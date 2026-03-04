@@ -316,6 +316,29 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
             sub: r.first_air_date ? r.first_air_date.slice(0, 4) : "",
             poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null,
           })));
+        } else if (catKey === "songs" || catKey === "albums" || catKey === "artists") {
+          const typeMap = { songs: "track", albums: "album", artists: "artist" };
+          const res  = await fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=${typeMap[catKey]}`);
+          const data = await res.json();
+          if (catKey === "songs") {
+            setResults((data.tracks?.items || []).slice(0, 8).map(r => ({
+              id: r.id, title: r.name,
+              sub: r.artists?.[0]?.name || "",
+              poster: r.album?.images?.[0]?.url || null,
+            })));
+          } else if (catKey === "albums") {
+            setResults((data.albums?.items || []).slice(0, 8).map(r => ({
+              id: r.id, title: r.name,
+              sub: r.artists?.[0]?.name || "",
+              poster: r.images?.[0]?.url || null,
+            })));
+          } else {
+            setResults((data.artists?.items || []).slice(0, 8).map(r => ({
+              id: r.id, title: r.name,
+              sub: r.genres?.[0] || "",
+              poster: r.images?.[0]?.url || null,
+            })));
+          }
         } else {
           const pool  = MOCK_SEARCH[catKey] || [];
           const lower = q.toLowerCase();
