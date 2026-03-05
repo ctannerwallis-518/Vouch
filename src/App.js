@@ -318,18 +318,7 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
           })));
         } else if (catKey === "songs" || catKey === "albums" || catKey === "artists") {
           const typeMap = { songs: "track", albums: "album", artists: "artist" };
-          const tokenRes = await fetch("https://accounts.spotify.com/api/token", {
-            method: "POST",
-            headers: {
-              "Authorization": `Basic ${btoa("12fd53f00e134d7698673f5c1445f8b4:8b1d9149aef844e4bc6f8ba707905bb3")}`,
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: "grant_type=client_credentials",
-          });
-          const { access_token } = await tokenRes.json();
-          const res = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=${typeMap[catKey]}&limit=8`, {
-            headers: { Authorization: `Bearer ${access_token}` }
-          });
+          const res = await fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=${typeMap[catKey]}`);
           const data = await res.json();
           if (catKey === "songs") {
             setResults((data.tracks?.items || []).slice(0, 8).map(r => ({
