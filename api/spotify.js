@@ -1,8 +1,11 @@
 export default async function handler(req, res) {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET");
+    
     const { q, type } = req.query;
     
     const creds = Buffer.from(
-      `12fd53f00e134d7698673f5c1445f8b4:8b1d9149aef844e4bc6f8ba707905bb3`
+      `${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`
     ).toString("base64");
   
     const tokenRes = await fetch("https://accounts.spotify.com/api/token", {
@@ -24,3 +27,4 @@ export default async function handler(req, res) {
     const data = await searchRes.json();
     res.status(200).json(data);
   }
+  
