@@ -209,10 +209,21 @@ const Styles = () => (
     .no-results { text-align: center; padding: 18px 0; font-family: 'Spectral', serif; font-style: italic; font-size: 13px; color: ${T.inkLight}; }
 
     @media (max-width: 640px) {
-      .cards-row-large { gap: 8px; }
-      .card, .slot-empty-sm { width: calc(33vw - 18px); }
-      .card-poster, .card-poster-placeholder { width: 100%; height: calc((33vw - 18px) * 1.375); }
-      .cards-row { gap: 10px; }
+      /* Vouch 5: single column full width */
+      .cards-row-large { flex-direction: column; gap: 0; }
+      .card-large { width: 100%; }
+      .card-poster-large { width: 100%; height: auto; aspect-ratio: 2/3; }
+      .card-poster-placeholder-large { width: 100%; aspect-ratio: 2/3; height: auto; }
+      .slot-empty-large { width: 100%; aspect-ratio: 2/3; height: auto; margin-bottom: 0; }
+
+      /* Category mentions: single column */
+      .cards-row { flex-direction: column; gap: 0; }
+      .card { width: 100%; display: flex; flex-direction: row; gap: 14px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid ${T.paperDark}; }
+      .card-poster { width: 72px; height: 100px; flex-shrink: 0; }
+      .card-poster-placeholder { width: 72px; height: 100px; flex-shrink: 0; font-size: 10px; }
+      .card:hover .card-poster { transform: none; box-shadow: none; }
+      .slot-empty-sm { width: 100%; height: 56px; aspect-ratio: unset; border-style: dashed; margin: 4px 0; }
+
       .page { padding: 0 16px 60px; }
       .masthead-meta { padding: 7px 16px; }
       .vouch-section { padding: 16px 14px 20px; }
@@ -542,16 +553,21 @@ function VouchSection({ board, isOwn, onCard, onAdd }) {
 }
 
 function CatSection({ catKey, label, items, isOwn, onCard, onAdd }) {
+  const [open, setOpen] = useState(false);
+  const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
   const slots = Array(5).fill(null).map((_, i) => items[i] || null);
+  const collapsed = isMobile && !open;
   return (
     <div className="cat-section">
-      <div className="cat-header">
+      <div className="cat-header" style={{ cursor: isMobile ? "pointer" : "default" }} onClick={() => isMobile && setOpen(o => !o)}>
         <div className="cat-label">{label}</div>
         <div className="cat-sublabel">Mentions</div>
         <div className="cat-count">{items.length} of 5</div>
-        {isOwn && <button className="cat-add" onClick={() => onAdd(catKey)}>+ Vouch</button>}
+        {isMobile && <span style={{ marginLeft: "auto", fontFamily: "'Spectral SC',serif", fontSize: "11px", color: T.inkFaint, paddingLeft: 8 }}>{open ? "▴" : "▾"}</span>}
+        {isOwn && !isMobile && <button className="cat-add" onClick={() => onAdd(catKey)}>+ Vouch</button>}
+        {isOwn && isMobile && open && <button className="cat-add" style={{ marginLeft: 8 }} onClick={e => { e.stopPropagation(); onAdd(catKey); }}>+ Vouch</button>}
       </div>
-      <div className="cards-row">
+      {!collapsed && <div className="cards-row">
         {slots.map((item, idx) =>
           item
             ? <div key={item.id} className="card" onClick={() => onCard(catKey, idx)}>
@@ -559,9 +575,11 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd }) {
                   ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} />
                   : null}
                 <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
-                <div className="card-title">{item.title}</div>
-                <div className="card-sub">{item.artist || item.author || item.year || ""}</div>
-                {item.comment && <div className="card-comment">"{item.comment}"</div>}
+                <div style={{ flex: 1 }}>
+                  <div className="card-title">{item.title}</div>
+                  <div className="card-sub">{item.artist || item.author || item.year || item.sub || ""}</div>
+                  {item.comment && <div className="card-comment">"{item.comment}"</div>}
+                </div>
               </div>
             : isOwn
               ? <div key={`e${idx}`} className="slot-empty-sm" onClick={() => onAdd(catKey)}>
@@ -571,7 +589,7 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd }) {
                   <div className="slot-empty-inner"><span className="slot-empty-plus">—</span></div>
                 </div>
         )}
-      </div>
+      </div>}
     </div>
   );
 }
