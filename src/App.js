@@ -334,6 +334,14 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
               poster: r.images?.[0]?.url || null,
             })));
           }
+        } else if (catKey === "books") {
+          const res  = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=8&langRestrict=en`);
+          const data = await res.json();
+          setResults((data.items || []).map(r => ({
+            id: r.id, title: r.volumeInfo?.title || "",
+            sub: (r.volumeInfo?.authors || []).join(", "),
+            poster: r.volumeInfo?.imageLinks?.thumbnail?.replace("http://", "https://") || null,
+          })));
         } else {
           setResults([]);
         }
@@ -408,12 +416,13 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
     timer.current = setTimeout(async () => {
       setBusy(true);
       try {
-        const [movieRes, tvRes, trackRes, albumRes, artistRes] = await Promise.all([
+        const [movieRes, tvRes, trackRes, albumRes, artistRes, booksRes] = await Promise.all([
           fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB}&query=${encodeURIComponent(q)}&language=en-US`).then(r => r.json()),
           fetch(`https://api.themoviedb.org/3/search/tv?api_key=${TMDB}&query=${encodeURIComponent(q)}&language=en-US`).then(r => r.json()),
           fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=track`).then(r => r.json()),
           fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=album`).then(r => r.json()),
           fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=artist`).then(r => r.json()),
+          fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=3&langRestrict=en`).then(r => r.json()),
         ]);
 
         const mixed = [];
@@ -446,6 +455,12 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
           id: r.id, title: r.name, catKey: "artists", catLabel: "Artists",
           sub: r.genres?.[0] || "",
           poster: r.images?.[0]?.url || null,
+        }));
+
+        (booksRes.items || []).slice(0, 2).forEach(r => mixed.push({
+          id: r.id, title: r.volumeInfo?.title || "", catKey: "books", catLabel: "Book",
+          sub: (r.volumeInfo?.authors || []).join(", "),
+          poster: r.volumeInfo?.imageLinks?.thumbnail?.replace("http://", "https://") || null,
         }));
 
         setResults(mixed);
