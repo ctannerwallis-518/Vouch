@@ -341,6 +341,7 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
             id: r.id, title: r.volumeInfo?.title || "",
             sub: (r.volumeInfo?.authors || []).join(", "),
             poster: (() => { const isbn = (r.volumeInfo?.industryIdentifiers || []).find(x => x.type === "ISBN_13" || x.type === "ISBN_10")?.identifier; return isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg` : (r.volumeInfo?.imageLinks?.thumbnail)?.replace("http://","https://") || null; })(),
+            posterFallback: (r.volumeInfo?.imageLinks?.thumbnail)?.replace("http://","https://") || null,
           })));
         } else {
           setResults([]);
@@ -365,7 +366,7 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
             : picked
               ? <>
                   <div className="selected-preview">
-                    <img src={picked.poster} alt={picked.title} className="result-img" onError={e => e.target.style.background = T.paperDark} />
+                    <img src={picked.poster} alt={picked.title} className="result-img" onError={e => { if (e.target.dataset.fallback && e.target.src !== e.target.dataset.fallback) { e.target.src = e.target.dataset.fallback; } else { e.target.style.background = T.paperDark; e.target.src = ''; } }} />
                     <div style={{ flex: 1 }}>
                       <div className="result-title">{picked.title}</div>
                       <div className="result-sub">{picked.sub || ""}</div>
@@ -386,7 +387,7 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
                   {!busy && q.trim() && results.length === 0 && <div className="no-results">No results found.</div>}
                   {results.map(r => (
                     <div key={r.id} className="result-item" onClick={() => setPicked(r)}>
-                      {r.poster ? <img src={r.poster} alt={r.title} className="result-img" onError={e => e.target.style.background = T.paperDark} /> : <div className="result-img" />}
+                      {r.poster ? <img src={r.poster} data-fallback={r.posterFallback} alt={r.title} className="result-img" onError={e => { if (e.target.dataset.fallback && e.target.src !== e.target.dataset.fallback) { e.target.src = e.target.dataset.fallback; } else { e.target.style.background = T.paperDark; e.target.src = ''; } }} /> : <div className="result-img" />}
                       <div>
                         <div className="result-title">{r.title}</div>
                         <div className="result-sub">{r.sub || ""}</div>
@@ -461,6 +462,7 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
           id: r.id, title: r.volumeInfo?.title || "", catKey: "books", catLabel: "Book",
           sub: (r.volumeInfo?.authors || []).join(", "),
           poster: (() => { const isbn = (r.volumeInfo?.industryIdentifiers || []).find(x => x.type === "ISBN_13" || x.type === "ISBN_10")?.identifier; return isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg` : (r.volumeInfo?.imageLinks?.thumbnail)?.replace("http://","https://") || null; })(),
+          posterFallback: (r.volumeInfo?.imageLinks?.thumbnail)?.replace("http://","https://") || null,
         }));
 
         setResults(mixed);
@@ -488,7 +490,7 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
             : picked
               ? <>
                   <div className="selected-preview">
-                    <img src={picked.poster} alt={picked.title} className="result-img" onError={e => e.target.style.background = T.paperDark} />
+                    <img src={picked.poster} alt={picked.title} className="result-img" onError={e => { if (e.target.dataset.fallback && e.target.src !== e.target.dataset.fallback) { e.target.src = e.target.dataset.fallback; } else { e.target.style.background = T.paperDark; e.target.src = ''; } }} />
                     <div style={{ flex: 1 }}>
                       <div className="result-title">{picked.title}</div>
                       <div className="result-sub">{picked.sub} · {picked.catLabel}</div>
@@ -509,7 +511,7 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
                   {!busy && q.trim() && results.length === 0 && <div className="no-results">No results found.</div>}
                   {results.map((r, i) => (
                     <div key={r.id + r.catKey + i} className="result-item" onClick={() => setPicked(r)}>
-                      {r.poster ? <img src={r.poster} alt={r.title} className="result-img" onError={e => e.target.style.background = T.paperDark} /> : <div className="result-img" />}
+                      {r.poster ? <img src={r.poster} data-fallback={r.posterFallback} alt={r.title} className="result-img" onError={e => { if (e.target.dataset.fallback && e.target.src !== e.target.dataset.fallback) { e.target.src = e.target.dataset.fallback; } else { e.target.style.background = T.paperDark; e.target.src = ''; } }} /> : <div className="result-img" />}
                       <div style={{ flex: 1 }}>
                         <div className="result-title">{r.title}</div>
                         <div className="result-sub">{r.sub}</div>
