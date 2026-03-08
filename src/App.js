@@ -661,11 +661,10 @@ export default function Vouch() {
       .eq("user_id", uid)
       .order("created_at", { ascending: true });
     if (!error && data) {
-      const b = { ...EMPTY_BOARD };
+      const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
       data.forEach(row => {
         const cat = row.category;
-        if (!b[cat]) b[cat] = [];
-        if (b[cat].length < 5) {
+        if (b[cat] && b[cat].length < 5) {
           b[cat].push({
             id: row.item_id,
             title: row.title,
@@ -708,7 +707,11 @@ export default function Vouch() {
   const currBoard = isOwn ? board : { ...EMPTY_BOARD };
   const currName  = isOwn ? user?.displayName : MOCK_FRIENDS.find(f => f.username === viewing)?.displayName || viewing;
 
+  const [saving, setSaving] = useState(false);
+
   const addItem = async (catKey, item) => {
+    if (saving) return;
+    setSaving(true);
     await supabase.from("endorsements").upsert({
       user_id: userId,
       category: catKey,
@@ -720,14 +723,18 @@ export default function Vouch() {
       vouched: item.vouched || false,
     }, { onConflict: "user_id,category,item_id" });
     await loadBoard(userId);
+    setSaving(false);
   };
 
   const removeItem = async (catKey, idx) => {
+    if (saving) return;
+    setSaving(true);
     const item = board[catKey]?.[idx];
     if (item?.dbId) {
       await supabase.from("endorsements").delete().eq("id", item.dbId);
     }
     await loadBoard(userId);
+    setSaving(false);
   };
 
 
