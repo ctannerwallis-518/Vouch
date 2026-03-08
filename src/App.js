@@ -63,26 +63,7 @@ const Styles = () => (
     .masthead-rule-ornament { text-align: center; font-family: 'Spectral', serif; font-size: 11px; letter-spacing: 0.6em; color: ${T.inkLight}; padding: 4px 0 2px; }
     .masthead-tagline { text-align: center; font-family: 'Spectral', serif; font-style: italic; font-weight: 300; font-size: 12.5px; letter-spacing: 0.12em; color: ${T.inkLight}; padding-bottom: 12px; }
 
-    /* MASTER SEARCH */
-    .master-search-wrap { padding: 0 28px 0; border-top: 1px solid ${T.ink}; }
-    .master-search-inner { max-width: 1380px; margin: 0 auto; display: flex; align-items: center; }
-    .master-search-input {
-      flex: 1; font-family: 'Spectral', serif; font-size: 14px; padding: 11px 14px;
-      border: none; background: transparent; color: ${T.ink}; outline: none;
-    }
-    .master-search-input::placeholder { color: ${T.inkFaint}; font-style: italic; }
-    .master-search-select {
-      font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.15em;
-      padding: 11px 14px; border: none; border-left: 1px solid ${T.paperDark};
-      background: transparent; color: ${T.inkMid}; cursor: pointer; outline: none;
-      appearance: none; -webkit-appearance: none;
-    }
-    .master-search-btn {
-      font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.2em;
-      padding: 11px 18px; border: none; border-left: 1px solid ${T.paperDark};
-      background: transparent; color: ${T.inkMid}; cursor: pointer;
-    }
-    .master-search-btn:hover { background: ${T.ink}; color: ${T.bg}; }
+
 
     /* NAV */
     .nav { display: flex; overflow-x: auto; scrollbar-width: none; border-top: 1px solid ${T.ink}; }
@@ -234,7 +215,6 @@ const Styles = () => (
       .card, .slot-empty-sm { width: calc(33vw - 18px); }
       .card-poster, .card-poster-placeholder { width: 100%; height: calc((33vw - 18px) * 1.375); }
       .cards-row { gap: 10px; }
-      .master-search-wrap { padding: 0 16px 0; }
       .page { padding: 0 16px 60px; }
       .masthead-meta { padding: 7px 16px; }
       .vouch-section { padding: 16px 14px 20px; }
@@ -424,7 +404,7 @@ function VouchSection({ board, isOwn, onCard, onAdd }) {
       <div className="cards-row-large">
         {slots.map((item, idx) =>
           item
-            ? <div key={item.id + item._cat} className="card-large" onClick={() => onCard(item._cat, (board[item._cat] || []).indexOf(item))}>
+            ? <div key={item.id + item._cat} className="card-large" onClick={() => onCard(item._cat, (board[item._cat] || []).findIndex(x => x.id === item.id))}>
                 {item.poster
                   ? <img src={item.poster} alt={item.title} className="card-poster-large" onError={e => { e.target.style.display = "none"; }} />
                   : <div className="card-poster-placeholder-large">{item.title}</div>}
@@ -494,8 +474,7 @@ export default function Vouch() {
   const [board,     setBoard]     = useState({ ...EMPTY_BOARD });
   const [lightbox,  setLightbox]  = useState(null);
   const [addModal,  setAddModal]  = useState(null);
-  const [masterQ,   setMasterQ]   = useState("");
-  const [masterCat, setMasterCat] = useState("movies");
+
 
   useEffect(() => {
     const setUserFromSession = (session) => {
@@ -524,10 +503,7 @@ export default function Vouch() {
     [catKey]: [...(prev[catKey] || []), item].slice(0, 5)
   }));
 
-  const handleMasterSearch = (e) => {
-    e.preventDefault();
-    if (masterQ.trim()) setAddModal(masterCat);
-  };
+
 
   if (!user) return <><Styles /><Auth /></>;
 
@@ -549,27 +525,6 @@ export default function Vouch() {
           </div>
           <div className="masthead-rule-ornament">— ✦ —</div>
           <div className="masthead-tagline">Love it? Vouch for it.</div>
-
-          <div className="master-search-wrap">
-            <form className="master-search-inner" onSubmit={handleMasterSearch}>
-              <input
-                className="master-search-input"
-                placeholder="Search films, albums, artists, songs…"
-                value={masterQ}
-                onChange={e => setMasterQ(e.target.value)}
-              />
-              <select
-                className="master-search-select"
-                value={masterCat}
-                onChange={e => setMasterCat(e.target.value)}
-              >
-                {CATEGORIES.filter(c => c.key !== "books").map(c => (
-                  <option key={c.key} value={c.key}>{c.label}</option>
-                ))}
-              </select>
-              <button type="submit" className="master-search-btn">Search</button>
-            </form>
-          </div>
 
           <nav className="nav">
             <button className={`nav-btn${tab === "board" && !viewing ? " active" : ""}`} onClick={() => { setTab("board"); setViewing(null); }}>My Board</button>
@@ -634,7 +589,7 @@ export default function Vouch() {
             catKey={addModal}
             catLabel={CATEGORIES.find(c => c.key === addModal)?.label}
             used={(board[addModal] || []).length}
-            onClose={() => { setAddModal(null); setMasterQ(""); }}
+            onClose={() => setAddModal(null)}
             onAdd={addItem}
           />
         )}
