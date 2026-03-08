@@ -574,7 +574,7 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
   );
 }
 
-function VouchSection({ board, isOwn, onCard, onAdd, onRemove }) {
+function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions }) {
   const allItems = [];
   CATEGORIES.forEach(cat => {
     (board[cat.key] || []).forEach(item => {
@@ -595,6 +595,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove }) {
           item
             ? <div key={item.id + item._cat} className="card-large" style={{ position: "relative" }} onClick={() => item.sourceUrl ? window.open(item.sourceUrl, "_blank") : onCard(item._cat, (board[item._cat] || []).findIndex(x => x.id === item.id))}>
                 {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(item._cat, (board[item._cat] || []).findIndex(x => x.id === item.id)); }} style={{ position: "absolute", top: 6, right: 6, zIndex: 2, background: "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", width: 26, height: 26, cursor: "pointer", fontSize: 15, lineHeight: "26px", textAlign: "center" }}>×</button>}
+                {!isOwn && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ position: "absolute", top: 6, right: 6, zIndex: 2, background: myReactions?.includes(item.id) ? T.ink : "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "4px 7px", whiteSpace: "nowrap" }}>{myReactions?.includes(item.id) ? "✓ Same" : "Dude, Same"}</button>}
                 {item.poster
                   ? <img src={item.poster} alt={item.title} className="card-poster-large" onError={e => { e.target.style.display = "none"; }} />
                   : <div className="card-poster-placeholder-large">{item.title}</div>}
@@ -616,7 +617,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove }) {
   );
 }
 
-function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove }) {
+function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions }) {
   const [open, setOpen] = useState(false);
   const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
   const slots = Array(5).fill(null).map((_, i) => items[i] || null);
@@ -636,6 +637,7 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove }) {
           item
             ? <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => item.sourceUrl ? window.open(item.sourceUrl, "_blank") : onCard(catKey, idx)}>
                 {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", width: 22, height: 22, cursor: "pointer", fontSize: 13, lineHeight: "22px", textAlign: "center" }}>×</button>}
+                {!isOwn && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: myReactions?.includes(item.id) ? T.ink : "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 5px", whiteSpace: "nowrap" }}>{myReactions?.includes(item.id) ? "✓" : "Same"}</button>}
                 {item.poster
                   ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} />
                   : null}
@@ -655,6 +657,33 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove }) {
                 </div>
         )}
       </div>}
+    </div>
+  );
+}
+
+function MutualMentions({ reactions, myReactions, isOwn, boardOwnerName }) {
+  if (!reactions.length && !myReactions.length) return null;
+  const items = isOwn ? myReactions : reactions;
+  if (!items.length) return null;
+  return (
+    <div style={{ marginTop: 52, borderTop: `1px solid ${T.paperDark}`, paddingTop: 28, opacity: 0.75 }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 18 }}>
+        <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", color: T.inkMid }}>Mutual Mentions</div>
+        <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkFaint }}>
+          {isOwn ? "Things you've said Dude, Same to" : `Things others said Dude, Same to on ${boardOwnerName}'s board`}
+        </div>
+      </div>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        {items.map((item, i) => (
+          <div key={item.id + i} style={{ width: 90, flexShrink: 0, cursor: item.sourceUrl ? "pointer" : "default", opacity: 0.85 }} onClick={() => item.sourceUrl && window.open(item.sourceUrl, "_blank")}>
+            {item.poster
+              ? <img src={item.poster} alt={item.title} style={{ width: 90, height: 124, objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block" }} onError={e => e.target.style.display = "none"} />
+              : <div style={{ width: 90, height: 124, background: T.paperDark, border: `1px solid ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 6 }}>{item.title}</div>}
+            <div style={{ fontFamily: "'Spectral',serif", fontSize: 10.5, fontWeight: 600, lineHeight: 1.3, marginTop: 5 }}>{item.title}</div>
+            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: 8.5, color: T.inkFaint, marginTop: 1 }}>{item.subtitle || ""}</div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -739,6 +768,18 @@ export default function Vouch() {
   const [pendingIn,   setPendingIn]   = useState([]);
   const [buddyModal,  setBuddyModal]  = useState(false);
   const [inviteLink,  setInviteLink]  = useState(null);
+  const [myReactions, setMyReactions] = useState([]); // items I reacted to
+  const [boardReactions, setBoardReactions] = useState([]); // reactions on viewed board
+
+  const loadMyReactions = async (uid) => {
+    const { data } = await supabase.from("reactions").select("*").eq("user_id", uid).order("created_at", { ascending: false });
+    setMyReactions(data || []);
+  };
+
+  const loadBoardReactions = async (ownerId) => {
+    const { data } = await supabase.from("reactions").select("*").eq("item_owner_id", ownerId).order("created_at", { ascending: false });
+    setBoardReactions(data || []);
+  };
 
   const loadBoard = async (uid) => {
     setLoading(true);
@@ -804,6 +845,7 @@ export default function Vouch() {
         setUserId(uid);
         loadBoard(uid);
         loadBuddies(uid);
+        loadMyReactions(uid);
         // Handle invite token from URL
         const params = new URLSearchParams(window.location.search);
         const inviteFrom = params.get("invite");
@@ -827,6 +869,26 @@ export default function Vouch() {
   const isOwn     = !viewing;
   const currBoard = isOwn ? board : viewBoard;
   const currName  = isOwn ? user?.displayName : viewing?.displayName || viewing?.username;
+
+  const dudeSame = async (item) => {
+    if (!userId || !viewing) return;
+    const already = myReactions.find(r => r.item_id === String(item.id) && r.item_owner_id === viewing.userId);
+    if (already) {
+      await supabase.from("reactions").delete().eq("id", already.id);
+    } else {
+      await supabase.from("reactions").upsert({
+        user_id: userId,
+        item_owner_id: viewing.userId,
+        item_id: String(item.id),
+        title: item.title,
+        subtitle: item.sub || item.artist || item.author || "",
+        poster: item.poster || null,
+        source_url: item.sourceUrl || null,
+      }, { onConflict: "user_id,item_owner_id,item_id" });
+    }
+    loadMyReactions(userId);
+    loadBoardReactions(viewing.userId);
+  };
 
   const generateInviteLink = () => {
     const link = `${window.location.origin}?invite=${userId}`;
@@ -853,6 +915,7 @@ export default function Vouch() {
     setViewing(buddy);
     setTab("board");
     await loadViewBoard(buddy.userId);
+    await loadBoardReactions(buddy.userId);
   };
 
   const addItem = async (catKey, item) => {
@@ -976,11 +1039,18 @@ export default function Vouch() {
                 </div>
                 <div className="ornament">— ✦ —</div>
 
-                <VouchSection board={currBoard} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={() => setVouchModal(true)} onRemove={removeItem} />
+                <VouchSection board={currBoard} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={() => setVouchModal(true)} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} />
 
                 {CATEGORIES.map(cat => (
-                  <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={currBoard[cat.key] || []} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={setAddModal} onRemove={removeItem} />
+                  <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={currBoard[cat.key] || []} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={setAddModal} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} />
                 ))}
+
+                <MutualMentions
+                  reactions={boardReactions}
+                  myReactions={myReactions}
+                  isOwn={isOwn}
+                  boardOwnerName={currName}
+                />
               </>
           }
         </main>
