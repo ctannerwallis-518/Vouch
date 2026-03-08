@@ -663,9 +663,10 @@ export default function Vouch() {
     if (!error && data) {
       const b = { ...EMPTY_BOARD };
       data.forEach(row => {
-        if (!b[row.category]) b[row.category] = [];
-        if (b[row.category].length < 5) {
-          b[row.category].push({
+        const cat = row.category;
+        if (!b[cat]) b[cat] = [];
+        if (b[cat].length < 5) {
+          b[cat].push({
             id: row.item_id,
             title: row.title,
             sub: row.subtitle || "",
@@ -713,7 +714,7 @@ export default function Vouch() {
       ...prev,
       [catKey]: [...(prev[catKey] || []), optimistic].slice(0, 5)
     }));
-    const { data, error } = await supabase.from("endorsements").insert({
+    const { data, error } = await supabase.from("endorsements").upsert({
       user_id: userId,
       category: catKey,
       item_id: String(item.id),
@@ -722,7 +723,7 @@ export default function Vouch() {
       poster: item.poster || null,
       comment: item.comment || "",
       vouched: item.vouched || false,
-    }).select().single();
+    }, { onConflict: "user_id,category,item_id" }).select().single();
     if (!error && data) {
       setBoard(prev => ({
         ...prev,
@@ -730,6 +731,8 @@ export default function Vouch() {
           i.id === item.id && !i.dbId ? { ...i, dbId: data.id } : i
         )
       }));
+    } else if (error) {
+      console.error("addItem error:", error);
     }
   };
 
