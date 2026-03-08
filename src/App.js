@@ -531,11 +531,10 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove }) {
   const allItems = [];
   CATEGORIES.forEach(cat => {
     (board[cat.key] || []).forEach(item => {
-      allItems.push({ ...item, _cat: cat.key, _catLabel: cat.label });
+      if (item.vouched) allItems.push({ ...item, _cat: cat.key, _catLabel: cat.label });
     });
   });
-  const top = allItems.slice(0, 5);
-  const slots = Array(5).fill(null).map((_, i) => top[i] || null);
+  const slots = Array(5).fill(null).map((_, i) => allItems[i] || null);
 
   return (
     <div className="vouch-section">
@@ -747,7 +746,7 @@ export default function Vouch() {
             used={Math.min(Object.values(board).flat().length, 5)}
             onClose={() => setVouchModal(false)}
             onAdd={(catKey, item) => {
-              addItem(catKey, item);
+              addItem(catKey, { ...item, vouched: true });
               setVouchModal(false);
             }}
           />
