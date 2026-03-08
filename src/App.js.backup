@@ -4,12 +4,27 @@ import { supabase } from "./supabase";
 const TMDB = "24f3b03466f2f7db2d54a0f53607da4f";
 
 const MOCK_ENDORSEMENTS = {
-  movies: [],
-  shows: [],
-  books: [],
-  songs: [],
-  albums: [],
-  artists: [],
+  movies: [
+    { id: 1, title: "The Brutalist", year: 2024, poster: "https://image.tmdb.org/t/p/w500/9n2tJBplPbgR2ca05hS5CKXwP2c.jpg", comment: "A monument of modern cinema. Brady Corbet has made something that demands to be seen on the biggest screen possible." },
+    { id: 2, title: "Conclave", year: 2024, poster: "https://image.tmdb.org/t/p/w500/m5ZSn1aSCYxHXlzCqbRVnHWiEBK.jpg", comment: "Tense, elegant, and completely gripping from first frame to last." },
+  ],
+  shows: [
+    { id: 3, title: "Severance", year: 2022, poster: "https://image.tmdb.org/t/p/w500/zMWtlKEKNNy2oYwFPrLBBHlNeFP.jpg", comment: "The most original thing on television. Season 2 somehow topped the first." },
+  ],
+  books: [
+    { id: 4, title: "The Women", author: "Kristin Hannah", poster: "https://covers.openlibrary.org/b/id/14635083-L.jpg", comment: "Devastatingly good. Read it in two sittings and thought about it for weeks." },
+    { id: 5, title: "James", author: "Percival Everett", poster: "https://covers.openlibrary.org/b/id/14479869-L.jpg", comment: "A masterpiece reimagining. Pulitzer well-deserved." },
+  ],
+  songs: [
+    { id: 6, title: "Birds of a Feather", artist: "Billie Eilish", poster: "https://i.scdn.co/image/ab67616d0000b273c6af5ffa661a365a78bb9e51", comment: "Has been stuck in my head for months. Perfect pop song." },
+  ],
+  albums: [
+    { id: 7, title: "Short n' Sweet", artist: "Sabrina Carpenter", poster: "https://i.scdn.co/image/ab67616d0000b2737b17f842a107dabb9f7f7890", comment: "Front to back banger. She locked in on this one." },
+    { id: 8, title: "GNX", artist: "Kendrick Lamar", poster: "https://i.scdn.co/image/ab67616d0000b273a83e3cd15f9c2f22e4f11a80", comment: "He dropped this with zero warning and it's somehow one of his best." },
+  ],
+  artists: [
+    { id: 9, title: "Chappell Roan", artist: "Chappell Roan", poster: "https://i.scdn.co/image/ab6761610000e5eb990d4b09e3ff2aacc96e5bb6", comment: "The most exciting artist of the decade. Every single is an event." },
+  ],
 };
 
 const CATEGORIES = [
