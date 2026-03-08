@@ -527,7 +527,7 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
   );
 }
 
-function VouchSection({ board, isOwn, onCard, onAdd }) {
+function VouchSection({ board, isOwn, onCard, onAdd, onRemove }) {
   const allItems = [];
   CATEGORIES.forEach(cat => {
     (board[cat.key] || []).forEach(item => {
@@ -547,7 +547,8 @@ function VouchSection({ board, isOwn, onCard, onAdd }) {
       <div className="cards-row-large">
         {slots.map((item, idx) =>
           item
-            ? <div key={item.id + item._cat} className="card-large" onClick={() => onCard(item._cat, (board[item._cat] || []).findIndex(x => x.id === item.id))}>
+            ? <div key={item.id + item._cat} className="card-large" style={{ position: "relative" }} onClick={() => onCard(item._cat, (board[item._cat] || []).findIndex(x => x.id === item.id))}>
+                {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(item._cat, (board[item._cat] || []).findIndex(x => x.id === item.id)); }} style={{ position: "absolute", top: 6, right: 6, zIndex: 2, background: "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", width: 26, height: 26, cursor: "pointer", fontSize: 15, lineHeight: "26px", textAlign: "center" }}>×</button>}
                 {item.poster
                   ? <img src={item.poster} alt={item.title} className="card-poster-large" onError={e => { e.target.style.display = "none"; }} />
                   : <div className="card-poster-placeholder-large">{item.title}</div>}
@@ -569,7 +570,7 @@ function VouchSection({ board, isOwn, onCard, onAdd }) {
   );
 }
 
-function CatSection({ catKey, label, items, isOwn, onCard, onAdd }) {
+function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove }) {
   const [open, setOpen] = useState(false);
   const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
   const slots = Array(5).fill(null).map((_, i) => items[i] || null);
@@ -587,7 +588,8 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd }) {
       {!collapsed && <div className="cards-row">
         {slots.map((item, idx) =>
           item
-            ? <div key={item.id} className="card" onClick={() => onCard(catKey, idx)}>
+            ? <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => onCard(catKey, idx)}>
+                {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", width: 22, height: 22, cursor: "pointer", fontSize: 13, lineHeight: "22px", textAlign: "center" }}>×</button>}
                 {item.poster
                   ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} />
                   : null}
@@ -652,6 +654,11 @@ export default function Vouch() {
   const addItem = (catKey, item) => setBoard(prev => ({
     ...prev,
     [catKey]: [...(prev[catKey] || []), item].slice(0, 5)
+  }));
+
+  const removeItem = (catKey, idx) => setBoard(prev => ({
+    ...prev,
+    [catKey]: (prev[catKey] || []).filter((_, i) => i !== idx)
   }));
 
 
@@ -720,10 +727,10 @@ export default function Vouch() {
                 </div>
                 <div className="ornament">— ✦ —</div>
 
-                <VouchSection board={currBoard} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={() => setVouchModal(true)} />
+                <VouchSection board={currBoard} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={() => setVouchModal(true)} onRemove={removeItem} />
 
                 {CATEGORIES.map(cat => (
-                  <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={currBoard[cat.key] || []} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={setAddModal} />
+                  <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={currBoard[cat.key] || []} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={setAddModal} onRemove={removeItem} />
                 ))}
               </>
           }
