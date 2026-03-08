@@ -709,12 +709,7 @@ export default function Vouch() {
   const currName  = isOwn ? user?.displayName : MOCK_FRIENDS.find(f => f.username === viewing)?.displayName || viewing;
 
   const addItem = async (catKey, item) => {
-    const optimistic = { ...item };
-    setBoard(prev => ({
-      ...prev,
-      [catKey]: [...(prev[catKey] || []), optimistic].slice(0, 5)
-    }));
-    const { data, error } = await supabase.from("endorsements").upsert({
+    await supabase.from("endorsements").upsert({
       user_id: userId,
       category: catKey,
       item_id: String(item.id),
@@ -723,28 +718,16 @@ export default function Vouch() {
       poster: item.poster || null,
       comment: item.comment || "",
       vouched: item.vouched || false,
-    }, { onConflict: "user_id,category,item_id" }).select().single();
-    if (!error && data) {
-      setBoard(prev => ({
-        ...prev,
-        [catKey]: (prev[catKey] || []).map(i =>
-          i.id === item.id && !i.dbId ? { ...i, dbId: data.id } : i
-        )
-      }));
-    } else if (error) {
-      console.error("addItem error:", error);
-    }
+    }, { onConflict: "user_id,category,item_id" });
+    await loadBoard(userId);
   };
 
   const removeItem = async (catKey, idx) => {
     const item = board[catKey]?.[idx];
-    setBoard(prev => ({
-      ...prev,
-      [catKey]: (prev[catKey] || []).filter((_, i) => i !== idx)
-    }));
     if (item?.dbId) {
       await supabase.from("endorsements").delete().eq("id", item.dbId);
     }
+    await loadBoard(userId);
   };
 
 
