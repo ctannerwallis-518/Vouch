@@ -659,45 +659,97 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove }) {
   );
 }
 
-const MOCK_FRIENDS = [
-  { username: "sarah_m",  displayName: "Sarah M."  },
-  { username: "jake_r",   displayName: "Jake R."   },
-  { username: "priya_k",  displayName: "Priya K."  },
-];
+function BuddyModal({ userId, onClose, onSendRequest, onGenerateLink, inviteLink, existingBuddyIds }) {
+  const [q, setQ]           = useState("");
+  const [results, setResults] = useState([]);
+  const [busy, setBusy]     = useState(false);
+  const [sent, setSent]     = useState([]);
+  const timer               = useRef(null);
+
+  useEffect(() => {
+    if (!q.trim()) { setResults([]); return; }
+    clearTimeout(timer.current);
+    timer.current = setTimeout(async () => {
+      setBusy(true);
+      const { data } = await supabase.from("profiles").select("id, username, display_name").or(`username.ilike.%${q}%,display_name.ilike.%${q}%`).neq("id", userId).limit(8);
+      setResults(data || []);
+      setBusy(false);
+    }, 300);
+  }, [q, userId]);
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-head">
+          <div className="modal-title">Add Buddy</div>
+          <button className="modal-x" onClick={onClose}>×</button>
+        </div>
+        <div className="modal-body">
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9.5px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 8 }}>Invite via Link</div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="btn btn-solid" style={{ flex: 1 }} onClick={onGenerateLink}>
+                {inviteLink ? "Link Copied!" : "Copy Invite Link"}
+              </button>
+            </div>
+            {inviteLink && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 6, wordBreak: "break-all" }}>{inviteLink}</div>}
+          </div>
+          <div style={{ borderBottom: `1px solid ${T.paperDark}`, marginBottom: 16 }} />
+          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9.5px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 10 }}>Search by Username</div>
+          <input className="search-input" placeholder="Search name or username…" value={q} onChange={e => setQ(e.target.value)} autoFocus />
+          {busy && <div className="loading">Searching…</div>}
+          {!busy && q.trim() && results.length === 0 && <div className="no-results">No users found.</div>}
+          {results.map(r => {
+            const isAlready = existingBuddyIds.includes(r.id);
+            const isSent    = sent.includes(r.id);
+            return (
+              <div key={r.id} className="result-item" style={{ justifyContent: "space-between" }}>
+                <div>
+                  <div className="result-title">{r.display_name}</div>
+                  <div className="result-sub">@{r.username}</div>
+                </div>
+                {isAlready
+                  ? <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkFaint }}>Buddies</span>
+                  : isSent
+                  ? <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkFaint }}>Sent</span>
+                  : <button className="btn btn-solid" style={{ padding: "4px 12px" }} onClick={() => { onSendRequest(r.id); setSent(s => [...s, r.id]); }}>Add</button>
+                }
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Vouch() {
-  const [user,      setUser]      = useState(null);
-  const [userId,    setUserId]    = useState(null);
-  const [tab,       setTab]       = useState("board");
-  const [viewing,   setViewing]   = useState(null);
-  const [board,     setBoard]     = useState({ ...EMPTY_BOARD });
-  const [loading,   setLoading]   = useState(false);
-  const [lightbox,  setLightbox]  = useState(null);
-  const [addModal,  setAddModal]  = useState(null);
-  const [vouchModal, setVouchModal] = useState(false);
+  const [user,        setUser]        = useState(null);
+  const [userId,      setUserId]      = useState(null);
+  const [tab,         setTab]         = useState("board");
+  const [viewing,     setViewing]     = useState(null); // { userId, username, displayName }
+  const [board,       setBoard]       = useState({ ...EMPTY_BOARD });
+  const [viewBoard,   setViewBoard]   = useState({ ...EMPTY_BOARD });
+  const [loading,     setLoading]     = useState(false);
+  const [lightbox,    setLightbox]    = useState(null);
+  const [addModal,    setAddModal]    = useState(null);
+  const [vouchModal,  setVouchModal]  = useState(false);
+  const [saving,      setSaving]      = useState(false);
+  const [buddies,     setBuddies]     = useState([]);
+  const [pendingIn,   setPendingIn]   = useState([]);
+  const [buddyModal,  setBuddyModal]  = useState(false);
+  const [inviteLink,  setInviteLink]  = useState(null);
 
   const loadBoard = async (uid) => {
     setLoading(true);
     const { data, error } = await supabase
-      .from("endorsements")
-      .select("*")
-      .eq("user_id", uid)
-      .order("created_at", { ascending: true });
+      .from("endorsements").select("*").eq("user_id", uid).order("created_at", { ascending: true });
     if (!error && data) {
       const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
       data.forEach(row => {
         const cat = row.category;
         if (b[cat] && b[cat].length < 5) {
-          b[cat].push({
-            id: row.item_id,
-            title: row.title,
-            sub: row.subtitle || "",
-            poster: row.poster || null,
-            comment: row.comment || "",
-            vouched: row.vouched || false,
-            sourceUrl: row.source_url || null,
-            dbId: row.id,
-          });
+          b[cat].push({ id: row.item_id, title: row.title, sub: row.subtitle || "", poster: row.poster || null, comment: row.comment || "", vouched: row.vouched || false, sourceUrl: row.source_url || null, dbId: row.id });
         }
       });
       setBoard(b);
@@ -705,19 +757,64 @@ export default function Vouch() {
     setLoading(false);
   };
 
+  const loadViewBoard = async (uid) => {
+    const { data, error } = await supabase
+      .from("endorsements").select("*").eq("user_id", uid).order("created_at", { ascending: true });
+    if (!error && data) {
+      const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
+      data.forEach(row => {
+        const cat = row.category;
+        if (b[cat] && b[cat].length < 5) {
+          b[cat].push({ id: row.item_id, title: row.title, sub: row.subtitle || "", poster: row.poster || null, comment: row.comment || "", vouched: row.vouched || false, sourceUrl: row.source_url || null, dbId: row.id });
+        }
+      });
+      setViewBoard(b);
+    }
+  };
+
+  const loadBuddies = async (uid) => {
+    const { data } = await supabase
+      .from("buddies")
+      .select("*, requester:requester_id(id, username, display_name), receiver:receiver_id(id, username, display_name)")
+      .or(`requester_id.eq.${uid},receiver_id.eq.${uid}`);
+    if (data) {
+      const accepted = data.filter(b => b.status === "accepted").map(b => {
+        const other = b.requester_id === uid ? b.receiver : b.requester;
+        return { buddyRowId: b.id, userId: other.id, username: other.username, displayName: other.display_name };
+      });
+      const incoming = data.filter(b => b.status === "pending" && b.receiver_id === uid).map(b => ({
+        buddyRowId: b.id, userId: b.requester.id, username: b.requester.username, displayName: b.requester.display_name
+      }));
+      setBuddies(accepted);
+      setPendingIn(incoming);
+    }
+  };
+
   useEffect(() => {
-    const setUserFromSession = (session) => {
+    const setUserFromSession = async (session) => {
       if (session?.user) {
-        setUser({
+        const uid = session.user.id;
+        // Upsert profile on login
+        await supabase.from("profiles").upsert({
+          id: uid,
           username: session.user.email.split("@")[0],
-          displayName: session.user.user_metadata?.full_name || session.user.email.split("@")[0]
-        });
-        setUserId(session.user.id);
-        loadBoard(session.user.id);
+          display_name: session.user.user_metadata?.full_name || session.user.email.split("@")[0],
+        }, { onConflict: "id" });
+        setUser({ username: session.user.email.split("@")[0], displayName: session.user.user_metadata?.full_name || session.user.email.split("@")[0] });
+        setUserId(uid);
+        loadBoard(uid);
+        loadBuddies(uid);
+        // Handle invite token from URL
+        const params = new URLSearchParams(window.location.search);
+        const inviteFrom = params.get("invite");
+        if (inviteFrom && inviteFrom !== uid) {
+          await supabase.from("buddies").upsert({ requester_id: inviteFrom, receiver_id: uid, status: "accepted" }, { onConflict: "requester_id,receiver_id" });
+          await supabase.from("buddies").upsert({ requester_id: uid, receiver_id: inviteFrom, status: "accepted" }, { onConflict: "requester_id,receiver_id" });
+          window.history.replaceState({}, "", window.location.pathname);
+          loadBuddies(uid);
+        }
       } else {
-        setUser(null);
-        setUserId(null);
-        setBoard({ ...EMPTY_BOARD });
+        setUser(null); setUserId(null); setBoard({ ...EMPTY_BOARD });
       }
     };
     supabase.auth.getSession().then(({ data: { session } }) => setUserFromSession(session));
@@ -728,10 +825,35 @@ export default function Vouch() {
   const signOut = async () => { await supabase.auth.signOut(); setUser(null); };
 
   const isOwn     = !viewing;
-  const currBoard = isOwn ? board : { ...EMPTY_BOARD };
-  const currName  = isOwn ? user?.displayName : MOCK_FRIENDS.find(f => f.username === viewing)?.displayName || viewing;
+  const currBoard = isOwn ? board : viewBoard;
+  const currName  = isOwn ? user?.displayName : viewing?.displayName || viewing?.username;
 
-  const [saving, setSaving] = useState(false);
+  const generateInviteLink = () => {
+    const link = `${window.location.origin}?invite=${userId}`;
+    setInviteLink(link);
+    navigator.clipboard?.writeText(link);
+  };
+
+  const sendBuddyRequest = async (receiverId) => {
+    await supabase.from("buddies").upsert({ requester_id: userId, receiver_id: receiverId, status: "pending" }, { onConflict: "requester_id,receiver_id" });
+    loadBuddies(userId);
+  };
+
+  const acceptBuddy = async (buddyRowId) => {
+    await supabase.from("buddies").update({ status: "accepted" }).eq("id", buddyRowId);
+    loadBuddies(userId);
+  };
+
+  const removeBuddy = async (buddyRowId) => {
+    await supabase.from("buddies").delete().eq("id", buddyRowId);
+    loadBuddies(userId);
+  };
+
+  const viewBuddy = async (buddy) => {
+    setViewing(buddy);
+    setTab("board");
+    await loadViewBoard(buddy.userId);
+  };
 
   const addItem = async (catKey, item) => {
     if (saving) return;
@@ -789,7 +911,9 @@ export default function Vouch() {
 
           <nav className="nav">
             <button className={`nav-btn${tab === "board" && !viewing ? " active" : ""}`} onClick={() => { setTab("board"); setViewing(null); }}>My Board</button>
-            <button className={`nav-btn${tab === "friends" ? " active" : ""}`} onClick={() => { setTab("friends"); setViewing(null); }}>Friends</button>
+            <button className={`nav-btn${tab === "friends" ? " active" : ""}`} onClick={() => { setTab("friends"); setViewing(null); }}>
+              Buddies {pendingIn.length > 0 && <span style={{ background: T.ink, color: T.bg, borderRadius: "50%", fontSize: 9, padding: "1px 5px", marginLeft: 4 }}>{pendingIn.length}</span>}
+            </button>
             {viewing && <button className="nav-btn active">{currName}'s Board</button>}
           </nav>
         </header>
@@ -799,17 +923,39 @@ export default function Vouch() {
             ? <>
                 <div className="board-header">
                   <div>
-                    <div className="board-name">Friends</div>
-                    <div className="board-sub">{MOCK_FRIENDS.length} connections</div>
+                    <div className="board-name">Buddies</div>
+                    <div className="board-sub">{buddies.length} connection{buddies.length !== 1 ? "s" : ""}</div>
                   </div>
-                  <button className="btn btn-solid">+ Add Friend</button>
+                  <button className="btn btn-solid" onClick={() => setBuddyModal(true)}>+ Add Buddy</button>
                 </div>
                 <div className="ornament">· · ·</div>
-                {MOCK_FRIENDS.map(f => (
-                  <div key={f.username} className="friend-row" onClick={() => { setViewing(f.username); setTab("board"); }}>
+
+                {pendingIn.length > 0 && <>
+                  <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 12 }}>Pending Requests</div>
+                  {pendingIn.map(b => (
+                    <div key={b.buddyRowId} className="friend-row">
+                      <div>
+                        <div className="friend-name">{b.displayName}</div>
+                        <div className="friend-handle">@{b.username}</div>
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button className="btn btn-solid" style={{ padding: "5px 14px" }} onClick={() => acceptBuddy(b.buddyRowId)}>Accept</button>
+                        <button className="btn btn-ghost" style={{ padding: "5px 14px" }} onClick={() => removeBuddy(b.buddyRowId)}>Decline</button>
+                      </div>
+                    </div>
+                  ))}
+                  <div style={{ borderBottom: `1px solid ${T.paperDark}`, margin: "20px 0" }} />
+                </>}
+
+                {buddies.length === 0 && pendingIn.length === 0 && (
+                  <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkLight, padding: "24px 0" }}>No buddies yet — add one or share your invite link.</div>
+                )}
+
+                {buddies.map(b => (
+                  <div key={b.buddyRowId} className="friend-row" onClick={() => viewBuddy(b)}>
                     <div>
-                      <div className="friend-name">{f.displayName}</div>
-                      <div className="friend-handle">@{f.username}</div>
+                      <div className="friend-name">{b.displayName}</div>
+                      <div className="friend-handle">@{b.username}</div>
                     </div>
                     <span className="friend-arrow">→</span>
                   </div>
@@ -820,7 +966,7 @@ export default function Vouch() {
                   <div>
                     <div className="board-name">
                       {currName}
-                      {viewing && <span style={{ fontWeight: 400, fontSize: 16, color: T.inkLight, marginLeft: 10 }}>@{viewing}</span>}
+                      {viewing && <span style={{ fontWeight: 400, fontSize: 16, color: T.inkLight, marginLeft: 10 }}>@{viewing?.username}</span>}
                     </div>
                     <div className="board-sub">
                       {isOwn ? user.displayName : `${currName}'s board`}
@@ -844,6 +990,17 @@ export default function Vouch() {
           if (!items.length) return null;
           return <Lightbox items={items} start={lightbox.idx} catLabel={CATEGORIES.find(c => c.key === lightbox.catKey)?.label} onClose={() => setLightbox(null)} />;
         })()}
+
+        {buddyModal && (
+          <BuddyModal
+            userId={userId}
+            onClose={() => { setBuddyModal(false); setInviteLink(null); }}
+            onSendRequest={sendBuddyRequest}
+            onGenerateLink={generateInviteLink}
+            inviteLink={inviteLink}
+            existingBuddyIds={buddies.map(b => b.userId)}
+          />
+        )}
 
         {vouchModal && (
           <UniversalSearchModal
