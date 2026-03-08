@@ -109,17 +109,17 @@ const Styles = () => (
     .vouch-section-add:hover { background: ${T.ink}; color: ${T.bg}; }
 
     /* LARGE CARDS (Vouch section) */
-    .cards-row-large { display: flex; gap: 20px; flex-wrap: wrap; }
-    .card-large { width: 240px; flex-shrink: 0; cursor: pointer; }
+    .cards-row-large { display: flex; gap: 12px; flex-wrap: nowrap; }
+    .card-large { flex: 1; min-width: 0; cursor: pointer; }
     .card-large:hover .card-poster-large { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(17,16,8,0.2); }
-    .card-poster-large { width: 240px; height: 330px; object-fit: cover; display: block; border: 1px solid ${T.paperDark}; transition: transform 0.2s, box-shadow 0.2s; }
-    .card-poster-placeholder-large { width: 240px; height: 330px; background: ${T.paperDark}; border: 1px solid ${T.paperDark}; display: flex; align-items: center; justify-content: center; font-family: 'Spectral', serif; font-style: italic; font-size: 12px; color: ${T.inkLight}; text-align: center; padding: 14px; }
+    .card-poster-large { width: 100%; aspect-ratio: 2/3; object-fit: cover; display: block; border: 1px solid ${T.paperDark}; transition: transform 0.2s, box-shadow 0.2s; }
+    .card-poster-placeholder-large { width: 100%; aspect-ratio: 2/3; background: ${T.paperDark}; border: 1px solid ${T.paperDark}; display: flex; align-items: center; justify-content: center; font-family: 'Spectral', serif; font-style: italic; font-size: 12px; color: ${T.inkLight}; text-align: center; padding: 14px; }
     .card-cat-badge { display: inline-block; font-family: 'Spectral SC', serif; font-size: 8.5px; letter-spacing: 0.2em; color: ${T.inkFaint}; margin-top: 8px; text-transform: uppercase; }
-    .card-title-large   { font-family: 'Spectral', serif; font-weight: 600; font-size: 14px; line-height: 1.35; margin-top: 3px; }
-    .card-sub-large     { font-family: 'Spectral SC', serif; font-size: 10px; letter-spacing: 0.06em; color: ${T.inkLight}; margin-top: 2px; }
-    .card-comment-large { font-family: 'Spectral', serif; font-style: italic; font-size: 11px; line-height: 1.5; color: ${T.inkMid}; margin-top: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .card-title-large   { font-family: 'Spectral', serif; font-weight: 600; font-size: 13px; line-height: 1.35; margin-top: 3px; }
+    .card-sub-large     { font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.06em; color: ${T.inkLight}; margin-top: 2px; }
+    .card-comment-large { font-family: 'Spectral', serif; font-style: italic; font-size: 10.5px; line-height: 1.5; color: ${T.inkMid}; margin-top: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-    .slot-empty-large { width: 240px; height: 330px; border: 1px dashed ${T.ink}; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.14s, background 0.14s; flex-shrink: 0; }
+    .slot-empty-large { flex: 1; min-width: 0; aspect-ratio: 2/3; border: 1px dashed ${T.ink}; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.14s, background 0.14s; }
     .slot-empty-large:hover { background: rgba(17,16,8,0.04); }
     .slot-empty-inner { text-align: center; font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.18em; color: ${T.inkFaint}; }
     .slot-empty-plus  { display: block; font-size: 22px; margin-bottom: 6px; color: ${T.paperDark}; }
@@ -209,9 +209,7 @@ const Styles = () => (
     .no-results { text-align: center; padding: 18px 0; font-family: 'Spectral', serif; font-style: italic; font-size: 13px; color: ${T.inkLight}; }
 
     @media (max-width: 640px) {
-      .card-large, .slot-empty-large { width: calc(50vw - 30px); }
-      .card-poster-large, .card-poster-placeholder-large { width: 100%; height: calc((50vw - 30px) * 1.375); }
-      .cards-row-large { gap: 12px; }
+      .cards-row-large { gap: 8px; }
       .card, .slot-empty-sm { width: calc(33vw - 18px); }
       .card-poster, .card-poster-placeholder { width: 100%; height: calc((33vw - 18px) * 1.375); }
       .cards-row { gap: 10px; }
@@ -384,6 +382,226 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
   );
 }
 
+function UniversalSearchModal({ used, onClose, onAdd }) {
+  const [q, setQ]             = useState("");
+  const [results, setResults] = useState([]);
+  const [picked, setPicked]   = useState(null);
+  const [note, setNote]       = useState("");
+  const [busy, setBusy]       = useState(false);
+  const timer                 = useRef(null);
+  const remaining             = 5 - used;
+
+  useEffect(() => {
+    if (!q.trim()) { setResults([]); return; }
+    clearTimeout(timer.current);
+    timer.current = setTimeout(async () => {
+      setBusy(true);
+      try {
+        const [movieRes, tvRes, trackRes, albumRes, artistRes] = await Promise.all([
+          fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB}&query=${encodeURIComponent(q)}&language=en-US`).then(r => r.json()),
+          fetch(`https://api.themoviedb.org/3/search/tv?api_key=${TMDB}&query=${encodeURIComponent(q)}&language=en-US`).then(r => r.json()),
+          fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=track`).then(r => r.json()),
+          fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=album`).then(r => r.json()),
+          fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=artist`).then(r => r.json()),
+        ]);
+
+        const mixed = [];
+
+        (movieRes.results || []).slice(0, 3).forEach(r => mixed.push({
+          id: r.id, title: r.title, catKey: "movies", catLabel: "Film",
+          sub: r.release_date ? r.release_date.slice(0, 4) : "",
+          poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null,
+        }));
+
+        (tvRes.results || []).slice(0, 2).forEach(r => mixed.push({
+          id: r.id, title: r.name, catKey: "shows", catLabel: "Television",
+          sub: r.first_air_date ? r.first_air_date.slice(0, 4) : "",
+          poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null,
+        }));
+
+        (trackRes.tracks?.items || []).slice(0, 3).forEach(r => mixed.push({
+          id: r.id, title: r.name, catKey: "songs", catLabel: "Songs",
+          sub: r.artists?.[0]?.name || "",
+          poster: r.album?.images?.[0]?.url || null,
+        }));
+
+        (albumRes.albums?.items || []).slice(0, 2).forEach(r => mixed.push({
+          id: r.id, title: r.name, catKey: "albums", catLabel: "Albums",
+          sub: r.artists?.[0]?.name || "",
+          poster: r.images?.[0]?.url || null,
+        }));
+
+        (artistRes.artists?.items || []).slice(0, 2).forEach(r => mixed.push({
+          id: r.id, title: r.name, catKey: "artists", catLabel: "Artists",
+          sub: r.genres?.[0] || "",
+          poster: r.images?.[0]?.url || null,
+        }));
+
+        setResults(mixed);
+      } catch(e) { console.error(e); }
+      setBusy(false);
+    }, 400);
+  }, [q]);
+
+  const confirm = () => {
+    if (!picked) return;
+    onAdd(picked.catKey, { ...picked, comment: note });
+    onClose();
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-head">
+          <div className="modal-title">Add to Vouch</div>
+          <button className="modal-x" onClick={onClose}>×</button>
+        </div>
+        <div className="modal-body">
+          {remaining <= 0
+            ? <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkLight, padding: "12px 0" }}>Your Vouch 5 is full.</div>
+            : picked
+              ? <>
+                  <div className="selected-preview">
+                    <img src={picked.poster} alt={picked.title} className="result-img" onError={e => e.target.style.background = T.paperDark} />
+                    <div style={{ flex: 1 }}>
+                      <div className="result-title">{picked.title}</div>
+                      <div className="result-sub">{picked.sub} · {picked.catLabel}</div>
+                    </div>
+                    <button onClick={() => setPicked(null)} style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: 18, color: T.inkFaint }}>×</button>
+                  </div>
+                  <span className="comment-label">Why are you vouching for this? <span style={{ fontStyle: "italic", fontFamily: "'Spectral',serif", textTransform: "none", letterSpacing: 0, fontWeight: 300 }}>(optional)</span></span>
+                  <textarea className="comment-area" placeholder="Say something about it…" value={note} onChange={e => setNote(e.target.value)} maxLength={200} />
+                  <div className="char-count">{note.length} / 200</div>
+                  <button className="btn btn-solid" style={{ width: "100%" }} onClick={confirm}>Vouch for This</button>
+                </>
+              : <>
+                  <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9.5px", letterSpacing: "0.16em", color: T.inkFaint, marginBottom: 12 }}>
+                    {remaining} slot{remaining !== 1 ? "s" : ""} remaining
+                  </div>
+                  <input className="search-input" placeholder="Search films, shows, songs, albums, artists…" value={q} onChange={e => setQ(e.target.value)} autoFocus />
+                  {busy && <div className="loading">Searching…</div>}
+                  {!busy && q.trim() && results.length === 0 && <div className="no-results">No results found.</div>}
+                  {results.map((r, i) => (
+                    <div key={r.id + r.catKey + i} className="result-item" onClick={() => setPicked(r)}>
+                      {r.poster ? <img src={r.poster} alt={r.title} className="result-img" onError={e => e.target.style.background = T.paperDark} /> : <div className="result-img" />}
+                      <div style={{ flex: 1 }}>
+                        <div className="result-title">{r.title}</div>
+                        <div className="result-sub">{r.sub}</div>
+                      </div>
+                      <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8.5px", letterSpacing: "0.15em", color: T.inkFaint, flexShrink: 0 }}>{r.catLabel}</div>
+                    </div>
+                  ))}
+                </>
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function UniversalSearchModal({ onClose, onAdd }) {
+  const [q, setQ]           = useState("");
+  const [results, setResults] = useState([]);
+  const [picked, setPicked] = useState(null);
+  const [note, setNote]     = useState("");
+  const [busy, setBusy]     = useState(false);
+  const timer               = useRef(null);
+
+  useEffect(() => {
+    if (!q.trim()) { setResults([]); return; }
+    clearTimeout(timer.current);
+    timer.current = setTimeout(async () => {
+      setBusy(true);
+      try {
+        const [moviesRes, tvRes, tracksRes, albumsRes, artistsRes] = await Promise.all([
+          fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB}&query=${encodeURIComponent(q)}&language=en-US`).then(r => r.json()),
+          fetch(`https://api.themoviedb.org/3/search/tv?api_key=${TMDB}&query=${encodeURIComponent(q)}&language=en-US`).then(r => r.json()),
+          fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=track`).then(r => r.json()),
+          fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=album`).then(r => r.json()),
+          fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=artist`).then(r => r.json()),
+        ]);
+        const mixed = [];
+        (moviesRes.results || []).slice(0, 3).forEach(r => mixed.push({
+          id: r.id, title: r.title, catKey: "movies", catLabel: "Film",
+          sub: r.release_date ? r.release_date.slice(0, 4) : "",
+          poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null,
+        }));
+        (tvRes.results || []).slice(0, 3).forEach(r => mixed.push({
+          id: r.id, title: r.name, catKey: "shows", catLabel: "Television",
+          sub: r.first_air_date ? r.first_air_date.slice(0, 4) : "",
+          poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null,
+        }));
+        (tracksRes.tracks?.items || []).slice(0, 3).forEach(r => mixed.push({
+          id: r.id, title: r.name, catKey: "songs", catLabel: "Song",
+          sub: r.artists?.[0]?.name || "",
+          poster: r.album?.images?.[0]?.url || null,
+        }));
+        (albumsRes.albums?.items || []).slice(0, 3).forEach(r => mixed.push({
+          id: r.id, title: r.name, catKey: "albums", catLabel: "Album",
+          sub: r.artists?.[0]?.name || "",
+          poster: r.images?.[0]?.url || null,
+        }));
+        (artistsRes.artists?.items || []).slice(0, 3).forEach(r => mixed.push({
+          id: r.id, title: r.name, catKey: "artists", catLabel: "Artist",
+          sub: r.genres?.[0] || "",
+          poster: r.images?.[0]?.url || null,
+        }));
+        setResults(mixed);
+      } catch(e) { console.error(e); }
+      setBusy(false);
+    }, 400);
+  }, [q]);
+
+  const confirm = () => {
+    if (!picked) return;
+    onAdd(picked.catKey, { ...picked, comment: note });
+    onClose();
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-head">
+          <div className="modal-title">Add to Vouch</div>
+          <button className="modal-x" onClick={onClose}>×</button>
+        </div>
+        <div className="modal-body">
+          {picked
+            ? <>
+                <div className="selected-preview">
+                  {picked.poster && <img src={picked.poster} alt={picked.title} className="result-img" />}
+                  <div style={{ flex: 1 }}>
+                    <div className="result-title">{picked.title}</div>
+                    <div className="result-sub">{picked.sub} · <span style={{ color: T.inkMid }}>{picked.catLabel}</span></div>
+                  </div>
+                  <button onClick={() => setPicked(null)} style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: 18, color: T.inkFaint }}>×</button>
+                </div>
+                <span className="comment-label">Why are you vouching for this? <span style={{ fontStyle: "italic", fontFamily: "'Spectral',serif", textTransform: "none", letterSpacing: 0, fontWeight: 300 }}>(optional)</span></span>
+                <textarea className="comment-area" placeholder="Say something about it…" value={note} onChange={e => setNote(e.target.value)} maxLength={200} />
+                <div className="char-count">{note.length} / 200</div>
+                <button className="btn btn-solid" style={{ width: "100%" }} onClick={confirm}>Vouch for This</button>
+              </>
+            : <>
+                <input className="search-input" placeholder="Search films, shows, songs, albums, artists…" value={q} onChange={e => setQ(e.target.value)} autoFocus />
+                {busy && <div className="loading">Searching…</div>}
+                {!busy && q.trim() && results.length === 0 && <div className="no-results">No results found.</div>}
+                {results.map((r, i) => (
+                  <div key={r.id + r.catKey + i} className="result-item" onClick={() => setPicked(r)}>
+                    {r.poster ? <img src={r.poster} alt={r.title} className="result-img" onError={e => e.target.style.background = T.paperDark} /> : <div className="result-img" />}
+                    <div>
+                      <div className="result-title">{r.title}</div>
+                      <div className="result-sub">{r.sub} · <span style={{ color: T.inkMid }}>{r.catLabel}</span></div>
+                    </div>
+                  </div>
+                ))}
+              </>
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function VouchSection({ board, isOwn, onCard, onAdd }) {
   const allItems = [];
   CATEGORIES.forEach(cat => {
@@ -399,7 +617,7 @@ function VouchSection({ board, isOwn, onCard, onAdd }) {
       <div className="vouch-section-header">
         <div className="vouch-section-label">Vouch</div>
         <div className="vouch-section-sub">The five that define this moment</div>
-        {isOwn && <button className="vouch-section-add" onClick={() => onAdd("movies")}>+ Add</button>}
+        {isOwn && <button className="vouch-section-add" onClick={onAdd}>+ Add</button>}
       </div>
       <div className="cards-row-large">
         {slots.map((item, idx) =>
@@ -410,11 +628,11 @@ function VouchSection({ board, isOwn, onCard, onAdd }) {
                   : <div className="card-poster-placeholder-large">{item.title}</div>}
                 <div className="card-cat-badge">{item._catLabel}</div>
                 <div className="card-title-large">{item.title}</div>
-                <div className="card-sub-large">{item.artist || item.author || item.year || ""}</div>
+                <div className="card-sub-large">{item.artist || item.author || item.year || item.sub || ""}</div>
                 {item.comment && <div className="card-comment-large">"{item.comment}"</div>}
               </div>
             : isOwn
-              ? <div key={`ve${idx}`} className="slot-empty-large" onClick={() => onAdd("movies")}>
+              ? <div key={`ve${idx}`} className="slot-empty-large" onClick={onAdd}>
                   <div className="slot-empty-inner"><span className="slot-empty-plus">+</span>Vouch</div>
                 </div>
               : <div key={`ve${idx}`} className="slot-empty-large" style={{ cursor: "default", opacity: 0.35 }}>
@@ -474,6 +692,7 @@ export default function Vouch() {
   const [board,     setBoard]     = useState({ ...EMPTY_BOARD });
   const [lightbox,  setLightbox]  = useState(null);
   const [addModal,  setAddModal]  = useState(null);
+  const [vouchModal, setVouchModal] = useState(false);
 
 
   useEffect(() => {
@@ -497,6 +716,8 @@ export default function Vouch() {
   const isOwn     = !viewing;
   const currBoard = isOwn ? board : { ...EMPTY_BOARD };
   const currName  = isOwn ? user?.displayName : MOCK_FRIENDS.find(f => f.username === viewing)?.displayName || viewing;
+
+  const allVouchCount = (b) => Object.values(b).flat().length;
 
   const addItem = (catKey, item) => setBoard(prev => ({
     ...prev,
@@ -569,7 +790,7 @@ export default function Vouch() {
                 </div>
                 <div className="ornament">— ✦ —</div>
 
-                <VouchSection board={currBoard} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={setAddModal} />
+                <VouchSection board={currBoard} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={() => setVouchModal(true)} />
 
                 {CATEGORIES.map(cat => (
                   <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={currBoard[cat.key] || []} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={setAddModal} />
@@ -583,6 +804,17 @@ export default function Vouch() {
           if (!items.length) return null;
           return <Lightbox items={items} start={lightbox.idx} catLabel={CATEGORIES.find(c => c.key === lightbox.catKey)?.label} onClose={() => setLightbox(null)} />;
         })()}
+
+        {vouchModal && (
+          <UniversalSearchModal
+            used={Math.min(Object.values(board).flat().length, 5)}
+            onClose={() => setVouchModal(false)}
+            onAdd={(catKey, item) => {
+              addItem(catKey, item);
+              setVouchModal(false);
+            }}
+          />
+        )}
 
         {addModal && (
           <AddModal
