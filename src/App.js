@@ -298,21 +298,25 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
         if (catKey === "movies") {
           const res  = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB}&query=${encodeURIComponent(q)}&language=en-US`);
           const data = await res.json();
-          setResults((data.results || []).slice(0, 8).map(r => ({
-            id: r.id, title: r.title,
-            sub: r.release_date ? r.release_date.slice(0, 4) : "",
-            poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null,
-            sourceUrl: `https://www.imdb.com/find?q=${encodeURIComponent(r.title)}`,
-          })));
+          const results = (data.results || []).slice(0, 8);
+          const withImdb = await Promise.all(results.map(async r => {
+            try {
+              const ext = await fetch(`https://api.themoviedb.org/3/movie/${r.id}/external_ids?api_key=${TMDB}`).then(x => x.json());
+              return { id: r.id, title: r.title, sub: r.release_date ? r.release_date.slice(0, 4) : "", poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null, sourceUrl: ext.imdb_id ? `https://www.imdb.com/title/${ext.imdb_id}/` : `https://www.imdb.com/find?q=${encodeURIComponent(r.title)}` };
+            } catch { return { id: r.id, title: r.title, sub: r.release_date ? r.release_date.slice(0, 4) : "", poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null, sourceUrl: `https://www.imdb.com/find?q=${encodeURIComponent(r.title)}` }; }
+          }));
+          setResults(withImdb);
         } else if (catKey === "shows") {
           const res  = await fetch(`https://api.themoviedb.org/3/search/tv?api_key=${TMDB}&query=${encodeURIComponent(q)}&language=en-US`);
           const data = await res.json();
-          setResults((data.results || []).slice(0, 8).map(r => ({
-            id: r.id, title: r.name,
-            sub: r.first_air_date ? r.first_air_date.slice(0, 4) : "",
-            poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null,
-            sourceUrl: `https://www.imdb.com/find?q=${encodeURIComponent(r.name)}`,
-          })));
+          const results = (data.results || []).slice(0, 8);
+          const withImdb = await Promise.all(results.map(async r => {
+            try {
+              const ext = await fetch(`https://api.themoviedb.org/3/tv/${r.id}/external_ids?api_key=${TMDB}`).then(x => x.json());
+              return { id: r.id, title: r.name, sub: r.first_air_date ? r.first_air_date.slice(0, 4) : "", poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null, sourceUrl: ext.imdb_id ? `https://www.imdb.com/title/${ext.imdb_id}/` : `https://www.imdb.com/find?q=${encodeURIComponent(r.name)}` };
+            } catch { return { id: r.id, title: r.name, sub: r.first_air_date ? r.first_air_date.slice(0, 4) : "", poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null, sourceUrl: `https://www.imdb.com/find?q=${encodeURIComponent(r.name)}` }; }
+          }));
+          setResults(withImdb);
         } else if (catKey === "songs" || catKey === "albums" || catKey === "artists") {
           const typeMap = { songs: "track", albums: "album", artists: "artist" };
           const res = await fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=${typeMap[catKey]}`);
@@ -447,18 +451,25 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
 
         const mixed = [];
 
-        (movieRes.results || []).slice(0, 3).forEach(r => mixed.push({
+        const movieResults = (movieRes.results || []).slice(0, 3);
+        const tvResults = (tvRes.results || []).slice(0, 2);
+        const [movieIds, tvIds] = await Promise.all([
+          Promise.all(movieResults.map(r => fetch(`https://api.themoviedb.org/3/movie/${r.id}/external_ids?api_key=${TMDB}`).then(x => x.json()).catch(() => ({})))),
+          Promise.all(tvResults.map(r => fetch(`https://api.themoviedb.org/3/tv/${r.id}/external_ids?api_key=${TMDB}`).then(x => x.json()).catch(() => ({})))),
+        ]);
+
+        movieResults.forEach((r, i) => mixed.push({
           id: r.id, title: r.title, catKey: "movies", catLabel: "Film",
           sub: r.release_date ? r.release_date.slice(0, 4) : "",
           poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null,
-          sourceUrl: `https://www.imdb.com/find?q=${encodeURIComponent(r.title)}`,
+          sourceUrl: movieIds[i]?.imdb_id ? `https://www.imdb.com/title/${movieIds[i].imdb_id}/` : `https://www.imdb.com/find?q=${encodeURIComponent(r.title)}`,
         }));
 
-        (tvRes.results || []).slice(0, 2).forEach(r => mixed.push({
+        tvResults.forEach((r, i) => mixed.push({
           id: r.id, title: r.name, catKey: "shows", catLabel: "Television",
           sub: r.first_air_date ? r.first_air_date.slice(0, 4) : "",
           poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null,
-          sourceUrl: `https://www.imdb.com/find?q=${encodeURIComponent(r.name)}`,
+          sourceUrl: tvIds[i]?.imdb_id ? `https://www.imdb.com/title/${tvIds[i].imdb_id}/` : `https://www.imdb.com/find?q=${encodeURIComponent(r.name)}`,
         }));
 
         (trackRes.tracks?.items || []).slice(0, 3).forEach(r => mixed.push({
