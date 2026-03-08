@@ -408,8 +408,21 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
   const [picked, setPicked]   = useState(null);
   const [note, setNote]       = useState("");
   const [busy, setBusy]       = useState(false);
+  const [filter, setFilter]   = useState("all");
   const timer                 = useRef(null);
   const remaining             = 5 - used;
+
+  const FILTERS = [
+    { key: "all",     label: "All"       },
+    { key: "movies",  label: "Film"      },
+    { key: "shows",   label: "TV"        },
+    { key: "songs",   label: "Songs"     },
+    { key: "albums",  label: "Albums"    },
+    { key: "artists", label: "Artists"   },
+    { key: "books",   label: "Books"     },
+  ];
+
+  const visibleResults = filter === "all" ? results : results.filter(r => r.catKey === filter);
 
   useEffect(() => {
     if (!q.trim()) { setResults([]); return; }
@@ -506,10 +519,21 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
                   <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9.5px", letterSpacing: "0.16em", color: T.inkFaint, marginBottom: 12 }}>
                     {remaining} slot{remaining !== 1 ? "s" : ""} remaining
                   </div>
-                  <input className="search-input" placeholder="Search films, shows, songs, albums, artists…" value={q} onChange={e => setQ(e.target.value)} autoFocus />
+                  <input className="search-input" placeholder="Search films, shows, songs, albums, artists, books…" value={q} onChange={e => setQ(e.target.value)} autoFocus />
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
+                    {FILTERS.map(f => (
+                      <button key={f.key} onClick={() => setFilter(f.key)} style={{
+                        fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em",
+                        padding: "4px 10px", border: `1px solid ${filter === f.key ? T.ink : T.paperDark}`,
+                        background: filter === f.key ? T.ink : "transparent",
+                        color: filter === f.key ? T.bg : T.inkMid,
+                        cursor: "pointer", transition: "all 0.12s",
+                      }}>{f.label}</button>
+                    ))}
+                  </div>
                   {busy && <div className="loading">Searching…</div>}
-                  {!busy && q.trim() && results.length === 0 && <div className="no-results">No results found.</div>}
-                  {results.map((r, i) => (
+                  {!busy && q.trim() && visibleResults.length === 0 && <div className="no-results">No results found.</div>}
+                  {visibleResults.map((r, i) => (
                     <div key={r.id + r.catKey + i} className="result-item" onClick={() => setPicked(r)}>
                       {r.poster ? <img src={r.poster} data-fallback={r.posterFallback} alt={r.title} className="result-img" onError={e => { if (e.target.dataset.fallback && e.target.src !== e.target.dataset.fallback) { e.target.src = e.target.dataset.fallback; } else { e.target.style.background = T.paperDark; e.target.src = ''; } }} /> : <div className="result-img" />}
                       <div style={{ flex: 1 }}>
