@@ -614,8 +614,6 @@ export default function Vouch() {
   const currBoard = isOwn ? board : { ...EMPTY_BOARD };
   const currName  = isOwn ? user?.displayName : MOCK_FRIENDS.find(f => f.username === viewing)?.displayName || viewing;
 
-  const allVouchCount = (b) => Object.values(b).flat().length;
-
   const addItem = (catKey, item) => setBoard(prev => ({
     ...prev,
     [catKey]: [...(prev[catKey] || []), item].slice(0, 5)
