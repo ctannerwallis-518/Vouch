@@ -3,51 +3,17 @@ import { supabase } from "./supabase";
 
 const TMDB = "24f3b03466f2f7db2d54a0f53607da4f";
 
-const MOCK_ENDORSEMENTS = {
-  movies: [],
-  shows: [],
-  books: [],
-  songs: [],
-  albums: [],
-  artists: [],
-};
-
 const CATEGORIES = [
   { key: "movies",  label: "Film"       },
-  { key: "shows",   label: "Television" },
-  { key: "books",   label: "Books"      },
-  { key: "songs",   label: "Songs"      },
   { key: "albums",  label: "Albums"     },
   { key: "artists", label: "Artists"    },
+  { key: "songs",   label: "Songs"      },
+  { key: "books",   label: "Books"      },
+  { key: "shows",   label: "Television" },
 ];
 
-const MOCK_FRIENDS = [
-  { username: "sarah_m",  displayName: "Sarah M."  },
-  { username: "jake_r",   displayName: "Jake R."   },
-  { username: "priya_k",  displayName: "Priya K."  },
-];
-
-const MOCK_SEARCH = {
-  books: [
-    { id: 301, title: "Intermezzo",  author: "Sally Rooney",   poster: "https://covers.openlibrary.org/b/id/14635083-L.jpg", sub: "Sally Rooney"   },
-    { id: 302, title: "All Fours",   author: "Miranda July",   poster: "https://covers.openlibrary.org/b/id/14479869-L.jpg", sub: "Miranda July"   },
-    { id: 303, title: "The Women",   author: "Kristin Hannah", poster: "https://covers.openlibrary.org/b/id/14635083-L.jpg", sub: "Kristin Hannah" },
-  ],
-  songs: [
-    { id: 401, title: "Espresso",           artist: "Sabrina Carpenter", poster: "https://i.scdn.co/image/ab67616d0000b2737b17f842a107dabb9f7f7890", sub: "Sabrina Carpenter" },
-    { id: 402, title: "Good Luck, Babe!",   artist: "Chappell Roan",     poster: "https://i.scdn.co/image/ab6761610000e5eb990d4b09e3ff2aacc96e5bb6", sub: "Chappell Roan"    },
-    { id: 403, title: "Birds of a Feather", artist: "Billie Eilish",     poster: "https://i.scdn.co/image/ab67616d0000b273c6af5ffa661a365a78bb9e51", sub: "Billie Eilish"    },
-  ],
-  albums: [
-    { id: 501, title: "Hit Me Hard and Soft", artist: "Billie Eilish",     poster: "https://i.scdn.co/image/ab67616d0000b273c6af5ffa661a365a78bb9e51", sub: "Billie Eilish"     },
-    { id: 502, title: "Short n' Sweet",       artist: "Sabrina Carpenter", poster: "https://i.scdn.co/image/ab67616d0000b2737b17f842a107dabb9f7f7890", sub: "Sabrina Carpenter" },
-    { id: 503, title: "GNX",                  artist: "Kendrick Lamar",    poster: "https://i.scdn.co/image/ab67616d0000b273a83e3cd15f9c2f22e4f11a80", sub: "Kendrick Lamar"    },
-  ],
-  artists: [
-    { id: 601, title: "Kendrick Lamar",    artist: "Kendrick Lamar",    poster: "https://i.scdn.co/image/ab6761610000e5eb990d4b09e3ff2aacc96e5bb6", sub: "Hip-Hop" },
-    { id: 602, title: "Chappell Roan",     artist: "Chappell Roan",     poster: "https://i.scdn.co/image/ab6761610000e5eb990d4b09e3ff2aacc96e5bb6", sub: "Pop"     },
-    { id: 603, title: "Sabrina Carpenter", artist: "Sabrina Carpenter", poster: "https://i.scdn.co/image/ab67616d0000b2737b17f842a107dabb9f7f7890", sub: "Pop"     },
-  ],
+const EMPTY_BOARD = {
+  movies: [], albums: [], artists: [], songs: [], books: [], shows: [],
 };
 
 const T = {
@@ -75,27 +41,50 @@ const Styles = () => (
 
     .app { min-height: 100vh; background: ${T.bg}; }
 
+    /* MASTHEAD */
     .masthead { background: ${T.bg}; border-bottom: 3px double ${T.ink}; user-select: none; }
-
     .masthead-meta {
       display: flex; justify-content: space-between; align-items: center;
       padding: 7px 28px; border-bottom: 1px solid ${T.ink};
-      font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.22em;
+      font-family: 'Spectral SC', serif; font-size: 9px; letter-spacing: 0.18em;
       color: ${T.inkMid}; text-transform: uppercase;
     }
     .masthead-meta .clickable { cursor: pointer; }
     .masthead-meta .clickable:hover { color: ${T.ink}; }
+    .masthead-meta-stars { font-size: 7px; letter-spacing: 0.3em; opacity: 0.6; }
 
     .masthead-nameplate { text-align: center; padding: 18px 28px 6px; cursor: pointer; }
     .nameplate-word {
-      font-family: 'Playfair Display', serif; font-weight: 900;
-      font-size: clamp(60px, 12vw, 110px); letter-spacing: 0.04em;
-      line-height: 0.92; color: ${T.ink}; text-transform: uppercase;
+      font-family: 'Times New Roman', Times, serif; font-weight: 900;
+      font-size: clamp(58px, 11vw, 104px); letter-spacing: 0.02em;
+      line-height: 0.92; color: ${T.ink};
     }
 
     .masthead-rule-ornament { text-align: center; font-family: 'Spectral', serif; font-size: 11px; letter-spacing: 0.6em; color: ${T.inkLight}; padding: 4px 0 2px; }
-    .masthead-tagline { text-align: center; font-family: 'Spectral', serif; font-style: italic; font-weight: 300; font-size: 12.5px; letter-spacing: 0.12em; color: ${T.inkLight}; padding-bottom: 14px; }
+    .masthead-tagline { text-align: center; font-family: 'Spectral', serif; font-style: italic; font-weight: 300; font-size: 12.5px; letter-spacing: 0.12em; color: ${T.inkLight}; padding-bottom: 12px; }
 
+    /* MASTER SEARCH */
+    .master-search-wrap { padding: 0 28px 0; border-top: 1px solid ${T.ink}; }
+    .master-search-inner { max-width: 1380px; margin: 0 auto; display: flex; align-items: center; }
+    .master-search-input {
+      flex: 1; font-family: 'Spectral', serif; font-size: 14px; padding: 11px 14px;
+      border: none; background: transparent; color: ${T.ink}; outline: none;
+    }
+    .master-search-input::placeholder { color: ${T.inkFaint}; font-style: italic; }
+    .master-search-select {
+      font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.15em;
+      padding: 11px 14px; border: none; border-left: 1px solid ${T.paperDark};
+      background: transparent; color: ${T.inkMid}; cursor: pointer; outline: none;
+      appearance: none; -webkit-appearance: none;
+    }
+    .master-search-btn {
+      font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.2em;
+      padding: 11px 18px; border: none; border-left: 1px solid ${T.paperDark};
+      background: transparent; color: ${T.inkMid}; cursor: pointer;
+    }
+    .master-search-btn:hover { background: ${T.ink}; color: ${T.bg}; }
+
+    /* NAV */
     .nav { display: flex; overflow-x: auto; scrollbar-width: none; border-top: 1px solid ${T.ink}; }
     .nav::-webkit-scrollbar { display: none; }
     .nav-btn {
@@ -107,6 +96,7 @@ const Styles = () => (
     .nav-btn:hover  { background: ${T.paperDark}; color: ${T.ink}; }
     .nav-btn.active { background: ${T.ink}; color: ${T.bg}; }
 
+    /* PAGE */
     .page { max-width: 1380px; margin: 0 auto; padding: 0 28px 80px; }
 
     .board-header { display: flex; justify-content: space-between; align-items: flex-end; padding: 30px 0 18px; border-bottom: 1px solid ${T.ink}; margin-bottom: 32px; }
@@ -121,36 +111,70 @@ const Styles = () => (
 
     .ornament { text-align: center; font-family: 'Spectral', serif; font-size: 13px; letter-spacing: 0.5em; color: ${T.inkFaint}; margin: 4px 0 28px; }
 
+    /* VOUCH SECTION (top 5 across all categories) */
+    .vouch-section {
+      margin-bottom: 52px;
+      border: 2px solid ${T.ink};
+      background: rgba(17,16,8,0.04);
+      padding: 24px 24px 28px;
+    }
+    .vouch-section-header {
+      display: flex; align-items: baseline; gap: 14px;
+      border-bottom: 2px solid ${T.ink}; padding-bottom: 10px; margin-bottom: 22px;
+    }
+    .vouch-section-label { font-family: 'Spectral SC', serif; font-weight: 700; font-size: 20px; letter-spacing: 0.08em; }
+    .vouch-section-sub   { font-family: 'Spectral', serif; font-style: italic; font-size: 11px; color: ${T.inkLight}; }
+    .vouch-section-add   { margin-left: auto; font-family: 'Spectral SC', serif; font-size: 9.5px; font-weight: 600; letter-spacing: 0.2em; padding: 4px 14px; border: 1px solid ${T.ink}; background: transparent; color: ${T.inkMid}; cursor: pointer; transition: all 0.14s; }
+    .vouch-section-add:hover { background: ${T.ink}; color: ${T.bg}; }
+
+    /* LARGE CARDS (Vouch section) */
+    .cards-row-large { display: flex; gap: 20px; flex-wrap: wrap; }
+    .card-large { width: 240px; flex-shrink: 0; cursor: pointer; }
+    .card-large:hover .card-poster-large { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(17,16,8,0.2); }
+    .card-poster-large { width: 240px; height: 330px; object-fit: cover; display: block; border: 1px solid ${T.paperDark}; transition: transform 0.2s, box-shadow 0.2s; }
+    .card-poster-placeholder-large { width: 240px; height: 330px; background: ${T.paperDark}; border: 1px solid ${T.paperDark}; display: flex; align-items: center; justify-content: center; font-family: 'Spectral', serif; font-style: italic; font-size: 12px; color: ${T.inkLight}; text-align: center; padding: 14px; }
+    .card-cat-badge { display: inline-block; font-family: 'Spectral SC', serif; font-size: 8.5px; letter-spacing: 0.2em; color: ${T.inkFaint}; margin-top: 8px; text-transform: uppercase; }
+    .card-title-large   { font-family: 'Spectral', serif; font-weight: 600; font-size: 14px; line-height: 1.35; margin-top: 3px; }
+    .card-sub-large     { font-family: 'Spectral SC', serif; font-size: 10px; letter-spacing: 0.06em; color: ${T.inkLight}; margin-top: 2px; }
+    .card-comment-large { font-family: 'Spectral', serif; font-style: italic; font-size: 11px; line-height: 1.5; color: ${T.inkMid}; margin-top: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+    .slot-empty-large { width: 240px; height: 330px; border: 1px dashed ${T.ink}; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.14s, background 0.14s; flex-shrink: 0; }
+    .slot-empty-large:hover { background: rgba(17,16,8,0.04); }
+    .slot-empty-inner { text-align: center; font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.18em; color: ${T.inkFaint}; }
+    .slot-empty-plus  { display: block; font-size: 22px; margin-bottom: 6px; color: ${T.paperDark}; }
+
+    /* MENTION SECTIONS (per-category, smaller) */
     .cat-section { margin-bottom: 44px; }
     .cat-header { display: flex; align-items: baseline; gap: 14px; border-bottom: 2px solid ${T.ink}; padding-bottom: 10px; margin-bottom: 18px; }
-    .cat-label { font-family: 'Spectral SC', serif; font-weight: 700; font-size: 18px; letter-spacing: 0.08em; }
+    .cat-label { font-family: 'Spectral SC', serif; font-weight: 700; font-size: 17px; letter-spacing: 0.08em; }
+    .cat-sublabel { font-family: 'Spectral', serif; font-style: italic; font-size: 11px; color: ${T.inkLight}; }
     .cat-count { font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.18em; color: ${T.inkFaint}; }
     .cat-add { margin-left: auto; font-family: 'Spectral SC', serif; font-size: 9.5px; font-weight: 600; letter-spacing: 0.2em; padding: 4px 14px; border: 1px solid ${T.inkLight}; background: transparent; color: ${T.inkMid}; cursor: pointer; transition: all 0.14s; }
     .cat-add:hover { border-color: ${T.ink}; color: ${T.ink}; }
 
-    .cards-row { display: flex; gap: 16px; flex-wrap: wrap; }
-    .card { width: 156px; flex-shrink: 0; cursor: pointer; }
-    .card:hover .card-poster { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(17,16,8,0.18); }
-    .card-poster { width: 156px; height: 214px; object-fit: cover; display: block; border: 1px solid ${T.paperDark}; transition: transform 0.2s, box-shadow 0.2s; }
-    .card-poster-placeholder { width: 156px; height: 214px; background: ${T.paperDark}; border: 1px solid ${T.paperDark}; display: flex; align-items: center; justify-content: center; font-family: 'Spectral', serif; font-style: italic; font-size: 11px; color: ${T.inkLight}; text-align: center; padding: 12px; }
-    .card-title   { font-family: 'Spectral', serif; font-weight: 600; font-size: 13px; line-height: 1.35; margin-top: 8px; }
-    .card-sub     { font-family: 'Spectral SC', serif; font-size: 10px; letter-spacing: 0.06em; color: ${T.inkLight}; margin-top: 2px; }
-    .card-comment { font-family: 'Spectral', serif; font-style: italic; font-size: 11px; line-height: 1.5; color: ${T.inkMid}; margin-top: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    /* SMALLER CARDS (Mentions) */
+    .cards-row { display: flex; gap: 14px; flex-wrap: wrap; }
+    .card { width: 150px; flex-shrink: 0; cursor: pointer; }
+    .card:hover .card-poster { transform: translateY(-3px); box-shadow: 0 7px 20px rgba(17,16,8,0.16); }
+    .card-poster { width: 150px; height: 206px; object-fit: cover; display: block; border: 1px solid ${T.paperDark}; transition: transform 0.2s, box-shadow 0.2s; }
+    .card-poster-placeholder { width: 150px; height: 206px; background: ${T.paperDark}; border: 1px solid ${T.paperDark}; display: flex; align-items: center; justify-content: center; font-family: 'Spectral', serif; font-style: italic; font-size: 11px; color: ${T.inkLight}; text-align: center; padding: 10px; }
+    .card-title   { font-family: 'Spectral', serif; font-weight: 600; font-size: 12.5px; line-height: 1.35; margin-top: 7px; }
+    .card-sub     { font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.06em; color: ${T.inkLight}; margin-top: 2px; }
+    .card-comment { font-family: 'Spectral', serif; font-style: italic; font-size: 10.5px; line-height: 1.5; color: ${T.inkMid}; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-    .slot-empty { width: 156px; height: 214px; border: 1px dashed ${T.paperDark}; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.14s, background 0.14s; flex-shrink: 0; }
-    .slot-empty:hover { border-color: ${T.ink}; background: rgba(17,16,8,0.03); }
-    .slot-empty-inner { text-align: center; font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.18em; color: ${T.inkFaint}; }
-    .slot-empty-plus  { display: block; font-size: 20px; margin-bottom: 6px; color: ${T.paperDark}; }
+    .slot-empty-sm { width: 150px; height: 206px; border: 1px dashed ${T.paperDark}; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.14s, background 0.14s; flex-shrink: 0; }
+    .slot-empty-sm:hover { border-color: ${T.ink}; background: rgba(17,16,8,0.03); }
 
+    /* LIGHTBOX */
     .lb-overlay { position: fixed; inset: 0; background: rgba(17,16,8,0.96); z-index: 1000; display: flex; align-items: center; justify-content: center; }
     .lb-close { position: fixed; top: 22px; right: 26px; background: transparent; border: none; color: ${T.bg}; font-family: 'Spectral', serif; font-size: 30px; line-height: 1; cursor: pointer; opacity: 0.6; transition: opacity 0.14s; }
     .lb-close:hover { opacity: 1; }
     .lb-body { text-align: center; color: ${T.bg}; padding: 32px 24px; max-width: 480px; width: 100%; }
     .lb-category { font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.3em; color: rgba(200,194,180,0.45); margin-bottom: 16px; }
-    .lb-poster   { width: 220px; height: 310px; object-fit: cover; display: block; margin: 0 auto 22px; box-shadow: 0 24px 64px rgba(0,0,0,0.7); }
-    .lb-title    { font-family: 'Spectral', serif; font-weight: 700; font-size: 26px; line-height: 1.2; margin-bottom: 5px; }
+    .lb-poster   { width: 200px; height: 280px; object-fit: cover; display: block; margin: 0 auto 22px; box-shadow: 0 24px 64px rgba(0,0,0,0.7); }
+    .lb-title    { font-family: 'Spectral', serif; font-weight: 700; font-size: 24px; line-height: 1.2; margin-bottom: 5px; }
     .lb-sub      { font-family: 'Spectral SC', serif; font-size: 11px; letter-spacing: 0.1em; color: rgba(200,194,180,0.55); margin-bottom: 20px; }
-    .lb-comment  { font-family: 'Spectral', serif; font-style: italic; font-weight: 300; font-size: 16px; line-height: 1.75; color: rgba(200,194,180,0.88); border-left: 2px solid rgba(200,194,180,0.2); text-align: left; padding: 0 0 0 18px; margin: 0 auto 28px; max-width: 360px; }
+    .lb-comment  { font-family: 'Spectral', serif; font-style: italic; font-weight: 300; font-size: 15px; line-height: 1.75; color: rgba(200,194,180,0.88); border-left: 2px solid rgba(200,194,180,0.2); text-align: left; padding: 0 0 0 18px; margin: 0 auto 28px; max-width: 360px; }
     .lb-nav      { display: flex; align-items: center; justify-content: center; gap: 20px; }
     .lb-nav-btn  { font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.2em; padding: 7px 18px; border: 1px solid rgba(200,194,180,0.25); background: transparent; color: ${T.bg}; cursor: pointer; transition: background 0.14s; }
     .lb-nav-btn:hover:not(:disabled) { background: rgba(200,194,180,0.08); }
@@ -159,6 +183,7 @@ const Styles = () => (
     .lb-dot    { width: 5px; height: 5px; border-radius: 50%; background: rgba(200,194,180,0.25); cursor: pointer; transition: background 0.14s; }
     .lb-dot.on { background: ${T.bg}; }
 
+    /* MODAL */
     .modal-overlay { position: fixed; inset: 0; background: rgba(17,16,8,0.82); z-index: 900; display: flex; align-items: flex-start; justify-content: center; padding-top: 72px; }
     .modal       { background: ${T.bg}; width: 100%; max-width: 540px; max-height: 82vh; overflow-y: auto; border: 1px solid ${T.ink}; }
     .modal-head  { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; border-bottom: 2px solid ${T.ink}; }
@@ -183,38 +208,36 @@ const Styles = () => (
     .comment-area::placeholder { color: ${T.inkFaint}; }
     .char-count { font-family: 'Spectral SC', serif; font-size: 9.5px; color: ${T.inkFaint}; text-align: right; margin: 4px 0 12px; }
 
+    /* FRIENDS */
     .friend-row { display: flex; align-items: center; justify-content: space-between; padding: 13px 0; border-bottom: 1px solid ${T.paperDark}; cursor: pointer; }
     .friend-row:hover .friend-name { text-decoration: underline; }
     .friend-name   { font-family: 'Spectral', serif; font-weight: 600; font-size: 15px; }
     .friend-handle { font-family: 'Spectral SC', serif; font-size: 10px; letter-spacing: 0.1em; color: ${T.inkLight}; margin-top: 2px; }
     .friend-arrow  { font-size: 13px; color: ${T.inkFaint}; }
 
+    /* AUTH */
     .auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: ${T.bg}; padding: 24px; }
     .auth-box  { width: 100%; max-width: 400px; }
     .auth-plate { text-align: center; border-top: 3px double ${T.ink}; border-bottom: 3px double ${T.ink}; padding: 14px 0 10px; margin-bottom: 10px; }
-    .auth-plate-name { font-family: 'Playfair Display', serif; font-weight: 900; font-size: 72px; letter-spacing: 0.04em; line-height: 0.92; text-transform: uppercase; }
+    .auth-plate-name { font-family: 'Times New Roman', Times, serif; font-weight: 900; font-size: 72px; letter-spacing: 0.02em; line-height: 0.92; }
     .auth-tagline { font-family: 'Spectral', serif; font-style: italic; font-weight: 300; font-size: 12px; letter-spacing: 0.1em; color: ${T.inkLight}; text-align: center; margin-bottom: 32px; }
-    .auth-form  { display: flex; flex-direction: column; gap: 10px; }
-    .auth-input { font-family: 'Spectral', serif; font-size: 14px; padding: 12px 15px; border: 1px solid ${T.ink}; background: transparent; color: ${T.ink}; outline: none; width: 100%; }
-    .auth-input::placeholder { color: ${T.inkFaint}; }
-    .auth-input:focus { box-shadow: 0 0 0 2px rgba(17,16,8,0.1); }
-    .auth-submit { font-family: 'Spectral SC', serif; font-size: 10.5px; font-weight: 600; letter-spacing: 0.25em; padding: 13px; background: ${T.ink}; color: ${T.bg}; border: none; cursor: pointer; transition: background 0.14s; margin-top: 4px; }
-    .auth-submit:hover { background: ${T.inkMid}; }
-    .auth-google { font-family: 'Spectral SC', serif; font-size: 10.5px; font-weight: 600; letter-spacing: 0.25em; padding: 13px; background: transparent; color: ${T.ink}; border: 1px solid ${T.ink}; cursor: pointer; transition: all 0.14s; }
+    .auth-google { font-family: 'Spectral SC', serif; font-size: 10.5px; font-weight: 600; letter-spacing: 0.25em; padding: 13px; width: 100%; background: transparent; color: ${T.ink}; border: 1px solid ${T.ink}; cursor: pointer; transition: all 0.14s; }
     .auth-google:hover { background: ${T.ink}; color: ${T.bg}; }
-    .auth-or { text-align: center; font-family: 'Spectral SC', serif; font-size: 10px; letter-spacing: 0.2em; color: ${T.inkFaint}; position: relative; }
-    .auth-or::before, .auth-or::after { content: ''; position: absolute; top: 50%; width: 42%; height: 1px; background: ${T.paperDark}; }
-    .auth-or::before { left: 0; } .auth-or::after { right: 0; }
-    .auth-switch { text-align: center; font-family: 'Spectral', serif; font-size: 12px; color: ${T.inkLight}; margin-top: 6px; }
-    .auth-switch span { cursor: pointer; text-decoration: underline; color: ${T.inkMid}; }
 
     .loading    { text-align: center; padding: 18px 0; font-family: 'Spectral SC', serif; font-size: 10px; letter-spacing: 0.2em; color: ${T.inkFaint}; }
     .no-results { text-align: center; padding: 18px 0; font-family: 'Spectral', serif; font-style: italic; font-size: 13px; color: ${T.inkLight}; }
 
-    @media (max-width: 580px) {
-      .card, .slot-empty { width: 130px; }
-      .card-poster, .card-poster-placeholder { width: 130px; height: 178px; }
-      .board-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    @media (max-width: 640px) {
+      .card-large, .slot-empty-large { width: calc(50vw - 30px); }
+      .card-poster-large, .card-poster-placeholder-large { width: 100%; height: calc((50vw - 30px) * 1.375); }
+      .cards-row-large { gap: 12px; }
+      .card, .slot-empty-sm { width: calc(33vw - 18px); }
+      .card-poster, .card-poster-placeholder { width: 100%; height: calc((33vw - 18px) * 1.375); }
+      .cards-row { gap: 10px; }
+      .master-search-wrap { padding: 0 16px 0; }
+      .page { padding: 0 16px 60px; }
+      .masthead-meta { padding: 7px 16px; }
+      .vouch-section { padding: 16px 14px 20px; }
     }
   `}</style>
 );
@@ -229,11 +252,9 @@ function Auth() {
   return (
     <div className="auth-wrap">
       <div className="auth-box">
-        <div className="auth-plate"><span className="auth-plate-name">Vouch</span></div>
-        <div className="auth-tagline">Five endorsements. Every month. Your word.</div>
-        <div className="auth-form">
-          <button className="auth-google" onClick={signInWithGoogle}>Continue with Google</button>
-        </div>
+        <div className="auth-plate"><span className="auth-plate-name">Vouch.</span></div>
+        <div className="auth-tagline">Love it? Vouch for it.</div>
+        <button className="auth-google" onClick={signInWithGoogle}>Continue with Google</button>
       </div>
     </div>
   );
@@ -325,13 +346,7 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
             })));
           }
         } else {
-          const pool  = MOCK_SEARCH[catKey] || [];
-          const lower = q.toLowerCase();
-          setResults(pool.filter(r =>
-            r.title.toLowerCase().includes(lower) ||
-            (r.artist || "").toLowerCase().includes(lower) ||
-            (r.author || "").toLowerCase().includes(lower)
-          ));
+          setResults([]);
         }
       } catch (e) { console.error(e); }
       setBusy(false);
@@ -349,25 +364,25 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
         </div>
         <div className="modal-body">
           {remaining <= 0
-            ? <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkLight, padding: "12px 0" }}>You've used all 5 {catLabel} endorsements this month.</div>
+            ? <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkLight, padding: "12px 0" }}>You've used all 5 {catLabel} vouches.</div>
             : picked
               ? <>
                   <div className="selected-preview">
                     <img src={picked.poster} alt={picked.title} className="result-img" onError={e => e.target.style.background = T.paperDark} />
                     <div style={{ flex: 1 }}>
                       <div className="result-title">{picked.title}</div>
-                      <div className="result-sub">{picked.sub || picked.artist || picked.author || ""}</div>
+                      <div className="result-sub">{picked.sub || ""}</div>
                     </div>
                     <button onClick={() => setPicked(null)} style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: 18, color: T.inkFaint }}>×</button>
                   </div>
-                  <span className="comment-label">Endorsement note <span style={{ fontStyle: "italic", fontFamily: "'Spectral',serif", textTransform: "none", letterSpacing: 0, fontWeight: 300 }}>(optional)</span></span>
-                  <textarea className="comment-area" placeholder="Why are you vouching for this?" value={note} onChange={e => setNote(e.target.value)} maxLength={200} />
+                  <span className="comment-label">Why are you vouching for this? <span style={{ fontStyle: "italic", fontFamily: "'Spectral',serif", textTransform: "none", letterSpacing: 0, fontWeight: 300 }}>(optional)</span></span>
+                  <textarea className="comment-area" placeholder="Say something about it…" value={note} onChange={e => setNote(e.target.value)} maxLength={200} />
                   <div className="char-count">{note.length} / 200</div>
                   <button className="btn btn-solid" style={{ width: "100%" }} onClick={confirm}>Vouch for This</button>
                 </>
               : <>
                   <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9.5px", letterSpacing: "0.16em", color: T.inkFaint, marginBottom: 12 }}>
-                    {remaining} slot{remaining !== 1 ? "s" : ""} remaining this month
+                    {remaining} slot{remaining !== 1 ? "s" : ""} remaining
                   </div>
                   <input className="search-input" placeholder={`Search ${catLabel.toLowerCase()}…`} value={q} onChange={e => setQ(e.target.value)} autoFocus />
                   {busy && <div className="loading">Searching…</div>}
@@ -377,7 +392,7 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
                       {r.poster ? <img src={r.poster} alt={r.title} className="result-img" onError={e => e.target.style.background = T.paperDark} /> : <div className="result-img" />}
                       <div>
                         <div className="result-title">{r.title}</div>
-                        <div className="result-sub">{r.sub || r.artist || r.author || ""}</div>
+                        <div className="result-sub">{r.sub || ""}</div>
                       </div>
                     </div>
                   ))}
@@ -389,14 +404,57 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
   );
 }
 
+function VouchSection({ board, isOwn, onCard, onAdd }) {
+  const allItems = [];
+  CATEGORIES.forEach(cat => {
+    (board[cat.key] || []).forEach(item => {
+      allItems.push({ ...item, _cat: cat.key, _catLabel: cat.label });
+    });
+  });
+  const top = allItems.slice(0, 5);
+  const slots = Array(5).fill(null).map((_, i) => top[i] || null);
+
+  return (
+    <div className="vouch-section">
+      <div className="vouch-section-header">
+        <div className="vouch-section-label">Vouch</div>
+        <div className="vouch-section-sub">The five that define this moment</div>
+        {isOwn && <button className="vouch-section-add" onClick={() => onAdd("movies")}>+ Add</button>}
+      </div>
+      <div className="cards-row-large">
+        {slots.map((item, idx) =>
+          item
+            ? <div key={item.id + item._cat} className="card-large" onClick={() => onCard(item._cat, (board[item._cat] || []).indexOf(item))}>
+                {item.poster
+                  ? <img src={item.poster} alt={item.title} className="card-poster-large" onError={e => { e.target.style.display = "none"; }} />
+                  : <div className="card-poster-placeholder-large">{item.title}</div>}
+                <div className="card-cat-badge">{item._catLabel}</div>
+                <div className="card-title-large">{item.title}</div>
+                <div className="card-sub-large">{item.artist || item.author || item.year || ""}</div>
+                {item.comment && <div className="card-comment-large">"{item.comment}"</div>}
+              </div>
+            : isOwn
+              ? <div key={`ve${idx}`} className="slot-empty-large" onClick={() => onAdd("movies")}>
+                  <div className="slot-empty-inner"><span className="slot-empty-plus">+</span>Vouch</div>
+                </div>
+              : <div key={`ve${idx}`} className="slot-empty-large" style={{ cursor: "default", opacity: 0.35 }}>
+                  <div className="slot-empty-inner"><span className="slot-empty-plus">—</span></div>
+                </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function CatSection({ catKey, label, items, isOwn, onCard, onAdd }) {
   const slots = Array(5).fill(null).map((_, i) => items[i] || null);
   return (
     <div className="cat-section">
       <div className="cat-header">
         <div className="cat-label">{label}</div>
+        <div className="cat-sublabel">Mentions</div>
         <div className="cat-count">{items.length} of 5</div>
-        {isOwn && <button className="cat-add" onClick={() => onAdd(catKey)}>+ Endorse</button>}
+        {isOwn && <button className="cat-add" onClick={() => onAdd(catKey)}>+ Vouch</button>}
       </div>
       <div className="cards-row">
         {slots.map((item, idx) =>
@@ -411,21 +469,33 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd }) {
                 {item.comment && <div className="card-comment">"{item.comment}"</div>}
               </div>
             : isOwn
-              ? <div key={`e${idx}`} className="slot-empty" onClick={() => onAdd(catKey)}><div className="slot-empty-inner"><span className="slot-empty-plus">+</span>Endorse</div></div>
-              : <div key={`e${idx}`} className="slot-empty" style={{ cursor: "default", opacity: 0.4 }}><div className="slot-empty-inner"><span className="slot-empty-plus">—</span>Empty</div></div>
+              ? <div key={`e${idx}`} className="slot-empty-sm" onClick={() => onAdd(catKey)}>
+                  <div className="slot-empty-inner"><span className="slot-empty-plus">+</span>Vouch</div>
+                </div>
+              : <div key={`e${idx}`} className="slot-empty-sm" style={{ cursor: "default", opacity: 0.4 }}>
+                  <div className="slot-empty-inner"><span className="slot-empty-plus">—</span></div>
+                </div>
         )}
       </div>
     </div>
   );
 }
 
+const MOCK_FRIENDS = [
+  { username: "sarah_m",  displayName: "Sarah M."  },
+  { username: "jake_r",   displayName: "Jake R."   },
+  { username: "priya_k",  displayName: "Priya K."  },
+];
+
 export default function Vouch() {
-  const [user,     setUser]     = useState(null);
-  const [tab,      setTab]      = useState("board");
-  const [viewing,  setViewing]  = useState(null);
-  const [board,    setBoard]    = useState(MOCK_ENDORSEMENTS);
-  const [lightbox, setLightbox] = useState(null);
-  const [addModal, setAddModal] = useState(null);
+  const [user,      setUser]      = useState(null);
+  const [tab,       setTab]       = useState("board");
+  const [viewing,   setViewing]   = useState(null);
+  const [board,     setBoard]     = useState({ ...EMPTY_BOARD });
+  const [lightbox,  setLightbox]  = useState(null);
+  const [addModal,  setAddModal]  = useState(null);
+  const [masterQ,   setMasterQ]   = useState("");
+  const [masterCat, setMasterCat] = useState("movies");
 
   useEffect(() => {
     const setUserFromSession = (session) => {
@@ -438,25 +508,26 @@ export default function Vouch() {
         setUser(null);
       }
     };
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUserFromSession(session);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUserFromSession(session);
-    });
-
+    supabase.auth.getSession().then(({ data: { session } }) => setUserFromSession(session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setUserFromSession(session));
     return () => subscription.unsubscribe();
   }, []);
 
   const signOut = async () => { await supabase.auth.signOut(); setUser(null); };
 
   const isOwn     = !viewing;
-  const currBoard = isOwn ? board : MOCK_ENDORSEMENTS;
+  const currBoard = isOwn ? board : { ...EMPTY_BOARD };
   const currName  = isOwn ? user?.displayName : MOCK_FRIENDS.find(f => f.username === viewing)?.displayName || viewing;
-  const addItem   = (catKey, item) => setBoard(prev => ({ ...prev, [catKey]: [...(prev[catKey] || []), item].slice(0, 5) }));
-  const total     = Object.values(board).flat().length;
+
+  const addItem = (catKey, item) => setBoard(prev => ({
+    ...prev,
+    [catKey]: [...(prev[catKey] || []), item].slice(0, 5)
+  }));
+
+  const handleMasterSearch = (e) => {
+    e.preventDefault();
+    if (masterQ.trim()) setAddModal(masterCat);
+  };
 
   if (!user) return <><Styles /><Auth /></>;
 
@@ -467,18 +538,42 @@ export default function Vouch() {
         <header className="masthead">
           <div className="masthead-meta">
             <span>Vol. I &nbsp;·&nbsp; {new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}</span>
-            <span>✦ &nbsp; ✦ &nbsp; ✦</span>
-            <span className="clickable" onClick={() => { setTab("board"); setViewing(null); }}>@{user.username}</span>
-            <span className="clickable" onClick={signOut} style={{ marginLeft: 16 }}>Sign out</span>
+            <span className="masthead-meta-stars">✦ · ✦ · ✦</span>
+            <span>
+              <span className="clickable" onClick={() => { setTab("board"); setViewing(null); }}>@{user.username}</span>
+              <span className="clickable" onClick={signOut} style={{ marginLeft: 16 }}>Sign out</span>
+            </span>
           </div>
           <div className="masthead-nameplate" onClick={() => { setTab("board"); setViewing(null); }}>
-            <span className="nameplate-word">Vouch</span>
+            <span className="nameplate-word">Vouch.</span>
           </div>
           <div className="masthead-rule-ornament">— ✦ —</div>
-          <div className="masthead-tagline">Five endorsements. Every month. Your word.</div>
+          <div className="masthead-tagline">Love it? Vouch for it.</div>
+
+          <div className="master-search-wrap">
+            <form className="master-search-inner" onSubmit={handleMasterSearch}>
+              <input
+                className="master-search-input"
+                placeholder="Search films, albums, artists, songs…"
+                value={masterQ}
+                onChange={e => setMasterQ(e.target.value)}
+              />
+              <select
+                className="master-search-select"
+                value={masterCat}
+                onChange={e => setMasterCat(e.target.value)}
+              >
+                {CATEGORIES.filter(c => c.key !== "books").map(c => (
+                  <option key={c.key} value={c.key}>{c.label}</option>
+                ))}
+              </select>
+              <button type="submit" className="master-search-btn">Search</button>
+            </form>
+          </div>
+
           <nav className="nav">
             <button className={`nav-btn${tab === "board" && !viewing ? " active" : ""}`} onClick={() => { setTab("board"); setViewing(null); }}>My Board</button>
-            <button className={`nav-btn${tab === "friends" ? " active" : ""}`}           onClick={() => { setTab("friends"); setViewing(null); }}>Friends</button>
+            <button className={`nav-btn${tab === "friends" ? " active" : ""}`} onClick={() => { setTab("friends"); setViewing(null); }}>Friends</button>
             {viewing && <button className="nav-btn active">{currName}'s Board</button>}
           </nav>
         </header>
@@ -512,12 +607,15 @@ export default function Vouch() {
                       {viewing && <span style={{ fontWeight: 400, fontSize: 16, color: T.inkLight, marginLeft: 10 }}>@{viewing}</span>}
                     </div>
                     <div className="board-sub">
-                      {isOwn ? `Vol. I · ${user.displayName} · ${total} endorsements this month` : `Vol. I · ${currName}'s board`}
+                      {isOwn ? user.displayName : `${currName}'s board`}
                     </div>
                   </div>
                   {viewing && <button className="btn btn-ghost" onClick={() => { setViewing(null); setTab("friends"); }}>← Back</button>}
                 </div>
                 <div className="ornament">— ✦ —</div>
+
+                <VouchSection board={currBoard} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={setAddModal} />
+
                 {CATEGORIES.map(cat => (
                   <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={currBoard[cat.key] || []} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={setAddModal} />
                 ))}
@@ -532,7 +630,13 @@ export default function Vouch() {
         })()}
 
         {addModal && (
-          <AddModal catKey={addModal} catLabel={CATEGORIES.find(c => c.key === addModal)?.label} used={(board[addModal] || []).length} onClose={() => setAddModal(null)} onAdd={addItem} />
+          <AddModal
+            catKey={addModal}
+            catLabel={CATEGORIES.find(c => c.key === addModal)?.label}
+            used={(board[addModal] || []).length}
+            onClose={() => { setAddModal(null); setMasterQ(""); }}
+            onAdd={addItem}
+          />
         )}
       </div>
     </>
