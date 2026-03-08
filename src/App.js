@@ -302,6 +302,7 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
             id: r.id, title: r.title,
             sub: r.release_date ? r.release_date.slice(0, 4) : "",
             poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null,
+            sourceUrl: `https://www.imdb.com/find?q=${encodeURIComponent(r.title)}`,
           })));
         } else if (catKey === "shows") {
           const res  = await fetch(`https://api.themoviedb.org/3/search/tv?api_key=${TMDB}&query=${encodeURIComponent(q)}&language=en-US`);
@@ -310,6 +311,7 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
             id: r.id, title: r.name,
             sub: r.first_air_date ? r.first_air_date.slice(0, 4) : "",
             poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null,
+            sourceUrl: `https://www.imdb.com/find?q=${encodeURIComponent(r.name)}`,
           })));
         } else if (catKey === "songs" || catKey === "albums" || catKey === "artists") {
           const typeMap = { songs: "track", albums: "album", artists: "artist" };
@@ -320,18 +322,21 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
               id: r.id, title: r.name,
               sub: r.artists?.[0]?.name || "",
               poster: r.album?.images?.[0]?.url || null,
+              sourceUrl: `https://open.spotify.com/track/${r.id}`,
             })));
           } else if (catKey === "albums") {
             setResults((data.albums?.items || []).slice(0, 8).map(r => ({
               id: r.id, title: r.name,
               sub: r.artists?.[0]?.name || "",
               poster: r.images?.[0]?.url || null,
+              sourceUrl: `https://open.spotify.com/album/${r.id}`,
             })));
           } else {
             setResults((data.artists?.items || []).slice(0, 8).map(r => ({
               id: r.id, title: r.name,
               sub: r.genres?.[0] || "",
               poster: r.images?.[0]?.url || null,
+              sourceUrl: `https://open.spotify.com/artist/${r.id}`,
             })));
           }
         } else if (catKey === "books") {
@@ -342,6 +347,7 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
             sub: (r.volumeInfo?.authors || []).join(", "),
             poster: (() => { const isbn = (r.volumeInfo?.industryIdentifiers || []).find(x => x.type === "ISBN_13" || x.type === "ISBN_10")?.identifier; return isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg` : (r.volumeInfo?.imageLinks?.thumbnail)?.replace("http://","https://") || null; })(),
             posterFallback: (r.volumeInfo?.imageLinks?.thumbnail)?.replace("http://","https://") || null,
+            sourceUrl: `https://www.goodreads.com/search?q=${encodeURIComponent(r.volumeInfo?.title || "")}`,
           })));
         } else {
           setResults([]);
@@ -445,30 +451,35 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
           id: r.id, title: r.title, catKey: "movies", catLabel: "Film",
           sub: r.release_date ? r.release_date.slice(0, 4) : "",
           poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null,
+          sourceUrl: `https://www.imdb.com/find?q=${encodeURIComponent(r.title)}`,
         }));
 
         (tvRes.results || []).slice(0, 2).forEach(r => mixed.push({
           id: r.id, title: r.name, catKey: "shows", catLabel: "Television",
           sub: r.first_air_date ? r.first_air_date.slice(0, 4) : "",
           poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null,
+          sourceUrl: `https://www.imdb.com/find?q=${encodeURIComponent(r.name)}`,
         }));
 
         (trackRes.tracks?.items || []).slice(0, 3).forEach(r => mixed.push({
           id: r.id, title: r.name, catKey: "songs", catLabel: "Songs",
           sub: r.artists?.[0]?.name || "",
           poster: r.album?.images?.[0]?.url || null,
+          sourceUrl: `https://open.spotify.com/track/${r.id}`,
         }));
 
         (albumRes.albums?.items || []).slice(0, 2).forEach(r => mixed.push({
           id: r.id, title: r.name, catKey: "albums", catLabel: "Albums",
           sub: r.artists?.[0]?.name || "",
           poster: r.images?.[0]?.url || null,
+          sourceUrl: `https://open.spotify.com/album/${r.id}`,
         }));
 
         (artistRes.artists?.items || []).slice(0, 2).forEach(r => mixed.push({
           id: r.id, title: r.name, catKey: "artists", catLabel: "Artists",
           sub: r.genres?.[0] || "",
           poster: r.images?.[0]?.url || null,
+          sourceUrl: `https://open.spotify.com/artist/${r.id}`,
         }));
 
         (booksRes.items || []).slice(0, 2).forEach(r => mixed.push({
@@ -476,6 +487,7 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
           sub: (r.volumeInfo?.authors || []).join(", "),
           poster: (() => { const isbn = (r.volumeInfo?.industryIdentifiers || []).find(x => x.type === "ISBN_13" || x.type === "ISBN_10")?.identifier; return isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg` : (r.volumeInfo?.imageLinks?.thumbnail)?.replace("http://","https://") || null; })(),
           posterFallback: (r.volumeInfo?.imageLinks?.thumbnail)?.replace("http://","https://") || null,
+          sourceUrl: `https://www.goodreads.com/search?q=${encodeURIComponent(r.volumeInfo?.title || "")}`,
         }));
 
         setResults(mixed);
@@ -570,7 +582,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove }) {
       <div className="cards-row-large">
         {slots.map((item, idx) =>
           item
-            ? <div key={item.id + item._cat} className="card-large" style={{ position: "relative" }} onClick={() => onCard(item._cat, (board[item._cat] || []).findIndex(x => x.id === item.id))}>
+            ? <div key={item.id + item._cat} className="card-large" style={{ position: "relative" }} onClick={() => item.sourceUrl ? window.open(item.sourceUrl, "_blank") : onCard(item._cat, (board[item._cat] || []).findIndex(x => x.id === item.id))}>
                 {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(item._cat, (board[item._cat] || []).findIndex(x => x.id === item.id)); }} style={{ position: "absolute", top: 6, right: 6, zIndex: 2, background: "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", width: 26, height: 26, cursor: "pointer", fontSize: 15, lineHeight: "26px", textAlign: "center" }}>×</button>}
                 {item.poster
                   ? <img src={item.poster} alt={item.title} className="card-poster-large" onError={e => { e.target.style.display = "none"; }} />
@@ -611,7 +623,7 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove }) {
       {!collapsed && <div className="cards-row">
         {slots.map((item, idx) =>
           item
-            ? <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => onCard(catKey, idx)}>
+            ? <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => item.sourceUrl ? window.open(item.sourceUrl, "_blank") : onCard(catKey, idx)}>
                 {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", width: 22, height: 22, cursor: "pointer", fontSize: 13, lineHeight: "22px", textAlign: "center" }}>×</button>}
                 {item.poster
                   ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} />
@@ -672,6 +684,7 @@ export default function Vouch() {
             poster: row.poster || null,
             comment: row.comment || "",
             vouched: row.vouched || false,
+            sourceUrl: row.source_url || null,
             dbId: row.id,
           });
         }
@@ -721,6 +734,7 @@ export default function Vouch() {
       poster: item.poster || null,
       comment: item.comment || "",
       vouched: item.vouched || false,
+      source_url: item.sourceUrl || null,
     }, { onConflict: "user_id,category,item_id" });
     await loadBoard(userId);
     setSaving(false);
