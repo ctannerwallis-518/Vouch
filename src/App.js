@@ -340,7 +340,7 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
           setResults((data.items || []).map(r => ({
             id: r.id, title: r.volumeInfo?.title || "",
             sub: (r.volumeInfo?.authors || []).join(", "),
-            poster: (r.volumeInfo?.imageLinks?.extraLarge || r.volumeInfo?.imageLinks?.large || r.volumeInfo?.imageLinks?.medium || r.volumeInfo?.imageLinks?.thumbnail)?.replace("http://", "https://") || null,
+            poster: (() => { const isbn = (r.volumeInfo?.industryIdentifiers || []).find(x => x.type === "ISBN_13" || x.type === "ISBN_10")?.identifier; return isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg` : (r.volumeInfo?.imageLinks?.thumbnail)?.replace("http://","https://") || null; })(),
           })));
         } else {
           setResults([]);
@@ -460,7 +460,7 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
         (booksRes.items || []).slice(0, 2).forEach(r => mixed.push({
           id: r.id, title: r.volumeInfo?.title || "", catKey: "books", catLabel: "Book",
           sub: (r.volumeInfo?.authors || []).join(", "),
-          poster: (r.volumeInfo?.imageLinks?.extraLarge || r.volumeInfo?.imageLinks?.large || r.volumeInfo?.imageLinks?.medium || r.volumeInfo?.imageLinks?.thumbnail)?.replace("http://", "https://") || null,
+          poster: (() => { const isbn = (r.volumeInfo?.industryIdentifiers || []).find(x => x.type === "ISBN_13" || x.type === "ISBN_10")?.identifier; return isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg` : (r.volumeInfo?.imageLinks?.thumbnail)?.replace("http://","https://") || null; })(),
         }));
 
         setResults(mixed);
