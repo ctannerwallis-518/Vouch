@@ -644,13 +644,42 @@ const MOCK_FRIENDS = [
 
 export default function Vouch() {
   const [user,      setUser]      = useState(null);
+  const [userId,    setUserId]    = useState(null);
   const [tab,       setTab]       = useState("board");
   const [viewing,   setViewing]   = useState(null);
   const [board,     setBoard]     = useState({ ...EMPTY_BOARD });
+  const [loading,   setLoading]   = useState(false);
   const [lightbox,  setLightbox]  = useState(null);
   const [addModal,  setAddModal]  = useState(null);
   const [vouchModal, setVouchModal] = useState(false);
 
+  const loadBoard = async (uid) => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("endorsements")
+      .select("*")
+      .eq("user_id", uid)
+      .order("created_at", { ascending: true });
+    if (!error && data) {
+      const b = { ...EMPTY_BOARD };
+      data.forEach(row => {
+        if (!b[row.category]) b[row.category] = [];
+        if (b[row.category].length < 5) {
+          b[row.category].push({
+            id: row.item_id,
+            title: row.title,
+            sub: row.subtitle || "",
+            poster: row.poster || null,
+            comment: row.comment || "",
+            vouched: row.vouched || false,
+            dbId: row.id,
+          });
+        }
+      });
+      setBoard(b);
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
     const setUserFromSession = (session) => {
@@ -659,8 +688,12 @@ export default function Vouch() {
           username: session.user.email.split("@")[0],
           displayName: session.user.user_metadata?.full_name || session.user.email.split("@")[0]
         });
+        setUserId(session.user.id);
+        loadBoard(session.user.id);
       } else {
         setUser(null);
+        setUserId(null);
+        setBoard({ ...EMPTY_BOARD });
       }
     };
     supabase.auth.getSession().then(({ data: { session } }) => setUserFromSession(session));
@@ -674,19 +707,48 @@ export default function Vouch() {
   const currBoard = isOwn ? board : { ...EMPTY_BOARD };
   const currName  = isOwn ? user?.displayName : MOCK_FRIENDS.find(f => f.username === viewing)?.displayName || viewing;
 
-  const addItem = (catKey, item) => setBoard(prev => ({
-    ...prev,
-    [catKey]: [...(prev[catKey] || []), item].slice(0, 5)
-  }));
+  const addItem = async (catKey, item) => {
+    const optimistic = { ...item };
+    setBoard(prev => ({
+      ...prev,
+      [catKey]: [...(prev[catKey] || []), optimistic].slice(0, 5)
+    }));
+    const { data, error } = await supabase.from("endorsements").insert({
+      user_id: userId,
+      category: catKey,
+      item_id: String(item.id),
+      title: item.title,
+      subtitle: item.sub || "",
+      poster: item.poster || null,
+      comment: item.comment || "",
+      vouched: item.vouched || false,
+    }).select().single();
+    if (!error && data) {
+      setBoard(prev => ({
+        ...prev,
+        [catKey]: (prev[catKey] || []).map(i =>
+          i.id === item.id && !i.dbId ? { ...i, dbId: data.id } : i
+        )
+      }));
+    }
+  };
 
-  const removeItem = (catKey, idx) => setBoard(prev => ({
-    ...prev,
-    [catKey]: (prev[catKey] || []).filter((_, i) => i !== idx)
-  }));
+  const removeItem = async (catKey, idx) => {
+    const item = board[catKey]?.[idx];
+    setBoard(prev => ({
+      ...prev,
+      [catKey]: (prev[catKey] || []).filter((_, i) => i !== idx)
+    }));
+    if (item?.dbId) {
+      await supabase.from("endorsements").delete().eq("id", item.dbId);
+    }
+  };
 
 
 
   if (!user) return <><Styles /><Auth /></>;
+  if (loading) return <><Styles /><div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: T.bg }}><div className="loading">Loading…</div></div></>;
+
 
   return (
     <>
