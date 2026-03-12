@@ -1177,7 +1177,6 @@ export default function Vouch() {
     clearTimeout(timeout);
     setSaving(false);
   };
-  };
 
   const removeItem = async (catKey, idx) => {
     if (saving) return;
@@ -1364,3 +1363,4 @@ export default function Vouch() {
       </div>
     </>
   );
+}
