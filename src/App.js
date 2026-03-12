@@ -559,7 +559,7 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
           fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=track`).then(r => r.json()),
           fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=album`).then(r => r.json()),
           fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=artist`).then(r => r.json()),
-          fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=3&langRestrict=en`).then(r => r.json()),
+          fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=3&language=eng`).then(r => r.json()),
         ]);
 
         const mixed = [];
@@ -606,13 +606,17 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
           sourceUrl: `https://open.spotify.com/artist/${r.id}`,
         }));
 
-        (booksRes.items || []).slice(0, 2).forEach(r => mixed.push({
-          id: r.id, title: r.volumeInfo?.title || "", catKey: "books", catLabel: "Book",
-          sub: (r.volumeInfo?.authors || []).join(", "),
-          poster: (() => { const isbn = (r.volumeInfo?.industryIdentifiers || []).find(x => x.type === "ISBN_13" || x.type === "ISBN_10")?.identifier; return isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg` : (r.volumeInfo?.imageLinks?.thumbnail)?.replace("http://","https://") || null; })(),
-          posterFallback: (r.volumeInfo?.imageLinks?.thumbnail)?.replace("http://","https://") || null,
-          sourceUrl: `https://www.goodreads.com/search?q=${encodeURIComponent(r.volumeInfo?.title || "")}`,
-        }));
+        (booksRes.docs || []).slice(0, 2).forEach(r => {
+          const coverId = r.cover_i;
+          const isbn = (r.isbn || [])[0];
+          const poster = coverId ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg` : isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg` : null;
+          mixed.push({
+            id: r.key || r.title, title: r.title, catKey: "books", catLabel: "Book",
+            sub: (r.author_name || []).join(", "),
+            poster,
+            sourceUrl: `https://openlibrary.org${r.key}`,
+          });
+        });
 
         setResults(mixed);
       } catch(e) { console.error(e); }
