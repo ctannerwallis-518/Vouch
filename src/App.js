@@ -712,6 +712,9 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
 
 function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions }) {
   const [idx, setIdx] = useState(0);
+  const touchStart = useRef(null);
+  const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
+
   const allItems = [];
   CATEGORIES.forEach(cat => {
     (board[cat.key] || []).forEach(item => {
@@ -722,11 +725,36 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
   const total = allItems.length;
   const item  = allItems[idx] || null;
 
-  // reset index if items change
   useEffect(() => { if (idx >= total && total > 0) setIdx(total - 1); }, [total, idx]);
 
   const prev = () => setIdx(i => Math.max(0, i - 1));
   const next = () => setIdx(i => Math.min(total - 1, i + 1));
+
+  const onTouchStart = e => { touchStart.current = e.touches[0].clientX; };
+  const onTouchEnd   = e => {
+    if (touchStart.current === null) return;
+    const diff = touchStart.current - e.changedTouches[0].clientX;
+    if (diff > 40) next();
+    else if (diff < -40) prev();
+    touchStart.current = null;
+  };
+
+  const CardContent = ({ item }) => (
+    <div style={{ position: "relative", cursor: item.sourceUrl ? "pointer" : "default" }}
+      onClick={() => item.sourceUrl ? window.open(item.sourceUrl, "_blank") : onCard(item._cat, (board[item._cat] || []).findIndex(x => x.id === item.id))}>
+      {item.poster
+        ? <img src={item.poster} alt={item.title} style={{ width: "100%", maxHeight: isMobile ? 340 : 380, objectFit: "cover", display: "block", border: `1px solid ${T.paperDark}` }} onError={e => e.target.style.display = "none"} />
+        : <div style={{ width: "100%", height: 320, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 18, color: T.inkLight, padding: 24, textAlign: "center" }}>{item.title}</div>}
+      <div style={{ padding: "14px 4px 4px" }}>
+        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkFaint, marginBottom: 4 }}>{item._catLabel}</div>
+        <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4 }}>{item.title}</div>
+        <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.inkMid }}>{item.artist || item.author || item.sub || ""}</div>
+        {item.comment && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkLight, marginTop: 6 }}>"{item.comment}"</div>}
+      </div>
+      {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(item._cat, (board[item._cat] || []).findIndex(x => x.id === item.id)); }} style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", width: 28, height: 28, cursor: "pointer", fontSize: 16, lineHeight: "28px", textAlign: "center" }}>×</button>}
+      {!isOwn && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: myReactions?.includes(item.id) ? T.ink : "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "5px 8px", whiteSpace: "nowrap" }}>{myReactions?.includes(item.id) ? "✓ Agreed" : "Agree"}</button>}
+    </div>
+  );
 
   return (
     <div className="vouch-section">
@@ -736,46 +764,44 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
         {isOwn && <button className="vouch-section-add" onClick={onAdd}>+ Add</button>}
       </div>
 
-      <div style={{ position: "relative", display: "flex", alignItems: "stretch", gap: 0 }}>
-        {/* Main card */}
-        <div style={{ flex: 1, position: "relative", minHeight: 320 }}>
-          {item ? (
-            <div style={{ position: "relative", cursor: item.sourceUrl ? "pointer" : "default", height: "100%" }}
-              onClick={() => item.sourceUrl ? window.open(item.sourceUrl, "_blank") : onCard(item._cat, (board[item._cat] || []).findIndex(x => x.id === item.id))}>
-              {item.poster
-                ? <img src={item.poster} alt={item.title} style={{ width: "100%", maxHeight: 380, objectFit: "cover", display: "block", border: `1px solid ${T.paperDark}` }} onError={e => e.target.style.display = "none"} />
-                : <div style={{ width: "100%", height: 320, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 18, color: T.inkLight, padding: 24, textAlign: "center" }}>{item.title}</div>}
-              <div style={{ padding: "14px 4px 4px" }}>
-                <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkFaint, marginBottom: 4 }}>{item._catLabel}</div>
-                <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4 }}>{item.title}</div>
-                <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.inkMid }}>{item.artist || item.author || item.sub || ""}</div>
-                {item.comment && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkLight, marginTop: 6 }}>"{item.comment}"</div>}
-              </div>
-              {/* action buttons */}
-              {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(item._cat, (board[item._cat] || []).findIndex(x => x.id === item.id)); }} style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", width: 28, height: 28, cursor: "pointer", fontSize: 16, lineHeight: "28px", textAlign: "center" }}>×</button>}
-              {!isOwn && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: myReactions?.includes(item.id) ? T.ink : "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "5px 8px", whiteSpace: "nowrap" }}>{myReactions?.includes(item.id) ? "✓ Same" : "Dude, Same"}</button>}
-            </div>
-          ) : isOwn ? (
-            <div style={{ height: 320, border: `1px dashed ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexDirection: "column", gap: 8 }} onClick={onAdd}>
+      {isMobile ? (
+        /* MOBILE — swipeable single card */
+        <div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} style={{ userSelect: "none" }}>
+          {item ? <CardContent item={item} /> : isOwn ? (
+            <div style={{ height: 280, border: `1px dashed ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexDirection: "column", gap: 8 }} onClick={onAdd}>
               <span style={{ fontSize: 28, color: T.inkFaint }}>+</span>
               <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: T.inkFaint }}>Add to Vouch 5</span>
             </div>
           ) : null}
-        </div>
-
-        {/* Nav strip */}
-        {total > 0 && (
-          <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", gap: 8, minWidth: 36 }}>
-            <button onClick={prev} disabled={idx === 0} style={{ background: "none", border: "none", cursor: idx === 0 ? "default" : "pointer", opacity: idx === 0 ? 0.2 : 1, fontSize: 18, color: T.ink, lineHeight: 1 }}>↑</button>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "center" }}>
-              {Array(Math.max(total, isOwn ? 1 : 0)).fill(null).map((_, i) => (
-                <div key={i} onClick={() => i < total && setIdx(i)} style={{ width: 6, height: 6, borderRadius: "50%", background: i === idx ? T.ink : T.paperDark, cursor: i < total ? "pointer" : "default", flexShrink: 0 }} />
+          {total > 1 && (
+            <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 14 }}>
+              {allItems.map((_, i) => (
+                <div key={i} onClick={() => setIdx(i)} style={{ width: 6, height: 6, borderRadius: "50%", background: i === idx ? T.ink : T.paperDark, cursor: "pointer" }} />
               ))}
             </div>
-            <button onClick={next} disabled={idx >= total - 1} style={{ background: "none", border: "none", cursor: idx >= total - 1 ? "default" : "pointer", opacity: idx >= total - 1 ? 0.2 : 1, fontSize: 18, color: T.ink, lineHeight: 1 }}>↓</button>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      ) : (
+        /* DESKTOP — row of all 5 cards */
+        <div className="cards-row-large">
+          {Array(5).fill(null).map((_, i) => {
+            const it = allItems[i] || null;
+            return it ? (
+              <div key={it.id + it._cat} className="card-large" style={{ position: "relative" }}>
+                <CardContent item={it} />
+              </div>
+            ) : isOwn ? (
+              <div key={`ve${i}`} className="slot-empty-large" onClick={onAdd}>
+                <div className="slot-empty-inner"><span className="slot-empty-plus">+</span>Vouch</div>
+              </div>
+            ) : (
+              <div key={`ve${i}`} className="slot-empty-large" style={{ cursor: "default", opacity: 0.35 }}>
+                <div className="slot-empty-inner"><span className="slot-empty-plus">—</span></div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -800,7 +826,7 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
           item
             ? <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => item.sourceUrl ? window.open(item.sourceUrl, "_blank") : onCard(catKey, idx)}>
                 {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", width: 22, height: 22, cursor: "pointer", fontSize: 13, lineHeight: "22px", textAlign: "center" }}>×</button>}
-                {!isOwn && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: myReactions?.includes(item.id) ? T.ink : "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 5px", whiteSpace: "nowrap" }}>{myReactions?.includes(item.id) ? "✓" : "Same"}</button>}
+                {!isOwn && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: myReactions?.includes(item.id) ? T.ink : "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 5px", whiteSpace: "nowrap" }}>{myReactions?.includes(item.id) ? "✓" : "Agree"}</button>}
                 {item.poster
                   ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} />
                   : null}
@@ -833,7 +859,7 @@ function MutualMentions({ reactions, myReactions, isOwn, boardOwnerName }) {
       <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 18 }}>
         <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", color: T.inkMid }}>Mutual Mentions</div>
         <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkFaint }}>
-          {isOwn ? "Things you've said Dude, Same to" : `Things others said Dude, Same to on ${boardOwnerName}'s board`}
+          {isOwn ? "Things you've agreed with" : `Things others agreed with on ${boardOwnerName}'s board`}
         </div>
       </div>
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
