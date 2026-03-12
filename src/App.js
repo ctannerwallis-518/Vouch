@@ -302,11 +302,11 @@ function PublicBoard({ inviteUserId, onSignUp }) {
       <Styles />
       <div className="app">
         {/* Banner */}
-        <div style={{ background: T.ink, color: T.bg, padding: "14px 28px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+        <div style={{ background: T.ink, color: T.bg, padding: "14px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
           <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14 }}>
             You're viewing <strong style={{ fontStyle: "normal" }}>{name}'s</strong> Vouch board.
           </div>
-          <button onClick={onSignUp} style={{ background: T.bg, color: T.ink, border: "none", fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.15em", padding: "9px 18px", cursor: "pointer", whiteSpace: "nowrap" }}>
+          <button onClick={onSignUp} style={{ background: T.bg, color: T.ink, border: "none", fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.15em", padding: "10px 18px", cursor: "pointer", width: "100%" }}>
             Create Your Own →
           </button>
         </div>
@@ -323,12 +323,10 @@ function PublicBoard({ inviteUserId, onSignUp }) {
         </header>
 
         <main className="page">
-          <div className="board-header">
-            <div>
-              <div className="board-name">{name}</div>
-              <div className="board-sub">@{profile.username}</div>
-            </div>
-            <button onClick={onSignUp} className="btn btn-solid">Create Your Own</button>
+          <div style={{ marginBottom: 20 }}>
+            <div className="board-name" style={{ fontSize: 28, marginBottom: 2 }}>{name}</div>
+            <div className="board-sub" style={{ marginBottom: 14 }}>@{profile?.username || ""}</div>
+            <button onClick={onSignUp} className="btn btn-solid" style={{ width: "100%", padding: "12px", fontSize: 13 }}>Create Your Own Vouch Board →</button>
           </div>
           <div className="ornament">— ✦ —</div>
 
@@ -715,6 +713,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
   const [dragX, setDragX] = useState(0);
   const [dragging, setDragging] = useState(false);
   const touchStart = useRef(null);
+  const containerRef = useRef(null);
   const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
 
   const allItems = [];
@@ -737,9 +736,8 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
   const onTouchMove = e => {
     if (touchStart.current === null) return;
     const diff = e.touches[0].clientX - touchStart.current;
-    // resist at edges
     if ((idx === 0 && diff > 0) || (idx === total - 1 && diff < 0)) {
-      setDragX(diff * 0.2);
+      setDragX(diff * 0.15);
     } else {
       setDragX(diff);
     }
@@ -747,8 +745,9 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
 
   const onTouchEnd = () => {
     setDragging(false);
-    if (dragX < -60 && idx < total - 1) setIdx(i => i + 1);
-    else if (dragX > 60 && idx > 0) setIdx(i => i - 1);
+    const w = containerRef.current?.offsetWidth || 300;
+    if (dragX < -(w * 0.25) && idx < total - 1) setIdx(i => i + 1);
+    else if (dragX > (w * 0.25) && idx > 0) setIdx(i => i - 1);
     setDragX(0);
     touchStart.current = null;
   };
@@ -756,7 +755,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
   const CardFace = ({ it }) => (
     <div style={{ position: "relative", cursor: it.sourceUrl ? "pointer" : "default" }}
       onClick={() => {
-        if (Math.abs(dragX) > 5) return; // don't fire click after drag
+        if (Math.abs(dragX) > 8) return;
         it.sourceUrl ? window.open(it.sourceUrl, "_blank") : onCard(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id));
       }}>
       {it.poster
@@ -782,32 +781,28 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
       </div>
 
       {isMobile ? (
-        <div style={{ touchAction: "pan-y" }}
+        <div ref={containerRef}
+          style={{ overflow: "hidden", touchAction: "pan-y", userSelect: "none" }}
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}>
-          {/* Slide track */}
-          <div style={{ overflow: "hidden", position: "relative" }}>
-            <div style={{
-              display: "flex",
-              transform: `translateX(calc(-${idx * 100}% + ${dragX}px))`,
-              transition: dragging ? "none" : "transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-              willChange: "transform",
-            }}>
-              {allItems.map((it, i) => (
-                <div key={it.id + it._cat} style={{ minWidth: "100%", flexShrink: 0 }}>
-                  <CardFace it={it} />
-                </div>
-              ))}
-              {allItems.length === 0 && isOwn && (
-                <div style={{ minWidth: "100%", height: 280, border: `1px dashed ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 8, cursor: "pointer" }} onClick={onAdd}>
-                  <span style={{ fontSize: 28, color: T.inkFaint }}>+</span>
-                  <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: T.inkFaint }}>Add to Vouch 5</span>
-                </div>
-              )}
-            </div>
+          <div style={{
+            display: "flex",
+            transform: `translateX(calc(${-idx * 100}% + ${dragX}px))`,
+            transition: dragging ? "none" : "transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+            willChange: "transform",
+          }}>
+            {allItems.length > 0 ? allItems.map((it) => (
+              <div key={it.id + it._cat} style={{ minWidth: "100%", width: "100%" }}>
+                <CardFace it={it} />
+              </div>
+            )) : isOwn ? (
+              <div style={{ minWidth: "100%", width: "100%", height: 280, border: `1px dashed ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 8, cursor: "pointer" }} onClick={onAdd}>
+                <span style={{ fontSize: 28, color: T.inkFaint }}>+</span>
+                <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: T.inkFaint }}>Add to Vouch 5</span>
+              </div>
+            ) : null}
           </div>
-          {/* Dots */}
           {total > 1 && (
             <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 14 }}>
               {allItems.map((_, i) => (
@@ -817,7 +812,6 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
           )}
         </div>
       ) : (
-        /* DESKTOP — row of all 5 cards */
         <div className="cards-row-large">
           {Array(5).fill(null).map((_, i) => {
             const it = allItems[i] || null;
@@ -842,7 +836,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
 }
 
 function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
   const slots = Array(5).fill(null).map((_, i) => items[i] || null);
   const collapsed = isMobile && !open;
