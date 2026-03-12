@@ -243,10 +243,10 @@ function Auth({ inviteUserId, inviterName }) {
       <div className="auth-box">
         <div className="auth-plate"><span className="auth-plate-name">Vouch.</span></div>
         <div className="auth-tagline">Love it? Vouch for it.</div>
-        <button className="auth-google" onClick={signInWithGoogle}>Continue with Google</button>
-        <div style={{ marginTop: 40, borderTop: `1px solid ${T.paperDark}`, paddingTop: 32 }}>
+        <div style={{ marginBottom: 32, borderBottom: `1px solid ${T.paperDark}`, paddingBottom: 32 }}>
           <HowItWorks />
         </div>
+        <button className="auth-google" onClick={signInWithGoogle}>Continue with Google</button>
       </div>
     </div>
   );
@@ -340,8 +340,8 @@ function PublicBoard({ inviteUserId, onSignUp }) {
 
 function HowItWorks() {
   return (
-    <div style={{ fontFamily: "'Spectral',serif", color: T.inkMid, maxWidth: 380, margin: "0 auto", textAlign: "left" }}>
-      <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.2em", color: T.ink, marginBottom: 20, textAlign: "center" }}>How It Works</div>
+    <div style={{ fontFamily: "'Spectral',serif", color: T.inkMid, maxWidth: 380, margin: "0 auto", textAlign: "center" }}>
+      <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.2em", color: T.ink, marginBottom: 20 }}>How It Works</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <div>
           <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>Vouch 5</div>
