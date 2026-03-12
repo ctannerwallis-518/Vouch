@@ -712,6 +712,8 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
 
 function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions }) {
   const [idx, setIdx] = useState(0);
+  const [dragX, setDragX] = useState(0);
+  const [dragging, setDragging] = useState(false);
   const touchStart = useRef(null);
   const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
 
@@ -724,35 +726,53 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
 
   const total = allItems.length;
   const item  = allItems[idx] || null;
+  const prevItem = allItems[idx - 1] || null;
+  const nextItem = allItems[idx + 1] || null;
 
   useEffect(() => { if (idx >= total && total > 0) setIdx(total - 1); }, [total, idx]);
 
-  const prev = () => setIdx(i => Math.max(0, i - 1));
-  const next = () => setIdx(i => Math.min(total - 1, i + 1));
+  const onTouchStart = e => {
+    touchStart.current = e.touches[0].clientX;
+    setDragging(true);
+    setDragX(0);
+  };
 
-  const onTouchStart = e => { touchStart.current = e.touches[0].clientX; };
-  const onTouchEnd   = e => {
+  const onTouchMove = e => {
     if (touchStart.current === null) return;
-    const diff = touchStart.current - e.changedTouches[0].clientX;
-    if (diff > 40) next();
-    else if (diff < -40) prev();
+    const diff = e.touches[0].clientX - touchStart.current;
+    // resist at edges
+    if ((idx === 0 && diff > 0) || (idx === total - 1 && diff < 0)) {
+      setDragX(diff * 0.2);
+    } else {
+      setDragX(diff);
+    }
+  };
+
+  const onTouchEnd = () => {
+    setDragging(false);
+    if (dragX < -60 && idx < total - 1) setIdx(i => i + 1);
+    else if (dragX > 60 && idx > 0) setIdx(i => i - 1);
+    setDragX(0);
     touchStart.current = null;
   };
 
-  const CardContent = ({ item }) => (
-    <div style={{ position: "relative", cursor: item.sourceUrl ? "pointer" : "default" }}
-      onClick={() => item.sourceUrl ? window.open(item.sourceUrl, "_blank") : onCard(item._cat, (board[item._cat] || []).findIndex(x => x.id === item.id))}>
-      {item.poster
-        ? <img src={item.poster} alt={item.title} style={{ width: "100%", maxHeight: isMobile ? 340 : 380, objectFit: "cover", display: "block", border: `1px solid ${T.paperDark}` }} onError={e => e.target.style.display = "none"} />
-        : <div style={{ width: "100%", height: 320, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 18, color: T.inkLight, padding: 24, textAlign: "center" }}>{item.title}</div>}
+  const CardFace = ({ it }) => (
+    <div style={{ position: "relative", cursor: it.sourceUrl ? "pointer" : "default" }}
+      onClick={() => {
+        if (Math.abs(dragX) > 5) return; // don't fire click after drag
+        it.sourceUrl ? window.open(it.sourceUrl, "_blank") : onCard(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id));
+      }}>
+      {it.poster
+        ? <img src={it.poster} alt={it.title} style={{ width: "100%", height: 340, objectFit: "cover", display: "block", border: `1px solid ${T.paperDark}` }} onError={e => e.target.style.display = "none"} />
+        : <div style={{ width: "100%", height: 340, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 18, color: T.inkLight, padding: 24, textAlign: "center" }}>{it.title}</div>}
       <div style={{ padding: "14px 4px 4px" }}>
-        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkFaint, marginBottom: 4 }}>{item._catLabel}</div>
-        <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4 }}>{item.title}</div>
-        <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.inkMid }}>{item.artist || item.author || item.sub || ""}</div>
-        {item.comment && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkLight, marginTop: 6 }}>"{item.comment}"</div>}
+        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkFaint, marginBottom: 4 }}>{it._catLabel}</div>
+        <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4 }}>{it.title}</div>
+        <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.inkMid }}>{it.artist || it.author || it.sub || ""}</div>
+        {it.comment && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkLight, marginTop: 6 }}>"{it.comment}"</div>}
       </div>
-      {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(item._cat, (board[item._cat] || []).findIndex(x => x.id === item.id)); }} style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", width: 28, height: 28, cursor: "pointer", fontSize: 16, lineHeight: "28px", textAlign: "center" }}>×</button>}
-      {!isOwn && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: myReactions?.includes(item.id) ? T.ink : "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "5px 8px", whiteSpace: "nowrap" }}>{myReactions?.includes(item.id) ? "✓ Agreed" : "Agree"}</button>}
+      {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id)); }} style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", width: 28, height: 28, cursor: "pointer", fontSize: 16, lineHeight: "28px", textAlign: "center" }}>×</button>}
+      {!isOwn && <button onClick={e => { e.stopPropagation(); onDudeSame(it); }} style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: myReactions?.includes(it.id) ? T.ink : "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "5px 8px", whiteSpace: "nowrap" }}>{myReactions?.includes(it.id) ? "✓ Agreed" : "Agree"}</button>}
     </div>
   );
 
@@ -765,18 +785,36 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
       </div>
 
       {isMobile ? (
-        /* MOBILE — swipeable single card */
-        <div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} style={{ userSelect: "none" }}>
-          {item ? <CardContent item={item} /> : isOwn ? (
-            <div style={{ height: 280, border: `1px dashed ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexDirection: "column", gap: 8 }} onClick={onAdd}>
-              <span style={{ fontSize: 28, color: T.inkFaint }}>+</span>
-              <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: T.inkFaint }}>Add to Vouch 5</span>
+        <div style={{ touchAction: "pan-y" }}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}>
+          {/* Slide track */}
+          <div style={{ overflow: "hidden", position: "relative" }}>
+            <div style={{
+              display: "flex",
+              transform: `translateX(calc(-${idx * 100}% + ${dragX}px))`,
+              transition: dragging ? "none" : "transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+              willChange: "transform",
+            }}>
+              {allItems.map((it, i) => (
+                <div key={it.id + it._cat} style={{ minWidth: "100%", flexShrink: 0 }}>
+                  <CardFace it={it} />
+                </div>
+              ))}
+              {allItems.length === 0 && isOwn && (
+                <div style={{ minWidth: "100%", height: 280, border: `1px dashed ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 8, cursor: "pointer" }} onClick={onAdd}>
+                  <span style={{ fontSize: 28, color: T.inkFaint }}>+</span>
+                  <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: T.inkFaint }}>Add to Vouch 5</span>
+                </div>
+              )}
             </div>
-          ) : null}
+          </div>
+          {/* Dots */}
           {total > 1 && (
             <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 14 }}>
               {allItems.map((_, i) => (
-                <div key={i} onClick={() => setIdx(i)} style={{ width: 6, height: 6, borderRadius: "50%", background: i === idx ? T.ink : T.paperDark, cursor: "pointer" }} />
+                <div key={i} onClick={() => setIdx(i)} style={{ width: 6, height: 6, borderRadius: "50%", background: i === idx ? T.ink : T.paperDark, cursor: "pointer", transition: "background 0.2s" }} />
               ))}
             </div>
           )}
@@ -788,7 +826,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
             const it = allItems[i] || null;
             return it ? (
               <div key={it.id + it._cat} className="card-large" style={{ position: "relative" }}>
-                <CardContent item={it} />
+                <CardFace it={it} />
               </div>
             ) : isOwn ? (
               <div key={`ve${i}`} className="slot-empty-large" onClick={onAdd}>
