@@ -457,15 +457,20 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
             })));
           }
         } else if (catKey === "books") {
-          const res  = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=8&langRestrict=en`);
+          const res  = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=8&language=eng`);
           const data = await res.json();
-          setResults((data.items || []).map(r => ({
-            id: r.id, title: r.volumeInfo?.title || "",
-            sub: (r.volumeInfo?.authors || []).join(", "),
-            poster: (() => { const isbn = (r.volumeInfo?.industryIdentifiers || []).find(x => x.type === "ISBN_13" || x.type === "ISBN_10")?.identifier; return isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg` : (r.volumeInfo?.imageLinks?.thumbnail)?.replace("http://","https://") || null; })(),
-            posterFallback: (r.volumeInfo?.imageLinks?.thumbnail)?.replace("http://","https://") || null,
-            sourceUrl: `https://www.goodreads.com/search?q=${encodeURIComponent(r.volumeInfo?.title || "")}`,
-          })));
+          setResults((data.docs || []).slice(0, 8).map(r => {
+            const coverId = r.cover_i;
+            const isbn = (r.isbn || [])[0];
+            const poster = coverId ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg` : isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg` : null;
+            return {
+              id: r.key || r.title,
+              title: r.title,
+              sub: (r.author_name || []).join(", "),
+              poster,
+              sourceUrl: `https://openlibrary.org${r.key}`,
+            };
+          }));
         } else {
           setResults([]);
         }
@@ -1154,29 +1159,38 @@ export default function Vouch() {
   const addItem = async (catKey, item) => {
     if (saving) return;
     setSaving(true);
-    await supabase.from("endorsements").upsert({
-      user_id: userId,
-      category: catKey,
-      item_id: String(item.id),
-      title: item.title,
-      subtitle: item.sub || "",
-      poster: item.poster || null,
-      comment: item.comment || "",
-      vouched: item.vouched || false,
-      source_url: item.sourceUrl || null,
-    }, { onConflict: "user_id,category,item_id" });
-    await loadBoard(userId);
+    const timeout = setTimeout(() => setSaving(false), 8000); // safety reset
+    try {
+      await supabase.from("endorsements").upsert({
+        user_id: userId,
+        category: catKey,
+        item_id: String(item.id),
+        title: item.title,
+        subtitle: item.sub || "",
+        poster: item.poster || null,
+        comment: item.comment || "",
+        vouched: item.vouched || false,
+        source_url: item.sourceUrl || null,
+      }, { onConflict: "user_id,category,item_id" });
+      await loadBoard(userId);
+    } catch(e) { console.error(e); }
+    clearTimeout(timeout);
     setSaving(false);
+  };
   };
 
   const removeItem = async (catKey, idx) => {
     if (saving) return;
     setSaving(true);
-    const item = board[catKey]?.[idx];
-    if (item?.dbId) {
-      await supabase.from("endorsements").delete().eq("id", item.dbId);
-    }
-    await loadBoard(userId);
+    const timeout = setTimeout(() => setSaving(false), 8000);
+    try {
+      const item = board[catKey]?.[idx];
+      if (item?.dbId) {
+        await supabase.from("endorsements").delete().eq("id", item.dbId);
+      }
+      await loadBoard(userId);
+    } catch(e) { console.error(e); }
+    clearTimeout(timeout);
     setSaving(false);
   };
 
@@ -1350,4 +1364,3 @@ export default function Vouch() {
       </div>
     </>
   );
-}
