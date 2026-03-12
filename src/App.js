@@ -725,9 +725,6 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
   });
 
   const total = allItems.length;
-  const item  = allItems[idx] || null;
-  const prevItem = allItems[idx - 1] || null;
-  const nextItem = allItems[idx + 1] || null;
 
   useEffect(() => { if (idx >= total && total > 0) setIdx(total - 1); }, [total, idx]);
 
