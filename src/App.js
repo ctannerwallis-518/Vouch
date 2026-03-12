@@ -261,12 +261,15 @@ function PublicBoard({ inviteUserId, onSignUp }) {
     const load = async () => {
       setLoading(true);
       try {
-        const { data: prof } = await supabase
+        console.log("PublicBoard loading for userId:", inviteUserId);
+        const { data: prof, error: profError } = await supabase
           .from("profiles").select("id, username, display_name").eq("id", inviteUserId).maybeSingle();
+        console.log("Profile result:", prof, profError);
         if (prof) setProfile(prof);
 
-        const { data: rows } = await supabase
+        const { data: rows, error: rowsError } = await supabase
           .from("endorsements").select("*").eq("user_id", inviteUserId).order("created_at", { ascending: true });
+        console.log("Endorsements result:", rows?.length, rowsError);
 
         if (rows && rows.length > 0) {
           const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
