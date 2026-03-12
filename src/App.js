@@ -713,6 +713,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
   const [dragX, setDragX] = useState(0);
   const [dragging, setDragging] = useState(false);
   const touchStart = useRef(null);
+  const dragXRef = useRef(0);
   const containerRef = useRef(null);
   const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
 
@@ -729,6 +730,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
 
   const onTouchStart = e => {
     touchStart.current = e.touches[0].clientX;
+    dragXRef.current = 0;
     setDragging(true);
     setDragX(0);
   };
@@ -736,18 +738,18 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
   const onTouchMove = e => {
     if (touchStart.current === null) return;
     const diff = e.touches[0].clientX - touchStart.current;
-    if ((idx === 0 && diff > 0) || (idx === total - 1 && diff < 0)) {
-      setDragX(diff * 0.15);
-    } else {
-      setDragX(diff);
-    }
+    const val = (idx === 0 && diff > 0) || (idx === total - 1 && diff < 0) ? diff * 0.15 : diff;
+    dragXRef.current = val;
+    setDragX(val);
   };
 
   const onTouchEnd = () => {
     setDragging(false);
     const w = containerRef.current?.offsetWidth || 300;
-    if (dragX < -(w * 0.25) && idx < total - 1) setIdx(i => i + 1);
-    else if (dragX > (w * 0.25) && idx > 0) setIdx(i => i - 1);
+    const dx = dragXRef.current;
+    if (dx < -(w * 0.25) && idx < total - 1) setIdx(i => i + 1);
+    else if (dx > (w * 0.25) && idx > 0) setIdx(i => i - 1);
+    dragXRef.current = 0;
     setDragX(0);
     touchStart.current = null;
   };
