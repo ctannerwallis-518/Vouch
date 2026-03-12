@@ -231,11 +231,11 @@ const Styles = () => (
   `}</style>
 );
 
-function Auth() {
+function Auth({ inviteUserId, inviterName }) {
   const signInWithGoogle = async () => {
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin }
+      options: { redirectTo: window.location.origin + (inviteUserId ? `?invite=${inviteUserId}` : "") }
     });
   };
   return (
@@ -244,6 +244,119 @@ function Auth() {
         <div className="auth-plate"><span className="auth-plate-name">Vouch.</span></div>
         <div className="auth-tagline">Love it? Vouch for it.</div>
         <button className="auth-google" onClick={signInWithGoogle}>Continue with Google</button>
+        <div style={{ marginTop: 40, borderTop: `1px solid ${T.paperDark}`, paddingTop: 32 }}>
+          <HowItWorks />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PublicBoard({ inviteUserId, onSignUp }) {
+  const [board, setBoard]       = useState(null);
+  const [profile, setProfile]   = useState(null);
+  const [loading, setLoading]   = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const { data: prof } = await supabase.from("profiles").select("id, username, display_name").eq("id", inviteUserId).single();
+      if (!prof) { setLoading(false); return; }
+      setProfile(prof);
+      const { data: rows } = await supabase.from("endorsements").select("*").eq("user_id", inviteUserId).order("created_at", { ascending: true });
+      if (rows) {
+        const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
+        rows.forEach(row => {
+          if (b[row.category] && b[row.category].length < 5) {
+            b[row.category].push({ id: row.item_id, title: row.title, sub: row.subtitle || "", poster: row.poster || null, comment: row.comment || "", vouched: row.vouched || false, sourceUrl: row.source_url || null });
+          }
+        });
+        setBoard(b);
+      }
+      setLoading(false);
+    };
+    load();
+  }, [inviteUserId]);
+
+  if (loading) return <><Styles /><div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: T.bg }}><div className="loading">Loading…</div></div></>;
+  if (!profile || !board) return <><Styles /><Auth inviteUserId={inviteUserId} /></>;
+
+  const name = profile.display_name || profile.username;
+
+  return (
+    <>
+      <Styles />
+      <div className="app">
+        {/* Banner */}
+        <div style={{ background: T.ink, color: T.bg, padding: "14px 28px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14 }}>
+            You're viewing <strong style={{ fontStyle: "normal" }}>{name}'s</strong> Vouch board.
+          </div>
+          <button onClick={onSignUp} style={{ background: T.bg, color: T.ink, border: "none", fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.15em", padding: "9px 18px", cursor: "pointer", whiteSpace: "nowrap" }}>
+            Create Your Own →
+          </button>
+        </div>
+
+        <header className="masthead">
+          <div className="masthead-meta">
+            <span>Vol. I &nbsp;·&nbsp; {new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}</span>
+            <span className="masthead-meta-stars">✦ · ✦ · ✦</span>
+            <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkMid }}>vouch5.com</span>
+          </div>
+          <div className="masthead-nameplate"><span className="nameplate-word">Vouch.</span></div>
+          <div className="masthead-rule-ornament">— ✦ —</div>
+          <div className="masthead-tagline">Love it? Vouch for it.</div>
+        </header>
+
+        <main className="page">
+          <div className="board-header">
+            <div>
+              <div className="board-name">{name}</div>
+              <div className="board-sub">@{profile.username}</div>
+            </div>
+            <button onClick={onSignUp} className="btn btn-solid">Create Your Own</button>
+          </div>
+          <div className="ornament">— ✦ —</div>
+
+          <VouchSection board={board} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => {}} myReactions={[]} />
+          {CATEGORIES.map(cat => (
+            <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={board[cat.key] || []} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => {}} myReactions={[]} />
+          ))}
+
+          <div style={{ marginTop: 48, padding: "32px 0", borderTop: `3px double ${T.ink}`, textAlign: "center" }}>
+            <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 26, fontWeight: 900, marginBottom: 8 }}>Make your own board.</div>
+            <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkMid, marginBottom: 24 }}>What five things would you put your name behind right now?</div>
+            <button onClick={onSignUp} className="btn btn-solid" style={{ fontSize: 13, padding: "12px 32px" }}>Get Started — It's Free</button>
+          </div>
+        </main>
+
+        <footer style={{ borderTop: `3px double ${T.ink}`, padding: "24px 28px", textAlign: "center" }}>
+          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid }}>© {new Date().getFullYear()} Vouch. All Rights Reserved.</div>
+        </footer>
+      </div>
+    </>
+  );
+}
+
+function HowItWorks() {
+  return (
+    <div style={{ fontFamily: "'Spectral',serif", color: T.inkMid, maxWidth: 380, margin: "0 auto", textAlign: "left" }}>
+      <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.2em", color: T.ink, marginBottom: 20, textAlign: "center" }}>How It Works</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div>
+          <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>Vouch 5</div>
+          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Pick the five things you'd put your name behind today. A movie, an album, a book, whatever. These are your top-of-the-fold picks.</div>
+        </div>
+        <div style={{ borderTop: `1px solid ${T.paperDark}` }} />
+        <div>
+          <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>Categories</div>
+          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Go deeper. Add up to five per category across Film, Music, Books, and Television.</div>
+        </div>
+        <div style={{ borderTop: `1px solid ${T.paperDark}` }} />
+        <div>
+          <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>Buddies</div>
+          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Connect with friends and see what they're vouching for. Hit "Dude, Same" on anything that resonates.</div>
+        </div>
       </div>
     </div>
   );
@@ -752,6 +865,120 @@ function BuddyModal({ userId, onClose, onSendRequest, onGenerateLink, inviteLink
   );
 }
 
+const TERMS = `TERMS OF USE
+
+Effective Date: March 11, 2026
+
+Welcome to Vouch ("the Service"), operated by Vouch ("we," "us," or "our"). By accessing or using Vouch, you agree to be bound by these Terms of Use. If you do not agree, please do not use the Service.
+
+1. USE OF THE SERVICE
+Vouch is a personal endorsement platform that allows users to share cultural recommendations with friends. You must be at least 13 years of age to use this Service. You agree not to use the Service for any unlawful purpose or in any way that could harm Vouch or other users.
+
+2. USER ACCOUNTS
+You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. We reserve the right to terminate accounts at our discretion.
+
+3. CONTENT
+You retain ownership of any content you submit to Vouch. By submitting content, you grant Vouch a non-exclusive, royalty-free license to display that content within the Service. You are solely responsible for the content you post.
+
+4. THIRD-PARTY SERVICES
+Vouch integrates with third-party services including Google, Spotify, and others. Your use of those services is governed by their respective terms and policies. Vouch is not responsible for the content, policies, or practices of third-party services.
+
+5. INTELLECTUAL PROPERTY
+The Vouch name, logo, design, and all associated content are the intellectual property of Vouch. All rights reserved. You may not reproduce, distribute, or create derivative works without our express written permission.
+
+6. DISCLAIMERS
+THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND. VOUCH DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+7. LIMITATION OF LIABILITY
+TO THE FULLEST EXTENT PERMITTED BY LAW, VOUCH SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES ARISING FROM YOUR USE OF THE SERVICE.
+
+8. CHANGES TO TERMS
+We reserve the right to modify these Terms at any time. Continued use of the Service after changes constitutes acceptance of the new Terms.
+
+9. CONTACT
+For questions about these Terms, contact us at legal@vouch5.com.`;
+
+const PRIVACY = `PRIVACY POLICY
+
+Effective Date: March 11, 2026
+
+Vouch ("we," "us," or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use the Vouch platform.
+
+1. INFORMATION WE COLLECT
+We collect the following information when you use Vouch:
+- Account Information: Your name and email address, collected via Google Sign-In.
+- Preference Data: Movies, TV shows, books, and music (artists, albums, songs) that you choose to endorse on your board.
+- Social Data: Buddy connections and reactions ("Dude, Same") you make on other users' boards.
+- Usage Data: Standard server logs including IP address, browser type, and pages visited.
+
+2. HOW WE USE YOUR INFORMATION
+We use your information to:
+- Provide and operate the Vouch Service
+- Display your board and endorsements to you and your approved Buddies
+- Enable social features including Buddy connections and reactions
+- Improve and develop the Service
+
+3. THIRD-PARTY SERVICES
+Vouch integrates with the following third-party services:
+- Google: Used for authentication. Governed by Google's Privacy Policy.
+- Spotify: Used to search and display music content. We do not store your Spotify credentials or access your private Spotify data.
+- The Movie Database (TMDB): Used to search and display film and television content.
+- Google Books / Open Library: Used to search and display book content.
+
+4. DATA SHARING
+We do not sell your personal information to third parties. Your board is visible to your approved Buddies. We do not share your data with advertisers.
+
+5. DATA RETENTION
+We retain your data for as long as your account is active. You may delete your account and associated data at any time by contacting us.
+
+6. SECURITY
+We use industry-standard security measures including Supabase row-level security to protect your data. No method of transmission over the Internet is 100% secure.
+
+7. CHILDREN'S PRIVACY
+Vouch is not directed at children under 13. We do not knowingly collect personal information from children under 13.
+
+8. YOUR RIGHTS
+Depending on your jurisdiction, you may have rights to access, correct, or delete your personal data. Contact us at legal@vouch5.com to make a request.
+
+9. CHANGES TO THIS POLICY
+We may update this Privacy Policy from time to time. We will notify users of significant changes by updating the effective date above.
+
+10. CONTACT
+For privacy-related questions, contact us at legal@vouch5.com.`;
+
+function LegalModal({ page, onClose }) {
+  if (page === "how") {
+    return (
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal" onClick={e => e.stopPropagation()}>
+          <div className="modal-head">
+            <div className="modal-title">How It Works</div>
+            <button className="modal-x" onClick={onClose}>×</button>
+          </div>
+          <div className="modal-body">
+            <HowItWorks />
+          </div>
+        </div>
+      </div>
+    );
+  }
+  const content = page === "terms" ? TERMS : PRIVACY;
+  const title   = page === "terms" ? "Terms of Use" : "Privacy Policy";
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxHeight: "80vh", display: "flex", flexDirection: "column" }}>
+        <div className="modal-head">
+          <div className="modal-title">{title}</div>
+          <button className="modal-x" onClick={onClose}>×</button>
+        </div>
+        <div className="modal-body" style={{ overflowY: "auto", flex: 1 }}>
+          <pre style={{ fontFamily: "'Spectral',serif", fontSize: 12.5, lineHeight: 1.8, whiteSpace: "pre-wrap", color: T.inkMid }}>{content}</pre>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Vouch() {
   const [user,        setUser]        = useState(null);
   const [userId,      setUserId]      = useState(null);
@@ -864,6 +1091,8 @@ export default function Vouch() {
     return () => subscription.unsubscribe();
   }, []);
 
+  const [legalPage, setLegalPage] = useState(null); // "terms" | "privacy" | null
+
   const signOut = async () => { await supabase.auth.signOut(); setUser(null); };
 
   const isOwn     = !viewing;
@@ -949,7 +1178,16 @@ export default function Vouch() {
 
 
 
-  if (!user) return <><Styles /><Auth /></>;
+  const inviteParam = new URLSearchParams(window.location.search).get("invite");
+
+  if (!user) {
+    if (inviteParam) {
+      return <PublicBoard inviteUserId={inviteParam} onSignUp={() => {
+        supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin + `?invite=${inviteParam}` } });
+      }} />;
+    }
+    return <><Styles /><Auth /></>;
+  }
   if (loading) return <><Styles /><div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: T.bg }}><div className="loading">Loading…</div></div></>;
 
 
@@ -962,6 +1200,7 @@ export default function Vouch() {
             <span>Vol. I &nbsp;·&nbsp; {new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}</span>
             <span className="masthead-meta-stars">✦ · ✦ · ✦</span>
             <span>
+              <span className="clickable" onClick={() => setLegalPage("how")} style={{ marginRight: 16 }}>How it Works</span>
               <span className="clickable" onClick={() => { setTab("board"); setViewing(null); }}>@{user.username}</span>
               <span className="clickable" onClick={signOut} style={{ marginLeft: 16 }}>Sign out</span>
             </span>
@@ -1092,6 +1331,18 @@ export default function Vouch() {
             onAdd={addItem}
           />
         )}
+
+        {legalPage && <LegalModal page={legalPage} onClose={() => setLegalPage(null)} />}
+
+        <footer style={{ borderTop: `3px double ${T.ink}`, marginTop: 64, padding: "24px 28px", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid }}>
+            © {new Date().getFullYear()} Vouch. All Rights Reserved.
+          </div>
+          <div style={{ display: "flex", gap: 20 }}>
+            <button onClick={() => setLegalPage("terms")} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkMid, textDecoration: "underline" }}>Terms of Use</button>
+            <button onClick={() => setLegalPage("privacy")} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkMid, textDecoration: "underline" }}>Privacy Policy</button>
+          </div>
+        </footer>
       </div>
     </>
   );
