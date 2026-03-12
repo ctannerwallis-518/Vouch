@@ -45,9 +45,9 @@ const Styles = () => (
     .masthead { background: ${T.bg}; border-bottom: 3px double ${T.ink}; user-select: none; }
     .masthead-meta {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 7px 28px; border-bottom: 1px solid ${T.ink};
-      font-family: 'Spectral SC', serif; font-size: 9px; letter-spacing: 0.18em;
-      color: ${T.inkMid}; text-transform: uppercase;
+      padding: 7px 14px; border-bottom: 1px solid ${T.ink};
+      font-family: 'Spectral SC', serif; font-size: 8px; letter-spacing: 0.12em;
+      color: ${T.inkMid}; text-transform: uppercase; white-space: nowrap; gap: 8px;
     }
     .masthead-meta .clickable { cursor: pointer; }
     .masthead-meta .clickable:hover { color: ${T.ink}; }
@@ -100,11 +100,11 @@ const Styles = () => (
       padding: 24px 24px 28px;
     }
     .vouch-section-header {
-      display: flex; align-items: baseline; gap: 14px;
+      display: flex; align-items: center; gap: 10px; flex-wrap: nowrap;
       border-bottom: 2px solid ${T.ink}; padding-bottom: 10px; margin-bottom: 22px;
     }
-    .vouch-section-label { font-family: 'Spectral SC', serif; font-weight: 700; font-size: 20px; letter-spacing: 0.08em; }
-    .vouch-section-sub   { font-family: 'Spectral', serif; font-style: italic; font-size: 11px; color: ${T.inkLight}; }
+    .vouch-section-label { font-family: 'Spectral SC', serif; font-weight: 700; font-size: 18px; letter-spacing: 0.08em; white-space: nowrap; }
+    .vouch-section-sub   { font-family: 'Spectral', serif; font-style: italic; font-size: 11px; color: ${T.inkLight}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .vouch-section-add   { margin-left: auto; font-family: 'Spectral SC', serif; font-size: 9.5px; font-weight: 600; letter-spacing: 0.2em; padding: 4px 14px; border: 1px solid ${T.ink}; background: transparent; color: ${T.inkMid}; cursor: pointer; transition: all 0.14s; }
     .vouch-section-add:hover { background: ${T.ink}; color: ${T.bg}; }
 
@@ -1369,6 +1369,14 @@ export default function Vouch() {
         </header>
 
         <main className="page">
+          {tab === "board" && !viewing && pendingIn.length > 0 && (
+            <div onClick={() => setTab("friends")} style={{ background: T.ink, color: T.bg, padding: "12px 16px", marginBottom: 20, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14 }}>
+                <strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11, letterSpacing: "0.12em" }}>{pendingIn.length} buddy request{pendingIn.length > 1 ? "s" : ""}</strong> waiting for you
+              </div>
+              <span style={{ fontFamily: "'Spectral SC',serif", fontSize: 10, letterSpacing: "0.12em" }}>Review →</span>
+            </div>
+          )}
           {tab === "friends" && !viewing
             ? <>
                 <div className="board-header">
@@ -1412,18 +1420,19 @@ export default function Vouch() {
                 ))}
               </>
             : <>
-                <div className="board-header">
-                  <div>
-                    <div className="board-name">
-                      {currName}
-                      {viewing && <span style={{ fontWeight: 400, fontSize: 16, color: T.inkLight, marginLeft: 10 }}>@{viewing?.username}</span>}
-                    </div>
-                    <div className="board-sub">
-                      {isOwn ? user.displayName : `${currName}'s board`}
-                    </div>
+                <div style={{ marginBottom: 8 }}>
+                  <div className="board-name" style={{ fontSize: 28, marginBottom: 2 }}>
+                    {currName}
                   </div>
-                  {viewing && <button className="btn btn-ghost" onClick={() => { setViewing(null); setTab("friends"); }}>← Back</button>}
+                  <div className="board-sub">
+                    @{viewing ? viewing.username : user.username}
+                  </div>
                 </div>
+                {viewing && (
+                  <div style={{ marginBottom: 16 }}>
+                    <button className="btn btn-ghost" onClick={() => { setViewing(null); setTab("friends"); }}>← Back to Buddies</button>
+                  </div>
+                )}
                 <div className="ornament">— ✦ —</div>
 
                 <VouchSection board={currBoard} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={() => setVouchModal(true)} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} />
