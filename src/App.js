@@ -711,42 +711,69 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
 }
 
 function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions }) {
+  const [idx, setIdx] = useState(0);
   const allItems = [];
   CATEGORIES.forEach(cat => {
     (board[cat.key] || []).forEach(item => {
       if (item.vouched) allItems.push({ ...item, _cat: cat.key, _catLabel: cat.label });
     });
   });
-  const slots = Array(5).fill(null).map((_, i) => allItems[i] || null);
+
+  const total = allItems.length;
+  const item  = allItems[idx] || null;
+
+  // reset index if items change
+  useEffect(() => { if (idx >= total && total > 0) setIdx(total - 1); }, [total]);
+
+  const prev = () => setIdx(i => Math.max(0, i - 1));
+  const next = () => setIdx(i => Math.min(total - 1, i + 1));
 
   return (
     <div className="vouch-section">
       <div className="vouch-section-header">
-        <div className="vouch-section-label">Vouch</div>
+        <div className="vouch-section-label">Vouch 5</div>
         <div className="vouch-section-sub">The five that define this moment</div>
         {isOwn && <button className="vouch-section-add" onClick={onAdd}>+ Add</button>}
       </div>
-      <div className="cards-row-large">
-        {slots.map((item, idx) =>
-          item
-            ? <div key={item.id + item._cat} className="card-large" style={{ position: "relative" }} onClick={() => item.sourceUrl ? window.open(item.sourceUrl, "_blank") : onCard(item._cat, (board[item._cat] || []).findIndex(x => x.id === item.id))}>
-                {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(item._cat, (board[item._cat] || []).findIndex(x => x.id === item.id)); }} style={{ position: "absolute", top: 6, right: 6, zIndex: 2, background: "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", width: 26, height: 26, cursor: "pointer", fontSize: 15, lineHeight: "26px", textAlign: "center" }}>×</button>}
-                {!isOwn && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ position: "absolute", top: 6, right: 6, zIndex: 2, background: myReactions?.includes(item.id) ? T.ink : "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "4px 7px", whiteSpace: "nowrap" }}>{myReactions?.includes(item.id) ? "✓ Same" : "Dude, Same"}</button>}
-                {item.poster
-                  ? <img src={item.poster} alt={item.title} className="card-poster-large" onError={e => { e.target.style.display = "none"; }} />
-                  : <div className="card-poster-placeholder-large">{item.title}</div>}
-                <div className="card-cat-badge">{item._catLabel}</div>
-                <div className="card-title-large">{item.title}</div>
-                <div className="card-sub-large">{item.artist || item.author || item.year || item.sub || ""}</div>
-                {item.comment && <div className="card-comment-large">"{item.comment}"</div>}
+
+      <div style={{ position: "relative", display: "flex", alignItems: "stretch", gap: 0 }}>
+        {/* Main card */}
+        <div style={{ flex: 1, position: "relative", minHeight: 320 }}>
+          {item ? (
+            <div style={{ position: "relative", cursor: item.sourceUrl ? "pointer" : "default", height: "100%" }}
+              onClick={() => item.sourceUrl ? window.open(item.sourceUrl, "_blank") : onCard(item._cat, (board[item._cat] || []).findIndex(x => x.id === item.id))}>
+              {item.poster
+                ? <img src={item.poster} alt={item.title} style={{ width: "100%", maxHeight: 380, objectFit: "cover", display: "block", border: `1px solid ${T.paperDark}` }} onError={e => e.target.style.display = "none"} />
+                : <div style={{ width: "100%", height: 320, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 18, color: T.inkLight, padding: 24, textAlign: "center" }}>{item.title}</div>}
+              <div style={{ padding: "14px 4px 4px" }}>
+                <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkFaint, marginBottom: 4 }}>{item._catLabel}</div>
+                <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4 }}>{item.title}</div>
+                <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.inkMid }}>{item.artist || item.author || item.sub || ""}</div>
+                {item.comment && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkLight, marginTop: 6 }}>"{item.comment}"</div>}
               </div>
-            : isOwn
-              ? <div key={`ve${idx}`} className="slot-empty-large" onClick={onAdd}>
-                  <div className="slot-empty-inner"><span className="slot-empty-plus">+</span>Vouch</div>
-                </div>
-              : <div key={`ve${idx}`} className="slot-empty-large" style={{ cursor: "default", opacity: 0.35 }}>
-                  <div className="slot-empty-inner"><span className="slot-empty-plus">—</span></div>
-                </div>
+              {/* action buttons */}
+              {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(item._cat, (board[item._cat] || []).findIndex(x => x.id === item.id)); }} style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", width: 28, height: 28, cursor: "pointer", fontSize: 16, lineHeight: "28px", textAlign: "center" }}>×</button>}
+              {!isOwn && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: myReactions?.includes(item.id) ? T.ink : "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "5px 8px", whiteSpace: "nowrap" }}>{myReactions?.includes(item.id) ? "✓ Same" : "Dude, Same"}</button>}
+            </div>
+          ) : isOwn ? (
+            <div style={{ height: 320, border: `1px dashed ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexDirection: "column", gap: 8 }} onClick={onAdd}>
+              <span style={{ fontSize: 28, color: T.inkFaint }}>+</span>
+              <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: T.inkFaint }}>Add to Vouch 5</span>
+            </div>
+          ) : null}
+        </div>
+
+        {/* Nav strip */}
+        {total > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", gap: 8, minWidth: 36 }}>
+            <button onClick={prev} disabled={idx === 0} style={{ background: "none", border: "none", cursor: idx === 0 ? "default" : "pointer", opacity: idx === 0 ? 0.2 : 1, fontSize: 18, color: T.ink, lineHeight: 1 }}>↑</button>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "center" }}>
+              {Array(Math.max(total, isOwn ? 1 : 0)).fill(null).map((_, i) => (
+                <div key={i} onClick={() => i < total && setIdx(i)} style={{ width: 6, height: 6, borderRadius: "50%", background: i === idx ? T.ink : T.paperDark, cursor: i < total ? "pointer" : "default", flexShrink: 0 }} />
+              ))}
+            </div>
+            <button onClick={next} disabled={idx >= total - 1} style={{ background: "none", border: "none", cursor: idx >= total - 1 ? "default" : "pointer", opacity: idx >= total - 1 ? 0.2 : 1, fontSize: 18, color: T.ink, lineHeight: 1 }}>↓</button>
+          </div>
         )}
       </div>
     </div>
