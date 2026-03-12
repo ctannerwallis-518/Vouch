@@ -710,10 +710,12 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
 
 function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions }) {
   const [idx, setIdx] = useState(0);
-  const [dragX, setDragX] = useState(0);
+  const [offsetX, setOffsetX] = useState(0);
   const [dragging, setDragging] = useState(false);
-  const touchStart = useRef(null);
-  const dragXRef = useRef(0);
+  const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
+  const currentOffsetX = useRef(0);
+  const isHoriz = useRef(false);
   const containerRef = useRef(null);
   const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
 
@@ -723,41 +725,85 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
       if (item.vouched) allItems.push({ ...item, _cat: cat.key, _catLabel: cat.label });
     });
   });
-
   const total = allItems.length;
 
   useEffect(() => { if (idx >= total && total > 0) setIdx(total - 1); }, [total, idx]);
 
-  const onTouchStart = e => {
-    touchStart.current = e.touches[0].clientX;
-    dragXRef.current = 0;
-    setDragging(true);
-    setDragX(0);
-  };
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || !isMobile) return;
 
-  const onTouchMove = e => {
-    if (touchStart.current === null) return;
-    const diff = e.touches[0].clientX - touchStart.current;
-    const val = (idx === 0 && diff > 0) || (idx === total - 1 && diff < 0) ? diff * 0.15 : diff;
-    dragXRef.current = val;
-    setDragX(val);
-  };
+    const handleStart = e => {
+      touchStartX.current = e.touches[0].clientX;
+      touchStartY.current = e.touches[0].clientY;
+      currentOffsetX.current = 0;
+      isHoriz.current = false;
+      setDragging(true);
+      setOffsetX(0);
+    };
 
-  const onTouchEnd = () => {
-    setDragging(false);
-    const w = containerRef.current?.offsetWidth || 300;
-    const dx = dragXRef.current;
-    if (dx < -(w * 0.25) && idx < total - 1) setIdx(i => i + 1);
-    else if (dx > (w * 0.25) && idx > 0) setIdx(i => i - 1);
-    dragXRef.current = 0;
-    setDragX(0);
-    touchStart.current = null;
-  };
+    const handleMove = e => {
+      if (touchStartX.current === null) return;
+      const dx = e.touches[0].clientX - touchStartX.current;
+      const dy = e.touches[0].clientY - touchStartY.current;
+      if (!isHoriz.current && Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+      if (!isHoriz.current) isHoriz.current = Math.abs(dx) > Math.abs(dy);
+      if (!isHoriz.current) return;
+      e.preventDefault();
+      const w = el.offsetWidth;
+      const bounded = (idx === 0 && dx > 0) || (idx === total - 1 && dx < 0) ? dx * 0.15 : dx;
+      currentOffsetX.current = bounded;
+      // Set transform directly on the track for zero-lag response
+      const track = el.querySelector(".swipe-track");
+      if (track) track.style.transform = `translateX(${-(idx * w) - bounded * -1}px)`;
+    };
+
+    const handleEnd = () => {
+      if (!isHoriz.current) { setDragging(false); return; }
+      const w = el.offsetWidth;
+      const dx = currentOffsetX.current;
+      let newIdx = idx;
+      if (dx < -(w * 0.22) && idx < total - 1) newIdx = idx + 1;
+      else if (dx > (w * 0.22) && idx > 0) newIdx = idx - 1;
+      // Snap with CSS transition
+      const track = el.querySelector(".swipe-track");
+      if (track) {
+        track.style.transition = "transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+        track.style.transform = `translateX(${-(newIdx * w)}px)`;
+        setTimeout(() => { if (track) track.style.transition = ""; }, 350);
+      }
+      currentOffsetX.current = 0;
+      setDragging(false);
+      setIdx(newIdx);
+      touchStartX.current = null;
+    };
+
+    el.addEventListener("touchstart", handleStart, { passive: true });
+    el.addEventListener("touchmove", handleMove, { passive: false });
+    el.addEventListener("touchend", handleEnd, { passive: true });
+    return () => {
+      el.removeEventListener("touchstart", handleStart);
+      el.removeEventListener("touchmove", handleMove);
+      el.removeEventListener("touchend", handleEnd);
+    };
+  }, [idx, total, isMobile]);
+
+  // Keep track snapped on idx change (e.g. dot tap)
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || !isMobile) return;
+    const track = el.querySelector(".swipe-track");
+    if (!track) return;
+    const w = el.offsetWidth;
+    track.style.transition = "transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+    track.style.transform = `translateX(${-(idx * w)}px)`;
+    setTimeout(() => { if (track) track.style.transition = ""; }, 350);
+  }, [idx, isMobile]);
 
   const CardFace = ({ it }) => (
     <div style={{ position: "relative", cursor: it.sourceUrl ? "pointer" : "default" }}
       onClick={() => {
-        if (Math.abs(dragX) > 8) return;
+        if (Math.abs(currentOffsetX.current) > 8) return;
         it.sourceUrl ? window.open(it.sourceUrl, "_blank") : onCard(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id));
       }}>
       {it.poster
@@ -783,28 +829,21 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
       </div>
 
       {isMobile ? (
-        <div ref={containerRef}
-          style={{ overflow: "hidden", touchAction: "pan-y", userSelect: "none" }}
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}>
-          <div style={{
-            display: "flex",
-            transform: `translateX(calc(${-idx * 100}% + ${dragX}px))`,
-            transition: dragging ? "none" : "transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-            willChange: "transform",
-          }}>
-            {allItems.length > 0 ? allItems.map((it) => (
-              <div key={it.id + it._cat} style={{ minWidth: "100%", width: "100%" }}>
-                <CardFace it={it} />
-              </div>
-            )) : isOwn ? (
-              <div style={{ minWidth: "100%", width: "100%", height: 280, border: `1px dashed ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 8, cursor: "pointer" }} onClick={onAdd}>
-                <span style={{ fontSize: 28, color: T.inkFaint }}>+</span>
-                <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: T.inkFaint }}>Add to Vouch 5</span>
-              </div>
-            ) : null}
-          </div>
+        <div ref={containerRef} style={{ overflow: "hidden", userSelect: "none" }}>
+          {allItems.length === 0 && isOwn ? (
+            <div style={{ height: 280, border: `1px dashed ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 8, cursor: "pointer" }} onClick={onAdd}>
+              <span style={{ fontSize: 28, color: T.inkFaint }}>+</span>
+              <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: T.inkFaint }}>Add to Vouch 5</span>
+            </div>
+          ) : (
+            <div className="swipe-track" style={{ display: "flex", willChange: "transform" }}>
+              {allItems.map((it) => (
+                <div key={it.id + it._cat} style={{ flex: "0 0 100%", width: "100%" }}>
+                  <CardFace it={it} />
+                </div>
+              ))}
+            </div>
+          )}
           {total > 1 && (
             <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 14 }}>
               {allItems.map((_, i) => (
