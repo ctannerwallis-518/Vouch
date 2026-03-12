@@ -260,28 +260,39 @@ function PublicBoard({ inviteUserId, onSignUp }) {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const { data: prof } = await supabase.from("profiles").select("id, username, display_name").eq("id", inviteUserId).single();
-      if (!prof) { setLoading(false); return; }
-      setProfile(prof);
-      const { data: rows } = await supabase.from("endorsements").select("*").eq("user_id", inviteUserId).order("created_at", { ascending: true });
-      if (rows) {
-        const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
-        rows.forEach(row => {
-          if (b[row.category] && b[row.category].length < 5) {
-            b[row.category].push({ id: row.item_id, title: row.title, sub: row.subtitle || "", poster: row.poster || null, comment: row.comment || "", vouched: row.vouched || false, sourceUrl: row.source_url || null });
-          }
-        });
-        setBoard(b);
-      }
+      try {
+        const { data: prof } = await supabase
+          .from("profiles").select("id, username, display_name").eq("id", inviteUserId).maybeSingle();
+        if (prof) setProfile(prof);
+
+        const { data: rows } = await supabase
+          .from("endorsements").select("*").eq("user_id", inviteUserId).order("created_at", { ascending: true });
+
+        if (rows && rows.length > 0) {
+          const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
+          rows.forEach(row => {
+            if (b[row.category] && b[row.category].length < 5) {
+              b[row.category].push({
+                id: row.item_id, title: row.title, sub: row.subtitle || "",
+                poster: row.poster || null, comment: row.comment || "",
+                vouched: row.vouched || false, sourceUrl: row.source_url || null,
+              });
+            }
+          });
+          setBoard(b);
+        } else {
+          setBoard({ movies: [], albums: [], artists: [], songs: [], books: [], shows: [] });
+        }
+      } catch(e) { console.error(e); }
       setLoading(false);
     };
     load();
   }, [inviteUserId]);
 
   if (loading) return <><Styles /><div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: T.bg }}><div className="loading">Loading…</div></div></>;
-  if (!profile || !board) return <><Styles /><Auth inviteUserId={inviteUserId} /></>;
+  if (!board) return <><Styles /><Auth inviteUserId={inviteUserId} /></>;
 
-  const name = profile.display_name || profile.username;
+  const name = profile?.display_name || profile?.username || "Someone";
 
   return (
     <>
