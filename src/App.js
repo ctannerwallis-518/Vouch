@@ -710,8 +710,6 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
 
 function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions }) {
   const [idx, setIdx] = useState(0);
-  const [offsetX, setOffsetX] = useState(0);
-  const [dragging, setDragging] = useState(false);
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);
   const currentOffsetX = useRef(0);
@@ -738,8 +736,6 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
       touchStartY.current = e.touches[0].clientY;
       currentOffsetX.current = 0;
       isHoriz.current = false;
-      setDragging(true);
-      setOffsetX(0);
     };
 
     const handleMove = e => {
@@ -759,13 +755,12 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
     };
 
     const handleEnd = () => {
-      if (!isHoriz.current) { setDragging(false); return; }
+      if (!isHoriz.current) return;
       const w = el.offsetWidth;
       const dx = currentOffsetX.current;
       let newIdx = idx;
       if (dx < -(w * 0.22) && idx < total - 1) newIdx = idx + 1;
       else if (dx > (w * 0.22) && idx > 0) newIdx = idx - 1;
-      // Snap with CSS transition
       const track = el.querySelector(".swipe-track");
       if (track) {
         track.style.transition = "transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
@@ -773,7 +768,6 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
         setTimeout(() => { if (track) track.style.transition = ""; }, 350);
       }
       currentOffsetX.current = 0;
-      setDragging(false);
       setIdx(newIdx);
       touchStartX.current = null;
     };
