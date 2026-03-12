@@ -723,7 +723,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
   const item  = allItems[idx] || null;
 
   // reset index if items change
-  useEffect(() => { if (idx >= total && total > 0) setIdx(total - 1); }, [total]);
+  useEffect(() => { if (idx >= total && total > 0) setIdx(total - 1); }, [total, idx]);
 
   const prev = () => setIdx(i => Math.max(0, i - 1));
   const next = () => setIdx(i => Math.min(total - 1, i + 1));
