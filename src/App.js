@@ -1155,7 +1155,13 @@ export default function Vouch() {
     setSaving(true);
     const timeout = setTimeout(() => setSaving(false), 8000);
     try {
-      await supabase.from("endorsements").upsert({
+      // Delete first to avoid any upsert conflict issues, then insert fresh
+      await supabase.from("endorsements")
+        .delete()
+        .eq("user_id", userId)
+        .eq("category", catKey)
+        .eq("item_id", String(item.id));
+      await supabase.from("endorsements").insert({
         user_id: userId,
         category: catKey,
         item_id: String(item.id),
@@ -1165,7 +1171,7 @@ export default function Vouch() {
         comment: item.comment || "",
         vouched: item.vouched === true,
         source_url: item.sourceUrl || null,
-      }, { onConflict: "user_id,category,item_id", ignoreDuplicates: false });
+      });
       await loadBoard(userId);
     } catch(e) { console.error(e); }
     clearTimeout(timeout);
