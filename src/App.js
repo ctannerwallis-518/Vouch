@@ -1326,7 +1326,6 @@ export default function Vouch() {
             onClose={() => setVouchModal(false)}
             onAdd={(catKey, item) => {
               addItem(catKey, { ...item, vouched: true });
-              setVouchModal(false);
             }}
           />
         )}
