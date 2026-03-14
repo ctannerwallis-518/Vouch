@@ -1174,7 +1174,7 @@ export default function Vouch() {
           .eq("user_id", userId)
           .eq("category", catKey)
           .eq("vouched", false);
-        if (count >= 5) { clearTimeout(timeout); setSaving(false); return; }
+        if (count >= 5) { clearTimeout(timeout); setSaving(false); alert("Your " + catKey + " category is full. Remove one first, then re-add this to Vouch 5."); return; }
         await supabase.from("endorsements").insert({
           user_id: userId,
           category: catKey,
