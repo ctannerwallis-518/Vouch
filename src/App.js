@@ -1172,7 +1172,8 @@ export default function Vouch() {
         const { count } = await supabase.from("endorsements")
           .select("*", { count: "exact", head: true })
           .eq("user_id", userId)
-          .eq("category", catKey);
+          .eq("category", catKey)
+          .eq("vouched", false);
         if (count >= 5) { clearTimeout(timeout); setSaving(false); return; }
         await supabase.from("endorsements").insert({
           user_id: userId,
