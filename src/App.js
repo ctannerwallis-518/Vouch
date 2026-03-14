@@ -1165,7 +1165,7 @@ export default function Vouch() {
         comment: item.comment || "",
         vouched: item.vouched === true,
         source_url: item.sourceUrl || null,
-      }, { onConflict: "user_id,category,item_id" });
+      }, { onConflict: "user_id,category,item_id", ignoreDuplicates: false });
       await loadBoard(userId);
     } catch(e) { console.error(e); }
     clearTimeout(timeout);
