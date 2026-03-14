@@ -41,7 +41,6 @@ const Styles = () => (
 
     .app { min-height: 100vh; background: ${T.bg}; }
 
-    /* MASTHEAD */
     .masthead { background: ${T.bg}; border-bottom: 3px double ${T.ink}; user-select: none; }
     .masthead-meta {
       display: flex; justify-content: space-between; align-items: center;
@@ -52,18 +51,15 @@ const Styles = () => (
     .masthead-meta .clickable { cursor: pointer; }
     .masthead-meta .clickable:hover { color: ${T.ink}; }
     .masthead-meta-stars { font-size: 7px; letter-spacing: 0.3em; opacity: 0.6; }
-
     .masthead-nameplate { text-align: center; padding: 18px 28px 6px; cursor: pointer; }
     .nameplate-word {
       font-family: 'Times New Roman', Times, serif; font-weight: 900;
       font-size: clamp(58px, 11vw, 104px); letter-spacing: 0.02em;
       line-height: 0.92; color: ${T.ink};
     }
-
     .masthead-rule-ornament { text-align: center; font-family: 'Spectral', serif; font-size: 11px; letter-spacing: 0.6em; color: ${T.inkLight}; padding: 4px 0 2px; }
     .masthead-tagline { text-align: center; font-family: 'Spectral', serif; font-style: italic; font-weight: 300; font-size: 12.5px; letter-spacing: 0.12em; color: ${T.inkLight}; padding-bottom: 12px; }
 
-    /* NAV */
     .nav { display: flex; overflow-x: auto; scrollbar-width: none; border-top: 1px solid ${T.ink}; }
     .nav::-webkit-scrollbar { display: none; }
     .nav-btn {
@@ -75,9 +71,7 @@ const Styles = () => (
     .nav-btn:hover  { background: ${T.paperDark}; color: ${T.ink}; }
     .nav-btn.active { background: ${T.ink}; color: ${T.bg}; }
 
-    /* PAGE */
     .page { max-width: 1380px; margin: 0 auto; padding: 0 28px 80px; }
-
     .board-header { display: flex; justify-content: space-between; align-items: flex-end; padding: 30px 0 18px; border-bottom: 1px solid ${T.ink}; margin-bottom: 32px; }
     .board-name { font-family: 'Spectral', serif; font-weight: 700; font-size: 26px; }
     .board-sub  { font-family: 'Spectral SC', serif; font-size: 10px; letter-spacing: 0.16em; color: ${T.inkLight}; margin-top: 5px; }
@@ -90,39 +84,22 @@ const Styles = () => (
 
     .ornament { text-align: center; font-family: 'Spectral', serif; font-size: 13px; letter-spacing: 0.5em; color: ${T.inkFaint}; margin: 4px 0 28px; }
 
-    /* VOUCH SECTION (top 5 across all categories) */
-    .vouch-section {
-      margin-bottom: 52px;
-      border: 2px solid ${T.ink};
-      background: rgba(17,16,8,0.04);
-      padding: 24px 24px 28px;
-    }
-    .vouch-section-header {
-      display: flex; align-items: center; gap: 10px; flex-wrap: nowrap;
-      border-bottom: 2px solid ${T.ink}; padding-bottom: 10px; margin-bottom: 22px;
-    }
+    .vouch-section { margin-bottom: 52px; border: 2px solid ${T.ink}; background: rgba(17,16,8,0.04); padding: 24px 24px 28px; }
+    .vouch-section-header { display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; border-bottom: 2px solid ${T.ink}; padding-bottom: 10px; margin-bottom: 22px; }
     .vouch-section-label { font-family: 'Spectral SC', serif; font-weight: 700; font-size: 18px; letter-spacing: 0.08em; white-space: nowrap; }
     .vouch-section-sub   { font-family: 'Spectral', serif; font-style: italic; font-size: 11px; color: ${T.inkLight}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .vouch-section-add   { margin-left: auto; font-family: 'Spectral SC', serif; font-size: 9.5px; font-weight: 600; letter-spacing: 0.2em; padding: 4px 14px; border: 1px solid ${T.ink}; background: transparent; color: ${T.inkMid}; cursor: pointer; transition: all 0.14s; }
     .vouch-section-add:hover { background: ${T.ink}; color: ${T.bg}; }
 
-    /* LARGE CARDS (Vouch section) */
     .cards-row-large { display: flex; gap: 12px; flex-wrap: nowrap; }
     .card-large { flex: 1; min-width: 0; cursor: pointer; }
-    .card-large:hover .card-poster-large { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(17,16,8,0.2); }
     .card-poster-large { width: 100%; aspect-ratio: 2/3; object-fit: cover; display: block; border: 1px solid ${T.paperDark}; transition: transform 0.2s, box-shadow 0.2s; }
     .card-poster-placeholder-large { width: 100%; aspect-ratio: 2/3; background: ${T.paperDark}; border: 1px solid ${T.paperDark}; display: flex; align-items: center; justify-content: center; font-family: 'Spectral', serif; font-style: italic; font-size: 12px; color: ${T.inkLight}; text-align: center; padding: 14px; }
-    .card-cat-badge { display: inline-block; font-family: 'Spectral SC', serif; font-size: 8.5px; letter-spacing: 0.2em; color: ${T.inkFaint}; margin-top: 8px; text-transform: uppercase; }
-    .card-title-large   { font-family: 'Spectral', serif; font-weight: 600; font-size: 13px; line-height: 1.35; margin-top: 3px; }
-    .card-sub-large     { font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.06em; color: ${T.inkLight}; margin-top: 2px; }
-    .card-comment-large { font-family: 'Spectral', serif; font-style: italic; font-size: 10.5px; line-height: 1.5; color: ${T.inkMid}; margin-top: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-
     .slot-empty-large { flex: 1; min-width: 0; aspect-ratio: 2/3; border: 1px dashed ${T.ink}; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.14s, background 0.14s; }
     .slot-empty-large:hover { background: rgba(17,16,8,0.04); }
     .slot-empty-inner { text-align: center; font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.18em; color: ${T.inkFaint}; }
     .slot-empty-plus  { display: block; font-size: 22px; margin-bottom: 6px; color: ${T.paperDark}; }
 
-    /* MENTION SECTIONS (per-category, smaller) */
     .cat-section { margin-bottom: 44px; }
     .cat-header { display: flex; align-items: baseline; gap: 14px; border-bottom: 2px solid ${T.ink}; padding-bottom: 10px; margin-bottom: 18px; }
     .cat-label { font-family: 'Spectral SC', serif; font-weight: 700; font-size: 17px; letter-spacing: 0.08em; }
@@ -131,7 +108,6 @@ const Styles = () => (
     .cat-add { margin-left: auto; font-family: 'Spectral SC', serif; font-size: 9.5px; font-weight: 600; letter-spacing: 0.2em; padding: 4px 14px; border: 1px solid ${T.inkLight}; background: transparent; color: ${T.inkMid}; cursor: pointer; transition: all 0.14s; }
     .cat-add:hover { border-color: ${T.ink}; color: ${T.ink}; }
 
-    /* SMALLER CARDS (Mentions) */
     .cards-row { display: flex; gap: 14px; flex-wrap: wrap; }
     .card { width: 150px; flex-shrink: 0; cursor: pointer; }
     .card:hover .card-poster { transform: translateY(-3px); box-shadow: 0 7px 20px rgba(17,16,8,0.16); }
@@ -140,11 +116,9 @@ const Styles = () => (
     .card-title   { font-family: 'Spectral', serif; font-weight: 600; font-size: 12.5px; line-height: 1.35; margin-top: 7px; }
     .card-sub     { font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.06em; color: ${T.inkLight}; margin-top: 2px; }
     .card-comment { font-family: 'Spectral', serif; font-style: italic; font-size: 10.5px; line-height: 1.5; color: ${T.inkMid}; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-
     .slot-empty-sm { width: 150px; height: 206px; border: 1px dashed ${T.paperDark}; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.14s, background 0.14s; flex-shrink: 0; }
     .slot-empty-sm:hover { border-color: ${T.ink}; background: rgba(17,16,8,0.03); }
 
-    /* LIGHTBOX */
     .lb-overlay { position: fixed; inset: 0; background: rgba(17,16,8,0.96); z-index: 1000; display: flex; align-items: center; justify-content: center; }
     .lb-close { position: fixed; top: 22px; right: 26px; background: transparent; border: none; color: ${T.bg}; font-family: 'Spectral', serif; font-size: 30px; line-height: 1; cursor: pointer; opacity: 0.6; transition: opacity 0.14s; }
     .lb-close:hover { opacity: 1; }
@@ -162,7 +136,6 @@ const Styles = () => (
     .lb-dot    { width: 5px; height: 5px; border-radius: 50%; background: rgba(200,194,180,0.25); cursor: pointer; transition: background 0.14s; }
     .lb-dot.on { background: ${T.bg}; }
 
-    /* MODAL */
     .modal-overlay { position: fixed; inset: 0; background: rgba(17,16,8,0.82); z-index: 900; display: flex; align-items: flex-start; justify-content: center; padding-top: 72px; }
     .modal       { background: ${T.bg}; width: 100%; max-width: 540px; max-height: 82vh; overflow-y: auto; border: 1px solid ${T.ink}; }
     .modal-head  { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; border-bottom: 2px solid ${T.ink}; }
@@ -187,14 +160,12 @@ const Styles = () => (
     .comment-area::placeholder { color: ${T.inkFaint}; }
     .char-count { font-family: 'Spectral SC', serif; font-size: 9.5px; color: ${T.inkFaint}; text-align: right; margin: 4px 0 12px; }
 
-    /* FRIENDS */
     .friend-row { display: flex; align-items: center; justify-content: space-between; padding: 13px 0; border-bottom: 1px solid ${T.paperDark}; cursor: pointer; }
     .friend-row:hover .friend-name { text-decoration: underline; }
     .friend-name   { font-family: 'Spectral', serif; font-weight: 600; font-size: 15px; }
     .friend-handle { font-family: 'Spectral SC', serif; font-size: 10px; letter-spacing: 0.1em; color: ${T.inkLight}; margin-top: 2px; }
     .friend-arrow  { font-size: 13px; color: ${T.inkFaint}; }
 
-    /* AUTH */
     .auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: ${T.bg}; padding: 24px; }
     .auth-box  { width: 100%; max-width: 400px; }
     .auth-plate { text-align: center; border-top: 3px double ${T.ink}; border-bottom: 3px double ${T.ink}; padding: 14px 0 10px; margin-bottom: 10px; }
@@ -212,14 +183,12 @@ const Styles = () => (
       .card-poster-large { width: 100%; height: auto; aspect-ratio: 2/3; }
       .card-poster-placeholder-large { width: 100%; aspect-ratio: 2/3; height: auto; }
       .slot-empty-large { width: 100%; aspect-ratio: 2/3; height: auto; margin-bottom: 0; }
-
       .cards-row { flex-direction: column; gap: 0; }
       .card { width: 100%; display: flex; flex-direction: row; gap: 14px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid ${T.paperDark}; }
       .card-poster { width: 72px; height: 100px; flex-shrink: 0; }
       .card-poster-placeholder { width: 72px; height: 100px; flex-shrink: 0; font-size: 10px; }
       .card:hover .card-poster { transform: none; box-shadow: none; }
       .slot-empty-sm { width: 100%; height: 56px; aspect-ratio: unset; border-style: dashed; margin: 4px 0; }
-
       .page { padding: 0 16px 60px; }
       .masthead-meta { padding: 7px 16px; }
       .vouch-section { padding: 16px 14px 20px; }
@@ -227,7 +196,7 @@ const Styles = () => (
   `}</style>
 );
 
-function Auth({ inviteUserId, inviterName }) {
+function Auth({ inviteUserId }) {
   const signInWithGoogle = async () => {
     await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -249,9 +218,9 @@ function Auth({ inviteUserId, inviterName }) {
 }
 
 function PublicBoard({ inviteUserId, onSignUp }) {
-  const [board, setBoard]       = useState(null);
-  const [profile, setProfile]   = useState(null);
-  const [loading, setLoading]   = useState(true);
+  const [board, setBoard]     = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
@@ -260,10 +229,8 @@ function PublicBoard({ inviteUserId, onSignUp }) {
         const { data: prof } = await supabase
           .from("profiles").select("id, username, display_name").eq("id", inviteUserId).maybeSingle();
         if (prof) setProfile(prof);
-
         const { data: rows } = await supabase
           .from("endorsements").select("*").eq("user_id", inviteUserId).order("created_at", { ascending: true });
-
         if (rows && rows.length > 0) {
           const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
           rows.forEach(row => {
@@ -302,10 +269,9 @@ function PublicBoard({ inviteUserId, onSignUp }) {
             Create Your Own →
           </button>
         </div>
-
         <header className="masthead">
           <div className="masthead-meta">
-            <span>Est. 2026 &nbsp;·&nbsp; {new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}</span>
+            <span>Est. 2026</span>
             <span className="masthead-meta-stars">✦ · ✦ · ✦</span>
             <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkMid }}>vouch5.com</span>
           </div>
@@ -313,7 +279,6 @@ function PublicBoard({ inviteUserId, onSignUp }) {
           <div className="masthead-rule-ornament">— ✦ —</div>
           <div className="masthead-tagline">Love it? Vouch for it.</div>
         </header>
-
         <main className="page">
           <div style={{ marginBottom: 20 }}>
             <div className="board-name" style={{ fontSize: 28, marginBottom: 2 }}>{name}</div>
@@ -321,19 +286,16 @@ function PublicBoard({ inviteUserId, onSignUp }) {
             <button onClick={onSignUp} className="btn btn-solid" style={{ width: "100%", padding: "12px", fontSize: 13 }}>Create Your Own Vouch Board →</button>
           </div>
           <div className="ornament">— ✦ —</div>
-
           <VouchSection board={board} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => {}} myReactions={[]} />
           {CATEGORIES.map(cat => (
             <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={board[cat.key] || []} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => {}} myReactions={[]} />
           ))}
-
           <div style={{ marginTop: 48, padding: "32px 0", borderTop: `3px double ${T.ink}`, textAlign: "center" }}>
             <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 26, fontWeight: 900, marginBottom: 8 }}>Make your own board.</div>
             <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkMid, marginBottom: 24 }}>What five things would you put your name behind right now?</div>
             <button onClick={onSignUp} className="btn btn-solid" style={{ fontSize: 13, padding: "12px 32px" }}>Get Started — It's Free</button>
           </div>
         </main>
-
         <footer style={{ borderTop: `3px double ${T.ink}`, padding: "24px 28px", textAlign: "center" }}>
           <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid }}>© {new Date().getFullYear()} Vouch. All Rights Reserved.</div>
         </footer>
@@ -415,8 +377,8 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
         if (catKey === "movies") {
           const res  = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB}&query=${encodeURIComponent(q)}&language=en-US`);
           const data = await res.json();
-          const results = (data.results || []).slice(0, 8);
-          const withImdb = await Promise.all(results.map(async r => {
+          const list = (data.results || []).slice(0, 8);
+          const withImdb = await Promise.all(list.map(async r => {
             try {
               const ext = await fetch(`https://api.themoviedb.org/3/movie/${r.id}/external_ids?api_key=${TMDB}`).then(x => x.json());
               return { id: r.id, title: r.title, sub: r.release_date ? r.release_date.slice(0, 4) : "", poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null, sourceUrl: ext.imdb_id ? `https://www.imdb.com/title/${ext.imdb_id}/` : `https://www.imdb.com/find?q=${encodeURIComponent(r.title)}` };
@@ -426,8 +388,8 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
         } else if (catKey === "shows") {
           const res  = await fetch(`https://api.themoviedb.org/3/search/tv?api_key=${TMDB}&query=${encodeURIComponent(q)}&language=en-US`);
           const data = await res.json();
-          const results = (data.results || []).slice(0, 8);
-          const withImdb = await Promise.all(results.map(async r => {
+          const list = (data.results || []).slice(0, 8);
+          const withImdb = await Promise.all(list.map(async r => {
             try {
               const ext = await fetch(`https://api.themoviedb.org/3/tv/${r.id}/external_ids?api_key=${TMDB}`).then(x => x.json());
               return { id: r.id, title: r.name, sub: r.first_air_date ? r.first_air_date.slice(0, 4) : "", poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null, sourceUrl: ext.imdb_id ? `https://www.imdb.com/title/${ext.imdb_id}/` : `https://www.imdb.com/find?q=${encodeURIComponent(r.name)}` };
@@ -439,26 +401,11 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
           const res = await fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=${typeMap[catKey]}`);
           const data = await res.json();
           if (catKey === "songs") {
-            setResults((data.tracks?.items || []).slice(0, 8).map(r => ({
-              id: r.id, title: r.name,
-              sub: r.artists?.[0]?.name || "",
-              poster: r.album?.images?.[0]?.url || null,
-              sourceUrl: `https://open.spotify.com/track/${r.id}`,
-            })));
+            setResults((data.tracks?.items || []).slice(0, 8).map(r => ({ id: r.id, title: r.name, sub: r.artists?.[0]?.name || "", poster: r.album?.images?.[0]?.url || null, sourceUrl: `https://open.spotify.com/track/${r.id}` })));
           } else if (catKey === "albums") {
-            setResults((data.albums?.items || []).slice(0, 8).map(r => ({
-              id: r.id, title: r.name,
-              sub: r.artists?.[0]?.name || "",
-              poster: r.images?.[0]?.url || null,
-              sourceUrl: `https://open.spotify.com/album/${r.id}`,
-            })));
+            setResults((data.albums?.items || []).slice(0, 8).map(r => ({ id: r.id, title: r.name, sub: r.artists?.[0]?.name || "", poster: r.images?.[0]?.url || null, sourceUrl: `https://open.spotify.com/album/${r.id}` })));
           } else {
-            setResults((data.artists?.items || []).slice(0, 8).map(r => ({
-              id: r.id, title: r.name,
-              sub: r.genres?.[0] || "",
-              poster: r.images?.[0]?.url || null,
-              sourceUrl: `https://open.spotify.com/artist/${r.id}`,
-            })));
+            setResults((data.artists?.items || []).slice(0, 8).map(r => ({ id: r.id, title: r.name, sub: r.genres?.[0] || "", poster: r.images?.[0]?.url || null, sourceUrl: `https://open.spotify.com/artist/${r.id}` })));
           }
         } else if (catKey === "books") {
           const res  = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=8&language=eng`);
@@ -467,13 +414,7 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
             const coverId = r.cover_i;
             const isbn = (r.isbn || [])[0];
             const poster = coverId ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg` : isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg` : null;
-            return {
-              id: r.key || r.title,
-              title: r.title,
-              sub: (r.author_name || []).join(", "),
-              poster,
-              sourceUrl: `https://openlibrary.org${r.key}`,
-            };
+            return { id: r.key || r.title, title: r.title, sub: (r.author_name || []).join(", "), poster, sourceUrl: `https://openlibrary.org${r.key}` };
           }));
         } else {
           setResults([]);
@@ -498,7 +439,7 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
             : picked
               ? <>
                   <div className="selected-preview">
-                    <img src={picked.poster} alt={picked.title} className="result-img" onError={e => { e.target.style.background = T.paperDark; e.target.src = ''; }} />
+                    <img src={picked.poster} alt={picked.title} className="result-img" onError={e => { e.target.style.background = T.paperDark; e.target.src = ""; }} />
                     <div style={{ flex: 1 }}>
                       <div className="result-title">{picked.title}</div>
                       <div className="result-sub">{picked.sub || ""}</div>
@@ -519,7 +460,7 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
                   {!busy && q.trim() && results.length === 0 && <div className="no-results">No results found.</div>}
                   {results.map(r => (
                     <div key={r.id} className="result-item" onClick={() => setPicked(r)}>
-                      {r.poster ? <img src={r.poster} alt={r.title} className="result-img" onError={e => { e.target.style.background = T.paperDark; e.target.src = ''; }} /> : <div className="result-img" />}
+                      {r.poster ? <img src={r.poster} alt={r.title} className="result-img" onError={e => { e.target.style.background = T.paperDark; e.target.src = ""; }} /> : <div className="result-img" />}
                       <div>
                         <div className="result-title">{r.title}</div>
                         <div className="result-sub">{r.sub || ""}</div>
@@ -545,13 +486,13 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
   const remaining             = 5 - used;
 
   const FILTERS = [
-    { key: "all",     label: "All"       },
-    { key: "movies",  label: "Film"      },
-    { key: "shows",   label: "TV"        },
-    { key: "songs",   label: "Songs"     },
-    { key: "albums",  label: "Albums"    },
-    { key: "artists", label: "Artists"   },
-    { key: "books",   label: "Books"     },
+    { key: "all",     label: "All"     },
+    { key: "movies",  label: "Film"    },
+    { key: "shows",   label: "TV"      },
+    { key: "songs",   label: "Songs"   },
+    { key: "albums",  label: "Albums"  },
+    { key: "artists", label: "Artists" },
+    { key: "books",   label: "Books"   },
   ];
 
   const visibleResults = filter === "all" ? results : results.filter(r => r.catKey === filter);
@@ -570,63 +511,24 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
           fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=artist`).then(r => r.json()),
           fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=3&language=eng`).then(r => r.json()),
         ]);
-
         const mixed = [];
-
         const movieResults = (movieRes.results || []).slice(0, 3);
-        const tvResults = (tvRes.results || []).slice(0, 2);
+        const tvResults    = (tvRes.results || []).slice(0, 2);
         const [movieIds, tvIds] = await Promise.all([
           Promise.all(movieResults.map(r => fetch(`https://api.themoviedb.org/3/movie/${r.id}/external_ids?api_key=${TMDB}`).then(x => x.json()).catch(() => ({})))),
           Promise.all(tvResults.map(r => fetch(`https://api.themoviedb.org/3/tv/${r.id}/external_ids?api_key=${TMDB}`).then(x => x.json()).catch(() => ({})))),
         ]);
-
-        movieResults.forEach((r, i) => mixed.push({
-          id: r.id, title: r.title, catKey: "movies", catLabel: "Film",
-          sub: r.release_date ? r.release_date.slice(0, 4) : "",
-          poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null,
-          sourceUrl: movieIds[i]?.imdb_id ? `https://www.imdb.com/title/${movieIds[i].imdb_id}/` : `https://www.imdb.com/find?q=${encodeURIComponent(r.title)}`,
-        }));
-
-        tvResults.forEach((r, i) => mixed.push({
-          id: r.id, title: r.name, catKey: "shows", catLabel: "Television",
-          sub: r.first_air_date ? r.first_air_date.slice(0, 4) : "",
-          poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null,
-          sourceUrl: tvIds[i]?.imdb_id ? `https://www.imdb.com/title/${tvIds[i].imdb_id}/` : `https://www.imdb.com/find?q=${encodeURIComponent(r.name)}`,
-        }));
-
-        (trackRes.tracks?.items || []).slice(0, 3).forEach(r => mixed.push({
-          id: r.id, title: r.name, catKey: "songs", catLabel: "Songs",
-          sub: r.artists?.[0]?.name || "",
-          poster: r.album?.images?.[0]?.url || null,
-          sourceUrl: `https://open.spotify.com/track/${r.id}`,
-        }));
-
-        (albumRes.albums?.items || []).slice(0, 2).forEach(r => mixed.push({
-          id: r.id, title: r.name, catKey: "albums", catLabel: "Albums",
-          sub: r.artists?.[0]?.name || "",
-          poster: r.images?.[0]?.url || null,
-          sourceUrl: `https://open.spotify.com/album/${r.id}`,
-        }));
-
-        (artistRes.artists?.items || []).slice(0, 2).forEach(r => mixed.push({
-          id: r.id, title: r.name, catKey: "artists", catLabel: "Artists",
-          sub: r.genres?.[0] || "",
-          poster: r.images?.[0]?.url || null,
-          sourceUrl: `https://open.spotify.com/artist/${r.id}`,
-        }));
-
+        movieResults.forEach((r, i) => mixed.push({ id: r.id, title: r.title, catKey: "movies", catLabel: "Film", sub: r.release_date ? r.release_date.slice(0, 4) : "", poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null, sourceUrl: movieIds[i]?.imdb_id ? `https://www.imdb.com/title/${movieIds[i].imdb_id}/` : `https://www.imdb.com/find?q=${encodeURIComponent(r.title)}` }));
+        tvResults.forEach((r, i) => mixed.push({ id: r.id, title: r.name, catKey: "shows", catLabel: "Television", sub: r.first_air_date ? r.first_air_date.slice(0, 4) : "", poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null, sourceUrl: tvIds[i]?.imdb_id ? `https://www.imdb.com/title/${tvIds[i].imdb_id}/` : `https://www.imdb.com/find?q=${encodeURIComponent(r.name)}` }));
+        (trackRes.tracks?.items || []).slice(0, 3).forEach(r => mixed.push({ id: r.id, title: r.name, catKey: "songs", catLabel: "Songs", sub: r.artists?.[0]?.name || "", poster: r.album?.images?.[0]?.url || null, sourceUrl: `https://open.spotify.com/track/${r.id}` }));
+        (albumRes.albums?.items || []).slice(0, 2).forEach(r => mixed.push({ id: r.id, title: r.name, catKey: "albums", catLabel: "Albums", sub: r.artists?.[0]?.name || "", poster: r.images?.[0]?.url || null, sourceUrl: `https://open.spotify.com/album/${r.id}` }));
+        (artistRes.artists?.items || []).slice(0, 2).forEach(r => mixed.push({ id: r.id, title: r.name, catKey: "artists", catLabel: "Artists", sub: r.genres?.[0] || "", poster: r.images?.[0]?.url || null, sourceUrl: `https://open.spotify.com/artist/${r.id}` }));
         (booksRes.docs || []).slice(0, 2).forEach(r => {
           const coverId = r.cover_i;
           const isbn = (r.isbn || [])[0];
           const poster = coverId ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg` : isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg` : null;
-          mixed.push({
-            id: r.key || r.title, title: r.title, catKey: "books", catLabel: "Book",
-            sub: (r.author_name || []).join(", "),
-            poster,
-            sourceUrl: `https://openlibrary.org${r.key}`,
-          });
+          mixed.push({ id: r.key || r.title, title: r.title, catKey: "books", catLabel: "Book", sub: (r.author_name || []).join(", "), poster, sourceUrl: `https://openlibrary.org${r.key}` });
         });
-
         setResults(mixed);
       } catch(e) { console.error(e); }
       setBusy(false);
@@ -643,7 +545,7 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}>
         <div className="modal-head">
-          <div className="modal-title">Add to Vouch</div>
+          <div className="modal-title">Add to Vouch 5</div>
           <button className="modal-x" onClick={onClose}>×</button>
         </div>
         <div className="modal-body">
@@ -652,7 +554,7 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
             : picked
               ? <>
                   <div className="selected-preview">
-                    <img src={picked.poster} alt={picked.title} className="result-img" onError={e => { e.target.style.background = T.paperDark; e.target.src = ''; }} />
+                    <img src={picked.poster} alt={picked.title} className="result-img" onError={e => { e.target.style.background = T.paperDark; e.target.src = ""; }} />
                     <div style={{ flex: 1 }}>
                       <div className="result-title">{picked.title}</div>
                       <div className="result-sub">{picked.sub} · {picked.catLabel}</div>
@@ -671,20 +573,14 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
                   <input className="search-input" placeholder="Search films, shows, songs, albums, artists, books…" value={q} onChange={e => setQ(e.target.value)} autoFocus />
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
                     {FILTERS.map(f => (
-                      <button key={f.key} onClick={() => setFilter(f.key)} style={{
-                        fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em",
-                        padding: "4px 10px", border: `1px solid ${filter === f.key ? T.ink : T.paperDark}`,
-                        background: filter === f.key ? T.ink : "transparent",
-                        color: filter === f.key ? T.bg : T.inkMid,
-                        cursor: "pointer", transition: "all 0.12s",
-                      }}>{f.label}</button>
+                      <button key={f.key} onClick={() => setFilter(f.key)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "4px 10px", border: `1px solid ${filter === f.key ? T.ink : T.paperDark}`, background: filter === f.key ? T.ink : "transparent", color: filter === f.key ? T.bg : T.inkMid, cursor: "pointer", transition: "all 0.12s" }}>{f.label}</button>
                     ))}
                   </div>
                   {busy && <div className="loading">Searching…</div>}
                   {!busy && q.trim() && visibleResults.length === 0 && <div className="no-results">No results found.</div>}
                   {visibleResults.map((r, i) => (
                     <div key={r.id + r.catKey + i} className="result-item" onClick={() => setPicked(r)}>
-                      {r.poster ? <img src={r.poster} alt={r.title} className="result-img" onError={e => { e.target.style.background = T.paperDark; e.target.src = ''; }} /> : <div className="result-img" />}
+                      {r.poster ? <img src={r.poster} alt={r.title} className="result-img" onError={e => { e.target.style.background = T.paperDark; e.target.src = ""; }} /> : <div className="result-img" />}
                       <div style={{ flex: 1 }}>
                         <div className="result-title">{r.title}</div>
                         <div className="result-sub">{r.sub}</div>
@@ -701,12 +597,12 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
 }
 
 function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions }) {
-  const [idx, setIdx] = useState(0);
-  const touchStartX = useRef(null);
-  const touchStartY = useRef(null);
-  const currentOffsetX = useRef(0);
-  const isHoriz = useRef(false);
-  const containerRef = useRef(null);
+  const [idx, setIdx]      = useState(0);
+  const touchStartX        = useRef(null);
+  const touchStartY        = useRef(null);
+  const currentOffsetX     = useRef(0);
+  const isHoriz            = useRef(false);
+  const containerRef       = useRef(null);
   const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
 
   const allItems = [];
@@ -722,14 +618,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
   useEffect(() => {
     const el = containerRef.current;
     if (!el || !isMobile) return;
-
-    const handleStart = e => {
-      touchStartX.current = e.touches[0].clientX;
-      touchStartY.current = e.touches[0].clientY;
-      currentOffsetX.current = 0;
-      isHoriz.current = false;
-    };
-
+    const handleStart = e => { touchStartX.current = e.touches[0].clientX; touchStartY.current = e.touches[0].clientY; currentOffsetX.current = 0; isHoriz.current = false; };
     const handleMove = e => {
       if (touchStartX.current === null) return;
       const dx = e.touches[0].clientX - touchStartX.current;
@@ -744,7 +633,6 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
       const track = el.querySelector(".swipe-track");
       if (track) track.style.transform = `translateX(${-(idx * w) - bounded * -1}px)`;
     };
-
     const handleEnd = () => {
       if (!isHoriz.current) return;
       const w = el.offsetWidth;
@@ -753,24 +641,13 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
       if (dx < -(w * 0.22) && idx < total - 1) newIdx = idx + 1;
       else if (dx > (w * 0.22) && idx > 0) newIdx = idx - 1;
       const track = el.querySelector(".swipe-track");
-      if (track) {
-        track.style.transition = "transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
-        track.style.transform = `translateX(${-(newIdx * w)}px)`;
-        setTimeout(() => { if (track) track.style.transition = ""; }, 350);
-      }
-      currentOffsetX.current = 0;
-      setIdx(newIdx);
-      touchStartX.current = null;
+      if (track) { track.style.transition = "transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94)"; track.style.transform = `translateX(${-(newIdx * w)}px)`; setTimeout(() => { if (track) track.style.transition = ""; }, 350); }
+      currentOffsetX.current = 0; setIdx(newIdx); touchStartX.current = null;
     };
-
     el.addEventListener("touchstart", handleStart, { passive: true });
     el.addEventListener("touchmove", handleMove, { passive: false });
     el.addEventListener("touchend", handleEnd, { passive: true });
-    return () => {
-      el.removeEventListener("touchstart", handleStart);
-      el.removeEventListener("touchmove", handleMove);
-      el.removeEventListener("touchend", handleEnd);
-    };
+    return () => { el.removeEventListener("touchstart", handleStart); el.removeEventListener("touchmove", handleMove); el.removeEventListener("touchend", handleEnd); };
   }, [idx, total, isMobile]);
 
   useEffect(() => {
@@ -799,8 +676,16 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
         <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.inkMid }}>{it.artist || it.author || it.sub || ""}</div>
         {it.comment && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkLight, marginTop: 6 }}>"{it.comment}"</div>}
       </div>
-      {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id)); }} style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", width: 28, height: 28, cursor: "pointer", fontSize: 16, lineHeight: "28px", textAlign: "center" }}>×</button>}
-      {!isOwn && <button onClick={e => { e.stopPropagation(); onDudeSame(it); }} style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: myReactions?.includes(it.id) ? T.ink : "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "5px 8px", whiteSpace: "nowrap" }}>{myReactions?.includes(it.id) ? "✓ Agreed" : "Agree"}</button>}
+      {isOwn && (
+        <button onClick={e => { e.stopPropagation(); onRemove(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id), true); }}
+          style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", width: 28, height: 28, cursor: "pointer", fontSize: 16, lineHeight: "28px", textAlign: "center" }}>×</button>
+      )}
+      {!isOwn && (
+        <button onClick={e => { e.stopPropagation(); onDudeSame(it); }}
+          style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: myReactions?.includes(String(it.id)) ? T.ink : "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "5px 8px", whiteSpace: "nowrap" }}>
+          {myReactions?.includes(String(it.id)) ? "✓ Agreed" : "Agree"}
+        </button>
+      )}
     </div>
   );
 
@@ -811,7 +696,6 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
         <div className="vouch-section-sub">The five that define this moment</div>
         {isOwn && <button className="vouch-section-add" onClick={onAdd}>+ Add</button>}
       </div>
-
       {isMobile ? (
         <div ref={containerRef} style={{ overflow: "hidden", userSelect: "none" }}>
           {allItems.length === 0 && isOwn ? (
@@ -875,31 +759,31 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
         {isOwn && !isMobile && <button className="cat-add" onClick={() => onAdd(catKey)}>+ Vouch</button>}
         {isOwn && isMobile && open && <button className="cat-add" style={{ marginLeft: 8 }} onClick={e => { e.stopPropagation(); onAdd(catKey); }}>+ Vouch</button>}
       </div>
-      {!collapsed && <div className="cards-row">
-        {slots.map((item, idx) =>
-          item
-            ? <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => item.sourceUrl ? window.open(item.sourceUrl, "_blank") : onCard(catKey, idx)}>
-                {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", width: 22, height: 22, cursor: "pointer", fontSize: 13, lineHeight: "22px", textAlign: "center" }}>×</button>}
-                {!isOwn && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: myReactions?.includes(item.id) ? T.ink : "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 5px", whiteSpace: "nowrap" }}>{myReactions?.includes(item.id) ? "✓" : "Agree"}</button>}
-                {item.poster
-                  ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} />
-                  : null}
-                <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
-                <div style={{ flex: 1 }}>
-                  <div className="card-title">{item.title}</div>
-                  <div className="card-sub">{item.artist || item.author || item.year || item.sub || ""}</div>
-                  {item.comment && <div className="card-comment">"{item.comment}"</div>}
+      {!collapsed && (
+        <div className="cards-row">
+          {slots.map((item, idx) =>
+            item
+              ? <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => item.sourceUrl ? window.open(item.sourceUrl, "_blank") : onCard(catKey, idx)}>
+                  {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx, false); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", width: 22, height: 22, cursor: "pointer", fontSize: 13, lineHeight: "22px", textAlign: "center" }}>×</button>}
+                  {!isOwn && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: myReactions?.includes(String(item.id)) ? T.ink : "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 5px", whiteSpace: "nowrap" }}>{myReactions?.includes(String(item.id)) ? "✓" : "Agree"}</button>}
+                  {item.poster ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} /> : null}
+                  <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
+                  <div style={{ flex: 1 }}>
+                    <div className="card-title">{item.title}</div>
+                    <div className="card-sub">{item.artist || item.author || item.year || item.sub || ""}</div>
+                    {item.comment && <div className="card-comment">"{item.comment}"</div>}
+                  </div>
                 </div>
-              </div>
-            : isOwn
-              ? <div key={`e${idx}`} className="slot-empty-sm" onClick={() => onAdd(catKey)}>
-                  <div className="slot-empty-inner"><span className="slot-empty-plus">+</span>Vouch</div>
-                </div>
-              : <div key={`e${idx}`} className="slot-empty-sm" style={{ cursor: "default", opacity: 0.4 }}>
-                  <div className="slot-empty-inner"><span className="slot-empty-plus">—</span></div>
-                </div>
-        )}
-      </div>}
+              : isOwn
+                ? <div key={`e${idx}`} className="slot-empty-sm" onClick={() => onAdd(catKey)}>
+                    <div className="slot-empty-inner"><span className="slot-empty-plus">+</span>Vouch</div>
+                  </div>
+                : <div key={`e${idx}`} className="slot-empty-sm" style={{ cursor: "default", opacity: 0.4 }}>
+                    <div className="slot-empty-inner"><span className="slot-empty-plus">—</span></div>
+                  </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -932,11 +816,11 @@ function MutualMentions({ reactions, myReactions, isOwn, boardOwnerName }) {
 }
 
 function BuddyModal({ userId, onClose, onSendRequest, onGenerateLink, inviteLink, existingBuddyIds }) {
-  const [q, setQ]           = useState("");
+  const [q, setQ]             = useState("");
   const [results, setResults] = useState([]);
-  const [busy, setBusy]     = useState(false);
-  const [sent, setSent]     = useState([]);
-  const timer               = useRef(null);
+  const [busy, setBusy]       = useState(false);
+  const [sent, setSent]       = useState([]);
+  const timer                 = useRef(null);
 
   useEffect(() => {
     if (!q.trim()) { setResults([]); return; }
@@ -959,11 +843,9 @@ function BuddyModal({ userId, onClose, onSendRequest, onGenerateLink, inviteLink
         <div className="modal-body">
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9.5px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 8 }}>Invite via Link</div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button className="btn btn-solid" style={{ flex: 1 }} onClick={onGenerateLink}>
-                {inviteLink ? "Link Copied!" : "Copy Invite Link"}
-              </button>
-            </div>
+            <button className="btn btn-solid" style={{ width: "100%" }} onClick={onGenerateLink}>
+              {inviteLink ? "Link Copied!" : "Copy Invite Link"}
+            </button>
             {inviteLink && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 6, wordBreak: "break-all" }}>{inviteLink}</div>}
           </div>
           <div style={{ borderBottom: `1px solid ${T.paperDark}`, marginBottom: 16 }} />
@@ -1038,7 +920,7 @@ Vouch ("we," "us," or "our") is committed to protecting your privacy. This Priva
 We collect the following information when you use Vouch:
 - Account Information: Your name and email address, collected via Google Sign-In.
 - Preference Data: Movies, TV shows, books, and music (artists, albums, songs) that you choose to endorse on your board.
-- Social Data: Buddy connections and reactions ("Agree") you make on other users' boards.
+- Social Data: Buddy connections and reactions you make on other users' boards.
 - Usage Data: Standard server logs including IP address, browser type, and pages visited.
 
 2. HOW WE USE YOUR INFORMATION
@@ -1085,9 +967,7 @@ function LegalModal({ page, onClose }) {
             <div className="modal-title">How It Works</div>
             <button className="modal-x" onClick={onClose}>×</button>
           </div>
-          <div className="modal-body">
-            <HowItWorks />
-          </div>
+          <div className="modal-body"><HowItWorks /></div>
         </div>
       </div>
     );
@@ -1110,24 +990,24 @@ function LegalModal({ page, onClose }) {
 }
 
 export default function Vouch() {
-  const [user,        setUser]        = useState(null);
-  const [userId,      setUserId]      = useState(null);
-  const [tab,         setTab]         = useState("board");
-  const [viewing,     setViewing]     = useState(null);
-  const [board,       setBoard]       = useState({ ...EMPTY_BOARD });
-  const [viewBoard,   setViewBoard]   = useState({ ...EMPTY_BOARD });
-  const [loading,     setLoading]     = useState(false);
-  const [lightbox,    setLightbox]    = useState(null);
-  const [addModal,    setAddModal]    = useState(null);
-  const [vouchModal,  setVouchModal]  = useState(false);
-  const [saving,      setSaving]      = useState(false);
-  const [buddies,     setBuddies]     = useState([]);
-  const [pendingIn,   setPendingIn]   = useState([]);
-  const [buddyModal,  setBuddyModal]  = useState(false);
-  const [inviteLink,  setInviteLink]  = useState(null);
-  const [myReactions, setMyReactions] = useState([]);
+  const [user,           setUser]           = useState(null);
+  const [userId,         setUserId]         = useState(null);
+  const [tab,            setTab]            = useState("board");
+  const [viewing,        setViewing]        = useState(null);
+  const [board,          setBoard]          = useState({ ...EMPTY_BOARD });
+  const [viewBoard,      setViewBoard]      = useState({ ...EMPTY_BOARD });
+  const [loading,        setLoading]        = useState(false);
+  const [lightbox,       setLightbox]       = useState(null);
+  const [addModal,       setAddModal]       = useState(null);
+  const [vouchModal,     setVouchModal]     = useState(false);
+  const [saving,         setSaving]         = useState(false);
+  const [buddies,        setBuddies]        = useState([]);
+  const [pendingIn,      setPendingIn]      = useState([]);
+  const [buddyModal,     setBuddyModal]     = useState(false);
+  const [inviteLink,     setInviteLink]     = useState(null);
+  const [myReactions,    setMyReactions]    = useState([]);
   const [boardReactions, setBoardReactions] = useState([]);
-  const [legalPage,   setLegalPage]   = useState(null);
+  const [legalPage,      setLegalPage]      = useState(null);
 
   const loadMyReactions = async (uid) => {
     const { data } = await supabase.from("reactions").select("*").eq("user_id", uid).order("created_at", { ascending: false });
@@ -1233,13 +1113,9 @@ export default function Vouch() {
       await supabase.from("reactions").delete().eq("id", already.id);
     } else {
       await supabase.from("reactions").upsert({
-        user_id: userId,
-        item_owner_id: viewing.userId,
-        item_id: String(item.id),
-        title: item.title,
-        subtitle: item.sub || item.artist || item.author || "",
-        poster: item.poster || null,
-        source_url: item.sourceUrl || null,
+        user_id: userId, item_owner_id: viewing.userId, item_id: String(item.id),
+        title: item.title, subtitle: item.sub || item.artist || item.author || "",
+        poster: item.poster || null, source_url: item.sourceUrl || null,
       }, { onConflict: "user_id,item_owner_id,item_id" });
     }
     loadMyReactions(userId);
@@ -1287,7 +1163,7 @@ export default function Vouch() {
         subtitle: item.sub || "",
         poster: item.poster || null,
         comment: item.comment || "",
-        vouched: item.vouched || false,
+        vouched: item.vouched === true,
         source_url: item.sourceUrl || null,
       }, { onConflict: "user_id,category,item_id" });
       await loadBoard(userId);
@@ -1296,13 +1172,18 @@ export default function Vouch() {
     setSaving(false);
   };
 
-  const removeItem = async (catKey, idx) => {
+  // fromVouch5=true just un-vouches the item (keeps it in category section)
+  // fromVouch5=false fully deletes it
+  const removeItem = async (catKey, idx, fromVouch5 = false) => {
     if (saving) return;
     setSaving(true);
     const timeout = setTimeout(() => setSaving(false), 8000);
     try {
       const item = board[catKey]?.[idx];
-      if (item?.dbId) {
+      if (!item?.dbId) { await loadBoard(userId); clearTimeout(timeout); setSaving(false); return; }
+      if (fromVouch5) {
+        await supabase.from("endorsements").update({ vouched: false }).eq("id", item.dbId);
+      } else {
         await supabase.from("endorsements").delete().eq("id", item.dbId);
       }
       await loadBoard(userId);
@@ -1311,7 +1192,8 @@ export default function Vouch() {
     setSaving(false);
   };
 
-  const inviteParam = new URLSearchParams(window.location.search).get("invite");
+  const vouchedCount = Object.values(board).flat().filter(item => item.vouched).length;
+  const inviteParam  = new URLSearchParams(window.location.search).get("invite");
 
   if (!user) {
     if (inviteParam) {
@@ -1329,7 +1211,7 @@ export default function Vouch() {
       <div className="app">
         <header className="masthead">
           <div className="masthead-meta">
-            <span>Est. 2026 &nbsp;·&nbsp; {new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}</span>
+            <span>Est. 2026</span>
             <span className="masthead-meta-stars">✦ · ✦ · ✦</span>
             <span>
               <span className="clickable" onClick={() => setLegalPage("how")} style={{ marginRight: 16 }}>How it Works</span>
@@ -1342,7 +1224,6 @@ export default function Vouch() {
           </div>
           <div className="masthead-rule-ornament">— ✦ —</div>
           <div className="masthead-tagline">Love it? Vouch for it.</div>
-
           <nav className="nav">
             <button className={`nav-btn${tab === "board" && !viewing ? " active" : ""}`} onClick={() => { setTab("board"); setViewing(null); }}>My Board</button>
             <button className={`nav-btn${tab === "friends" ? " active" : ""}`} onClick={() => { setTab("friends"); setViewing(null); }}>
@@ -1361,6 +1242,7 @@ export default function Vouch() {
               <span style={{ fontFamily: "'Spectral SC',serif", fontSize: 10, letterSpacing: "0.12em" }}>Review →</span>
             </div>
           )}
+
           {tab === "friends" && !viewing
             ? <>
                 <div className="board-header">
@@ -1371,7 +1253,6 @@ export default function Vouch() {
                   <button className="btn btn-solid" onClick={() => setBuddyModal(true)}>+ Add Buddy</button>
                 </div>
                 <div className="ornament">· · ·</div>
-
                 {pendingIn.length > 0 && <>
                   <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 12 }}>Pending Requests</div>
                   {pendingIn.map(b => (
@@ -1388,11 +1269,9 @@ export default function Vouch() {
                   ))}
                   <div style={{ borderBottom: `1px solid ${T.paperDark}`, margin: "20px 0" }} />
                 </>}
-
                 {buddies.length === 0 && pendingIn.length === 0 && (
                   <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkLight, padding: "24px 0" }}>No buddies yet — add one or share your invite link.</div>
                 )}
-
                 {buddies.map(b => (
                   <div key={b.buddyRowId} className="friend-row" onClick={() => viewBuddy(b)}>
                     <div>
@@ -1421,12 +1300,7 @@ export default function Vouch() {
                   <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={currBoard[cat.key] || []} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={setAddModal} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} />
                 ))}
 
-                <MutualMentions
-                  reactions={boardReactions}
-                  myReactions={myReactions}
-                  isOwn={isOwn}
-                  boardOwnerName={currName}
-                />
+                <MutualMentions reactions={boardReactions} myReactions={myReactions} isOwn={isOwn} boardOwnerName={currName} />
               </>
           }
         </main>
@@ -1438,19 +1312,12 @@ export default function Vouch() {
         })()}
 
         {buddyModal && (
-          <BuddyModal
-            userId={userId}
-            onClose={() => { setBuddyModal(false); setInviteLink(null); }}
-            onSendRequest={sendBuddyRequest}
-            onGenerateLink={generateInviteLink}
-            inviteLink={inviteLink}
-            existingBuddyIds={buddies.map(b => b.userId)}
-          />
+          <BuddyModal userId={userId} onClose={() => { setBuddyModal(false); setInviteLink(null); }} onSendRequest={sendBuddyRequest} onGenerateLink={generateInviteLink} inviteLink={inviteLink} existingBuddyIds={buddies.map(b => b.userId)} />
         )}
 
         {vouchModal && (
           <UniversalSearchModal
-            used={Object.values(board).flat().filter(item => item.vouched).length}
+            used={vouchedCount}
             onClose={() => setVouchModal(false)}
             onAdd={(catKey, item) => {
               addItem(catKey, { ...item, vouched: true });
@@ -1460,13 +1327,7 @@ export default function Vouch() {
         )}
 
         {addModal && (
-          <AddModal
-            catKey={addModal}
-            catLabel={CATEGORIES.find(c => c.key === addModal)?.label}
-            used={(board[addModal] || []).length}
-            onClose={() => setAddModal(null)}
-            onAdd={addItem}
-          />
+          <AddModal catKey={addModal} catLabel={CATEGORIES.find(c => c.key === addModal)?.label} used={(board[addModal] || []).length} onClose={() => setAddModal(null)} onAdd={addItem} />
         )}
 
         {legalPage && <LegalModal page={legalPage} onClose={() => setLegalPage(null)} />}
