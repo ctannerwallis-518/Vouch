@@ -1151,7 +1151,6 @@ export default function Vouch() {
   };
 
   const addItem = async (catKey, item) => {
-    if (saving) return;
     setSaving(true);
     const timeout = setTimeout(() => setSaving(false), 8000);
     try {
