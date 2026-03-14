@@ -1151,6 +1151,8 @@ export default function Vouch() {
   };
 
   const addItem = async (catKey, item) => {
+    const { count } = await supabase.from("endorsements").select("*", { count: "exact", head: true }).eq("user_id", userId).eq("category", catKey);
+    if (count !== null && count >= 5) { const existing = board[catKey]?.find(i => String(i.id) === String(item.id)); if (!existing) return; }
     setSaving(true);
     const timeout = setTimeout(() => setSaving(false), 8000);
     try {
