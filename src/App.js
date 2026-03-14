@@ -63,8 +63,6 @@ const Styles = () => (
     .masthead-rule-ornament { text-align: center; font-family: 'Spectral', serif; font-size: 11px; letter-spacing: 0.6em; color: ${T.inkLight}; padding: 4px 0 2px; }
     .masthead-tagline { text-align: center; font-family: 'Spectral', serif; font-style: italic; font-weight: 300; font-size: 12.5px; letter-spacing: 0.12em; color: ${T.inkLight}; padding-bottom: 12px; }
 
-
-
     /* NAV */
     .nav { display: flex; overflow-x: auto; scrollbar-width: none; border-top: 1px solid ${T.ink}; }
     .nav::-webkit-scrollbar { display: none; }
@@ -209,14 +207,12 @@ const Styles = () => (
     .no-results { text-align: center; padding: 18px 0; font-family: 'Spectral', serif; font-style: italic; font-size: 13px; color: ${T.inkLight}; }
 
     @media (max-width: 640px) {
-      /* Vouch 5: single column full width */
       .cards-row-large { flex-direction: column; gap: 0; }
       .card-large { width: 100%; }
       .card-poster-large { width: 100%; height: auto; aspect-ratio: 2/3; }
       .card-poster-placeholder-large { width: 100%; aspect-ratio: 2/3; height: auto; }
       .slot-empty-large { width: 100%; aspect-ratio: 2/3; height: auto; margin-bottom: 0; }
 
-      /* Category mentions: single column */
       .cards-row { flex-direction: column; gap: 0; }
       .card { width: 100%; display: flex; flex-direction: row; gap: 14px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid ${T.paperDark}; }
       .card-poster { width: 72px; height: 100px; flex-shrink: 0; }
@@ -261,15 +257,12 @@ function PublicBoard({ inviteUserId, onSignUp }) {
     const load = async () => {
       setLoading(true);
       try {
-        console.log("PublicBoard loading for userId:", inviteUserId);
-        const { data: prof, error: profError } = await supabase
+        const { data: prof } = await supabase
           .from("profiles").select("id, username, display_name").eq("id", inviteUserId).maybeSingle();
-        console.log("Profile result:", prof, profError);
         if (prof) setProfile(prof);
 
-        const { data: rows, error: rowsError } = await supabase
+        const { data: rows } = await supabase
           .from("endorsements").select("*").eq("user_id", inviteUserId).order("created_at", { ascending: true });
-        console.log("Endorsements result:", rows?.length, rowsError);
 
         if (rows && rows.length > 0) {
           const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
@@ -301,7 +294,6 @@ function PublicBoard({ inviteUserId, onSignUp }) {
     <>
       <Styles />
       <div className="app">
-        {/* Banner */}
         <div style={{ background: T.ink, color: T.bg, padding: "14px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
           <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14 }}>
             You're viewing <strong style={{ fontStyle: "normal" }}>{name}'s</strong> Vouch board.
@@ -313,7 +305,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
 
         <header className="masthead">
           <div className="masthead-meta">
-            <span>Vol. I &nbsp;·&nbsp; {new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}</span>
+            <span>Est. 2026 &nbsp;·&nbsp; {new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}</span>
             <span className="masthead-meta-stars">✦ · ✦ · ✦</span>
             <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkMid }}>vouch5.com</span>
           </div>
@@ -367,7 +359,7 @@ function HowItWorks() {
         <div style={{ borderTop: `1px solid ${T.paperDark}` }} />
         <div>
           <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>Buddies</div>
-          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Connect with friends and see what they're vouching for. Hit "Dude, Same" on anything that resonates.</div>
+          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Connect with friends and see what they're vouching for. Hit "Agree" on anything that resonates.</div>
         </div>
       </div>
     </div>
@@ -506,7 +498,7 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
             : picked
               ? <>
                   <div className="selected-preview">
-                    <img src={picked.poster} alt={picked.title} className="result-img" onError={e => { if (e.target.dataset.fallback && e.target.src !== e.target.dataset.fallback) { e.target.src = e.target.dataset.fallback; } else { e.target.style.background = T.paperDark; e.target.src = ''; } }} />
+                    <img src={picked.poster} alt={picked.title} className="result-img" onError={e => { e.target.style.background = T.paperDark; e.target.src = ''; }} />
                     <div style={{ flex: 1 }}>
                       <div className="result-title">{picked.title}</div>
                       <div className="result-sub">{picked.sub || ""}</div>
@@ -527,7 +519,7 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
                   {!busy && q.trim() && results.length === 0 && <div className="no-results">No results found.</div>}
                   {results.map(r => (
                     <div key={r.id} className="result-item" onClick={() => setPicked(r)}>
-                      {r.poster ? <img src={r.poster} data-fallback={r.posterFallback} alt={r.title} className="result-img" onError={e => { if (e.target.dataset.fallback && e.target.src !== e.target.dataset.fallback) { e.target.src = e.target.dataset.fallback; } else { e.target.style.background = T.paperDark; e.target.src = ''; } }} /> : <div className="result-img" />}
+                      {r.poster ? <img src={r.poster} alt={r.title} className="result-img" onError={e => { e.target.style.background = T.paperDark; e.target.src = ''; }} /> : <div className="result-img" />}
                       <div>
                         <div className="result-title">{r.title}</div>
                         <div className="result-sub">{r.sub || ""}</div>
@@ -660,7 +652,7 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
             : picked
               ? <>
                   <div className="selected-preview">
-                    <img src={picked.poster} alt={picked.title} className="result-img" onError={e => { if (e.target.dataset.fallback && e.target.src !== e.target.dataset.fallback) { e.target.src = e.target.dataset.fallback; } else { e.target.style.background = T.paperDark; e.target.src = ''; } }} />
+                    <img src={picked.poster} alt={picked.title} className="result-img" onError={e => { e.target.style.background = T.paperDark; e.target.src = ''; }} />
                     <div style={{ flex: 1 }}>
                       <div className="result-title">{picked.title}</div>
                       <div className="result-sub">{picked.sub} · {picked.catLabel}</div>
@@ -692,7 +684,7 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
                   {!busy && q.trim() && visibleResults.length === 0 && <div className="no-results">No results found.</div>}
                   {visibleResults.map((r, i) => (
                     <div key={r.id + r.catKey + i} className="result-item" onClick={() => setPicked(r)}>
-                      {r.poster ? <img src={r.poster} data-fallback={r.posterFallback} alt={r.title} className="result-img" onError={e => { if (e.target.dataset.fallback && e.target.src !== e.target.dataset.fallback) { e.target.src = e.target.dataset.fallback; } else { e.target.style.background = T.paperDark; e.target.src = ''; } }} /> : <div className="result-img" />}
+                      {r.poster ? <img src={r.poster} alt={r.title} className="result-img" onError={e => { e.target.style.background = T.paperDark; e.target.src = ''; }} /> : <div className="result-img" />}
                       <div style={{ flex: 1 }}>
                         <div className="result-title">{r.title}</div>
                         <div className="result-sub">{r.sub}</div>
@@ -749,7 +741,6 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
       const w = el.offsetWidth;
       const bounded = (idx === 0 && dx > 0) || (idx === total - 1 && dx < 0) ? dx * 0.15 : dx;
       currentOffsetX.current = bounded;
-      // Set transform directly on the track for zero-lag response
       const track = el.querySelector(".swipe-track");
       if (track) track.style.transform = `translateX(${-(idx * w) - bounded * -1}px)`;
     };
@@ -782,7 +773,6 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
     };
   }, [idx, total, isMobile]);
 
-  // Keep track snapped on idx change (e.g. dot tap)
   useEffect(() => {
     const el = containerRef.current;
     if (!el || !isMobile) return;
@@ -1048,7 +1038,7 @@ Vouch ("we," "us," or "our") is committed to protecting your privacy. This Priva
 We collect the following information when you use Vouch:
 - Account Information: Your name and email address, collected via Google Sign-In.
 - Preference Data: Movies, TV shows, books, and music (artists, albums, songs) that you choose to endorse on your board.
-- Social Data: Buddy connections and reactions ("Dude, Same") you make on other users' boards.
+- Social Data: Buddy connections and reactions ("Agree") you make on other users' boards.
 - Usage Data: Standard server logs including IP address, browser type, and pages visited.
 
 2. HOW WE USE YOUR INFORMATION
@@ -1063,7 +1053,7 @@ Vouch integrates with the following third-party services:
 - Google: Used for authentication. Governed by Google's Privacy Policy.
 - Spotify: Used to search and display music content. We do not store your Spotify credentials or access your private Spotify data.
 - The Movie Database (TMDB): Used to search and display film and television content.
-- Google Books / Open Library: Used to search and display book content.
+- Open Library: Used to search and display book content.
 
 4. DATA SHARING
 We do not sell your personal information to third parties. Your board is visible to your approved Buddies. We do not share your data with advertisers.
@@ -1123,7 +1113,7 @@ export default function Vouch() {
   const [user,        setUser]        = useState(null);
   const [userId,      setUserId]      = useState(null);
   const [tab,         setTab]         = useState("board");
-  const [viewing,     setViewing]     = useState(null); // { userId, username, displayName }
+  const [viewing,     setViewing]     = useState(null);
   const [board,       setBoard]       = useState({ ...EMPTY_BOARD });
   const [viewBoard,   setViewBoard]   = useState({ ...EMPTY_BOARD });
   const [loading,     setLoading]     = useState(false);
@@ -1135,8 +1125,9 @@ export default function Vouch() {
   const [pendingIn,   setPendingIn]   = useState([]);
   const [buddyModal,  setBuddyModal]  = useState(false);
   const [inviteLink,  setInviteLink]  = useState(null);
-  const [myReactions, setMyReactions] = useState([]); // items I reacted to
-  const [boardReactions, setBoardReactions] = useState([]); // reactions on viewed board
+  const [myReactions, setMyReactions] = useState([]);
+  const [boardReactions, setBoardReactions] = useState([]);
+  const [legalPage,   setLegalPage]   = useState(null);
 
   const loadMyReactions = async (uid) => {
     const { data } = await supabase.from("reactions").select("*").eq("user_id", uid).order("created_at", { ascending: false });
@@ -1202,7 +1193,6 @@ export default function Vouch() {
     const setUserFromSession = async (session) => {
       if (session?.user) {
         const uid = session.user.id;
-        // Upsert profile on login
         await supabase.from("profiles").upsert({
           id: uid,
           username: session.user.email.split("@")[0],
@@ -1213,7 +1203,6 @@ export default function Vouch() {
         loadBoard(uid);
         loadBuddies(uid);
         loadMyReactions(uid);
-        // Handle invite token from URL
         const params = new URLSearchParams(window.location.search);
         const inviteFrom = params.get("invite");
         if (inviteFrom && inviteFrom !== uid) {
@@ -1230,8 +1219,6 @@ export default function Vouch() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setUserFromSession(session));
     return () => subscription.unsubscribe();
   }, []);
-
-  const [legalPage, setLegalPage] = useState(null); // "terms" | "privacy" | null
 
   const signOut = async () => { await supabase.auth.signOut(); setUser(null); };
 
@@ -1290,7 +1277,7 @@ export default function Vouch() {
   const addItem = async (catKey, item) => {
     if (saving) return;
     setSaving(true);
-    const timeout = setTimeout(() => setSaving(false), 8000); // safety reset
+    const timeout = setTimeout(() => setSaving(false), 8000);
     try {
       await supabase.from("endorsements").upsert({
         user_id: userId,
@@ -1324,8 +1311,6 @@ export default function Vouch() {
     setSaving(false);
   };
 
-
-
   const inviteParam = new URLSearchParams(window.location.search).get("invite");
 
   if (!user) {
@@ -1338,14 +1323,13 @@ export default function Vouch() {
   }
   if (loading) return <><Styles /><div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: T.bg }}><div className="loading">Loading…</div></div></>;
 
-
   return (
     <>
       <Styles />
       <div className="app">
         <header className="masthead">
           <div className="masthead-meta">
-            <span>Vol. I &nbsp;·&nbsp; {new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}</span>
+            <span>Est. 2026 &nbsp;·&nbsp; {new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}</span>
             <span className="masthead-meta-stars">✦ · ✦ · ✦</span>
             <span>
               <span className="clickable" onClick={() => setLegalPage("how")} style={{ marginRight: 16 }}>How it Works</span>
@@ -1421,12 +1405,8 @@ export default function Vouch() {
               </>
             : <>
                 <div style={{ marginBottom: 8 }}>
-                  <div className="board-name" style={{ fontSize: 28, marginBottom: 2 }}>
-                    {currName}
-                  </div>
-                  <div className="board-sub">
-                    @{viewing ? viewing.username : user.username}
-                  </div>
+                  <div className="board-name" style={{ fontSize: 28, marginBottom: 2 }}>{currName}</div>
+                  <div className="board-sub">@{viewing ? viewing.username : user.username}</div>
                 </div>
                 {viewing && (
                   <div style={{ marginBottom: 16 }}>
@@ -1470,7 +1450,7 @@ export default function Vouch() {
 
         {vouchModal && (
           <UniversalSearchModal
-            used={Math.min(Object.values(board).flat().length, 5)}
+            used={Object.values(board).flat().filter(item => item.vouched).length}
             onClose={() => setVouchModal(false)}
             onAdd={(catKey, item) => {
               addItem(catKey, { ...item, vouched: true });
