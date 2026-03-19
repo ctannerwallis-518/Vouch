@@ -84,9 +84,9 @@ const Styles = () => (
 
     .ornament { text-align: center; font-family: 'Spectral', serif; font-size: 13px; letter-spacing: 0.5em; color: ${T.inkFaint}; margin: 4px 0 28px; }
 
-    .vouch-section { margin-bottom: 52px; border: 2px solid ${T.ink}; background: rgba(17,16,8,0.04); padding: 24px 24px 28px; }
-    .vouch-section-header { display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; border-bottom: 2px solid ${T.ink}; padding-bottom: 10px; margin-bottom: 22px; }
-    .vouch-section-label { font-family: 'Spectral SC', serif; font-weight: 700; font-size: 18px; letter-spacing: 0.08em; white-space: nowrap; }
+    .vouch-section { margin-bottom: 52px; border: 3px double ${T.ink}; background: rgba(17,16,8,0.04); padding: 28px 28px 32px; position: relative; }
+    .vouch-section-header { display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; border-bottom: 3px double ${T.ink}; padding-bottom: 12px; margin-bottom: 24px; }
+    .vouch-section-label { font-family: 'Times New Roman', Times, serif; font-weight: 900; font-size: 22px; letter-spacing: 0.04em; white-space: nowrap; }
     .vouch-section-sub   { font-family: 'Spectral', serif; font-style: italic; font-size: 11px; color: ${T.inkLight}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .vouch-section-add   { margin-left: auto; font-family: 'Spectral SC', serif; font-size: 9.5px; font-weight: 600; letter-spacing: 0.2em; padding: 4px 14px; border: 1px solid ${T.ink}; background: transparent; color: ${T.inkMid}; cursor: pointer; transition: all 0.14s; }
     .vouch-section-add:hover { background: ${T.ink}; color: ${T.bg}; }
@@ -535,9 +535,9 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
     }, 400);
   }, [q]);
 
-  const confirm = () => {
+  const confirm = async () => {
     if (!picked) return;
-    onAdd(picked.catKey, { ...picked, comment: note });
+    await onAdd(picked.catKey, { ...picked, comment: note });
     onClose();
   };
 
@@ -1163,7 +1163,12 @@ export default function Vouch() {
         .maybeSingle();
 
       if (existing) {
-        // Item exists — just update vouched flag and comment
+        // Item already on board — check if already vouched (duplicate)
+        const alreadyVouched = board[catKey]?.find(i => String(i.id) === String(item.id) && i.vouched);
+        if (alreadyVouched && item.vouched) {
+          clearTimeout(timeout); setSaving(false);
+          alert(""" + item.title + "" is already in your Vouch 5."); return;
+        }
         await supabase.from("endorsements")
           .update({ vouched: item.vouched === true, comment: item.comment || "" })
           .eq("id", existing.id);
@@ -1174,7 +1179,8 @@ export default function Vouch() {
           .eq("user_id", userId)
           .eq("category", catKey)
           .eq("vouched", false);
-        if (count >= 5) { clearTimeout(timeout); setSaving(false); alert("Your " + catKey + " category is full. Remove one first, then re-add this to Vouch 5."); return; }
+        const catLabel = { movies: "Film", albums: "Albums", artists: "Artists", songs: "Songs", books: "Books", shows: "Television" }[catKey] || catKey;
+        if (count >= 5) { clearTimeout(timeout); setSaving(false); alert(catLabel + " is full — you can have up to 5 across both Vouch 5 and " + catLabel + " mentions. Remove one to make room."); return; }
         await supabase.from("endorsements").insert({
           user_id: userId,
           category: catKey,
@@ -1341,7 +1347,7 @@ export default function Vouch() {
             used={vouchedCount}
             onClose={() => setVouchModal(false)}
             onAdd={(catKey, item) => {
-              addItem(catKey, { ...item, vouched: true });
+              return addItem(catKey, { ...item, vouched: true });
             }}
           />
         )}
