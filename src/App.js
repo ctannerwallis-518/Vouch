@@ -1225,8 +1225,23 @@ export default function Vouch() {
         setUser(null); setUserId(null); setBoard({ ...EMPTY_BOARD });
       }
     };
-    supabase.auth.getSession().then(({ data: { session } }) => setUserFromSession(session));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setUserFromSession(session));
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session) {
+        const now = Math.floor(Date.now() / 1000);
+        if (session.expires_at && session.expires_at < now) {
+          const { data: { session: refreshed } } = await supabase.auth.refreshSession();
+          setUserFromSession(refreshed);
+        } else {
+          setUserFromSession(session);
+        }
+      } else {
+        setUserFromSession(null);
+      }
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") { setUser(null); setUserId(null); setBoard({ ...EMPTY_BOARD }); return; }
+      setUserFromSession(session);
+    });
     return () => subscription.unsubscribe();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
