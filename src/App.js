@@ -1167,7 +1167,7 @@ export default function Vouch() {
         const alreadyVouched = board[catKey]?.find(i => String(i.id) === String(item.id) && i.vouched);
         if (alreadyVouched && item.vouched) {
           clearTimeout(timeout); setSaving(false);
-          alert(""" + item.title + "" is already in your Vouch 5."); return;
+          alert(item.title + " is already in your Vouch 5."); return;
         }
         await supabase.from("endorsements")
           .update({ vouched: item.vouched === true, comment: item.comment || "" })
