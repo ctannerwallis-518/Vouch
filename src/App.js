@@ -1252,26 +1252,31 @@ export default function Vouch() {
   // fromVouch5=true just un-vouches the item (keeps it in category section)
   // fromVouch5=false fully deletes it
   const removeItem = async (catKey, idx, fromVouch5 = false) => {
-    setSaving(true);
-    const timeout = setTimeout(() => setSaving(false), 8000);
+    const item = board[catKey]?.[idx];
+    if (!item) return;
+
+    // Optimistically update UI immediately
+    if (fromVouch5) {
+      setBoard(prev => ({
+        ...prev,
+        [catKey]: prev[catKey].map((it, i) => i === idx ? { ...it, vouched: false } : it)
+      }));
+    } else {
+      setBoard(prev => ({
+        ...prev,
+        [catKey]: prev[catKey].filter((_, i) => i !== idx)
+      }));
+    }
+
+    // Sync with DB in background
     try {
-      const item = board[catKey]?.[idx];
-      if (!item?.dbId) {
-        // fallback: try to find by position in a fresh load
-        await loadBoard(userId);
-        clearTimeout(timeout);
-        setSaving(false);
-        return;
-      }
+      if (!item.dbId) { await loadBoard(userId); return; }
       if (fromVouch5) {
         await supabase.from("endorsements").update({ vouched: false }).eq("id", item.dbId);
       } else {
         await supabase.from("endorsements").delete().eq("id", item.dbId);
       }
-      await loadBoard(userId);
-    } catch(e) { console.error("removeItem error:", e); }
-    clearTimeout(timeout);
-    setSaving(false);
+    } catch(e) { console.error("removeItem error:", e); await loadBoard(userId); }
   };
 
   const vouchedCount = Object.values(board).flat().filter(item => item.vouched).length;
