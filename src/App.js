@@ -286,8 +286,13 @@ function PublicBoard({ inviteUserId, onSignUp }) {
             <div className="board-sub" style={{ marginBottom: 14 }}>@{profile?.username || ""}</div>
             <button onClick={onSignUp} className="btn btn-solid" style={{ width: "100%", padding: "12px", fontSize: 13 }}>Create Your Own Vouch Board →</button>
           </div>
-          <div style={{ marginBottom: 28, borderTop: `1px solid ${T.paperDark}`, borderBottom: `1px solid ${T.paperDark}`, padding: "24px 0" }}>
-            <HowItWorks />
+          <div style={{ marginBottom: 24, borderTop: `1px solid ${T.paperDark}`, borderBottom: `1px solid ${T.paperDark}`, padding: "14px 0", display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 8 }}>
+            {[{label: "Vouch 5", desc: "Your top 5 picks across all media"},{label: "Categories", desc: "Up to 5 per Film, Music, Books, TV"},{label: "Buddies", desc: "See what friends are vouching for"}].map(item => (
+              <div key={item.label} style={{ textAlign: "center", flex: "1 1 100px" }}>
+                <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 10, letterSpacing: "0.15em", color: T.ink }}>{item.label}</div>
+                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkMid, marginTop: 3 }}>{item.desc}</div>
+              </div>
+            ))}
           </div>
           <div className="ornament">— ✦ —</div>
           <VouchSection board={board} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} />
