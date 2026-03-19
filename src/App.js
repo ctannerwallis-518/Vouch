@@ -788,7 +788,7 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
   );
 }
 
-function MutualMentions({ reactions, myReactions, isOwn, boardOwnerName }) {
+function MutualMentions({ reactions, myReactions, isOwn, boardOwnerName, buddies, onViewBuddy }) {
   if (!reactions.length && !myReactions.length) return null;
   const items = isOwn ? myReactions : reactions;
   if (!items.length) return null;
@@ -805,13 +805,21 @@ function MutualMentions({ reactions, myReactions, isOwn, boardOwnerName }) {
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
         {items.map((item, i) => {
           const url = item.source_url || item.sourceUrl;
+          const sourceBuddy = isOwn && buddies ? buddies.find(b => b.userId === item.item_owner_id) : null;
           return (
-            <div key={(item.id || item.item_id) + i} style={{ width: 100, flexShrink: 0, cursor: url ? "pointer" : "default" }} onClick={() => url && window.open(url, "_blank")}>
-              {item.poster
-                ? <img src={item.poster} alt={item.title} style={{ width: 100, height: 138, objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block" }} onError={e => e.target.style.display = "none"} />
-                : <div style={{ width: 100, height: 138, background: T.paperDark, border: `1px solid ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 6 }}>{item.title}</div>}
-              <div style={{ fontFamily: "'Spectral',serif", fontSize: 11, fontWeight: 600, lineHeight: 1.3, marginTop: 5 }}>{item.title}</div>
-              <div style={{ fontFamily: "'Spectral SC',serif", fontSize: 8.5, color: T.inkFaint, marginTop: 1 }}>{item.subtitle || ""}</div>
+            <div key={(item.id || item.item_id) + i} style={{ width: 100, flexShrink: 0 }}>
+              <div style={{ cursor: url ? "pointer" : "default" }} onClick={() => url && window.open(url, "_blank")}>
+                {item.poster
+                  ? <img src={item.poster} alt={item.title} style={{ width: 100, height: 138, objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block" }} onError={e => e.target.style.display = "none"} />
+                  : <div style={{ width: 100, height: 138, background: T.paperDark, border: `1px solid ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 6 }}>{item.title}</div>}
+                <div style={{ fontFamily: "'Spectral',serif", fontSize: 11, fontWeight: 600, lineHeight: 1.3, marginTop: 5 }}>{item.title}</div>
+                <div style={{ fontFamily: "'Spectral SC',serif", fontSize: 8.5, color: T.inkFaint, marginTop: 1 }}>{item.subtitle || ""}</div>
+              </div>
+              {sourceBuddy && (
+                <div onClick={() => onViewBuddy && onViewBuddy(sourceBuddy)} style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 9.5, color: T.inkLight, marginTop: 3, cursor: "pointer" }}>
+                  from {sourceBuddy.displayName} →
+                </div>
+              )}
             </div>
           );
         })}
@@ -1399,7 +1407,23 @@ export default function Vouch() {
                   <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={currBoard[cat.key] || []} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={setAddModal} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} />
                 ))}
 
-                <MutualMentions reactions={boardReactions} myReactions={myReactions} isOwn={isOwn} boardOwnerName={currName} />
+                <MutualMentions reactions={boardReactions} myReactions={myReactions} isOwn={isOwn} boardOwnerName={currName} buddies={buddies} onViewBuddy={(b) => { setViewing(b); setTab("board"); loadViewBoard(b.userId); loadBoardReactions(b.userId); }} />
+
+                {/* BUDDIES LIST at bottom of every board */}
+                {buddies.length > 0 && (
+                  <div style={{ marginTop: 52, borderTop: `1px solid ${T.paperDark}`, paddingTop: 28 }}>
+                    <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", color: T.inkMid, marginBottom: 16 }}>Buddies</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 20px" }}>
+                      {buddies.map(b => (
+                        <div key={b.buddyRowId} onClick={() => { setViewing(b); setTab("board"); loadViewBoard(b.userId); loadBoardReactions(b.userId); }} style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.inkMid, cursor: "pointer", borderBottom: `1px solid transparent` }}
+                          onMouseEnter={e => e.target.style.borderBottomColor = T.inkLight}
+                          onMouseLeave={e => e.target.style.borderBottomColor = "transparent"}>
+                          {b.displayName}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </>
           }
         </main>
