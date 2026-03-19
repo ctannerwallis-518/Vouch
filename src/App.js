@@ -1021,6 +1021,91 @@ function LegalModal({ page, onClose }) {
   );
 }
 
+function GroupVouchSlideshow({ items, isMobile }) {
+  const [idx, setIdx] = useState(0);
+  const touchStartX = useRef(null);
+  const currentOffsetX = React.useRef(0);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || !isMobile) return;
+    const handleStart = e => { touchStartX.current = e.touches[0].clientX; currentOffsetX.current = 0; };
+    const handleMove = e => {
+      if (touchStartX.current === null) return;
+      const dx = e.touches[0].clientX - touchStartX.current;
+      currentOffsetX.current = dx;
+      const track = el.querySelector(".gv-track");
+      if (track) track.style.transform = `translateX(${-(idx * el.offsetWidth) + dx}px)`;
+    };
+    const handleEnd = () => {
+      const w = el.offsetWidth;
+      const dx = currentOffsetX.current;
+      let newIdx = idx;
+      if (dx < -(w * 0.22) && idx < items.length - 1) newIdx = idx + 1;
+      else if (dx > (w * 0.22) && idx > 0) newIdx = idx - 1;
+      const track = el.querySelector(".gv-track");
+      if (track) { track.style.transition = "transform 0.32s cubic-bezier(0.25,0.46,0.45,0.94)"; track.style.transform = `translateX(${-(newIdx * w)}px)`; setTimeout(() => { if (track) track.style.transition = ""; }, 350); }
+      setIdx(newIdx); touchStartX.current = null;
+    };
+    el.addEventListener("touchstart", handleStart, { passive: true });
+    el.addEventListener("touchmove", handleMove, { passive: true });
+    el.addEventListener("touchend", handleEnd, { passive: true });
+    return () => { el.removeEventListener("touchstart", handleStart); el.removeEventListener("touchmove", handleMove); el.removeEventListener("touchend", handleEnd); };
+  }, [idx, items.length, isMobile]);
+
+  const CardFace = ({ item }) => (
+    <div style={{ cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")}>
+      {item.poster
+        ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: isMobile ? 340 : "auto", aspectRatio: isMobile ? "unset" : "2/3", objectFit: "cover", display: "block", border: "1px solid rgba(200,194,180,0.2)" }} onError={e => e.target.style.display = "none"} />
+        : <div style={{ width: "100%", aspectRatio: "2/3", background: "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center" }}>{item.title}</div>}
+      <div style={{ padding: "12px 4px 4px" }}>
+        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 3 }}>{item.category}</div>
+        <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: "#C8C2B4" }}>{item.title}</div>
+        <div style={{ fontFamily: "'Spectral',serif", fontSize: 11, color: "rgba(200,194,180,0.6)", marginBottom: 2 }}>{item.subtitle || ""}</div>
+        <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: "rgba(200,194,180,0.45)", marginTop: 4 }}>
+          {item.count === 1 ? "Vouched by" : `Vouched by ${item.count}`}{item.vouchers?.length > 0 ? " · " + item.vouchers.join(", ") : ""}
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ marginBottom: 40, border: "3px double #111008", background: "#111008", padding: "24px 24px 28px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid rgba(200,194,180,0.25)", paddingBottom: 12, marginBottom: 22 }}>
+        <div style={{ fontFamily: "'Times New Roman',Times,serif", fontWeight: 900, fontSize: 22, color: "#C8C2B4", letterSpacing: "0.04em" }}>Group Vouch</div>
+        <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.55)" }}>Most vouched across your circle</div>
+      </div>
+      {isMobile ? (
+        <div ref={containerRef} style={{ overflow: "hidden", userSelect: "none" }}>
+          <div className="gv-track" style={{ display: "flex", willChange: "transform" }}>
+            {items.map((item, i) => (
+              <div key={i} style={{ flex: "0 0 100%", width: "100%" }}>
+                <CardFace item={item} />
+              </div>
+            ))}
+          </div>
+          {items.length > 1 && (
+            <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 14 }}>
+              {items.map((_, i) => (
+                <div key={i} onClick={() => setIdx(i)} style={{ width: 6, height: 6, borderRadius: "50%", background: i === idx ? "#C8C2B4" : "rgba(200,194,180,0.25)", cursor: "pointer", transition: "background 0.2s" }} />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div style={{ display: "flex", gap: 12, flexWrap: "nowrap" }}>
+          {items.map((item, i) => (
+            <div key={i} style={{ flex: 1, minWidth: 0 }}>
+              <CardFace item={item} />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Vouch() {
   const [user,           setUser]           = useState(null);
   const [userId,         setUserId]         = useState(null);
@@ -1083,13 +1168,14 @@ export default function Vouch() {
     setViewBoard(b);
   };
 
-  const loadAllBuddyBoards = async (buddyList) => {
+  const loadAllBuddyBoards = async (buddyList, uid) => {
     const allBoards = await Promise.all(buddyList.map(async b => {
       const { data } = await supabase.from("endorsements").select("*").eq("user_id", b.userId);
       return data || [];
     }));
     // Also include own board
-    const { data: ownData } = await supabase.from("endorsements").select("*").eq("user_id", userId);
+    const ownId = uid || userId;
+    const { data: ownData } = await supabase.from("endorsements").select("*").eq("user_id", ownId);
     const allRows = [...(ownData || []), ...allBoards.flat()];
     setAllBuddyBoards(allRows);
   };
@@ -1109,7 +1195,7 @@ export default function Vouch() {
       }));
       setBuddies(accepted);
       setPendingIn(incoming);
-      if (accepted.length > 0) loadAllBuddyBoards(accepted);
+      if (accepted.length > 0) loadAllBuddyBoards(accepted, uid);
     }
   };
 
@@ -1359,31 +1445,22 @@ export default function Vouch() {
 
                 {/* GROUP VOUCH - top of page */}
                 {allBuddyBoards.length > 0 && (() => {
+                  // Only count vouched items, track who vouched each
                   const itemCount = {};
                   allBuddyBoards.forEach(row => {
                     const key = row.category + ":" + row.item_id;
-                    if (!itemCount[key]) itemCount[key] = { ...row, count: 0 };
+                    if (!itemCount[key]) itemCount[key] = { ...row, count: 0, vouchers: [] };
                     itemCount[key].count++;
+                    const voucher = [...buddies, { userId, displayName: user?.displayName }].find(b => b.userId === row.user_id);
+                    if (voucher && !itemCount[key].vouchers.includes(voucher.displayName)) {
+                      itemCount[key].vouchers.push(voucher.displayName);
+                    }
                   });
                   const top5 = Object.values(itemCount).sort((a, b) => b.count - a.count).slice(0, 5);
+                  if (top5.length === 0) return null;
+                  const isMobile = window.innerWidth <= 640;
                   return (
-                    <div style={{ marginBottom: 40, border: `3px double ${T.ink}`, background: T.ink, padding: "24px 24px 28px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid rgba(200,194,180,0.25)", paddingBottom: 12, marginBottom: 22 }}>
-                        <div style={{ fontFamily: "'Times New Roman',Times,serif", fontWeight: 900, fontSize: 22, color: T.bg, letterSpacing: "0.04em" }}>Group Vouch</div>
-                        <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.55)" }}>Most vouched across your circle</div>
-                      </div>
-                      <div style={{ display: "flex", gap: 12, flexWrap: "nowrap" }}>
-                        {top5.map((item, i) => (
-                          <div key={i} style={{ flex: 1, minWidth: 0, cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")}>
-                            {item.poster
-                              ? <img src={item.poster} alt={item.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", display: "block", border: "1px solid rgba(200,194,180,0.2)" }} onError={e => e.target.style.display = "none"} />
-                              : <div style={{ width: "100%", aspectRatio: "2/3", background: "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 11, color: "rgba(200,194,180,0.5)", padding: 8, textAlign: "center" }}>{item.title}</div>}
-                            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginTop: 6 }}>{item.count} {item.count === 1 ? "vouch" : "vouches"}</div>
-                            <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 13, lineHeight: 1.2, marginTop: 2, color: T.bg }}>{item.title}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                    <GroupVouchSlideshow items={top5} isMobile={isMobile} />
                   );
                 })()}
 
