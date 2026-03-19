@@ -57,7 +57,7 @@ const Styles = () => (
       font-size: clamp(58px, 11vw, 104px); letter-spacing: 0.02em;
       line-height: 0.92; color: ${T.ink};
     }
-    .masthead-rule-ornament { text-align: center; font-family: 'Spectral', serif; font-size: 11px; letter-spacing: 0.6em; color: ${T.inkLight}; padding: 4px 0 2px; }
+    .masthead-rule-ornament { text-align: center; font-family: 'Spectral', serif; font-size: 11px; color: ${T.inkLight}; padding: 4px 0 2px; display: flex; align-items: center; justify-content: center; gap: 10px; letter-spacing: 0; }
     .masthead-tagline { text-align: center; font-family: 'Spectral', serif; font-style: italic; font-weight: 300; font-size: 12.5px; letter-spacing: 0.12em; color: ${T.inkLight}; padding-bottom: 12px; }
 
     .nav { display: flex; overflow-x: auto; scrollbar-width: none; border-top: 1px solid ${T.ink}; }
@@ -277,7 +277,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
             <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkMid }}>vouch5.com</span>
           </div>
           <div className="masthead-nameplate"><span className="nameplate-word">Vouch.</span></div>
-          <div className="masthead-rule-ornament">— ✦ —</div>
+          <div className="masthead-rule-ornament"><span>—</span><span>✦</span><span>—</span></div>
           <div className="masthead-tagline">Love it? Vouch for it.</div>
         </header>
         <main className="page">
@@ -714,7 +714,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
         </button>
       )}
       {buddyCounts?.[String(it.id)] > 0 && (
-        <div title="Total Buddy Vouches" style={{ position: "absolute", top: 8, left: 8, zIndex: 2, background: "rgba(200,194,180,0.9)", color: "#111008", fontFamily: "'Spectral SC',serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "default" }}>{buddyCounts[String(it.id)]}</div>
+        <div title="Total Buddy Vouches" style={{ position: "absolute", top: 8, left: 8, zIndex: 2, background: "rgba(200,194,180,0.9)", color: "#111008", fontFamily: "'Spectral SC',serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "default" }}>{buddyCounts[String(it.id)]} {buddyCounts[String(it.id)] === 1 ? "Vouch" : "Vouches"}</div>
       )}
     </div>
   );
@@ -797,7 +797,7 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
                   {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx, false); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 30, height: 30, cursor: "pointer", fontSize: 16, lineHeight: "30px", textAlign: "center", borderRadius: 2 }}>×</button>}
                   {!isOwn && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: myReactions?.includes(String(item.id)) ? "#C8C2B4" : "rgba(17,16,8,0.7)", border: "none", color: myReactions?.includes(String(item.id)) ? T.ink : "#C8C2B4", cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 5px", whiteSpace: "nowrap", fontWeight: myReactions?.includes(String(item.id)) ? 700 : 400 }}>{myReactions?.includes(String(item.id)) ? "✓ Agreed" : "Agree"}</button>}
                 {buddyCounts?.[String(item.id)] > 0 && (
-                  <div title="Total Buddy Vouches" style={{ position: "absolute", top: 4, left: 4, zIndex: 2, background: "rgba(17,16,8,0.75)", color: "#C8C2B4", fontFamily: "'Spectral SC',serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", padding: "2px 6px", cursor: "default" }}>{buddyCounts[String(item.id)]}</div>
+                  <div title="Total Buddy Vouches" style={{ position: "absolute", top: 4, left: 4, zIndex: 2, background: "rgba(17,16,8,0.75)", color: "#C8C2B4", fontFamily: "'Spectral SC',serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", padding: "2px 6px", cursor: "default" }}>{buddyCounts[String(item.id)]} {buddyCounts[String(item.id)] === 1 ? "Vouch" : "Vouches"}</div>
                 )}
                   {item.poster ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} /> : null}
                   <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
@@ -1450,7 +1450,7 @@ export default function Vouch() {
           <div className="masthead-nameplate" onClick={() => { setTab("board"); setViewing(null); }}>
             <span className="nameplate-word">Vouch.</span>
           </div>
-          <div className="masthead-rule-ornament">— ✦ —</div>
+          <div className="masthead-rule-ornament"><span>—</span><span>✦</span><span>—</span></div>
           <div className="masthead-tagline">Love it? Vouch for it.</div>
           <nav className="nav">
             <button className={`nav-btn${tab === "board" && !viewing ? " active" : ""}`} onClick={() => { setTab("board"); setViewing(null); }}>My Board</button>
