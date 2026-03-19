@@ -1074,7 +1074,7 @@ function GroupVouchSlideshow({ items, isMobile }) {
         {item.poster
           ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: isMobile ? 340 : "auto", aspectRatio: isMobile ? "unset" : "2/3", objectFit: "cover", display: "block", border: "1px solid rgba(200,194,180,0.2)" }} onError={e => e.target.style.display = "none"} />
           : <div style={{ width: "100%", aspectRatio: "2/3", background: "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center" }}>{item.title}</div>}
-        <div title="Total Buddy Vouches" style={{ position: "absolute", top: 8, left: 8, background: "rgba(200,194,180,0.9)", color: "#111008", fontFamily: "'Spectral SC',serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "default" }}>{item.count}</div>
+        <div title="Total Buddy Vouches" style={{ position: "absolute", top: 8, left: 8, background: "rgba(200,194,180,0.9)", color: "#111008", fontFamily: "'Spectral SC',serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "default" }}>{item.count} {item.count === 1 ? "Vouch" : "Vouches"}</div>
       </div>
       <div style={{ padding: "12px 4px 4px" }}>
         <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 3 }}>{item.category}</div>
