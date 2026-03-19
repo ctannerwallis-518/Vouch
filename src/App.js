@@ -1068,7 +1068,6 @@ function GroupVouchSlideshow({ items, isMobile }) {
           : <div style={{ width: "100%", aspectRatio: "2/3", background: "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center" }}>{item.title}</div>}
         <div title="Total Buddy Vouches" style={{ position: "absolute", top: 8, left: 8, background: "rgba(200,194,180,0.9)", color: "#111008", fontFamily: "'Spectral SC',serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "default" }}>{item.count}</div>
       </div>
-      </div>
       <div style={{ padding: "12px 4px 4px" }}>
         <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 3 }}>{item.category}</div>
         <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: "#C8C2B4" }}>{item.title}</div>
