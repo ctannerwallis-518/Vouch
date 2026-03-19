@@ -231,17 +231,19 @@ function PublicBoard({ inviteUserId, onSignUp }) {
         const { data: prof } = await supabase
           .from("profiles").select("id, username, display_name").eq("id", inviteUserId).maybeSingle();
         if (prof) setProfile(prof);
-        // Load buddies for public display
+        // Load buddies for public display (two-step to avoid join RLS issues)
         const { data: buddyRows } = await supabase
           .from("buddies")
-          .select("requester:requester_id(id, display_name), receiver:receiver_id(id, display_name)")
+          .select("requester_id, receiver_id")
           .or(`requester_id.eq.${inviteUserId},receiver_id.eq.${inviteUserId}`)
           .eq("status", "accepted");
-        if (buddyRows) {
-          const buddyProfiles = buddyRows.map(b =>
-            b.requester?.id === inviteUserId ? b.receiver : b.requester
+        if (buddyRows && buddyRows.length > 0) {
+          const buddyIds = buddyRows.map(b =>
+            b.requester_id === inviteUserId ? b.receiver_id : b.requester_id
           ).filter(Boolean);
-          setPublicBuddies(buddyProfiles);
+          const { data: profiles } = await supabase
+            .from("profiles").select("id, display_name").in("id", buddyIds);
+          if (profiles) setPublicBuddies(profiles);
         }
         const { data: rows } = await supabase
           .from("endorsements").select("*").eq("user_id", inviteUserId).order("created_at", { ascending: true });
