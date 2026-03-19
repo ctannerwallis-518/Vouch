@@ -82,7 +82,7 @@ const Styles = () => (
     .btn-ghost { background: transparent; color: ${T.ink}; }
     .btn-ghost:hover { background: ${T.ink}; color: ${T.bg}; }
 
-    .ornament { text-align: center; font-family: 'Spectral', serif; font-size: 13px; letter-spacing: 0.5em; color: ${T.inkFaint}; margin: 4px 0 28px; }
+    .ornament { text-align: center; font-family: 'Spectral', serif; font-size: 13px; color: ${T.inkFaint}; margin: 4px 0 28px; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
     .vouch-section { margin-bottom: 52px; border: 3px double ${T.ink}; background: ${T.ink}; padding: 28px 28px 32px; position: relative; }
     .vouch-section-header { display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; border-bottom: 1px solid rgba(200,194,180,0.25); padding-bottom: 12px; margin-bottom: 24px; }
@@ -309,7 +309,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
               </div>
             ))}
           </div>
-          <div className="ornament">— ✦ —</div>
+          <div className="ornament"><span>—</span><span>✦</span><span>—</span></div>
           <VouchSection board={board} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} />
           {publicBuddies.length > 0 && (
             <div style={{ margin: "32px 0", borderTop: `1px solid ${T.paperDark}`, paddingTop: 24 }}>
@@ -1634,7 +1634,7 @@ export default function Vouch() {
                     <button className="btn btn-ghost" onClick={() => { setViewing(null); setTab("friends"); }}>← Back to Buddies</button>
                   </div>
                 )}
-                <div className="ornament">— ✦ —</div>
+                <div className="ornament"><span>—</span><span>✦</span><span>—</span></div>
 
                 <VouchSection board={currBoard} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={() => setVouchModal(true)} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} />
 
