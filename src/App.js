@@ -232,7 +232,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
           .from("profiles").select("id, username, display_name").eq("id", inviteUserId).maybeSingle();
         if (prof) setProfile(prof);
         // Load buddies for public display
-        const { data: buddyRows, error: buddyErr } = await supabase
+        const { data: buddyRows } = await supabase
           .from("buddies")
           .select("requester_id, receiver_id")
           .or(`requester_id.eq.${inviteUserId},receiver_id.eq.${inviteUserId}`)
