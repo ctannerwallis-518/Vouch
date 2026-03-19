@@ -793,23 +793,28 @@ function MutualMentions({ reactions, myReactions, isOwn, boardOwnerName }) {
   const items = isOwn ? myReactions : reactions;
   if (!items.length) return null;
   return (
-    <div style={{ marginTop: 52, borderTop: `1px solid ${T.paperDark}`, paddingTop: 28, opacity: 0.75 }}>
+    <div style={{ marginTop: 52, borderTop: `1px solid ${T.paperDark}`, paddingTop: 28 }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 18 }}>
-        <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", color: T.inkMid }}>Mutual Mentions</div>
+        <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 15, letterSpacing: "0.08em", color: T.inkMid }}>
+          {isOwn ? "Agreed With" : "Others Agreed"}
+        </div>
         <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkFaint }}>
-          {isOwn ? "Things you've agreed with" : `Things others agreed with on ${boardOwnerName}'s board`}
+          {isOwn ? "Things you've agreed with on buddy boards" : `Things others agreed with on ${boardOwnerName}'s board`}
         </div>
       </div>
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-        {items.map((item, i) => (
-          <div key={item.id + i} style={{ width: 90, flexShrink: 0, cursor: item.sourceUrl ? "pointer" : "default", opacity: 0.85 }} onClick={() => item.sourceUrl && window.open(item.sourceUrl, "_blank")}>
-            {item.poster
-              ? <img src={item.poster} alt={item.title} style={{ width: 90, height: 124, objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block" }} onError={e => e.target.style.display = "none"} />
-              : <div style={{ width: 90, height: 124, background: T.paperDark, border: `1px solid ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 6 }}>{item.title}</div>}
-            <div style={{ fontFamily: "'Spectral',serif", fontSize: 10.5, fontWeight: 600, lineHeight: 1.3, marginTop: 5 }}>{item.title}</div>
-            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: 8.5, color: T.inkFaint, marginTop: 1 }}>{item.subtitle || ""}</div>
-          </div>
-        ))}
+        {items.map((item, i) => {
+          const url = item.source_url || item.sourceUrl;
+          return (
+            <div key={(item.id || item.item_id) + i} style={{ width: 100, flexShrink: 0, cursor: url ? "pointer" : "default" }} onClick={() => url && window.open(url, "_blank")}>
+              {item.poster
+                ? <img src={item.poster} alt={item.title} style={{ width: 100, height: 138, objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block" }} onError={e => e.target.style.display = "none"} />
+                : <div style={{ width: 100, height: 138, background: T.paperDark, border: `1px solid ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 6 }}>{item.title}</div>}
+              <div style={{ fontFamily: "'Spectral',serif", fontSize: 11, fontWeight: 600, lineHeight: 1.3, marginTop: 5 }}>{item.title}</div>
+              <div style={{ fontFamily: "'Spectral SC',serif", fontSize: 8.5, color: T.inkFaint, marginTop: 1 }}>{item.subtitle || ""}</div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -1121,18 +1126,24 @@ export default function Vouch() {
 
   const dudeSame = async (item) => {
     if (!userId || !viewing) return;
-    const already = myReactions.find(r => r.item_id === String(item.id) && r.item_owner_id === viewing.userId);
+    const ownerId = viewing.userId;
+    const already = myReactions.find(r => r.item_id === String(item.id) && r.item_owner_id === ownerId);
     if (already) {
       await supabase.from("reactions").delete().eq("id", already.id);
     } else {
       await supabase.from("reactions").upsert({
-        user_id: userId, item_owner_id: viewing.userId, item_id: String(item.id),
-        title: item.title, subtitle: item.sub || item.artist || item.author || "",
-        poster: item.poster || null, source_url: item.sourceUrl || null,
+        user_id: userId,
+        item_owner_id: ownerId,
+        item_id: String(item.id),
+        category: item._cat || item.catKey || "",
+        title: item.title,
+        subtitle: item.sub || item.artist || item.author || "",
+        poster: item.poster || null,
+        source_url: item.sourceUrl || null,
       }, { onConflict: "user_id,item_owner_id,item_id" });
     }
-    loadMyReactions(userId);
-    loadBoardReactions(viewing.userId);
+    await loadMyReactions(userId);
+    await loadBoardReactions(ownerId);
   };
 
   const generateInviteLink = () => {
