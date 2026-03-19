@@ -242,7 +242,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
             b.requester_id === inviteUserId ? b.receiver_id : b.requester_id
           ).filter(Boolean);
           const { data: profiles } = await supabase
-            .from("profiles").select("id, display_name").in("id", buddyIds);
+            .from("profiles").select("id, display_name, avatar_url").in("id", buddyIds);
           if (profiles) setPublicBuddies(profiles);
         }
         const { data: rows } = await supabase
@@ -317,7 +317,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
               <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
                 {publicBuddies.map((b, i) => (
                   <div key={i} onClick={() => setShowSignupNudge(true)} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
-                    <Avatar name={b.display_name} size={36} />
+                    <Avatar name={b.display_name} size={36} avatarUrl={b.avatar_url} />
                     <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.inkMid, borderBottom: `1px solid transparent` }}
                       onMouseEnter={e => e.currentTarget.style.borderBottomColor = T.inkLight}
                       onMouseLeave={e => e.currentTarget.style.borderBottomColor = "transparent"}>
@@ -390,11 +390,18 @@ function HowItWorks() {
   );
 }
 
-function Avatar({ name, size = 36 }) {
+function Avatar({ name, size = 36, avatarUrl }) {
   const parts = (name || "?").trim().split(" ");
   const initials = parts.length >= 2
     ? parts[0][0].toUpperCase() + parts[parts.length - 1][0].toUpperCase()
     : parts[0].slice(0, 2).toUpperCase();
+  const [imgFailed, setImgFailed] = useState(false);
+  if (avatarUrl && !imgFailed) {
+    return (
+      <img src={avatarUrl} alt={name} onError={() => setImgFailed(true)}
+        style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", flexShrink: 0, display: "block", border: `1px solid ${T.paperDark}` }} />
+    );
+  }
   return (
     <div style={{
       width: size, height: size, borderRadius: "50%",
@@ -1253,15 +1260,15 @@ export default function Vouch() {
   const loadBuddies = async (uid) => {
     const { data } = await supabase
       .from("buddies")
-      .select("*, requester:requester_id(id, username, display_name), receiver:receiver_id(id, username, display_name)")
+      .select("*, requester:requester_id(id, username, display_name, avatar_url), receiver:receiver_id(id, username, display_name, avatar_url)")
       .or(`requester_id.eq.${uid},receiver_id.eq.${uid}`);
     if (data) {
       const accepted = data.filter(b => b.status === "accepted").map(b => {
         const other = b.requester_id === uid ? b.receiver : b.requester;
-        return { buddyRowId: b.id, userId: other.id, username: other.username, displayName: other.display_name };
+        return { buddyRowId: b.id, userId: other.id, username: other.username, displayName: other.display_name, avatarUrl: other.avatar_url || null };
       });
       const incoming = data.filter(b => b.status === "pending" && b.receiver_id === uid).map(b => ({
-        buddyRowId: b.id, userId: b.requester.id, username: b.requester.username, displayName: b.requester.display_name
+        buddyRowId: b.id, userId: b.requester.id, username: b.requester.username, displayName: b.requester.display_name, avatarUrl: b.requester.avatar_url || null
       }));
       setBuddies(accepted);
       setPendingIn(incoming);
@@ -1273,12 +1280,14 @@ export default function Vouch() {
     const setUserFromSession = async (session) => {
       if (session?.user) {
         const uid = session.user.id;
+        const avatarUrl = session.user.user_metadata?.avatar_url || null;
         await supabase.from("profiles").upsert({
           id: uid,
           username: session.user.email.split("@")[0],
           display_name: session.user.user_metadata?.full_name || session.user.email.split("@")[0],
+          avatar_url: avatarUrl,
         }, { onConflict: "id" });
-        setUser({ username: session.user.email.split("@")[0], displayName: session.user.user_metadata?.full_name || session.user.email.split("@")[0] });
+        setUser({ username: session.user.email.split("@")[0], displayName: session.user.user_metadata?.full_name || session.user.email.split("@")[0], avatarUrl });
         setUserId(uid);
         loadBoard(uid);
         loadBuddies(uid);
@@ -1601,7 +1610,7 @@ export default function Vouch() {
                     <div key={b.buddyRowId} style={{ borderBottom: `1px solid ${T.paperDark}`, padding: "16px 0", cursor: "pointer" }} onClick={() => viewBuddy(b)}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: bPreviews.length > 0 ? 12 : 0 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                          <Avatar name={b.displayName} size={44} />
+                          <Avatar name={b.displayName} size={44} avatarUrl={b.avatarUrl} />
                           <div>
                             <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 20 }}>{b.displayName}</div>
                             <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.1em", color: T.inkLight, marginTop: 2 }}>@{b.username}</div>
@@ -1651,7 +1660,7 @@ export default function Vouch() {
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 20px" }}>
                       {buddies.map(b => (
                         <div key={b.buddyRowId} onClick={() => { setViewing(b); setTab("board"); loadViewBoard(b.userId); loadBoardReactions(b.userId); }} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
-                          <Avatar name={b.displayName} size={32} />
+                          <Avatar name={b.displayName} size={32} avatarUrl={b.avatarUrl} />
                           <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.inkMid }}>{b.displayName}</div>
                         </div>
                       ))}
