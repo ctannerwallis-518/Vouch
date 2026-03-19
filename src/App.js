@@ -286,6 +286,9 @@ function PublicBoard({ inviteUserId, onSignUp }) {
             <div className="board-sub" style={{ marginBottom: 14 }}>@{profile?.username || ""}</div>
             <button onClick={onSignUp} className="btn btn-solid" style={{ width: "100%", padding: "12px", fontSize: 13 }}>Create Your Own Vouch Board →</button>
           </div>
+          <div style={{ marginBottom: 28, borderTop: `1px solid ${T.paperDark}`, borderBottom: `1px solid ${T.paperDark}`, padding: "24px 0" }}>
+            <HowItWorks />
+          </div>
           <div className="ornament">— ✦ —</div>
           <VouchSection board={board} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} />
           {CATEGORIES.map(cat => (
