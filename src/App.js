@@ -1032,7 +1032,7 @@ export default function Vouch() {
   const [lightbox,       setLightbox]       = useState(null);
   const [addModal,       setAddModal]       = useState(null);
   const [vouchModal,     setVouchModal]     = useState(false);
-  const [saving,         setSaving]         = useState(false);
+  const [saving, setSaving] = useState(false); // eslint-disable-line no-unused-vars
   const [buddies,        setBuddies]        = useState([]);
   const [pendingIn,      setPendingIn]      = useState([]);
   const [buddyModal,     setBuddyModal]     = useState(false);
