@@ -1009,7 +1009,6 @@ export default function Vouch() {
   const [boardReactions, setBoardReactions] = useState([]);
   const [legalPage,      setLegalPage]      = useState(null);
   const [allBuddyBoards, setAllBuddyBoards] = useState([]);
-  const [buddiesSubTab,  setBuddiesSubTab]  = useState("list"); // "list" | "group"
 
   const loadMyReactions = async (uid) => {
     const { data } = await supabase.from("reactions").select("*").eq("user_id", uid).order("created_at", { ascending: false });
@@ -1294,129 +1293,83 @@ export default function Vouch() {
                   <button className="btn btn-solid" onClick={() => setBuddyModal(true)}>+ Add Buddy</button>
                 </div>
 
-                {/* Sub-tabs */}
-                <div style={{ display: "flex", borderBottom: `1px solid ${T.ink}`, marginBottom: 28 }}>
-                  {["list", "group"].map(t => (
-                    <button key={t} onClick={() => setBuddiesSubTab(t)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.2em", padding: "8px 20px", background: buddiesSubTab === t ? T.ink : "transparent", color: buddiesSubTab === t ? T.bg : T.inkMid, border: "none", cursor: "pointer", textTransform: "uppercase" }}>
-                      {t === "list" ? "Buddy List" : "Group Board"}
-                    </button>
+                {/* GROUP VOUCH - top of page */}
+                {allBuddyBoards.length > 0 && (() => {
+                  const itemCount = {};
+                  allBuddyBoards.forEach(row => {
+                    const key = row.category + ":" + row.item_id;
+                    if (!itemCount[key]) itemCount[key] = { ...row, count: 0 };
+                    itemCount[key].count++;
+                  });
+                  const top5 = Object.values(itemCount).sort((a, b) => b.count - a.count).slice(0, 5);
+                  return (
+                    <div style={{ marginBottom: 40, border: `3px double ${T.ink}`, background: T.ink, padding: "24px 24px 28px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid rgba(200,194,180,0.25)", paddingBottom: 12, marginBottom: 22 }}>
+                        <div style={{ fontFamily: "'Times New Roman',Times,serif", fontWeight: 900, fontSize: 22, color: T.bg, letterSpacing: "0.04em" }}>Group Vouch</div>
+                        <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.55)" }}>Most vouched across your circle</div>
+                      </div>
+                      <div style={{ display: "flex", gap: 12, flexWrap: "nowrap" }}>
+                        {top5.map((item, i) => (
+                          <div key={i} style={{ flex: 1, minWidth: 0, cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")}>
+                            {item.poster
+                              ? <img src={item.poster} alt={item.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", display: "block", border: "1px solid rgba(200,194,180,0.2)" }} onError={e => e.target.style.display = "none"} />
+                              : <div style={{ width: "100%", aspectRatio: "2/3", background: "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 11, color: "rgba(200,194,180,0.5)", padding: 8, textAlign: "center" }}>{item.title}</div>}
+                            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginTop: 6 }}>{item.count} {item.count === 1 ? "vouch" : "vouches"}</div>
+                            <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 13, lineHeight: 1.2, marginTop: 2, color: T.bg }}>{item.title}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* PENDING REQUESTS */}
+                {pendingIn.length > 0 && <>
+                  <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 12 }}>Pending Requests</div>
+                  {pendingIn.map(b => (
+                    <div key={b.buddyRowId} className="friend-row">
+                      <div>
+                        <div className="friend-name" style={{ fontSize: 18 }}>{b.displayName}</div>
+                        <div className="friend-handle">@{b.username}</div>
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button className="btn btn-solid" style={{ padding: "5px 14px" }} onClick={() => acceptBuddy(b.buddyRowId)}>Accept</button>
+                        <button className="btn btn-ghost" style={{ padding: "5px 14px" }} onClick={() => removeBuddy(b.buddyRowId)}>Decline</button>
+                      </div>
+                    </div>
                   ))}
-                </div>
+                  <div style={{ borderBottom: `1px solid ${T.paperDark}`, margin: "20px 0" }} />
+                </>}
 
-                {buddiesSubTab === "list" ? <>
-                  {pendingIn.length > 0 && <>
-                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 12 }}>Pending Requests</div>
-                    {pendingIn.map(b => (
-                      <div key={b.buddyRowId} className="friend-row">
+                {/* BUDDY LIST */}
+                {buddies.length === 0 && pendingIn.length === 0 && (
+                  <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkLight, padding: "24px 0" }}>No buddies yet — add one or share your invite link.</div>
+                )}
+                {buddies.map(b => {
+                  const bPreviews = allBuddyBoards.filter(r => r.user_id === b.userId && r.vouched).slice(0, 5);
+                  return (
+                    <div key={b.buddyRowId} style={{ borderBottom: `1px solid ${T.paperDark}`, padding: "16px 0", cursor: "pointer" }} onClick={() => viewBuddy(b)}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: bPreviews.length > 0 ? 12 : 0 }}>
                         <div>
-                          <div className="friend-name" style={{ fontSize: 18 }}>{b.displayName}</div>
-                          <div className="friend-handle">@{b.username}</div>
+                          <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 20 }}>{b.displayName}</div>
+                          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.1em", color: T.inkLight, marginTop: 2 }}>@{b.username}</div>
                         </div>
+                        <span style={{ fontSize: 13, color: T.inkFaint }}>→</span>
+                      </div>
+                      {bPreviews.length > 0 && (
                         <div style={{ display: "flex", gap: 8 }}>
-                          <button className="btn btn-solid" style={{ padding: "5px 14px" }} onClick={() => acceptBuddy(b.buddyRowId)}>Accept</button>
-                          <button className="btn btn-ghost" style={{ padding: "5px 14px" }} onClick={() => removeBuddy(b.buddyRowId)}>Decline</button>
-                        </div>
-                      </div>
-                    ))}
-                    <div style={{ borderBottom: `1px solid ${T.paperDark}`, margin: "20px 0" }} />
-                  </>}
-                  {buddies.length === 0 && pendingIn.length === 0 && (
-                    <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkLight, padding: "24px 0" }}>No buddies yet — add one or share your invite link.</div>
-                  )}
-                  {buddies.map(b => {
-                    const bPreviews = allBuddyBoards.filter(r => r.user_id === b.userId && r.vouched).slice(0, 5);
-                    return (
-                      <div key={b.buddyRowId} style={{ borderBottom: `1px solid ${T.paperDark}`, padding: "16px 0", cursor: "pointer" }} onClick={() => viewBuddy(b)}>
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: bPreviews.length > 0 ? 12 : 0 }}>
-                          <div>
-                            <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 20 }}>{b.displayName}</div>
-                            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.1em", color: T.inkLight, marginTop: 2 }}>@{b.username}</div>
-                          </div>
-                          <span style={{ fontSize: 13, color: T.inkFaint }}>→</span>
-                        </div>
-                        {bPreviews.length > 0 && (
-                          <div style={{ display: "flex", gap: 8 }}>
-                            {bPreviews.map((item, i) => (
-                              <div key={i} style={{ width: 52, flexShrink: 0 }}>
-                                {item.poster
-                                  ? <img src={item.poster} alt={item.title} style={{ width: 52, height: 72, objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block" }} onError={e => e.target.style.display = "none"} />
-                                  : <div style={{ width: 52, height: 72, background: T.paperDark, border: `1px solid ${T.paperDark}` }} />}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </> : <>
-                  {/* GROUP BOARD */}
-                  {allBuddyBoards.length === 0 ? (
-                    <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkLight, padding: "24px 0" }}>Add buddies to see the group board.</div>
-                  ) : (() => {
-                    // Count item frequency across all boards
-                    const itemCount = {};
-                    allBuddyBoards.forEach(row => {
-                      const key = row.category + ":" + row.item_id;
-                      if (!itemCount[key]) itemCount[key] = { ...row, count: 0 };
-                      itemCount[key].count++;
-                    });
-                    const allItems = Object.values(itemCount).sort((a, b) => b.count - a.count);
-                    const top5 = allItems.slice(0, 5);
-
-                    // Group by category
-                    const byCat = {};
-                    CATEGORIES.forEach(c => { byCat[c.key] = []; });
-                    allItems.forEach(item => {
-                      if (byCat[item.category]) byCat[item.category].push(item);
-                    });
-
-                    return <>
-                      {/* Group Vouch 5 */}
-                      <div style={{ marginBottom: 40, border: `3px double ${T.ink}`, background: T.ink, padding: "24px 24px 28px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid rgba(200,194,180,0.25)", paddingBottom: 12, marginBottom: 22 }}>
-                          <div style={{ fontFamily: "'Times New Roman',Times,serif", fontWeight: 900, fontSize: 22, color: T.bg, letterSpacing: "0.04em" }}>Group Vouch</div>
-                          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.55)" }}>Most vouched across your circle</div>
-                        </div>
-                        <div style={{ display: "flex", gap: 12, flexWrap: "nowrap" }}>
-                          {top5.map((item, i) => (
-                            <div key={i} style={{ flex: 1, minWidth: 0, cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")}>
+                          {bPreviews.map((item, i) => (
+                            <div key={i} style={{ width: 52, flexShrink: 0 }}>
                               {item.poster
-                                ? <img src={item.poster} alt={item.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", display: "block", border: `1px solid rgba(200,194,180,0.2)` }} onError={e => e.target.style.display = "none"} />
-                                : <div style={{ width: "100%", aspectRatio: "2/3", background: "rgba(200,194,180,0.1)", border: `1px solid rgba(200,194,180,0.2)`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 11, color: "rgba(200,194,180,0.5)", padding: 8, textAlign: "center" }}>{item.title}</div>}
-                              <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginTop: 6 }}>{item.count} {item.count === 1 ? "vouch" : "vouches"}</div>
-                              <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 13, lineHeight: 1.2, marginTop: 2, color: T.bg }}>{item.title}</div>
+                                ? <img src={item.poster} alt={item.title} style={{ width: 52, height: 72, objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block" }} onError={e => e.target.style.display = "none"} />
+                                : <div style={{ width: 52, height: 72, background: T.paperDark, border: `1px solid ${T.paperDark}` }} />}
                             </div>
                           ))}
                         </div>
-                      </div>
-
-                      {/* Category sections */}
-                      {CATEGORIES.map(cat => {
-                        const items = byCat[cat.key] || [];
-                        if (items.length === 0) return null;
-                        return (
-                          <div key={cat.key} style={{ marginBottom: 44 }}>
-                            <div style={{ display: "flex", alignItems: "baseline", gap: 14, borderBottom: `2px solid ${T.ink}`, paddingBottom: 10, marginBottom: 18 }}>
-                              <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 17, letterSpacing: "0.08em" }}>{cat.label}</div>
-                              <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight }}>Group Mentions</div>
-                            </div>
-                            <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-                              {items.slice(0, 10).map((item, i) => (
-                                <div key={i} style={{ width: 150, flexShrink: 0, cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")}>
-                                  {item.poster
-                                    ? <img src={item.poster} alt={item.title} style={{ width: 150, height: 206, objectFit: "cover", display: "block", border: `1px solid ${T.paperDark}` }} onError={e => e.target.style.display = "none"} />
-                                    : <div style={{ width: 150, height: 206, background: T.paperDark, border: `1px solid ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 11, color: T.inkLight, textAlign: "center", padding: 10 }}>{item.title}</div>}
-                                  <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 12.5, lineHeight: 1.35, marginTop: 7 }}>{item.title}</div>
-                                  <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: T.inkFaint, marginTop: 2 }}>{item.count} {item.count === 1 ? "vouch" : "vouches"}</div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </>;
-                  })()}
-                </>}
+                      )}
+                    </div>
+                  );
+                })}
               </>
             : <>
                 <div style={{ marginBottom: 8 }}>
