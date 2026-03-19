@@ -1112,7 +1112,7 @@ export default function Vouch() {
     supabase.auth.getSession().then(({ data: { session } }) => setUserFromSession(session));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setUserFromSession(session));
     return () => subscription.unsubscribe();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const signOut = async () => { await supabase.auth.signOut(); setUser(null); };
 
