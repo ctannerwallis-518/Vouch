@@ -232,20 +232,17 @@ function PublicBoard({ inviteUserId, onSignUp }) {
           .from("profiles").select("id, username, display_name").eq("id", inviteUserId).maybeSingle();
         if (prof) setProfile(prof);
         // Load buddies for public display
-        console.log("loading buddies for", inviteUserId);
         const { data: buddyRows, error: buddyErr } = await supabase
           .from("buddies")
           .select("requester_id, receiver_id")
           .or(`requester_id.eq.${inviteUserId},receiver_id.eq.${inviteUserId}`)
           .eq("status", "accepted");
-        console.log("buddyRows:", buddyRows, "error:", buddyErr);
         if (buddyRows && buddyRows.length > 0) {
           const buddyIds = buddyRows.map(b =>
             b.requester_id === inviteUserId ? b.receiver_id : b.requester_id
           ).filter(Boolean);
           const { data: profiles } = await supabase
             .from("profiles").select("id, display_name").in("id", buddyIds);
-          console.log("publicBuddies profiles:", profiles);
           if (profiles) setPublicBuddies(profiles);
         }
         const { data: rows } = await supabase
@@ -319,11 +316,18 @@ function PublicBoard({ inviteUserId, onSignUp }) {
               <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.18em", color: T.inkMid, marginBottom: 16 }}>Also on Vouch</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
                 {publicBuddies.map((b, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div key={i} onClick={() => setShowSignupNudge(true)} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
                     <Avatar name={b.display_name} size={36} />
-                    <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.inkMid }}>{b.display_name}</div>
+                    <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.inkMid, borderBottom: `1px solid transparent` }}
+                      onMouseEnter={e => e.currentTarget.style.borderBottomColor = T.inkLight}
+                      onMouseLeave={e => e.currentTarget.style.borderBottomColor = "transparent"}>
+                      {b.display_name}
+                    </div>
                   </div>
                 ))}
+              </div>
+              <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkFaint, marginTop: 14 }}>
+                Sign up to see their boards →
               </div>
             </div>
           )}
