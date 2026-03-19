@@ -1460,7 +1460,7 @@ export default function Vouch() {
 
                 {/* GROUP VOUCH - top of page */}
                 {allBuddyBoards.length > 0 && (() => {
-                  // Only count vouched items, track who vouched each
+                  // Count endorsements + reactions as votes
                   const itemCount = {};
                   allBuddyBoards.forEach(row => {
                     const key = row.category + ":" + row.item_id;
@@ -1469,6 +1469,16 @@ export default function Vouch() {
                     const voucher = [...buddies, { userId, displayName: user?.displayName }].find(b => b.userId === row.user_id);
                     if (voucher && !itemCount[key].vouchers.includes(voucher.displayName)) {
                       itemCount[key].vouchers.push(voucher.displayName);
+                    }
+                  });
+                  // Add reactions as bonus votes
+                  myReactions.forEach(r => {
+                    const matchKey = Object.keys(itemCount).find(k => k.endsWith(":" + r.item_id));
+                    if (matchKey) {
+                      itemCount[matchKey].count += 2; // reactions count double
+                      if (!itemCount[matchKey].vouchers.includes("You agreed")) {
+                        itemCount[matchKey].vouchers.push("You agreed");
+                      }
                     }
                   });
                   const top5 = Object.values(itemCount).sort((a, b) => b.count - a.count).slice(0, 5);
