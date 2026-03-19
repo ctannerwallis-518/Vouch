@@ -1201,10 +1201,47 @@ export default function Vouch() {
   };
 
   const addItem = async (catKey, item) => {
-    setSaving(true);
-    const timeout = setTimeout(() => setSaving(false), 8000);
+    const catLabel = { movies: "Film", albums: "Albums", artists: "Artists", songs: "Songs", books: "Books", shows: "Television" }[catKey] || catKey;
+
+    // Check for duplicate vouch
+    const alreadyVouched = board[catKey]?.find(i => String(i.id) === String(item.id) && i.vouched);
+    if (alreadyVouched && item.vouched) {
+      alert(item.title + " is already in your Vouch 5."); return;
+    }
+
+    // Check category limit (non-vouched only)
+    const existingInCat = board[catKey]?.find(i => String(i.id) === String(item.id));
+    if (!existingInCat) {
+      const nonVouchedCount = (board[catKey] || []).filter(i => !i.vouched).length;
+      if (nonVouchedCount >= 5) {
+        alert(catLabel + " is full — you can have up to 5 mentions. Remove one to make room."); return;
+      }
+    }
+
+    // Optimistically update UI immediately
+    const optimisticItem = {
+      id: item.id, title: item.title, sub: item.sub || "",
+      poster: item.poster || null, comment: item.comment || "",
+      vouched: item.vouched === true, sourceUrl: item.sourceUrl || null,
+      dbId: null, // will be filled after DB save
+    };
+
+    if (existingInCat) {
+      // Update existing item vouched flag
+      setBoard(prev => ({
+        ...prev,
+        [catKey]: prev[catKey].map(i => String(i.id) === String(item.id) ? { ...i, vouched: item.vouched === true, comment: item.comment || i.comment } : i)
+      }));
+    } else {
+      // Add new item
+      setBoard(prev => ({
+        ...prev,
+        [catKey]: [...(prev[catKey] || []), optimisticItem]
+      }));
+    }
+
+    // Sync with DB in background
     try {
-      // Check if item already exists in this category
       const { data: existing } = await supabase.from("endorsements")
         .select("id")
         .eq("user_id", userId)
@@ -1213,40 +1250,20 @@ export default function Vouch() {
         .maybeSingle();
 
       if (existing) {
-        // Item already on board — check if already vouched (duplicate)
-        const alreadyVouched = board[catKey]?.find(i => String(i.id) === String(item.id) && i.vouched);
-        if (alreadyVouched && item.vouched) {
-          clearTimeout(timeout); setSaving(false);
-          alert(item.title + " is already in your Vouch 5."); return;
-        }
         await supabase.from("endorsements")
           .update({ vouched: item.vouched === true, comment: item.comment || "" })
           .eq("id", existing.id);
       } else {
-        // New item — check category isn't full (max 5 non-vouched + vouched combined)
-        const { count } = await supabase.from("endorsements")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", userId)
-          .eq("category", catKey)
-          .eq("vouched", false);
-        const catLabel = { movies: "Film", albums: "Albums", artists: "Artists", songs: "Songs", books: "Books", shows: "Television" }[catKey] || catKey;
-        if (count >= 5) { clearTimeout(timeout); setSaving(false); alert(catLabel + " is full — you can have up to 5 across both Vouch 5 and " + catLabel + " mentions. Remove one to make room."); return; }
         await supabase.from("endorsements").insert({
-          user_id: userId,
-          category: catKey,
-          item_id: String(item.id),
-          title: item.title,
-          subtitle: item.sub || "",
-          poster: item.poster || null,
-          comment: item.comment || "",
-          vouched: item.vouched === true,
-          source_url: item.sourceUrl || null,
+          user_id: userId, category: catKey, item_id: String(item.id),
+          title: item.title, subtitle: item.sub || "",
+          poster: item.poster || null, comment: item.comment || "",
+          vouched: item.vouched === true, source_url: item.sourceUrl || null,
         });
       }
+      // Reload to get real dbId
       await loadBoard(userId);
-    } catch(e) { console.error(e); }
-    clearTimeout(timeout);
-    setSaving(false);
+    } catch(e) { console.error("addItem error:", e); await loadBoard(userId); }
   };
 
   // fromVouch5=true just un-vouches the item (keeps it in category section)
