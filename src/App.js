@@ -697,7 +697,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
       </div>
       {isOwn && (
         <button onClick={e => { e.stopPropagation(); onRemove(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id), true); }}
-          style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", width: 28, height: 28, cursor: "pointer", fontSize: 16, lineHeight: "28px", textAlign: "center" }}>×</button>
+          style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 36, height: 36, cursor: "pointer", fontSize: 20, lineHeight: "36px", textAlign: "center", borderRadius: 2 }}>×</button>
       )}
       {!isOwn && (
         <button onClick={e => { e.stopPropagation(); onDudeSame(it); }}
@@ -783,7 +783,7 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
           {slots.map((item, idx) =>
             item
               ? <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => item.sourceUrl ? window.open(item.sourceUrl, "_blank") : onCard(catKey, idx)}>
-                  {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx, false); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", width: 22, height: 22, cursor: "pointer", fontSize: 13, lineHeight: "22px", textAlign: "center" }}>×</button>}
+                  {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx, false); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 30, height: 30, cursor: "pointer", fontSize: 16, lineHeight: "30px", textAlign: "center", borderRadius: 2 }}>×</button>}
                   {!isOwn && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: myReactions?.includes(String(item.id)) ? "#C8C2B4" : "rgba(17,16,8,0.7)", border: "none", color: myReactions?.includes(String(item.id)) ? T.ink : "#C8C2B4", cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 5px", whiteSpace: "nowrap", fontWeight: myReactions?.includes(String(item.id)) ? 700 : 400 }}>{myReactions?.includes(String(item.id)) ? "✓ Agreed" : "Agree"}</button>}
                   {item.poster ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} /> : null}
                   <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
@@ -1252,19 +1252,24 @@ export default function Vouch() {
   // fromVouch5=true just un-vouches the item (keeps it in category section)
   // fromVouch5=false fully deletes it
   const removeItem = async (catKey, idx, fromVouch5 = false) => {
-    if (saving) return;
     setSaving(true);
     const timeout = setTimeout(() => setSaving(false), 8000);
     try {
       const item = board[catKey]?.[idx];
-      if (!item?.dbId) { await loadBoard(userId); clearTimeout(timeout); setSaving(false); return; }
+      if (!item?.dbId) {
+        // fallback: try to find by position in a fresh load
+        await loadBoard(userId);
+        clearTimeout(timeout);
+        setSaving(false);
+        return;
+      }
       if (fromVouch5) {
         await supabase.from("endorsements").update({ vouched: false }).eq("id", item.dbId);
       } else {
         await supabase.from("endorsements").delete().eq("id", item.dbId);
       }
       await loadBoard(userId);
-    } catch(e) { console.error(e); }
+    } catch(e) { console.error("removeItem error:", e); }
     clearTimeout(timeout);
     setSaving(false);
   };
