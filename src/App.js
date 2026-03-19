@@ -1024,7 +1024,7 @@ function LegalModal({ page, onClose }) {
 function GroupVouchSlideshow({ items, isMobile }) {
   const [idx, setIdx] = useState(0);
   const touchStartX = useRef(null);
-  const currentOffsetX = React.useRef(0);
+  const currentOffsetX = useRef(0);
   const containerRef = useRef(null);
 
   useEffect(() => {
