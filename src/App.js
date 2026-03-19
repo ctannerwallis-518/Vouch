@@ -1416,9 +1416,13 @@ export default function Vouch() {
 
   const vouchedCount = Object.values(board).flat().filter(item => item.vouched).length;
 
-  // Build a map of item_id -> count across all buddy boards (for badges)
+  // Build a map of item_id -> unique user count across all buddy boards (for badges)
   const buddyCounts = {};
+  const seenBadge = new Set();
   allBuddyBoards.forEach(row => {
+    const key = row.user_id + ":" + row.item_id;
+    if (seenBadge.has(key)) return;
+    seenBadge.add(key);
     buddyCounts[String(row.item_id)] = (buddyCounts[String(row.item_id)] || 0) + 1;
   });
   const inviteParam  = new URLSearchParams(window.location.search).get("invite");
@@ -1483,9 +1487,13 @@ export default function Vouch() {
 
                 {/* GROUP VOUCH - top of page */}
                 {allBuddyBoards.length > 0 && (() => {
-                  // Count endorsements + reactions as votes
+                  // Dedupe by user+item first, then count unique users per item
+                  const seenUserItem = new Set();
                   const itemCount = {};
                   allBuddyBoards.forEach(row => {
+                    const userItemKey = row.user_id + ":" + row.item_id;
+                    if (seenUserItem.has(userItemKey)) return; // skip dupes from same user
+                    seenUserItem.add(userItemKey);
                     const key = row.category + ":" + row.item_id;
                     if (!itemCount[key]) itemCount[key] = { ...row, count: 0, vouchers: [] };
                     itemCount[key].count++;
@@ -1494,11 +1502,11 @@ export default function Vouch() {
                       itemCount[key].vouchers.push(voucher.displayName);
                     }
                   });
-                  // Add reactions as bonus votes
+                  // Add reactions as bonus votes (max 1 per reacter)
                   myReactions.forEach(r => {
                     const matchKey = Object.keys(itemCount).find(k => k.endsWith(":" + r.item_id));
                     if (matchKey) {
-                      itemCount[matchKey].count += 2; // reactions count double
+                      itemCount[matchKey].count += 1;
                       if (!itemCount[matchKey].vouchers.includes("You agreed")) {
                         itemCount[matchKey].vouchers.push("You agreed");
                       }
