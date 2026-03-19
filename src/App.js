@@ -84,20 +84,20 @@ const Styles = () => (
 
     .ornament { text-align: center; font-family: 'Spectral', serif; font-size: 13px; letter-spacing: 0.5em; color: ${T.inkFaint}; margin: 4px 0 28px; }
 
-    .vouch-section { margin-bottom: 52px; border: 3px double ${T.ink}; background: rgba(17,16,8,0.04); padding: 28px 28px 32px; position: relative; }
-    .vouch-section-header { display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; border-bottom: 3px double ${T.ink}; padding-bottom: 12px; margin-bottom: 24px; }
-    .vouch-section-label { font-family: 'Times New Roman', Times, serif; font-weight: 900; font-size: 22px; letter-spacing: 0.04em; white-space: nowrap; }
-    .vouch-section-sub   { font-family: 'Spectral', serif; font-style: italic; font-size: 11px; color: ${T.inkLight}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .vouch-section-add   { margin-left: auto; font-family: 'Spectral SC', serif; font-size: 9.5px; font-weight: 600; letter-spacing: 0.2em; padding: 4px 14px; border: 1px solid ${T.ink}; background: transparent; color: ${T.inkMid}; cursor: pointer; transition: all 0.14s; }
-    .vouch-section-add:hover { background: ${T.ink}; color: ${T.bg}; }
+    .vouch-section { margin-bottom: 52px; border: 3px double ${T.ink}; background: ${T.ink}; padding: 28px 28px 32px; position: relative; }
+    .vouch-section-header { display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; border-bottom: 1px solid rgba(200,194,180,0.25); padding-bottom: 12px; margin-bottom: 24px; }
+    .vouch-section-label { font-family: 'Times New Roman', Times, serif; font-weight: 900; font-size: 22px; letter-spacing: 0.04em; white-space: nowrap; color: ${T.bg}; }
+    .vouch-section-sub   { font-family: 'Spectral', serif; font-style: italic; font-size: 11px; color: rgba(200,194,180,0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vouch-section-add   { margin-left: auto; font-family: 'Spectral SC', serif; font-size: 9.5px; font-weight: 600; letter-spacing: 0.2em; padding: 4px 14px; border: 1px solid rgba(200,194,180,0.4); background: transparent; color: ${T.bg}; cursor: pointer; transition: all 0.14s; }
+    .vouch-section-add:hover { background: rgba(200,194,180,0.15); }
 
     .cards-row-large { display: flex; gap: 12px; flex-wrap: nowrap; }
     .card-large { flex: 1; min-width: 0; cursor: pointer; }
     .card-poster-large { width: 100%; aspect-ratio: 2/3; object-fit: cover; display: block; border: 1px solid ${T.paperDark}; transition: transform 0.2s, box-shadow 0.2s; }
     .card-poster-placeholder-large { width: 100%; aspect-ratio: 2/3; background: ${T.paperDark}; border: 1px solid ${T.paperDark}; display: flex; align-items: center; justify-content: center; font-family: 'Spectral', serif; font-style: italic; font-size: 12px; color: ${T.inkLight}; text-align: center; padding: 14px; }
-    .slot-empty-large { flex: 1; min-width: 0; aspect-ratio: 2/3; border: 1px dashed ${T.ink}; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.14s, background 0.14s; }
-    .slot-empty-large:hover { background: rgba(17,16,8,0.04); }
-    .slot-empty-inner { text-align: center; font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.18em; color: ${T.inkFaint}; }
+    .slot-empty-large { flex: 1; min-width: 0; aspect-ratio: 2/3; border: 1px dashed rgba(200,194,180,0.3); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.14s, background 0.14s; }
+    .slot-empty-large:hover { background: rgba(200,194,180,0.06); }
+    .slot-empty-inner { text-align: center; font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.18em; color: rgba(200,194,180,0.4); }
     .slot-empty-plus  { display: block; font-size: 22px; margin-bottom: 6px; color: ${T.paperDark}; }
 
     .cat-section { margin-bottom: 44px; }
@@ -671,10 +671,10 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
         ? <img src={it.poster} alt={it.title} style={{ width: "100%", height: 340, objectFit: "cover", display: "block", border: `1px solid ${T.paperDark}` }} onError={e => e.target.style.display = "none"} />
         : <div style={{ width: "100%", height: 340, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 18, color: T.inkLight, padding: 24, textAlign: "center" }}>{it.title}</div>}
       <div style={{ padding: "14px 4px 4px" }}>
-        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkFaint, marginBottom: 4 }}>{it._catLabel}</div>
-        <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4 }}>{it.title}</div>
-        <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.inkMid }}>{it.artist || it.author || it.sub || ""}</div>
-        {it.comment && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkLight, marginTop: 6 }}>"{it.comment}"</div>}
+        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 4 }}>{it._catLabel}</div>
+        <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: T.bg }}>{it.title}</div>
+        <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "rgba(200,194,180,0.7)" }}>{it.artist || it.author || it.sub || ""}</div>
+        {it.comment && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: "rgba(200,194,180,0.55)", marginTop: 6 }}>"{it.comment}"</div>}
       </div>
       {isOwn && (
         <button onClick={e => { e.stopPropagation(); onRemove(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id), true); }}
