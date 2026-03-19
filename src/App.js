@@ -222,6 +222,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
   const [profile, setProfile]       = useState(null);
   const [loading, setLoading]       = useState(true);
   const [showSignupNudge, setShowSignupNudge] = useState(false);
+  const [publicBuddies, setPublicBuddies] = useState([]);
 
   useEffect(() => {
     const load = async () => {
@@ -230,6 +231,18 @@ function PublicBoard({ inviteUserId, onSignUp }) {
         const { data: prof } = await supabase
           .from("profiles").select("id, username, display_name").eq("id", inviteUserId).maybeSingle();
         if (prof) setProfile(prof);
+        // Load buddies for public display
+        const { data: buddyRows } = await supabase
+          .from("buddies")
+          .select("requester:requester_id(id, display_name), receiver:receiver_id(id, display_name)")
+          .or(`requester_id.eq.${inviteUserId},receiver_id.eq.${inviteUserId}`)
+          .eq("status", "accepted");
+        if (buddyRows) {
+          const buddyProfiles = buddyRows.map(b =>
+            b.requester?.id === inviteUserId ? b.receiver : b.requester
+          ).filter(Boolean);
+          setPublicBuddies(buddyProfiles);
+        }
         const { data: rows } = await supabase
           .from("endorsements").select("*").eq("user_id", inviteUserId).order("created_at", { ascending: true });
         if (rows && rows.length > 0) {
@@ -296,6 +309,19 @@ function PublicBoard({ inviteUserId, onSignUp }) {
           </div>
           <div className="ornament">— ✦ —</div>
           <VouchSection board={board} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} />
+          {publicBuddies.length > 0 && (
+            <div style={{ margin: "32px 0", borderTop: `1px solid ${T.paperDark}`, paddingTop: 24 }}>
+              <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.18em", color: T.inkMid, marginBottom: 16 }}>Also on Vouch</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
+                {publicBuddies.map((b, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <Avatar name={b.display_name} size={36} />
+                    <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.inkMid }}>{b.display_name}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {CATEGORIES.map(cat => (
             <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={board[cat.key] || []} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} />
           ))}
@@ -351,6 +377,24 @@ function HowItWorks() {
           <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Connect with friends and see what they're vouching for. Hit "Agree" on anything that resonates.</div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function Avatar({ name, size = 36 }) {
+  const parts = (name || "?").trim().split(" ");
+  const initials = parts.length >= 2
+    ? parts[0][0].toUpperCase() + parts[parts.length - 1][0].toUpperCase()
+    : parts[0].slice(0, 2).toUpperCase();
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: "50%",
+      background: T.ink, color: T.bg, flexShrink: 0,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      fontFamily: "'Spectral SC', serif", fontWeight: 700,
+      fontSize: size * 0.33, letterSpacing: "0.05em", userSelect: "none"
+    }}>
+      {initials}
     </div>
   );
 }
@@ -1547,9 +1591,12 @@ export default function Vouch() {
                   return (
                     <div key={b.buddyRowId} style={{ borderBottom: `1px solid ${T.paperDark}`, padding: "16px 0", cursor: "pointer" }} onClick={() => viewBuddy(b)}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: bPreviews.length > 0 ? 12 : 0 }}>
-                        <div>
-                          <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 20 }}>{b.displayName}</div>
-                          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.1em", color: T.inkLight, marginTop: 2 }}>@{b.username}</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <Avatar name={b.displayName} size={44} />
+                          <div>
+                            <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 20 }}>{b.displayName}</div>
+                            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.1em", color: T.inkLight, marginTop: 2 }}>@{b.username}</div>
+                          </div>
                         </div>
                         <span style={{ fontSize: 13, color: T.inkFaint }}>→</span>
                       </div>
@@ -1594,10 +1641,9 @@ export default function Vouch() {
                     <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", color: T.inkMid, marginBottom: 16 }}>Buddies</div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 20px" }}>
                       {buddies.map(b => (
-                        <div key={b.buddyRowId} onClick={() => { setViewing(b); setTab("board"); loadViewBoard(b.userId); loadBoardReactions(b.userId); }} style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.inkMid, cursor: "pointer", borderBottom: `1px solid transparent` }}
-                          onMouseEnter={e => e.target.style.borderBottomColor = T.inkLight}
-                          onMouseLeave={e => e.target.style.borderBottomColor = "transparent"}>
-                          {b.displayName}
+                        <div key={b.buddyRowId} onClick={() => { setViewing(b); setTab("board"); loadViewBoard(b.userId); loadBoardReactions(b.userId); }} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+                          <Avatar name={b.displayName} size={32} />
+                          <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.inkMid }}>{b.displayName}</div>
                         </div>
                       ))}
                     </div>
