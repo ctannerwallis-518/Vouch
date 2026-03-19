@@ -243,7 +243,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
           ).filter(Boolean);
           const { data: profiles } = await supabase
             .from("profiles").select("id, display_name").in("id", buddyIds);
-          if (profiles) setPublicBuddies(profiles);
+          console.log("publicBuddies loaded:", profiles); if (profiles) setPublicBuddies(profiles);
         }
         const { data: rows } = await supabase
           .from("endorsements").select("*").eq("user_id", inviteUserId).order("created_at", { ascending: true });
