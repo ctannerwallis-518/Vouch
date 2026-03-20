@@ -1203,6 +1203,7 @@ export default function Vouch() {
   const [boardReactions, setBoardReactions] = useState([]);
   const [legalPage,      setLegalPage]      = useState(null);
   const [allBuddyBoards, setAllBuddyBoards] = useState([]);
+  const [viewBuddies,    setViewBuddies]    = useState([]);
 
   const loadMyReactions = async (uid) => {
     const { data } = await supabase.from("reactions").select("*").eq("user_id", uid).order("created_at", { ascending: false });
@@ -1378,6 +1379,18 @@ export default function Vouch() {
     setTab("board");
     await loadViewBoard(buddy.userId);
     await loadBoardReactions(buddy.userId);
+    // Load this buddy's own buddies for display at bottom of their board
+    const { data } = await supabase.from("buddies")
+      .select("requester_id, receiver_id")
+      .or(`requester_id.eq.${buddy.userId},receiver_id.eq.${buddy.userId}`)
+      .eq("status", "accepted");
+    if (data && data.length > 0) {
+      const ids = data.map(b => b.requester_id === buddy.userId ? b.receiver_id : b.requester_id);
+      const { data: profiles } = await supabase.from("profiles").select("id, display_name, avatar_url").in("id", ids);
+      setViewBuddies(profiles || []);
+    } else {
+      setViewBuddies([]);
+    }
   };
 
   const addItem = async (catKey, item) => {
@@ -1654,19 +1667,32 @@ export default function Vouch() {
                 <MutualMentions reactions={boardReactions} myReactions={myReactions} isOwn={isOwn} boardOwnerName={currName} buddies={buddies} onViewBuddy={(b) => { setViewing(b); setTab("board"); loadViewBoard(b.userId); loadBoardReactions(b.userId); }} />
 
                 {/* BUDDIES LIST at bottom of every board */}
-                {buddies.length > 0 && (
-                  <div style={{ marginTop: 52, borderTop: `1px solid ${T.paperDark}`, paddingTop: 28 }}>
-                    <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", color: T.inkMid, marginBottom: 16 }}>Buddies</div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 20px" }}>
-                      {buddies.map(b => (
-                        <div key={b.buddyRowId} onClick={() => { setViewing(b); setTab("board"); loadViewBoard(b.userId); loadBoardReactions(b.userId); }} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
-                          <Avatar name={b.displayName} size={32} avatarUrl={b.avatarUrl} />
-                          <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.inkMid }}>{b.displayName}</div>
-                        </div>
-                      ))}
+                {(() => {
+                  const displayBuddies = isOwn
+                    ? buddies.map(b => ({ id: b.userId, display_name: b.displayName, avatar_url: b.avatarUrl, buddyRowId: b.buddyRowId, ...b }))
+                    : viewBuddies;
+                  if (!displayBuddies.length) return null;
+                  return (
+                    <div style={{ marginTop: 52, borderTop: `1px solid ${T.paperDark}`, paddingTop: 28 }}>
+                      <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", color: T.inkMid, marginBottom: 16 }}>Buddies</div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "12px 20px" }}>
+                        {displayBuddies.map((b, i) => {
+                          const name = b.displayName || b.display_name;
+                          const avatarUrl = b.avatarUrl || b.avatar_url;
+                          const onClick = isOwn
+                            ? () => viewBuddy(b)
+                            : null;
+                          return (
+                            <div key={b.buddyRowId || b.id || i} onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 10, cursor: isOwn ? "pointer" : "default" }}>
+                              <Avatar name={name} size={32} avatarUrl={avatarUrl} />
+                              <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.inkMid }}>{name}</div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
               </>
           }
         </main>
