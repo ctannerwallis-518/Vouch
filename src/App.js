@@ -287,9 +287,9 @@ function PublicBoard({ inviteUserId, onSignUp }) {
         </div>
         <header className="masthead">
           <div className="masthead-meta">
-            <span>Est. 2026</span>
-            <span className="masthead-meta-stars">✦ · ✦ · ✦</span>
-            <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkMid }}>vouch5.com</span>
+            <span style={{ flex: 1 }}>Est. 2026</span>
+            <span className="masthead-meta-stars" style={{ flex: "0 0 auto" }}>✦ · ✦ · ✦</span>
+            <span style={{ flex: 1, display: "flex", justifyContent: "flex-end", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkMid }}>vouch5.com</span>
           </div>
           <div className="masthead-nameplate"><span className="nameplate-word">Vouch.</span></div>
           <div className="masthead-rule-ornament"><span>—</span><span>✦</span><span>—</span></div>
@@ -1505,12 +1505,12 @@ export default function Vouch() {
       <div className="app">
         <header className="masthead">
           <div className="masthead-meta">
-            <span>Est. 2026</span>
-            <span className="masthead-meta-stars">✦ · ✦ · ✦</span>
-            <span>
-              <span className="clickable" onClick={() => setLegalPage("how")} style={{ marginRight: 16 }}>How it Works</span>
+            <span style={{ flex: 1 }}>Est. 2026</span>
+            <span className="masthead-meta-stars" style={{ flex: "0 0 auto" }}>✦ · ✦ · ✦</span>
+            <span style={{ flex: 1, display: "flex", justifyContent: "flex-end", gap: 16 }}>
+              <span className="clickable" onClick={() => setLegalPage("how")}>How it Works</span>
               <span className="clickable" onClick={() => { setTab("board"); setViewing(null); }}>@{user.username}</span>
-              <span className="clickable" onClick={signOut} style={{ marginLeft: 16 }}>Sign out</span>
+              <span className="clickable" onClick={signOut}>Sign out</span>
             </span>
           </div>
           <div className="masthead-nameplate" onClick={() => { setTab("board"); setViewing(null); }}>
