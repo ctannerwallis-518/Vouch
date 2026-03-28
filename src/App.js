@@ -331,9 +331,11 @@ function PublicBoard({ inviteUserId, onSignUp }) {
               </div>
             </div>
           )}
-          {CATEGORIES.map(cat => (
-            <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={board[cat.key] || []} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} />
-          ))}
+          {[...CATEGORIES].sort((a, b) => (board[b.key] || []).length - (board[a.key] || []).length).map(cat => {
+            const items = board[cat.key] || [];
+            if (items.length === 0) return null;
+            return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} />;
+          })}
           <div style={{ marginTop: 48, padding: "32px 0", borderTop: `3px double ${T.ink}`, textAlign: "center" }}>
             <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 26, fontWeight: 900, marginBottom: 8 }}>Make your own board.</div>
             <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkMid, marginBottom: 24 }}>What five things would you put your name behind right now?</div>
@@ -1296,8 +1298,16 @@ export default function Vouch() {
         const params = new URLSearchParams(window.location.search);
         const inviteFrom = params.get("invite");
         if (inviteFrom && inviteFrom !== uid) {
-          await supabase.from("buddies").upsert({ requester_id: inviteFrom, receiver_id: uid, status: "accepted" }, { onConflict: "requester_id,receiver_id" });
-          await supabase.from("buddies").upsert({ requester_id: uid, receiver_id: inviteFrom, status: "accepted" }, { onConflict: "requester_id,receiver_id" });
+          // Check if connection already exists in either direction before auto-buddying
+          const { data: existingBuddy } = await supabase.from("buddies")
+            .select("id")
+            .or(`and(requester_id.eq.${inviteFrom},receiver_id.eq.${uid}),and(requester_id.eq.${uid},receiver_id.eq.${inviteFrom})`)
+            .maybeSingle();
+          if (!existingBuddy) {
+            await supabase.from("buddies").insert({ requester_id: inviteFrom, receiver_id: uid, status: "accepted" });
+          } else {
+            await supabase.from("buddies").update({ status: "accepted" }).eq("id", existingBuddy.id);
+          }
           window.history.replaceState({}, "", window.location.pathname);
           loadBuddies(uid);
         }
@@ -1360,7 +1370,13 @@ export default function Vouch() {
   };
 
   const sendBuddyRequest = async (receiverId) => {
-    await supabase.from("buddies").upsert({ requester_id: userId, receiver_id: receiverId, status: "pending" }, { onConflict: "requester_id,receiver_id" });
+    // Check if connection already exists in either direction
+    const { data: existing } = await supabase.from("buddies")
+      .select("id")
+      .or(`and(requester_id.eq.${userId},receiver_id.eq.${receiverId}),and(requester_id.eq.${receiverId},receiver_id.eq.${userId})`)
+      .maybeSingle();
+    if (existing) return; // already connected, skip
+    await supabase.from("buddies").insert({ requester_id: userId, receiver_id: receiverId, status: "pending" });
     loadBuddies(userId);
   };
 
@@ -1660,9 +1676,21 @@ export default function Vouch() {
 
                 <VouchSection board={currBoard} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={() => setVouchModal(true)} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} />
 
-                {CATEGORIES.map(cat => (
-                  <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={currBoard[cat.key] || []} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={setAddModal} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} />
-                ))}
+                {(() => {
+                  // On own board show all categories; on others' boards hide empty ones and sort filled first
+                  const cats = isOwn
+                    ? CATEGORIES
+                    : [...CATEGORIES].sort((a, b) => {
+                        const aLen = (currBoard[a.key] || []).length;
+                        const bLen = (currBoard[b.key] || []).length;
+                        return bLen - aLen;
+                      });
+                  return cats.map(cat => {
+                    const items = currBoard[cat.key] || [];
+                    if (!isOwn && items.length === 0) return null;
+                    return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={setAddModal} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} />;
+                  });
+                })()}
 
                 <MutualMentions reactions={boardReactions} myReactions={myReactions} isOwn={isOwn} boardOwnerName={currName} buddies={buddies} onViewBuddy={(b) => { setViewing(b); setTab("board"); loadViewBoard(b.userId); loadBoardReactions(b.userId); }} />
 
