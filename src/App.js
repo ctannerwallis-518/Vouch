@@ -1106,10 +1106,13 @@ function GroupVouchSlideshow({ items, isMobile }) {
   useEffect(() => {
     const el = containerRef.current;
     if (!el || !isMobile) return;
-    const handleStart = e => { touchStartX.current = e.touches[0].clientX; currentOffsetX.current = 0; };
+    const handleStart = e => { touchStartX.current = e.touches[0].clientX; touchStartY.current = e.touches[0].clientY; currentOffsetX.current = 0; };
+    const touchStartY = { current: null };
     const handleMove = e => {
       if (touchStartX.current === null) return;
       const dx = e.touches[0].clientX - touchStartX.current;
+      const dy = e.touches[0].clientY - (touchStartY.current || 0);
+      if (Math.abs(dx) > Math.abs(dy)) e.preventDefault();
       currentOffsetX.current = dx;
       const track = el.querySelector(".gv-track");
       if (track) track.style.transform = `translateX(${-(idx * el.offsetWidth) + dx}px)`;
@@ -1122,10 +1125,10 @@ function GroupVouchSlideshow({ items, isMobile }) {
       else if (dx > (w * 0.22) && idx > 0) newIdx = idx - 1;
       const track = el.querySelector(".gv-track");
       if (track) { track.style.transition = "transform 0.32s cubic-bezier(0.25,0.46,0.45,0.94)"; track.style.transform = `translateX(${-(newIdx * w)}px)`; setTimeout(() => { if (track) track.style.transition = ""; }, 350); }
-      setIdx(newIdx); touchStartX.current = null;
+      setIdx(newIdx); touchStartX.current = null; touchStartY.current = null;
     };
     el.addEventListener("touchstart", handleStart, { passive: true });
-    el.addEventListener("touchmove", handleMove, { passive: true });
+    el.addEventListener("touchmove", handleMove, { passive: false });
     el.addEventListener("touchend", handleEnd, { passive: true });
     return () => { el.removeEventListener("touchstart", handleStart); el.removeEventListener("touchmove", handleMove); el.removeEventListener("touchend", handleEnd); };
   }, [idx, items.length, isMobile]);
