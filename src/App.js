@@ -41,25 +41,50 @@ const Styles = () => (
 
     .app { min-height: 100vh; background: ${T.bg}; }
 
+    /* MASTHEAD */
     .masthead { background: ${T.bg}; border-bottom: 3px double ${T.ink}; user-select: none; }
     .masthead-meta {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 7px 14px; border-bottom: 1px solid ${T.ink};
-      font-family: 'Spectral SC', serif; font-size: 8px; letter-spacing: 0.12em;
-      color: ${T.inkMid}; text-transform: uppercase; white-space: nowrap; gap: 8px;
+      padding: 7px 28px; border-bottom: 1px solid ${T.ink};
+      font-family: 'Spectral SC', serif; font-size: 9px; letter-spacing: 0.18em;
+      color: ${T.inkMid}; text-transform: uppercase;
     }
     .masthead-meta .clickable { cursor: pointer; }
     .masthead-meta .clickable:hover { color: ${T.ink}; }
     .masthead-meta-stars { font-size: 7px; letter-spacing: 0.3em; opacity: 0.6; }
+
     .masthead-nameplate { text-align: center; padding: 18px 28px 6px; cursor: pointer; }
     .nameplate-word {
       font-family: 'Times New Roman', Times, serif; font-weight: 900;
       font-size: clamp(58px, 11vw, 104px); letter-spacing: 0.02em;
       line-height: 0.92; color: ${T.ink};
     }
-    .masthead-rule-ornament { text-align: center; font-family: 'Spectral', serif; font-size: 11px; color: ${T.inkLight}; padding: 4px 0 2px; display: flex; align-items: center; justify-content: center; gap: 10px; letter-spacing: 0; }
+
+    .masthead-rule-ornament { text-align: center; font-family: 'Spectral', serif; font-size: 11px; letter-spacing: 0.6em; color: ${T.inkLight}; padding: 4px 0 2px; }
     .masthead-tagline { text-align: center; font-family: 'Spectral', serif; font-style: italic; font-weight: 300; font-size: 12.5px; letter-spacing: 0.12em; color: ${T.inkLight}; padding-bottom: 12px; }
 
+    /* MASTER SEARCH */
+    .master-search-wrap { padding: 0 28px 0; border-top: 1px solid ${T.ink}; }
+    .master-search-inner { max-width: 1380px; margin: 0 auto; display: flex; align-items: center; }
+    .master-search-input {
+      flex: 1; font-family: 'Spectral', serif; font-size: 14px; padding: 11px 14px;
+      border: none; background: transparent; color: ${T.ink}; outline: none;
+    }
+    .master-search-input::placeholder { color: ${T.inkFaint}; font-style: italic; }
+    .master-search-select {
+      font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.15em;
+      padding: 11px 14px; border: none; border-left: 1px solid ${T.paperDark};
+      background: transparent; color: ${T.inkMid}; cursor: pointer; outline: none;
+      appearance: none; -webkit-appearance: none;
+    }
+    .master-search-btn {
+      font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.2em;
+      padding: 11px 18px; border: none; border-left: 1px solid ${T.paperDark};
+      background: transparent; color: ${T.inkMid}; cursor: pointer;
+    }
+    .master-search-btn:hover { background: ${T.ink}; color: ${T.bg}; }
+
+    /* NAV */
     .nav { display: flex; overflow-x: auto; scrollbar-width: none; border-top: 1px solid ${T.ink}; }
     .nav::-webkit-scrollbar { display: none; }
     .nav-btn {
@@ -71,7 +96,9 @@ const Styles = () => (
     .nav-btn:hover  { background: ${T.paperDark}; color: ${T.ink}; }
     .nav-btn.active { background: ${T.ink}; color: ${T.bg}; }
 
+    /* PAGE */
     .page { max-width: 1380px; margin: 0 auto; padding: 0 28px 80px; }
+
     .board-header { display: flex; justify-content: space-between; align-items: flex-end; padding: 30px 0 18px; border-bottom: 1px solid ${T.ink}; margin-bottom: 32px; }
     .board-name { font-family: 'Spectral', serif; font-weight: 700; font-size: 26px; }
     .board-sub  { font-family: 'Spectral SC', serif; font-size: 10px; letter-spacing: 0.16em; color: ${T.inkLight}; margin-top: 5px; }
@@ -82,24 +109,41 @@ const Styles = () => (
     .btn-ghost { background: transparent; color: ${T.ink}; }
     .btn-ghost:hover { background: ${T.ink}; color: ${T.bg}; }
 
-    .ornament { text-align: center; font-family: 'Spectral', serif; font-size: 13px; color: ${T.inkFaint}; margin: 4px 0 28px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .ornament { text-align: center; font-family: 'Spectral', serif; font-size: 13px; letter-spacing: 0.5em; color: ${T.inkFaint}; margin: 4px 0 28px; }
 
-    .vouch-section { margin-bottom: 52px; border: 3px double ${T.ink}; background: ${T.ink}; padding: 28px 28px 32px; position: relative; }
-    .vouch-section-header { display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; border-bottom: 1px solid rgba(200,194,180,0.25); padding-bottom: 12px; margin-bottom: 24px; }
-    .vouch-section-label { font-family: 'Times New Roman', Times, serif; font-weight: 900; font-size: 22px; letter-spacing: 0.04em; white-space: nowrap; color: ${T.bg}; }
-    .vouch-section-sub   { font-family: 'Spectral', serif; font-style: italic; font-size: 11px; color: rgba(200,194,180,0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .vouch-section-add   { margin-left: auto; font-family: 'Spectral SC', serif; font-size: 9.5px; font-weight: 600; letter-spacing: 0.2em; padding: 4px 14px; border: 1px solid rgba(200,194,180,0.4); background: transparent; color: ${T.bg}; cursor: pointer; transition: all 0.14s; }
-    .vouch-section-add:hover { background: rgba(200,194,180,0.15); }
+    /* VOUCH SECTION (top 5 across all categories) */
+    .vouch-section {
+      margin-bottom: 52px;
+      border: 2px solid ${T.ink};
+      background: rgba(17,16,8,0.04);
+      padding: 24px 24px 28px;
+    }
+    .vouch-section-header {
+      display: flex; align-items: baseline; gap: 14px;
+      border-bottom: 2px solid ${T.ink}; padding-bottom: 10px; margin-bottom: 22px;
+    }
+    .vouch-section-label { font-family: 'Spectral SC', serif; font-weight: 700; font-size: 20px; letter-spacing: 0.08em; }
+    .vouch-section-sub   { font-family: 'Spectral', serif; font-style: italic; font-size: 11px; color: ${T.inkLight}; }
+    .vouch-section-add   { margin-left: auto; font-family: 'Spectral SC', serif; font-size: 9.5px; font-weight: 600; letter-spacing: 0.2em; padding: 4px 14px; border: 1px solid ${T.ink}; background: transparent; color: ${T.inkMid}; cursor: pointer; transition: all 0.14s; }
+    .vouch-section-add:hover { background: ${T.ink}; color: ${T.bg}; }
 
-    .cards-row-large { display: flex; gap: 12px; flex-wrap: nowrap; }
-    .card-large { flex: 1; min-width: 0; cursor: pointer; }
-    .card-poster-large { width: 100%; aspect-ratio: 2/3; object-fit: cover; display: block; border: 1px solid ${T.paperDark}; transition: transform 0.2s, box-shadow 0.2s; }
-    .card-poster-placeholder-large { width: 100%; aspect-ratio: 2/3; background: ${T.paperDark}; border: 1px solid ${T.paperDark}; display: flex; align-items: center; justify-content: center; font-family: 'Spectral', serif; font-style: italic; font-size: 12px; color: ${T.inkLight}; text-align: center; padding: 14px; }
-    .slot-empty-large { flex: 1; min-width: 0; aspect-ratio: 2/3; border: 1px dashed rgba(200,194,180,0.3); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.14s, background 0.14s; }
-    .slot-empty-large:hover { background: rgba(200,194,180,0.06); }
-    .slot-empty-inner { text-align: center; font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.18em; color: rgba(200,194,180,0.4); }
+    /* LARGE CARDS (Vouch section) */
+    .cards-row-large { display: flex; gap: 20px; flex-wrap: wrap; }
+    .card-large { width: 240px; flex-shrink: 0; cursor: pointer; }
+    .card-large:hover .card-poster-large { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(17,16,8,0.2); }
+    .card-poster-large { width: 240px; height: 330px; object-fit: cover; display: block; border: 1px solid ${T.paperDark}; transition: transform 0.2s, box-shadow 0.2s; }
+    .card-poster-placeholder-large { width: 240px; height: 330px; background: ${T.paperDark}; border: 1px solid ${T.paperDark}; display: flex; align-items: center; justify-content: center; font-family: 'Spectral', serif; font-style: italic; font-size: 12px; color: ${T.inkLight}; text-align: center; padding: 14px; }
+    .card-cat-badge { display: inline-block; font-family: 'Spectral SC', serif; font-size: 8.5px; letter-spacing: 0.2em; color: ${T.inkFaint}; margin-top: 8px; text-transform: uppercase; }
+    .card-title-large   { font-family: 'Spectral', serif; font-weight: 600; font-size: 14px; line-height: 1.35; margin-top: 3px; }
+    .card-sub-large     { font-family: 'Spectral SC', serif; font-size: 10px; letter-spacing: 0.06em; color: ${T.inkLight}; margin-top: 2px; }
+    .card-comment-large { font-family: 'Spectral', serif; font-style: italic; font-size: 11px; line-height: 1.5; color: ${T.inkMid}; margin-top: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+    .slot-empty-large { width: 240px; height: 330px; border: 1px dashed ${T.ink}; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.14s, background 0.14s; flex-shrink: 0; }
+    .slot-empty-large:hover { background: rgba(17,16,8,0.04); }
+    .slot-empty-inner { text-align: center; font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.18em; color: ${T.inkFaint}; }
     .slot-empty-plus  { display: block; font-size: 22px; margin-bottom: 6px; color: ${T.paperDark}; }
 
+    /* MENTION SECTIONS (per-category, smaller) */
     .cat-section { margin-bottom: 44px; }
     .cat-header { display: flex; align-items: baseline; gap: 14px; border-bottom: 2px solid ${T.ink}; padding-bottom: 10px; margin-bottom: 18px; }
     .cat-label { font-family: 'Spectral SC', serif; font-weight: 700; font-size: 17px; letter-spacing: 0.08em; }
@@ -108,6 +152,7 @@ const Styles = () => (
     .cat-add { margin-left: auto; font-family: 'Spectral SC', serif; font-size: 9.5px; font-weight: 600; letter-spacing: 0.2em; padding: 4px 14px; border: 1px solid ${T.inkLight}; background: transparent; color: ${T.inkMid}; cursor: pointer; transition: all 0.14s; }
     .cat-add:hover { border-color: ${T.ink}; color: ${T.ink}; }
 
+    /* SMALLER CARDS (Mentions) */
     .cards-row { display: flex; gap: 14px; flex-wrap: wrap; }
     .card { width: 150px; flex-shrink: 0; cursor: pointer; }
     .card:hover .card-poster { transform: translateY(-3px); box-shadow: 0 7px 20px rgba(17,16,8,0.16); }
@@ -116,9 +161,11 @@ const Styles = () => (
     .card-title   { font-family: 'Spectral', serif; font-weight: 600; font-size: 12.5px; line-height: 1.35; margin-top: 7px; }
     .card-sub     { font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.06em; color: ${T.inkLight}; margin-top: 2px; }
     .card-comment { font-family: 'Spectral', serif; font-style: italic; font-size: 10.5px; line-height: 1.5; color: ${T.inkMid}; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
     .slot-empty-sm { width: 150px; height: 206px; border: 1px dashed ${T.paperDark}; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.14s, background 0.14s; flex-shrink: 0; }
     .slot-empty-sm:hover { border-color: ${T.ink}; background: rgba(17,16,8,0.03); }
 
+    /* LIGHTBOX */
     .lb-overlay { position: fixed; inset: 0; background: rgba(17,16,8,0.96); z-index: 1000; display: flex; align-items: center; justify-content: center; }
     .lb-close { position: fixed; top: 22px; right: 26px; background: transparent; border: none; color: ${T.bg}; font-family: 'Spectral', serif; font-size: 30px; line-height: 1; cursor: pointer; opacity: 0.6; transition: opacity 0.14s; }
     .lb-close:hover { opacity: 1; }
@@ -136,6 +183,7 @@ const Styles = () => (
     .lb-dot    { width: 5px; height: 5px; border-radius: 50%; background: rgba(200,194,180,0.25); cursor: pointer; transition: background 0.14s; }
     .lb-dot.on { background: ${T.bg}; }
 
+    /* MODAL */
     .modal-overlay { position: fixed; inset: 0; background: rgba(17,16,8,0.82); z-index: 900; display: flex; align-items: flex-start; justify-content: center; padding-top: 72px; }
     .modal       { background: ${T.bg}; width: 100%; max-width: 540px; max-height: 82vh; overflow-y: auto; border: 1px solid ${T.ink}; }
     .modal-head  { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; border-bottom: 2px solid ${T.ink}; }
@@ -160,12 +208,14 @@ const Styles = () => (
     .comment-area::placeholder { color: ${T.inkFaint}; }
     .char-count { font-family: 'Spectral SC', serif; font-size: 9.5px; color: ${T.inkFaint}; text-align: right; margin: 4px 0 12px; }
 
+    /* FRIENDS */
     .friend-row { display: flex; align-items: center; justify-content: space-between; padding: 13px 0; border-bottom: 1px solid ${T.paperDark}; cursor: pointer; }
     .friend-row:hover .friend-name { text-decoration: underline; }
     .friend-name   { font-family: 'Spectral', serif; font-weight: 600; font-size: 15px; }
     .friend-handle { font-family: 'Spectral SC', serif; font-size: 10px; letter-spacing: 0.1em; color: ${T.inkLight}; margin-top: 2px; }
     .friend-arrow  { font-size: 13px; color: ${T.inkFaint}; }
 
+    /* AUTH */
     .auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: ${T.bg}; padding: 24px; }
     .auth-box  { width: 100%; max-width: 400px; }
     .auth-plate { text-align: center; border-top: 3px double ${T.ink}; border-bottom: 3px double ${T.ink}; padding: 14px 0 10px; margin-bottom: 10px; }
@@ -178,17 +228,13 @@ const Styles = () => (
     .no-results { text-align: center; padding: 18px 0; font-family: 'Spectral', serif; font-style: italic; font-size: 13px; color: ${T.inkLight}; }
 
     @media (max-width: 640px) {
-      .cards-row-large { flex-direction: column; gap: 0; }
-      .card-large { width: 100%; }
-      .card-poster-large { width: 100%; height: auto; aspect-ratio: 2/3; }
-      .card-poster-placeholder-large { width: 100%; aspect-ratio: 2/3; height: auto; }
-      .slot-empty-large { width: 100%; aspect-ratio: 2/3; height: auto; margin-bottom: 0; }
-      .cards-row { flex-direction: column; gap: 0; }
-      .card { width: 100%; display: flex; flex-direction: row; gap: 14px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid ${T.paperDark}; }
-      .card-poster { width: 72px; height: 100px; flex-shrink: 0; }
-      .card-poster-placeholder { width: 72px; height: 100px; flex-shrink: 0; font-size: 10px; }
-      .card:hover .card-poster { transform: none; box-shadow: none; }
-      .slot-empty-sm { width: 100%; height: 56px; aspect-ratio: unset; border-style: dashed; margin: 4px 0; }
+      .card-large, .slot-empty-large { width: calc(50vw - 30px); }
+      .card-poster-large, .card-poster-placeholder-large { width: 100%; height: calc((50vw - 30px) * 1.375); }
+      .cards-row-large { gap: 12px; }
+      .card, .slot-empty-sm { width: calc(33vw - 18px); }
+      .card-poster, .card-poster-placeholder { width: 100%; height: calc((33vw - 18px) * 1.375); }
+      .cards-row { gap: 10px; }
+      .master-search-wrap { padding: 0 16px 0; }
       .page { padding: 0 16px 60px; }
       .masthead-meta { padding: 7px 16px; }
       .vouch-section { padding: 16px 14px 20px; }
@@ -196,11 +242,11 @@ const Styles = () => (
   `}</style>
 );
 
-function Auth({ inviteUserId }) {
+function Auth() {
   const signInWithGoogle = async () => {
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin + (inviteUserId ? `?invite=${inviteUserId}` : "") }
+      options: { redirectTo: window.location.origin }
     });
   };
   return (
@@ -208,209 +254,8 @@ function Auth({ inviteUserId }) {
       <div className="auth-box">
         <div className="auth-plate"><span className="auth-plate-name">Vouch.</span></div>
         <div className="auth-tagline">Love it? Vouch for it.</div>
-        <div style={{ marginBottom: 32, borderBottom: `1px solid ${T.paperDark}`, paddingBottom: 32 }}>
-          <HowItWorks />
-        </div>
         <button className="auth-google" onClick={signInWithGoogle}>Continue with Google</button>
       </div>
-    </div>
-  );
-}
-
-function PublicBoard({ inviteUserId, onSignUp }) {
-  const [board, setBoard]           = useState(null);
-  const [profile, setProfile]       = useState(null);
-  const [loading, setLoading]       = useState(true);
-  const [showSignupNudge, setShowSignupNudge] = useState(false);
-  const [publicBuddies, setPublicBuddies] = useState([]);
-
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      try {
-        const { data: prof } = await supabase
-          .from("profiles").select("id, username, display_name").eq("id", inviteUserId).maybeSingle();
-        if (prof) setProfile(prof);
-        // Load buddies for public display
-        const { data: buddyRows } = await supabase
-          .from("buddies")
-          .select("requester_id, receiver_id")
-          .or(`requester_id.eq.${inviteUserId},receiver_id.eq.${inviteUserId}`)
-          .eq("status", "accepted");
-        if (buddyRows && buddyRows.length > 0) {
-          const buddyIds = buddyRows.map(b =>
-            b.requester_id === inviteUserId ? b.receiver_id : b.requester_id
-          ).filter(Boolean);
-          const { data: profiles } = await supabase
-            .from("profiles").select("id, display_name, avatar_url").in("id", buddyIds);
-          if (profiles) setPublicBuddies(profiles);
-        }
-        const { data: rows } = await supabase
-          .from("endorsements").select("*").eq("user_id", inviteUserId).order("created_at", { ascending: true });
-        if (rows && rows.length > 0) {
-          const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
-          rows.forEach(row => {
-            if (b[row.category] && b[row.category].length < 5) {
-              b[row.category].push({
-                id: row.item_id, title: row.title, sub: row.subtitle || "",
-                poster: row.poster || null, comment: row.comment || "",
-                vouched: row.vouched || false, sourceUrl: row.source_url || null,
-              });
-            }
-          });
-          setBoard(b);
-        } else {
-          setBoard({ movies: [], albums: [], artists: [], songs: [], books: [], shows: [] });
-        }
-      } catch(e) { console.error(e); }
-      setLoading(false);
-    };
-    load();
-  }, [inviteUserId]);
-
-  if (loading) return <><Styles /><div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: T.bg }}><div className="loading">Loading…</div></div></>;
-  if (!board) return <><Styles /><Auth inviteUserId={inviteUserId} /></>;
-
-  const name = profile?.display_name || profile?.username || "Someone";
-
-  return (
-    <>
-      <Styles />
-      <div className="app">
-        <div style={{ background: T.ink, color: T.bg, padding: "14px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
-          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14 }}>
-            You're viewing <strong style={{ fontStyle: "normal" }}>{name}'s</strong> Vouch board.
-          </div>
-          <button onClick={onSignUp} style={{ background: T.bg, color: T.ink, border: "none", fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.15em", padding: "10px 18px", cursor: "pointer", width: "100%" }}>
-            Create Your Own →
-          </button>
-        </div>
-        <header className="masthead">
-          <div className="masthead-meta">
-            <span style={{ flex: 1 }}>Est. 2026</span>
-            <span className="masthead-meta-stars" style={{ flex: "0 0 auto" }}>✦ · ✦ · ✦</span>
-            <span style={{ flex: 1, display: "flex", justifyContent: "flex-end", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkMid }}>vouch5.com</span>
-          </div>
-          <div className="masthead-nameplate"><span className="nameplate-word">Vouch.</span></div>
-          <div className="masthead-rule-ornament"><span>—</span><span>✦</span><span>—</span></div>
-          <div className="masthead-tagline">Love it? Vouch for it.</div>
-        </header>
-        <main className="page">
-          <div style={{ marginBottom: 20 }}>
-            <div className="board-name" style={{ fontSize: 28, marginBottom: 2 }}>{name}</div>
-            <div className="board-sub" style={{ marginBottom: 14 }}>@{profile?.username || ""}</div>
-            <button onClick={onSignUp} className="btn btn-solid" style={{ width: "100%", padding: "12px", fontSize: 13 }}>Create Your Own Vouch Board →</button>
-          </div>
-          <div style={{ marginBottom: 24, borderTop: `1px solid ${T.paperDark}`, borderBottom: `1px solid ${T.paperDark}`, padding: "14px 0", display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 8 }}>
-            {[{label: "Vouch 5", desc: "Your top 5 picks across all media"},{label: "Categories", desc: "Up to 5 per Film, Music, Books, TV"},{label: "Buddies", desc: "See what friends are vouching for"}].map(item => (
-              <div key={item.label} style={{ textAlign: "center", flex: "1 1 100px" }}>
-                <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 10, letterSpacing: "0.15em", color: T.ink }}>{item.label}</div>
-                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkMid, marginTop: 3 }}>{item.desc}</div>
-              </div>
-            ))}
-          </div>
-          <div className="ornament"><span>—</span><span>✦</span><span>—</span></div>
-          <VouchSection board={board} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} />
-          {publicBuddies.length > 0 && (
-            <div style={{ margin: "32px 0", borderTop: `1px solid ${T.paperDark}`, paddingTop: 24 }}>
-              <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.18em", color: T.inkMid, marginBottom: 16 }}>Also on Vouch</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
-                {publicBuddies.map((b, i) => (
-                  <div key={i} onClick={() => setShowSignupNudge(true)} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
-                    <Avatar name={b.display_name} size={36} avatarUrl={b.avatar_url} />
-                    <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.inkMid, borderBottom: `1px solid transparent` }}
-                      onMouseEnter={e => e.currentTarget.style.borderBottomColor = T.inkLight}
-                      onMouseLeave={e => e.currentTarget.style.borderBottomColor = "transparent"}>
-                      {b.display_name}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkFaint, marginTop: 14 }}>
-                Sign up to see their boards →
-              </div>
-            </div>
-          )}
-          {CATEGORIES.map(cat => (
-            <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={board[cat.key] || []} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} />
-          ))}
-          <div style={{ marginTop: 48, padding: "32px 0", borderTop: `3px double ${T.ink}`, textAlign: "center" }}>
-            <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 26, fontWeight: 900, marginBottom: 8 }}>Make your own board.</div>
-            <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkMid, marginBottom: 24 }}>What five things would you put your name behind right now?</div>
-            <button onClick={onSignUp} className="btn btn-solid" style={{ fontSize: 13, padding: "12px 32px" }}>Get Started — It's Free</button>
-          </div>
-        </main>
-        <footer style={{ borderTop: `3px double ${T.ink}`, padding: "24px 28px", textAlign: "center" }}>
-          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid }}>© {new Date().getFullYear()} Vouch. All Rights Reserved.</div>
-        </footer>
-
-        {showSignupNudge && (
-          <div style={{ position: "fixed", inset: 0, background: "rgba(17,16,8,0.82)", zIndex: 900, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={() => setShowSignupNudge(false)}>
-            <div style={{ background: T.bg, maxWidth: 420, width: "100%", border: `2px solid ${T.ink}`, padding: "32px 28px" }} onClick={e => e.stopPropagation()}>
-              <div style={{ fontFamily: "'Times New Roman',Times,serif", fontWeight: 900, fontSize: 36, marginBottom: 4 }}>Vouch.</div>
-              <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 24 }}>Love it? Vouch for it.</div>
-              <div style={{ marginBottom: 28, borderBottom: `1px solid ${T.paperDark}`, paddingBottom: 28 }}>
-                <HowItWorks />
-              </div>
-              <button onClick={onSignUp} style={{ width: "100%", fontFamily: "'Spectral SC',serif", fontSize: "10.5px", fontWeight: 600, letterSpacing: "0.25em", padding: 13, background: T.ink, color: T.bg, border: "none", cursor: "pointer" }}>
-                Create Your Account →
-              </button>
-              <button onClick={() => setShowSignupNudge(false)} style={{ width: "100%", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", padding: "10px", background: "transparent", color: T.inkFaint, border: "none", cursor: "pointer", marginTop: 8 }}>
-                Maybe later
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    </>
-  );
-}
-
-function HowItWorks() {
-  return (
-    <div style={{ fontFamily: "'Spectral',serif", color: T.inkMid, maxWidth: 380, margin: "0 auto", textAlign: "center" }}>
-      <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.2em", color: T.ink, marginBottom: 20 }}>How It Works</div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        <div>
-          <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>Vouch 5</div>
-          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Pick the five things you'd put your name behind today. A movie, an album, a book, whatever. These are your top-of-the-fold picks.</div>
-        </div>
-        <div style={{ borderTop: `1px solid ${T.paperDark}` }} />
-        <div>
-          <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>Categories</div>
-          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Go deeper. Add up to five per category across Film, Music, Books, and Television.</div>
-        </div>
-        <div style={{ borderTop: `1px solid ${T.paperDark}` }} />
-        <div>
-          <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>Buddies</div>
-          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Connect with friends and see what they're vouching for. Hit "Agree" on anything that resonates.</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Avatar({ name, size = 36, avatarUrl }) {
-  const parts = (name || "?").trim().split(" ");
-  const initials = parts.length >= 2
-    ? parts[0][0].toUpperCase() + parts[parts.length - 1][0].toUpperCase()
-    : parts[0].slice(0, 2).toUpperCase();
-  const [imgFailed, setImgFailed] = useState(false);
-  if (avatarUrl && !imgFailed) {
-    return (
-      <img src={avatarUrl} alt={name} onError={() => setImgFailed(true)}
-        style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", flexShrink: 0, display: "block", border: `1px solid ${T.paperDark}` }} />
-    );
-  }
-  return (
-    <div style={{
-      width: size, height: size, borderRadius: "50%",
-      background: T.ink, color: T.bg, flexShrink: 0,
-      display: "flex", alignItems: "center", justifyContent: "center",
-      fontFamily: "'Spectral SC', serif", fontWeight: 700,
-      fontSize: size * 0.33, letterSpacing: "0.05em", userSelect: "none"
-    }}>
-      {initials}
     </div>
   );
 }
@@ -464,45 +309,42 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
         if (catKey === "movies") {
           const res  = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB}&query=${encodeURIComponent(q)}&language=en-US`);
           const data = await res.json();
-          const list = (data.results || []).slice(0, 8);
-          const withImdb = await Promise.all(list.map(async r => {
-            try {
-              const ext = await fetch(`https://api.themoviedb.org/3/movie/${r.id}/external_ids?api_key=${TMDB}`).then(x => x.json());
-              return { id: r.id, title: r.title, sub: r.release_date ? r.release_date.slice(0, 4) : "", poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null, sourceUrl: ext.imdb_id ? `https://www.imdb.com/title/${ext.imdb_id}/` : `https://www.imdb.com/find?q=${encodeURIComponent(r.title)}` };
-            } catch { return { id: r.id, title: r.title, sub: r.release_date ? r.release_date.slice(0, 4) : "", poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null, sourceUrl: `https://www.imdb.com/find?q=${encodeURIComponent(r.title)}` }; }
-          }));
-          setResults(withImdb);
+          setResults((data.results || []).slice(0, 8).map(r => ({
+            id: r.id, title: r.title,
+            sub: r.release_date ? r.release_date.slice(0, 4) : "",
+            poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null,
+          })));
         } else if (catKey === "shows") {
           const res  = await fetch(`https://api.themoviedb.org/3/search/tv?api_key=${TMDB}&query=${encodeURIComponent(q)}&language=en-US`);
           const data = await res.json();
-          const list = (data.results || []).slice(0, 8);
-          const withImdb = await Promise.all(list.map(async r => {
-            try {
-              const ext = await fetch(`https://api.themoviedb.org/3/tv/${r.id}/external_ids?api_key=${TMDB}`).then(x => x.json());
-              return { id: r.id, title: r.name, sub: r.first_air_date ? r.first_air_date.slice(0, 4) : "", poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null, sourceUrl: ext.imdb_id ? `https://www.imdb.com/title/${ext.imdb_id}/` : `https://www.imdb.com/find?q=${encodeURIComponent(r.name)}` };
-            } catch { return { id: r.id, title: r.name, sub: r.first_air_date ? r.first_air_date.slice(0, 4) : "", poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null, sourceUrl: `https://www.imdb.com/find?q=${encodeURIComponent(r.name)}` }; }
-          }));
-          setResults(withImdb);
+          setResults((data.results || []).slice(0, 8).map(r => ({
+            id: r.id, title: r.name,
+            sub: r.first_air_date ? r.first_air_date.slice(0, 4) : "",
+            poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null,
+          })));
         } else if (catKey === "songs" || catKey === "albums" || catKey === "artists") {
           const typeMap = { songs: "track", albums: "album", artists: "artist" };
           const res = await fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=${typeMap[catKey]}`);
           const data = await res.json();
           if (catKey === "songs") {
-            setResults((data.tracks?.items || []).slice(0, 8).map(r => ({ id: r.id, title: r.name, sub: r.artists?.[0]?.name || "", poster: r.album?.images?.[0]?.url || null, sourceUrl: `https://open.spotify.com/track/${r.id}` })));
+            setResults((data.tracks?.items || []).slice(0, 8).map(r => ({
+              id: r.id, title: r.name,
+              sub: r.artists?.[0]?.name || "",
+              poster: r.album?.images?.[0]?.url || null,
+            })));
           } else if (catKey === "albums") {
-            setResults((data.albums?.items || []).slice(0, 8).map(r => ({ id: r.id, title: r.name, sub: r.artists?.[0]?.name || "", poster: r.images?.[0]?.url || null, sourceUrl: `https://open.spotify.com/album/${r.id}` })));
+            setResults((data.albums?.items || []).slice(0, 8).map(r => ({
+              id: r.id, title: r.name,
+              sub: r.artists?.[0]?.name || "",
+              poster: r.images?.[0]?.url || null,
+            })));
           } else {
-            setResults((data.artists?.items || []).slice(0, 8).map(r => ({ id: r.id, title: r.name, sub: r.genres?.[0] || "", poster: r.images?.[0]?.url || null, sourceUrl: `https://open.spotify.com/artist/${r.id}` })));
+            setResults((data.artists?.items || []).slice(0, 8).map(r => ({
+              id: r.id, title: r.name,
+              sub: r.genres?.[0] || "",
+              poster: r.images?.[0]?.url || null,
+            })));
           }
-        } else if (catKey === "books") {
-          const res  = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=8&language=eng`);
-          const data = await res.json();
-          setResults((data.docs || []).slice(0, 8).map(r => {
-            const coverId = r.cover_i;
-            const isbn = (r.isbn || [])[0];
-            const poster = coverId ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg` : isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg` : null;
-            return { id: r.key || r.title, title: r.title, sub: (r.author_name || []).join(", "), poster, sourceUrl: `https://openlibrary.org${r.key}` };
-          }));
         } else {
           setResults([]);
         }
@@ -526,7 +368,7 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
             : picked
               ? <>
                   <div className="selected-preview">
-                    <img src={picked.poster} alt={picked.title} className="result-img" onError={e => { e.target.style.background = T.paperDark; e.target.src = ""; }} />
+                    <img src={picked.poster} alt={picked.title} className="result-img" onError={e => e.target.style.background = T.paperDark} />
                     <div style={{ flex: 1 }}>
                       <div className="result-title">{picked.title}</div>
                       <div className="result-sub">{picked.sub || ""}</div>
@@ -547,7 +389,7 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
                   {!busy && q.trim() && results.length === 0 && <div className="no-results">No results found.</div>}
                   {results.map(r => (
                     <div key={r.id} className="result-item" onClick={() => setPicked(r)}>
-                      {r.poster ? <img src={r.poster} alt={r.title} className="result-img" onError={e => { e.target.style.background = T.paperDark; e.target.src = ""; }} /> : <div className="result-img" />}
+                      {r.poster ? <img src={r.poster} alt={r.title} className="result-img" onError={e => e.target.style.background = T.paperDark} /> : <div className="result-img" />}
                       <div>
                         <div className="result-title">{r.title}</div>
                         <div className="result-sub">{r.sub || ""}</div>
@@ -562,955 +404,132 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
   );
 }
 
-function UniversalSearchModal({ used, onClose, onAdd }) {
-  const [q, setQ]             = useState("");
-  const [results, setResults] = useState([]);
-  const [picked, setPicked]   = useState(null);
-  const [note, setNote]       = useState("");
-  const [busy, setBusy]       = useState(false);
-  const [filter, setFilter]   = useState("all");
-  const timer                 = useRef(null);
-  const remaining             = 5 - used;
-
-  const FILTERS = [
-    { key: "all",     label: "All"     },
-    { key: "movies",  label: "Film"    },
-    { key: "shows",   label: "TV"      },
-    { key: "songs",   label: "Songs"   },
-    { key: "albums",  label: "Albums"  },
-    { key: "artists", label: "Artists" },
-    { key: "books",   label: "Books"   },
-  ];
-
-  const visibleResults = filter === "all" ? results : results.filter(r => r.catKey === filter);
-
-  useEffect(() => {
-    if (!q.trim()) { setResults([]); return; }
-    clearTimeout(timer.current);
-    timer.current = setTimeout(async () => {
-      setBusy(true);
-      try {
-        const [movieRes, tvRes, trackRes, albumRes, artistRes, booksRes] = await Promise.all([
-          fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB}&query=${encodeURIComponent(q)}&language=en-US`).then(r => r.json()),
-          fetch(`https://api.themoviedb.org/3/search/tv?api_key=${TMDB}&query=${encodeURIComponent(q)}&language=en-US`).then(r => r.json()),
-          fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=track`).then(r => r.json()),
-          fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=album`).then(r => r.json()),
-          fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=artist`).then(r => r.json()),
-          fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=3&language=eng`).then(r => r.json()),
-        ]);
-        const mixed = [];
-        const movieResults = (movieRes.results || []).slice(0, 3);
-        const tvResults    = (tvRes.results || []).slice(0, 2);
-        const [movieIds, tvIds] = await Promise.all([
-          Promise.all(movieResults.map(r => fetch(`https://api.themoviedb.org/3/movie/${r.id}/external_ids?api_key=${TMDB}`).then(x => x.json()).catch(() => ({})))),
-          Promise.all(tvResults.map(r => fetch(`https://api.themoviedb.org/3/tv/${r.id}/external_ids?api_key=${TMDB}`).then(x => x.json()).catch(() => ({})))),
-        ]);
-        movieResults.forEach((r, i) => mixed.push({ id: r.id, title: r.title, catKey: "movies", catLabel: "Film", sub: r.release_date ? r.release_date.slice(0, 4) : "", poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null, sourceUrl: movieIds[i]?.imdb_id ? `https://www.imdb.com/title/${movieIds[i].imdb_id}/` : `https://www.imdb.com/find?q=${encodeURIComponent(r.title)}` }));
-        tvResults.forEach((r, i) => mixed.push({ id: r.id, title: r.name, catKey: "shows", catLabel: "Television", sub: r.first_air_date ? r.first_air_date.slice(0, 4) : "", poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null, sourceUrl: tvIds[i]?.imdb_id ? `https://www.imdb.com/title/${tvIds[i].imdb_id}/` : `https://www.imdb.com/find?q=${encodeURIComponent(r.name)}` }));
-        (trackRes.tracks?.items || []).slice(0, 3).forEach(r => mixed.push({ id: r.id, title: r.name, catKey: "songs", catLabel: "Songs", sub: r.artists?.[0]?.name || "", poster: r.album?.images?.[0]?.url || null, sourceUrl: `https://open.spotify.com/track/${r.id}` }));
-        (albumRes.albums?.items || []).slice(0, 2).forEach(r => mixed.push({ id: r.id, title: r.name, catKey: "albums", catLabel: "Albums", sub: r.artists?.[0]?.name || "", poster: r.images?.[0]?.url || null, sourceUrl: `https://open.spotify.com/album/${r.id}` }));
-        (artistRes.artists?.items || []).slice(0, 2).forEach(r => mixed.push({ id: r.id, title: r.name, catKey: "artists", catLabel: "Artists", sub: r.genres?.[0] || "", poster: r.images?.[0]?.url || null, sourceUrl: `https://open.spotify.com/artist/${r.id}` }));
-        (booksRes.docs || []).slice(0, 2).forEach(r => {
-          const coverId = r.cover_i;
-          const isbn = (r.isbn || [])[0];
-          const poster = coverId ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg` : isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg` : null;
-          mixed.push({ id: r.key || r.title, title: r.title, catKey: "books", catLabel: "Book", sub: (r.author_name || []).join(", "), poster, sourceUrl: `https://openlibrary.org${r.key}` });
-        });
-        setResults(mixed);
-      } catch(e) { console.error(e); }
-      setBusy(false);
-    }, 400);
-  }, [q]);
-
-  const confirm = async () => {
-    if (!picked) return;
-    await onAdd(picked.catKey, { ...picked, comment: note });
-    onClose();
-  };
-
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={e => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-title">Add to Vouch 5</div>
-          <button className="modal-x" onClick={onClose}>×</button>
-        </div>
-        <div className="modal-body">
-          {remaining <= 0
-            ? <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkLight, padding: "12px 0" }}>Your Vouch 5 is full.</div>
-            : picked
-              ? <>
-                  <div className="selected-preview">
-                    <img src={picked.poster} alt={picked.title} className="result-img" onError={e => { e.target.style.background = T.paperDark; e.target.src = ""; }} />
-                    <div style={{ flex: 1 }}>
-                      <div className="result-title">{picked.title}</div>
-                      <div className="result-sub">{picked.sub} · {picked.catLabel}</div>
-                    </div>
-                    <button onClick={() => setPicked(null)} style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: 18, color: T.inkFaint }}>×</button>
-                  </div>
-                  <span className="comment-label">Why are you vouching for this? <span style={{ fontStyle: "italic", fontFamily: "'Spectral',serif", textTransform: "none", letterSpacing: 0, fontWeight: 300 }}>(optional)</span></span>
-                  <textarea className="comment-area" placeholder="Say something about it…" value={note} onChange={e => setNote(e.target.value)} maxLength={200} />
-                  <div className="char-count">{note.length} / 200</div>
-                  <button className="btn btn-solid" style={{ width: "100%" }} onClick={confirm}>Vouch for This</button>
-                </>
-              : <>
-                  <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9.5px", letterSpacing: "0.16em", color: T.inkFaint, marginBottom: 12 }}>
-                    {remaining} slot{remaining !== 1 ? "s" : ""} remaining
-                  </div>
-                  <input className="search-input" placeholder="Search films, shows, songs, albums, artists, books…" value={q} onChange={e => setQ(e.target.value)} autoFocus />
-                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
-                    {FILTERS.map(f => (
-                      <button key={f.key} onClick={() => setFilter(f.key)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "4px 10px", border: `1px solid ${filter === f.key ? T.ink : T.paperDark}`, background: filter === f.key ? T.ink : "transparent", color: filter === f.key ? T.bg : T.inkMid, cursor: "pointer", transition: "all 0.12s" }}>{f.label}</button>
-                    ))}
-                  </div>
-                  {busy && <div className="loading">Searching…</div>}
-                  {!busy && q.trim() && visibleResults.length === 0 && <div className="no-results">No results found.</div>}
-                  {visibleResults.map((r, i) => (
-                    <div key={r.id + r.catKey + i} className="result-item" onClick={() => setPicked(r)}>
-                      {r.poster ? <img src={r.poster} alt={r.title} className="result-img" onError={e => { e.target.style.background = T.paperDark; e.target.src = ""; }} /> : <div className="result-img" />}
-                      <div style={{ flex: 1 }}>
-                        <div className="result-title">{r.title}</div>
-                        <div className="result-sub">{r.sub}</div>
-                      </div>
-                      <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8.5px", letterSpacing: "0.15em", color: T.inkFaint, flexShrink: 0 }}>{r.catLabel}</div>
-                    </div>
-                  ))}
-                </>
-          }
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, buddyCounts }) {
-  const [idx, setIdx]      = useState(0);
-  const touchStartX        = useRef(null);
-  const touchStartY        = useRef(null);
-  const currentOffsetX     = useRef(0);
-  const isHoriz            = useRef(false);
-  const containerRef       = useRef(null);
-  const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
-
+function VouchSection({ board, isOwn, onCard, onAdd }) {
   const allItems = [];
   CATEGORIES.forEach(cat => {
     (board[cat.key] || []).forEach(item => {
-      if (item.vouched) allItems.push({ ...item, _cat: cat.key, _catLabel: cat.label });
+      allItems.push({ ...item, _cat: cat.key, _catLabel: cat.label });
     });
   });
-  const total = allItems.length;
-
-  useEffect(() => { if (idx >= total && total > 0) setIdx(total - 1); }, [total, idx]);
-
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el || !isMobile) return;
-    const handleStart = e => { touchStartX.current = e.touches[0].clientX; touchStartY.current = e.touches[0].clientY; currentOffsetX.current = 0; isHoriz.current = false; };
-    const handleMove = e => {
-      if (touchStartX.current === null) return;
-      const dx = e.touches[0].clientX - touchStartX.current;
-      const dy = e.touches[0].clientY - touchStartY.current;
-      if (!isHoriz.current && Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
-      if (!isHoriz.current) isHoriz.current = Math.abs(dx) > Math.abs(dy);
-      if (!isHoriz.current) return;
-      e.preventDefault();
-      const w = el.offsetWidth;
-      const bounded = (idx === 0 && dx > 0) || (idx === total - 1 && dx < 0) ? dx * 0.15 : dx;
-      currentOffsetX.current = bounded;
-      const track = el.querySelector(".swipe-track");
-      if (track) track.style.transform = `translateX(${-(idx * w) - bounded * -1}px)`;
-    };
-    const handleEnd = () => {
-      if (!isHoriz.current) return;
-      const w = el.offsetWidth;
-      const dx = currentOffsetX.current;
-      let newIdx = idx;
-      if (dx < -(w * 0.22) && idx < total - 1) newIdx = idx + 1;
-      else if (dx > (w * 0.22) && idx > 0) newIdx = idx - 1;
-      const track = el.querySelector(".swipe-track");
-      if (track) { track.style.transition = "transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94)"; track.style.transform = `translateX(${-(newIdx * w)}px)`; setTimeout(() => { if (track) track.style.transition = ""; }, 350); }
-      currentOffsetX.current = 0; setIdx(newIdx); touchStartX.current = null;
-    };
-    el.addEventListener("touchstart", handleStart, { passive: true });
-    el.addEventListener("touchmove", handleMove, { passive: false });
-    el.addEventListener("touchend", handleEnd, { passive: true });
-    return () => { el.removeEventListener("touchstart", handleStart); el.removeEventListener("touchmove", handleMove); el.removeEventListener("touchend", handleEnd); };
-  }, [idx, total, isMobile]);
-
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el || !isMobile) return;
-    const track = el.querySelector(".swipe-track");
-    if (!track) return;
-    const w = el.offsetWidth;
-    track.style.transition = "transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
-    track.style.transform = `translateX(${-(idx * w)}px)`;
-    setTimeout(() => { if (track) track.style.transition = ""; }, 350);
-  }, [idx, isMobile]);
-
-  const CardFace = ({ it }) => (
-    <div style={{ position: "relative", cursor: it.sourceUrl ? "pointer" : "default" }}
-      onClick={() => {
-        if (Math.abs(currentOffsetX.current) > 8) return;
-        it.sourceUrl ? window.open(it.sourceUrl, "_blank") : onCard(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id));
-      }}>
-      {it.poster
-        ? <img src={it.poster} alt={it.title} style={{ width: "100%", height: 340, objectFit: "cover", display: "block", border: `1px solid ${T.paperDark}` }} onError={e => e.target.style.display = "none"} />
-        : <div style={{ width: "100%", height: 340, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 18, color: T.inkLight, padding: 24, textAlign: "center" }}>{it.title}</div>}
-      <div style={{ padding: "14px 4px 4px" }}>
-        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 4 }}>{it._catLabel}</div>
-        <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: T.bg }}>{it.title}</div>
-        <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "rgba(200,194,180,0.7)" }}>{it.artist || it.author || it.sub || ""}</div>
-        {it.comment && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: "rgba(200,194,180,0.55)", marginTop: 6 }}>"{it.comment}"</div>}
-      </div>
-      {isOwn && (
-        <button onClick={e => { e.stopPropagation(); onRemove(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id), true); }}
-          style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 36, height: 36, cursor: "pointer", fontSize: 20, lineHeight: "36px", textAlign: "center", borderRadius: 2 }}>×</button>
-      )}
-      {!isOwn && (
-        <button onClick={e => { e.stopPropagation(); onDudeSame(it); }}
-          style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: myReactions?.includes(String(it.id)) ? T.ink : "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "5px 8px", whiteSpace: "nowrap" }}>
-          {myReactions?.includes(String(it.id)) ? "✓ Agreed" : "Agree"}
-        </button>
-      )}
-      {buddyCounts?.[String(it.id)] > 0 && (
-        <div title="Total Buddy Vouches" style={{ position: "absolute", top: 8, left: 8, zIndex: 2, background: "rgba(200,194,180,0.9)", color: "#111008", fontFamily: "'Spectral SC',serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "default" }}>{buddyCounts[String(it.id)]} {buddyCounts[String(it.id)] === 1 ? "Vouch" : "Vouches"}</div>
-      )}
-    </div>
-  );
+  const top = allItems.slice(0, 5);
+  const slots = Array(5).fill(null).map((_, i) => top[i] || null);
 
   return (
     <div className="vouch-section">
       <div className="vouch-section-header">
-        <div className="vouch-section-label">Vouch 5</div>
+        <div className="vouch-section-label">Vouch</div>
         <div className="vouch-section-sub">The five that define this moment</div>
-        {isOwn && <button className="vouch-section-add" onClick={onAdd}>+ Add</button>}
+        {isOwn && <button className="vouch-section-add" onClick={() => onAdd("movies")}>+ Add</button>}
       </div>
-      {isMobile ? (
-        <div ref={containerRef} style={{ overflow: "hidden", userSelect: "none" }}>
-          {allItems.length === 0 && isOwn ? (
-            <div style={{ height: 280, border: `1px dashed ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 8, cursor: "pointer" }} onClick={onAdd}>
-              <span style={{ fontSize: 28, color: T.inkFaint }}>+</span>
-              <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: T.inkFaint }}>Add to Vouch 5</span>
-            </div>
-          ) : (
-            <div className="swipe-track" style={{ display: "flex", willChange: "transform" }}>
-              {allItems.map((it) => (
-                <div key={it.id + it._cat} style={{ flex: "0 0 100%", width: "100%" }}>
-                  <CardFace it={it} />
+      <div className="cards-row-large">
+        {slots.map((item, idx) =>
+          item
+            ? <div key={item.id + item._cat} className="card-large" onClick={() => onCard(item._cat, (board[item._cat] || []).indexOf(item))}>
+                {item.poster
+                  ? <img src={item.poster} alt={item.title} className="card-poster-large" onError={e => { e.target.style.display = "none"; }} />
+                  : <div className="card-poster-placeholder-large">{item.title}</div>}
+                <div className="card-cat-badge">{item._catLabel}</div>
+                <div className="card-title-large">{item.title}</div>
+                <div className="card-sub-large">{item.artist || item.author || item.year || ""}</div>
+                {item.comment && <div className="card-comment-large">"{item.comment}"</div>}
+              </div>
+            : isOwn
+              ? <div key={`ve${idx}`} className="slot-empty-large" onClick={() => onAdd("movies")}>
+                  <div className="slot-empty-inner"><span className="slot-empty-plus">+</span>Vouch</div>
                 </div>
-              ))}
-            </div>
-          )}
-          {total > 1 && (
-            <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 14 }}>
-              {allItems.map((_, i) => (
-                <div key={i} onClick={() => setIdx(i)} style={{ width: 6, height: 6, borderRadius: "50%", background: i === idx ? T.ink : T.paperDark, cursor: "pointer", transition: "background 0.2s" }} />
-              ))}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="cards-row-large">
-          {Array(5).fill(null).map((_, i) => {
-            const it = allItems[i] || null;
-            return it ? (
-              <div key={it.id + it._cat} className="card-large" style={{ position: "relative" }}>
-                <CardFace it={it} />
-              </div>
-            ) : isOwn ? (
-              <div key={`ve${i}`} className="slot-empty-large" onClick={onAdd}>
-                <div className="slot-empty-inner"><span className="slot-empty-plus">+</span>Vouch</div>
-              </div>
-            ) : (
-              <div key={`ve${i}`} className="slot-empty-large" style={{ cursor: "default", opacity: 0.35 }}>
-                <div className="slot-empty-inner"><span className="slot-empty-plus">—</span></div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              : <div key={`ve${idx}`} className="slot-empty-large" style={{ cursor: "default", opacity: 0.35 }}>
+                  <div className="slot-empty-inner"><span className="slot-empty-plus">—</span></div>
+                </div>
+        )}
+      </div>
     </div>
   );
 }
 
-function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, buddyCounts }) {
-  const [open, setOpen] = useState(true);
-  const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
+function CatSection({ catKey, label, items, isOwn, onCard, onAdd }) {
   const slots = Array(5).fill(null).map((_, i) => items[i] || null);
-  const collapsed = isMobile && !open;
   return (
     <div className="cat-section">
-      <div className="cat-header" style={{ cursor: isMobile ? "pointer" : "default" }} onClick={() => isMobile && setOpen(o => !o)}>
+      <div className="cat-header">
         <div className="cat-label">{label}</div>
         <div className="cat-sublabel">Mentions</div>
         <div className="cat-count">{items.length} of 5</div>
-        {isMobile && <span style={{ marginLeft: "auto", fontFamily: "'Spectral SC',serif", fontSize: "11px", color: T.inkFaint, paddingLeft: 8 }}>{open ? "▴" : "▾"}</span>}
-        {isOwn && !isMobile && <button className="cat-add" onClick={() => onAdd(catKey)}>+ Vouch</button>}
-        {isOwn && isMobile && open && <button className="cat-add" style={{ marginLeft: 8 }} onClick={e => { e.stopPropagation(); onAdd(catKey); }}>+ Vouch</button>}
+        {isOwn && <button className="cat-add" onClick={() => onAdd(catKey)}>+ Vouch</button>}
       </div>
-      {!collapsed && (
-        <div className="cards-row">
-          {slots.map((item, idx) =>
-            item
-              ? <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => item.sourceUrl ? window.open(item.sourceUrl, "_blank") : onCard(catKey, idx)}>
-                  {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx, false); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 30, height: 30, cursor: "pointer", fontSize: 16, lineHeight: "30px", textAlign: "center", borderRadius: 2 }}>×</button>}
-                  {!isOwn && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: myReactions?.includes(String(item.id)) ? "#C8C2B4" : "rgba(17,16,8,0.7)", border: "none", color: myReactions?.includes(String(item.id)) ? T.ink : "#C8C2B4", cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 5px", whiteSpace: "nowrap", fontWeight: myReactions?.includes(String(item.id)) ? 700 : 400 }}>{myReactions?.includes(String(item.id)) ? "✓ Agreed" : "Agree"}</button>}
-                {buddyCounts?.[String(item.id)] > 0 && (
-                  <div title="Total Buddy Vouches" style={{ position: "absolute", top: 4, left: 4, zIndex: 2, background: "rgba(17,16,8,0.75)", color: "#C8C2B4", fontFamily: "'Spectral SC',serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", padding: "2px 6px", cursor: "default" }}>{buddyCounts[String(item.id)]} {buddyCounts[String(item.id)] === 1 ? "Vouch" : "Vouches"}</div>
-                )}
-                  {item.poster ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} /> : null}
-                  <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
-                  <div style={{ flex: 1 }}>
-                    <div className="card-title">{item.title}</div>
-                    <div className="card-sub">{item.artist || item.author || item.year || item.sub || ""}</div>
-                    {item.comment && <div className="card-comment">"{item.comment}"</div>}
-                  </div>
-                </div>
-              : isOwn
-                ? <div key={`e${idx}`} className="slot-empty-sm" onClick={() => onAdd(catKey)}>
-                    <div className="slot-empty-inner"><span className="slot-empty-plus">+</span>Vouch</div>
-                  </div>
-                : <div key={`e${idx}`} className="slot-empty-sm" style={{ cursor: "default", opacity: 0.4 }}>
-                    <div className="slot-empty-inner"><span className="slot-empty-plus">—</span></div>
-                  </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function MutualMentions({ reactions, myReactions, isOwn, boardOwnerName, buddies, onViewBuddy }) {
-  if (!reactions.length && !myReactions.length) return null;
-  const items = isOwn ? myReactions : reactions;
-  if (!items.length) return null;
-  return (
-    <div style={{ marginTop: 52, borderTop: `1px solid ${T.paperDark}`, paddingTop: 28 }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 18 }}>
-        <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 15, letterSpacing: "0.08em", color: T.inkMid }}>
-          {isOwn ? "Agreed With" : "Others Agreed"}
-        </div>
-        <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkFaint }}>
-          {isOwn ? "Things you've agreed with on buddy boards" : `Things others agreed with on ${boardOwnerName}'s board`}
-        </div>
-      </div>
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-        {items.map((item, i) => {
-          const url = item.source_url || item.sourceUrl;
-          const sourceBuddy = isOwn && buddies ? buddies.find(b => b.userId === item.item_owner_id) : null;
-          return (
-            <div key={(item.id || item.item_id) + i} style={{ width: 100, flexShrink: 0 }}>
-              <div style={{ cursor: url ? "pointer" : "default" }} onClick={() => url && window.open(url, "_blank")}>
+      <div className="cards-row">
+        {slots.map((item, idx) =>
+          item
+            ? <div key={item.id} className="card" onClick={() => onCard(catKey, idx)}>
                 {item.poster
-                  ? <img src={item.poster} alt={item.title} style={{ width: 100, height: 138, objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block" }} onError={e => e.target.style.display = "none"} />
-                  : <div style={{ width: 100, height: 138, background: T.paperDark, border: `1px solid ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 6 }}>{item.title}</div>}
-                <div style={{ fontFamily: "'Spectral',serif", fontSize: 11, fontWeight: 600, lineHeight: 1.3, marginTop: 5 }}>{item.title}</div>
-                <div style={{ fontFamily: "'Spectral SC',serif", fontSize: 8.5, color: T.inkFaint, marginTop: 1 }}>{item.subtitle || ""}</div>
+                  ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} />
+                  : null}
+                <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
+                <div className="card-title">{item.title}</div>
+                <div className="card-sub">{item.artist || item.author || item.year || ""}</div>
+                {item.comment && <div className="card-comment">"{item.comment}"</div>}
               </div>
-              {sourceBuddy && (
-                <div onClick={() => onViewBuddy && onViewBuddy(sourceBuddy)} style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 9.5, color: T.inkLight, marginTop: 3, cursor: "pointer" }}>
-                  from {sourceBuddy.displayName} →
+            : isOwn
+              ? <div key={`e${idx}`} className="slot-empty-sm" onClick={() => onAdd(catKey)}>
+                  <div className="slot-empty-inner"><span className="slot-empty-plus">+</span>Vouch</div>
                 </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function BuddyModal({ userId, onClose, onSendRequest, onGenerateLink, inviteLink, existingBuddyIds }) {
-  const [q, setQ]             = useState("");
-  const [results, setResults] = useState([]);
-  const [busy, setBusy]       = useState(false);
-  const [sent, setSent]       = useState([]);
-  const timer                 = useRef(null);
-
-  useEffect(() => {
-    if (!q.trim()) { setResults([]); return; }
-    clearTimeout(timer.current);
-    timer.current = setTimeout(async () => {
-      setBusy(true);
-      const { data } = await supabase.from("profiles").select("id, username, display_name").or(`username.ilike.%${q}%,display_name.ilike.%${q}%`).neq("id", userId).limit(8);
-      setResults(data || []);
-      setBusy(false);
-    }, 300);
-  }, [q, userId]);
-
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={e => e.stopPropagation()}>
-        <div className="modal-head">
-          <div className="modal-title">Add Buddy</div>
-          <button className="modal-x" onClick={onClose}>×</button>
-        </div>
-        <div className="modal-body">
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9.5px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 8 }}>Invite via Link</div>
-            <button className="btn btn-solid" style={{ width: "100%" }} onClick={onGenerateLink}>
-              {inviteLink ? "Link Copied!" : "Copy Invite Link"}
-            </button>
-            {inviteLink && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 6, wordBreak: "break-all" }}>{inviteLink}</div>}
-          </div>
-          <div style={{ borderBottom: `1px solid ${T.paperDark}`, marginBottom: 16 }} />
-          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9.5px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 10 }}>Search by Username</div>
-          <input className="search-input" placeholder="Search name or username…" value={q} onChange={e => setQ(e.target.value)} autoFocus />
-          {busy && <div className="loading">Searching…</div>}
-          {!busy && q.trim() && results.length === 0 && <div className="no-results">No users found.</div>}
-          {results.map(r => {
-            const isAlready = existingBuddyIds.includes(r.id);
-            const isSent    = sent.includes(r.id);
-            return (
-              <div key={r.id} className="result-item" style={{ justifyContent: "space-between" }}>
-                <div>
-                  <div className="result-title">{r.display_name}</div>
-                  <div className="result-sub">@{r.username}</div>
+              : <div key={`e${idx}`} className="slot-empty-sm" style={{ cursor: "default", opacity: 0.4 }}>
+                  <div className="slot-empty-inner"><span className="slot-empty-plus">—</span></div>
                 </div>
-                {isAlready
-                  ? <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkFaint }}>Buddies</span>
-                  : isSent
-                  ? <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkFaint }}>Sent</span>
-                  : <button className="btn btn-solid" style={{ padding: "4px 12px" }} onClick={() => { onSendRequest(r.id); setSent(s => [...s, r.id]); }}>Add</button>
-                }
-              </div>
-            );
-          })}
-        </div>
+        )}
       </div>
     </div>
   );
 }
 
-const TERMS = `TERMS OF USE
-
-Effective Date: March 11, 2026
-
-Welcome to Vouch ("the Service"), operated by Vouch ("we," "us," or "our"). By accessing or using Vouch, you agree to be bound by these Terms of Use. If you do not agree, please do not use the Service.
-
-1. USE OF THE SERVICE
-Vouch is a personal endorsement platform that allows users to share cultural recommendations with friends. You must be at least 13 years of age to use this Service. You agree not to use the Service for any unlawful purpose or in any way that could harm Vouch or other users.
-
-2. USER ACCOUNTS
-You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. We reserve the right to terminate accounts at our discretion.
-
-3. CONTENT
-You retain ownership of any content you submit to Vouch. By submitting content, you grant Vouch a non-exclusive, royalty-free license to display that content within the Service. You are solely responsible for the content you post.
-
-4. THIRD-PARTY SERVICES
-Vouch integrates with third-party services including Google, Spotify, and others. Your use of those services is governed by their respective terms and policies. Vouch is not responsible for the content, policies, or practices of third-party services.
-
-5. INTELLECTUAL PROPERTY
-The Vouch name, logo, design, and all associated content are the intellectual property of Vouch. All rights reserved. You may not reproduce, distribute, or create derivative works without our express written permission.
-
-6. DISCLAIMERS
-THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND. VOUCH DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
-
-7. LIMITATION OF LIABILITY
-TO THE FULLEST EXTENT PERMITTED BY LAW, VOUCH SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES ARISING FROM YOUR USE OF THE SERVICE.
-
-8. CHANGES TO TERMS
-We reserve the right to modify these Terms at any time. Continued use of the Service after changes constitutes acceptance of the new Terms.
-
-9. CONTACT
-For questions about these Terms, contact us at legal@vouch5.com.`;
-
-const PRIVACY = `PRIVACY POLICY
-
-Effective Date: March 11, 2026
-
-Vouch ("we," "us," or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use the Vouch platform.
-
-1. INFORMATION WE COLLECT
-We collect the following information when you use Vouch:
-- Account Information: Your name and email address, collected via Google Sign-In.
-- Preference Data: Movies, TV shows, books, and music (artists, albums, songs) that you choose to endorse on your board.
-- Social Data: Buddy connections and reactions you make on other users' boards.
-- Usage Data: Standard server logs including IP address, browser type, and pages visited.
-
-2. HOW WE USE YOUR INFORMATION
-We use your information to:
-- Provide and operate the Vouch Service
-- Display your board and endorsements to you and your approved Buddies
-- Enable social features including Buddy connections and reactions
-- Improve and develop the Service
-
-3. THIRD-PARTY SERVICES
-Vouch integrates with the following third-party services:
-- Google: Used for authentication. Governed by Google's Privacy Policy.
-- Spotify: Used to search and display music content. We do not store your Spotify credentials or access your private Spotify data.
-- The Movie Database (TMDB): Used to search and display film and television content.
-- Open Library: Used to search and display book content.
-
-4. DATA SHARING
-We do not sell your personal information to third parties. Your board is visible to your approved Buddies. We do not share your data with advertisers.
-
-5. DATA RETENTION
-We retain your data for as long as your account is active. You may delete your account and associated data at any time by contacting us.
-
-6. SECURITY
-We use industry-standard security measures including Supabase row-level security to protect your data. No method of transmission over the Internet is 100% secure.
-
-7. CHILDREN'S PRIVACY
-Vouch is not directed at children under 13. We do not knowingly collect personal information from children under 13.
-
-8. YOUR RIGHTS
-Depending on your jurisdiction, you may have rights to access, correct, or delete your personal data. Contact us at legal@vouch5.com to make a request.
-
-9. CHANGES TO THIS POLICY
-We may update this Privacy Policy from time to time. We will notify users of significant changes by updating the effective date above.
-
-10. CONTACT
-For privacy-related questions, contact us at legal@vouch5.com.`;
-
-function LegalModal({ page, onClose }) {
-  if (page === "how") {
-    return (
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="modal" onClick={e => e.stopPropagation()}>
-          <div className="modal-head">
-            <div className="modal-title">How It Works</div>
-            <button className="modal-x" onClick={onClose}>×</button>
-          </div>
-          <div className="modal-body"><HowItWorks /></div>
-        </div>
-      </div>
-    );
-  }
-  const content = page === "terms" ? TERMS : PRIVACY;
-  const title   = page === "terms" ? "Terms of Use" : "Privacy Policy";
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxHeight: "80vh", display: "flex", flexDirection: "column" }}>
-        <div className="modal-head">
-          <div className="modal-title">{title}</div>
-          <button className="modal-x" onClick={onClose}>×</button>
-        </div>
-        <div className="modal-body" style={{ overflowY: "auto", flex: 1 }}>
-          <pre style={{ fontFamily: "'Spectral',serif", fontSize: 12.5, lineHeight: 1.8, whiteSpace: "pre-wrap", color: T.inkMid }}>{content}</pre>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function GroupVouchSlideshow({ items, isMobile }) {
-  const [idx, setIdx] = useState(0);
-  const touchStartX = useRef(null);
-  const currentOffsetX = useRef(0);
-  const containerRef = useRef(null);
-
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el || !isMobile) return;
-    const handleStart = e => { touchStartX.current = e.touches[0].clientX; currentOffsetX.current = 0; };
-    const handleMove = e => {
-      if (touchStartX.current === null) return;
-      const dx = e.touches[0].clientX - touchStartX.current;
-      currentOffsetX.current = dx;
-      const track = el.querySelector(".gv-track");
-      if (track) track.style.transform = `translateX(${-(idx * el.offsetWidth) + dx}px)`;
-    };
-    const handleEnd = () => {
-      const w = el.offsetWidth;
-      const dx = currentOffsetX.current;
-      let newIdx = idx;
-      if (dx < -(w * 0.22) && idx < items.length - 1) newIdx = idx + 1;
-      else if (dx > (w * 0.22) && idx > 0) newIdx = idx - 1;
-      const track = el.querySelector(".gv-track");
-      if (track) { track.style.transition = "transform 0.32s cubic-bezier(0.25,0.46,0.45,0.94)"; track.style.transform = `translateX(${-(newIdx * w)}px)`; setTimeout(() => { if (track) track.style.transition = ""; }, 350); }
-      setIdx(newIdx); touchStartX.current = null;
-    };
-    el.addEventListener("touchstart", handleStart, { passive: true });
-    el.addEventListener("touchmove", handleMove, { passive: true });
-    el.addEventListener("touchend", handleEnd, { passive: true });
-    return () => { el.removeEventListener("touchstart", handleStart); el.removeEventListener("touchmove", handleMove); el.removeEventListener("touchend", handleEnd); };
-  }, [idx, items.length, isMobile]);
-
-  const CardFace = ({ item }) => (
-    <div style={{ cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")}>
-      <div style={{ position: "relative" }}>
-        {item.poster
-          ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: isMobile ? 340 : "auto", aspectRatio: isMobile ? "unset" : "2/3", objectFit: "cover", display: "block", border: "1px solid rgba(200,194,180,0.2)" }} onError={e => e.target.style.display = "none"} />
-          : <div style={{ width: "100%", aspectRatio: "2/3", background: "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center" }}>{item.title}</div>}
-        <div title="Total Buddy Vouches" style={{ position: "absolute", top: 8, left: 8, background: "rgba(200,194,180,0.9)", color: "#111008", fontFamily: "'Spectral SC',serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "default" }}>{item.count} {item.count === 1 ? "Vouch" : "Vouches"}</div>
-      </div>
-      <div style={{ padding: "12px 4px 4px" }}>
-        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 3 }}>{item.category}</div>
-        <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: "#C8C2B4" }}>{item.title}</div>
-        <div style={{ fontFamily: "'Spectral',serif", fontSize: 11, color: "rgba(200,194,180,0.6)", marginBottom: 2 }}>{item.subtitle || ""}</div>
-        <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: "rgba(200,194,180,0.45)", marginTop: 4 }}>
-          {item.count === 1 ? "Vouched by" : `Vouched by ${item.count}`}{item.vouchers?.length > 0 ? " · " + item.vouchers.join(", ") : ""}
-        </div>
-      </div>
-    </div>
-  );
-
-  return (
-    <div style={{ marginBottom: 40, border: "3px double #111008", background: "#111008", padding: "24px 24px 28px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid rgba(200,194,180,0.25)", paddingBottom: 12, marginBottom: 22 }}>
-        <div style={{ fontFamily: "'Times New Roman',Times,serif", fontWeight: 900, fontSize: 22, color: "#C8C2B4", letterSpacing: "0.04em" }}>Group Vouch</div>
-        <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.55)" }}>Most vouched across your circle</div>
-      </div>
-      {isMobile ? (
-        <div ref={containerRef} style={{ overflow: "hidden", userSelect: "none" }}>
-          <div className="gv-track" style={{ display: "flex", willChange: "transform" }}>
-            {items.map((item, i) => (
-              <div key={i} style={{ flex: "0 0 100%", width: "100%" }}>
-                <CardFace item={item} />
-              </div>
-            ))}
-          </div>
-          {items.length > 1 && (
-            <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 14 }}>
-              {items.map((_, i) => (
-                <div key={i} onClick={() => setIdx(i)} style={{ width: 6, height: 6, borderRadius: "50%", background: i === idx ? "#C8C2B4" : "rgba(200,194,180,0.25)", cursor: "pointer", transition: "background 0.2s" }} />
-              ))}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div style={{ display: "flex", gap: 12, flexWrap: "nowrap" }}>
-          {items.map((item, i) => (
-            <div key={i} style={{ flex: 1, minWidth: 0 }}>
-              <CardFace item={item} />
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+const MOCK_FRIENDS = [
+  { username: "sarah_m",  displayName: "Sarah M."  },
+  { username: "jake_r",   displayName: "Jake R."   },
+  { username: "priya_k",  displayName: "Priya K."  },
+];
 
 export default function Vouch() {
-  const [user,           setUser]           = useState(null);
-  const [userId,         setUserId]         = useState(null);
-  const [tab,            setTab]            = useState("board");
-  const [viewing,        setViewing]        = useState(null);
-  const [board,          setBoard]          = useState({ ...EMPTY_BOARD });
-  const [viewBoard,      setViewBoard]      = useState({ ...EMPTY_BOARD });
-  const [loading,        setLoading]        = useState(false);
-  const [lightbox,       setLightbox]       = useState(null);
-  const [addModal,       setAddModal]       = useState(null);
-  const [vouchModal,     setVouchModal]     = useState(false);
-  const [saving, setSaving] = useState(false); // eslint-disable-line no-unused-vars
-  const [buddies,        setBuddies]        = useState([]);
-  const [pendingIn,      setPendingIn]      = useState([]);
-  const [buddyModal,     setBuddyModal]     = useState(false);
-  const [inviteLink,     setInviteLink]     = useState(null);
-  const [myReactions,    setMyReactions]    = useState([]);
-  const [boardReactions, setBoardReactions] = useState([]);
-  const [legalPage,      setLegalPage]      = useState(null);
-  const [allBuddyBoards, setAllBuddyBoards] = useState([]);
-  const [viewBuddies,    setViewBuddies]    = useState([]);
-
-  const loadMyReactions = async (uid) => {
-    const { data } = await supabase.from("reactions").select("*").eq("user_id", uid).order("created_at", { ascending: false });
-    setMyReactions(data || []);
-  };
-
-  const loadBoardReactions = async (ownerId) => {
-    const { data } = await supabase.from("reactions").select("*").eq("item_owner_id", ownerId).order("created_at", { ascending: false });
-    setBoardReactions(data || []);
-  };
-
-  const loadBoard = async (uid) => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("endorsements").select("*").eq("user_id", uid).order("created_at", { ascending: true });
-    if (!error && data) {
-      const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
-      data.forEach(row => {
-        const cat = row.category;
-        if (b[cat] && b[cat].length < 5) {
-          b[cat].push({ id: row.item_id, title: row.title, sub: row.subtitle || "", poster: row.poster || null, comment: row.comment || "", vouched: row.vouched || false, sourceUrl: row.source_url || null, dbId: row.id });
-        }
-      });
-      setBoard(b);
-    }
-    setLoading(false);
-  };
-
-  const loadViewBoard = async (uid) => {
-    const { data, error } = await supabase
-      .from("endorsements").select("*").eq("user_id", uid).order("created_at", { ascending: true });
-    if (error) { console.error("loadViewBoard error:", error); return; }
-    const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
-    (data || []).forEach(row => {
-      const cat = row.category;
-      if (b[cat] && b[cat].length < 5) {
-        b[cat].push({ id: row.item_id, title: row.title, sub: row.subtitle || "", poster: row.poster || null, comment: row.comment || "", vouched: row.vouched || false, sourceUrl: row.source_url || null, dbId: row.id });
-      }
-    });
-    setViewBoard(b);
-  };
-
-  const loadAllBuddyBoards = async (buddyList, uid) => {
-    const allBoards = await Promise.all(buddyList.map(async b => {
-      const { data } = await supabase.from("endorsements").select("*").eq("user_id", b.userId);
-      return data || [];
-    }));
-    // Also include own board
-    const ownId = uid || userId;
-    const { data: ownData } = await supabase.from("endorsements").select("*").eq("user_id", ownId);
-    const allRows = [...(ownData || []), ...allBoards.flat()];
-    setAllBuddyBoards(allRows);
-  };
-
-  const loadBuddies = async (uid) => {
-    const { data } = await supabase
-      .from("buddies")
-      .select("*, requester:requester_id(id, username, display_name, avatar_url), receiver:receiver_id(id, username, display_name, avatar_url)")
-      .or(`requester_id.eq.${uid},receiver_id.eq.${uid}`);
-    if (data) {
-      const accepted = data.filter(b => b.status === "accepted").map(b => {
-        const other = b.requester_id === uid ? b.receiver : b.requester;
-        return { buddyRowId: b.id, userId: other.id, username: other.username, displayName: other.display_name, avatarUrl: other.avatar_url || null };
-      });
-      const incoming = data.filter(b => b.status === "pending" && b.receiver_id === uid).map(b => ({
-        buddyRowId: b.id, userId: b.requester.id, username: b.requester.username, displayName: b.requester.display_name, avatarUrl: b.requester.avatar_url || null
-      }));
-      setBuddies(accepted);
-      setPendingIn(incoming);
-      if (accepted.length > 0) loadAllBuddyBoards(accepted, uid);
-    }
-  };
+  const [user,      setUser]      = useState(null);
+  const [tab,       setTab]       = useState("board");
+  const [viewing,   setViewing]   = useState(null);
+  const [board,     setBoard]     = useState({ ...EMPTY_BOARD });
+  const [lightbox,  setLightbox]  = useState(null);
+  const [addModal,  setAddModal]  = useState(null);
+  const [masterQ,   setMasterQ]   = useState("");
+  const [masterCat, setMasterCat] = useState("movies");
 
   useEffect(() => {
-    const setUserFromSession = async (session) => {
+    const setUserFromSession = (session) => {
       if (session?.user) {
-        const uid = session.user.id;
-        const avatarUrl = session.user.user_metadata?.avatar_url || null;
-        await supabase.from("profiles").upsert({
-          id: uid,
+        setUser({
           username: session.user.email.split("@")[0],
-          display_name: session.user.user_metadata?.full_name || session.user.email.split("@")[0],
-          avatar_url: avatarUrl,
-        }, { onConflict: "id" });
-        setUser({ username: session.user.email.split("@")[0], displayName: session.user.user_metadata?.full_name || session.user.email.split("@")[0], avatarUrl });
-        setUserId(uid);
-        loadBoard(uid);
-        loadBuddies(uid);
-        loadMyReactions(uid);
-        const params = new URLSearchParams(window.location.search);
-        const inviteFrom = params.get("invite");
-        if (inviteFrom && inviteFrom !== uid) {
-          await supabase.from("buddies").upsert({ requester_id: inviteFrom, receiver_id: uid, status: "accepted" }, { onConflict: "requester_id,receiver_id" });
-          await supabase.from("buddies").upsert({ requester_id: uid, receiver_id: inviteFrom, status: "accepted" }, { onConflict: "requester_id,receiver_id" });
-          window.history.replaceState({}, "", window.location.pathname);
-          loadBuddies(uid);
-        }
+          displayName: session.user.user_metadata?.full_name || session.user.email.split("@")[0]
+        });
       } else {
-        setUser(null); setUserId(null); setBoard({ ...EMPTY_BOARD });
+        setUser(null);
       }
     };
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session) {
-        const now = Math.floor(Date.now() / 1000);
-        if (session.expires_at && session.expires_at < now) {
-          const { data: { session: refreshed } } = await supabase.auth.refreshSession();
-          setUserFromSession(refreshed);
-        } else {
-          setUserFromSession(session);
-        }
-      } else {
-        setUserFromSession(null);
-      }
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_OUT") { setUser(null); setUserId(null); setBoard({ ...EMPTY_BOARD }); return; }
-      setUserFromSession(session);
-    });
+    supabase.auth.getSession().then(({ data: { session } }) => setUserFromSession(session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setUserFromSession(session));
     return () => subscription.unsubscribe();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   const signOut = async () => { await supabase.auth.signOut(); setUser(null); };
 
   const isOwn     = !viewing;
-  const currBoard = isOwn ? board : viewBoard;
-  const currName  = isOwn ? user?.displayName : viewing?.displayName || viewing?.username;
+  const currBoard = isOwn ? board : { ...EMPTY_BOARD };
+  const currName  = isOwn ? user?.displayName : MOCK_FRIENDS.find(f => f.username === viewing)?.displayName || viewing;
 
-  const dudeSame = async (item) => {
-    if (!userId || !viewing) return;
-    const ownerId = viewing.userId;
-    const already = myReactions.find(r => r.item_id === String(item.id) && r.item_owner_id === ownerId);
-    if (already) {
-      await supabase.from("reactions").delete().eq("id", already.id);
-    } else {
-      await supabase.from("reactions").upsert({
-        user_id: userId,
-        item_owner_id: ownerId,
-        item_id: String(item.id),
-        category: item._cat || item.catKey || "",
-        title: item.title,
-        subtitle: item.sub || item.artist || item.author || "",
-        poster: item.poster || null,
-        source_url: item.sourceUrl || null,
-      }, { onConflict: "user_id,item_owner_id,item_id" });
-    }
-    await loadMyReactions(userId);
-    await loadBoardReactions(ownerId);
+  const addItem = (catKey, item) => setBoard(prev => ({
+    ...prev,
+    [catKey]: [...(prev[catKey] || []), item].slice(0, 5)
+  }));
+
+  const handleMasterSearch = (e) => {
+    e.preventDefault();
+    if (masterQ.trim()) setAddModal(masterCat);
   };
 
-  const generateInviteLink = () => {
-    const link = `${window.location.origin}?invite=${userId}`;
-    setInviteLink(link);
-    navigator.clipboard?.writeText(link);
-  };
-
-  const sendBuddyRequest = async (receiverId) => {
-    await supabase.from("buddies").upsert({ requester_id: userId, receiver_id: receiverId, status: "pending" }, { onConflict: "requester_id,receiver_id" });
-    loadBuddies(userId);
-  };
-
-  const acceptBuddy = async (buddyRowId) => {
-    await supabase.from("buddies").update({ status: "accepted" }).eq("id", buddyRowId);
-    loadBuddies(userId);
-  };
-
-  const removeBuddy = async (buddyRowId) => {
-    await supabase.from("buddies").delete().eq("id", buddyRowId);
-    loadBuddies(userId);
-  };
-
-  const viewBuddy = async (buddy) => {
-    setViewing(buddy);
-    setTab("board");
-    await loadViewBoard(buddy.userId);
-    await loadBoardReactions(buddy.userId);
-    // Load this buddy's own buddies for display at bottom of their board
-    const { data } = await supabase.from("buddies")
-      .select("requester_id, receiver_id")
-      .or(`requester_id.eq.${buddy.userId},receiver_id.eq.${buddy.userId}`)
-      .eq("status", "accepted");
-    if (data && data.length > 0) {
-      const ids = data.map(b => b.requester_id === buddy.userId ? b.receiver_id : b.requester_id);
-      const { data: profiles } = await supabase.from("profiles").select("id, display_name, avatar_url").in("id", ids);
-      setViewBuddies(profiles || []);
-    } else {
-      setViewBuddies([]);
-    }
-  };
-
-  const addItem = async (catKey, item) => {
-    const catLabel = { movies: "Film", albums: "Albums", artists: "Artists", songs: "Songs", books: "Books", shows: "Television" }[catKey] || catKey;
-
-    // Check for duplicate vouch
-    const alreadyVouched = board[catKey]?.find(i => String(i.id) === String(item.id) && i.vouched);
-    if (alreadyVouched && item.vouched) {
-      alert(item.title + " is already in your Vouch 5."); return;
-    }
-
-    // Check category limit (non-vouched only)
-    const existingInCat = board[catKey]?.find(i => String(i.id) === String(item.id));
-    if (!existingInCat) {
-      const nonVouchedCount = (board[catKey] || []).filter(i => !i.vouched).length;
-      if (nonVouchedCount >= 5) {
-        alert(catLabel + " is full — you can have up to 5 mentions. Remove one to make room."); return;
-      }
-    }
-
-    // Optimistically update UI immediately
-    const optimisticItem = {
-      id: item.id, title: item.title, sub: item.sub || "",
-      poster: item.poster || null, comment: item.comment || "",
-      vouched: item.vouched === true, sourceUrl: item.sourceUrl || null,
-      dbId: null, // will be filled after DB save
-    };
-
-    if (existingInCat) {
-      // Update existing item vouched flag
-      setBoard(prev => ({
-        ...prev,
-        [catKey]: prev[catKey].map(i => String(i.id) === String(item.id) ? { ...i, vouched: item.vouched === true, comment: item.comment || i.comment } : i)
-      }));
-    } else {
-      // Add new item
-      setBoard(prev => ({
-        ...prev,
-        [catKey]: [...(prev[catKey] || []), optimisticItem]
-      }));
-    }
-
-    // Sync with DB in background
-    try {
-      const { data: existing } = await supabase.from("endorsements")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("category", catKey)
-        .eq("item_id", String(item.id))
-        .maybeSingle();
-
-      if (existing) {
-        await supabase.from("endorsements")
-          .update({ vouched: item.vouched === true, comment: item.comment || "" })
-          .eq("id", existing.id);
-      } else {
-        await supabase.from("endorsements").insert({
-          user_id: userId, category: catKey, item_id: String(item.id),
-          title: item.title, subtitle: item.sub || "",
-          poster: item.poster || null, comment: item.comment || "",
-          vouched: item.vouched === true, source_url: item.sourceUrl || null,
-        });
-      }
-      // Reload to get real dbId
-      await loadBoard(userId);
-    } catch(e) { console.error("addItem error:", e); await loadBoard(userId); }
-  };
-
-  // fromVouch5=true just un-vouches the item (keeps it in category section)
-  // fromVouch5=false fully deletes it
-  const removeItem = async (catKey, idx, fromVouch5 = false) => {
-    const item = board[catKey]?.[idx];
-    if (!item) return;
-
-    // Optimistically update UI immediately
-    if (fromVouch5) {
-      setBoard(prev => ({
-        ...prev,
-        [catKey]: prev[catKey].map((it, i) => i === idx ? { ...it, vouched: false } : it)
-      }));
-    } else {
-      setBoard(prev => ({
-        ...prev,
-        [catKey]: prev[catKey].filter((_, i) => i !== idx)
-      }));
-    }
-
-    // Sync with DB in background
-    try {
-      if (!item.dbId) { await loadBoard(userId); return; }
-      if (fromVouch5) {
-        await supabase.from("endorsements").update({ vouched: false }).eq("id", item.dbId);
-      } else {
-        await supabase.from("endorsements").delete().eq("id", item.dbId);
-      }
-    } catch(e) { console.error("removeItem error:", e); await loadBoard(userId); }
-  };
-
-  const vouchedCount = Object.values(board).flat().filter(item => item.vouched).length;
-
-  // Build a map of item_id -> unique user count across all buddy boards (for badges)
-  const buddyCounts = {};
-  const seenBadge = new Set();
-  allBuddyBoards.forEach(row => {
-    const key = row.user_id + ":" + row.item_id;
-    if (seenBadge.has(key)) return;
-    seenBadge.add(key);
-    buddyCounts[String(row.item_id)] = (buddyCounts[String(row.item_id)] || 0) + 1;
-  });
-  const inviteParam  = new URLSearchParams(window.location.search).get("invite");
-
-  if (!user) {
-    if (inviteParam) {
-      return <PublicBoard inviteUserId={inviteParam} onSignUp={() => {
-        supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin + `?invite=${inviteParam}` } });
-      }} />;
-    }
-    return <><Styles /><Auth /></>;
-  }
-  if (loading) return <><Styles /><div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: T.bg }}><div className="loading">Loading…</div></div></>;
+  if (!user) return <><Styles /><Auth /></>;
 
   return (
     <>
@@ -1518,181 +537,88 @@ export default function Vouch() {
       <div className="app">
         <header className="masthead">
           <div className="masthead-meta">
-            <span style={{ flex: 1 }}>Est. 2026</span>
-            <span className="masthead-meta-stars" style={{ flex: "0 0 auto" }}>✦ · ✦ · ✦</span>
-            <span style={{ flex: 1, display: "flex", justifyContent: "flex-end", gap: 16 }}>
-              <span className="clickable" onClick={() => setLegalPage("how")}>How it Works</span>
+            <span>Vol. I &nbsp;·&nbsp; {new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}</span>
+            <span className="masthead-meta-stars">✦ · ✦ · ✦</span>
+            <span>
               <span className="clickable" onClick={() => { setTab("board"); setViewing(null); }}>@{user.username}</span>
-              <span className="clickable" onClick={signOut}>Sign out</span>
+              <span className="clickable" onClick={signOut} style={{ marginLeft: 16 }}>Sign out</span>
             </span>
           </div>
           <div className="masthead-nameplate" onClick={() => { setTab("board"); setViewing(null); }}>
             <span className="nameplate-word">Vouch.</span>
           </div>
-          <div className="masthead-rule-ornament"><span>—</span><span>✦</span><span>—</span></div>
+          <div className="masthead-rule-ornament">— ✦ —</div>
           <div className="masthead-tagline">Love it? Vouch for it.</div>
+
+          <div className="master-search-wrap">
+            <form className="master-search-inner" onSubmit={handleMasterSearch}>
+              <input
+                className="master-search-input"
+                placeholder="Search films, albums, artists, songs…"
+                value={masterQ}
+                onChange={e => setMasterQ(e.target.value)}
+              />
+              <select
+                className="master-search-select"
+                value={masterCat}
+                onChange={e => setMasterCat(e.target.value)}
+              >
+                {CATEGORIES.filter(c => c.key !== "books").map(c => (
+                  <option key={c.key} value={c.key}>{c.label}</option>
+                ))}
+              </select>
+              <button type="submit" className="master-search-btn">Search</button>
+            </form>
+          </div>
+
           <nav className="nav">
             <button className={`nav-btn${tab === "board" && !viewing ? " active" : ""}`} onClick={() => { setTab("board"); setViewing(null); }}>My Board</button>
-            <button className={`nav-btn${tab === "friends" ? " active" : ""}`} onClick={() => { setTab("friends"); setViewing(null); }}>
-              Buddies {pendingIn.length > 0 && <span style={{ background: T.ink, color: T.bg, borderRadius: "50%", fontSize: 9, padding: "1px 5px", marginLeft: 4 }}>{pendingIn.length}</span>}
-            </button>
+            <button className={`nav-btn${tab === "friends" ? " active" : ""}`} onClick={() => { setTab("friends"); setViewing(null); }}>Friends</button>
             {viewing && <button className="nav-btn active">{currName}'s Board</button>}
           </nav>
         </header>
 
         <main className="page">
-          {tab === "board" && !viewing && pendingIn.length > 0 && (
-            <div onClick={() => setTab("friends")} style={{ background: T.ink, color: T.bg, padding: "12px 16px", marginBottom: 20, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14 }}>
-                <strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11, letterSpacing: "0.12em" }}>{pendingIn.length} buddy request{pendingIn.length > 1 ? "s" : ""}</strong> waiting for you
-              </div>
-              <span style={{ fontFamily: "'Spectral SC',serif", fontSize: 10, letterSpacing: "0.12em" }}>Review →</span>
-            </div>
-          )}
-
           {tab === "friends" && !viewing
             ? <>
                 <div className="board-header">
                   <div>
-                    <div className="board-name" style={{ fontSize: 32 }}>Buddies</div>
-                    <div className="board-sub">{buddies.length} connection{buddies.length !== 1 ? "s" : ""}</div>
+                    <div className="board-name">Friends</div>
+                    <div className="board-sub">{MOCK_FRIENDS.length} connections</div>
                   </div>
-                  <button className="btn btn-solid" onClick={() => setBuddyModal(true)}>+ Add Buddy</button>
+                  <button className="btn btn-solid">+ Add Friend</button>
                 </div>
-
-                {/* GROUP VOUCH - top of page */}
-                {allBuddyBoards.length > 0 && (() => {
-                  // Dedupe by user+item first, then count unique users per item
-                  const seenUserItem = new Set();
-                  const itemCount = {};
-                  allBuddyBoards.forEach(row => {
-                    const userItemKey = row.user_id + ":" + row.item_id;
-                    if (seenUserItem.has(userItemKey)) return; // skip dupes from same user
-                    seenUserItem.add(userItemKey);
-                    const key = row.category + ":" + row.item_id;
-                    if (!itemCount[key]) itemCount[key] = { ...row, count: 0, vouchers: [] };
-                    itemCount[key].count++;
-                    const voucher = [...buddies, { userId, displayName: user?.displayName }].find(b => b.userId === row.user_id);
-                    if (voucher && !itemCount[key].vouchers.includes(voucher.displayName)) {
-                      itemCount[key].vouchers.push(voucher.displayName);
-                    }
-                  });
-                  // Add reactions as bonus votes (max 1 per reacter)
-                  myReactions.forEach(r => {
-                    const matchKey = Object.keys(itemCount).find(k => k.endsWith(":" + r.item_id));
-                    if (matchKey) {
-                      itemCount[matchKey].count += 1;
-                      if (!itemCount[matchKey].vouchers.includes("You agreed")) {
-                        itemCount[matchKey].vouchers.push("You agreed");
-                      }
-                    }
-                  });
-                  const top5 = Object.values(itemCount).sort((a, b) => b.count - a.count).slice(0, 5);
-                  if (top5.length === 0) return null;
-                  const isMobile = window.innerWidth <= 640;
-                  return (
-                    <GroupVouchSlideshow items={top5} isMobile={isMobile} />
-                  );
-                })()}
-
-                {/* PENDING REQUESTS */}
-                {pendingIn.length > 0 && <>
-                  <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 12 }}>Pending Requests</div>
-                  {pendingIn.map(b => (
-                    <div key={b.buddyRowId} className="friend-row">
-                      <div>
-                        <div className="friend-name" style={{ fontSize: 18 }}>{b.displayName}</div>
-                        <div className="friend-handle">@{b.username}</div>
-                      </div>
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <button className="btn btn-solid" style={{ padding: "5px 14px" }} onClick={() => acceptBuddy(b.buddyRowId)}>Accept</button>
-                        <button className="btn btn-ghost" style={{ padding: "5px 14px" }} onClick={() => removeBuddy(b.buddyRowId)}>Decline</button>
-                      </div>
+                <div className="ornament">· · ·</div>
+                {MOCK_FRIENDS.map(f => (
+                  <div key={f.username} className="friend-row" onClick={() => { setViewing(f.username); setTab("board"); }}>
+                    <div>
+                      <div className="friend-name">{f.displayName}</div>
+                      <div className="friend-handle">@{f.username}</div>
                     </div>
-                  ))}
-                  <div style={{ borderBottom: `1px solid ${T.paperDark}`, margin: "20px 0" }} />
-                </>}
-
-                {/* BUDDY LIST */}
-                {buddies.length === 0 && pendingIn.length === 0 && (
-                  <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkLight, padding: "24px 0" }}>No buddies yet — add one or share your invite link.</div>
-                )}
-                {buddies.map(b => {
-                  const bPreviews = allBuddyBoards.filter(r => r.user_id === b.userId && r.vouched).slice(0, 5);
-                  return (
-                    <div key={b.buddyRowId} style={{ borderBottom: `1px solid ${T.paperDark}`, padding: "16px 0", cursor: "pointer" }} onClick={() => viewBuddy(b)}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: bPreviews.length > 0 ? 12 : 0 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                          <Avatar name={b.displayName} size={44} avatarUrl={b.avatarUrl} />
-                          <div>
-                            <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 20 }}>{b.displayName}</div>
-                            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.1em", color: T.inkLight, marginTop: 2 }}>@{b.username}</div>
-                          </div>
-                        </div>
-                        <span style={{ fontSize: 13, color: T.inkFaint }}>→</span>
-                      </div>
-                      {bPreviews.length > 0 && (
-                        <div style={{ display: "flex", gap: 8 }}>
-                          {bPreviews.map((item, i) => (
-                            <div key={i} style={{ width: 52, flexShrink: 0 }}>
-                              {item.poster
-                                ? <img src={item.poster} alt={item.title} style={{ width: 52, height: 72, objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block" }} onError={e => e.target.style.display = "none"} />
-                                : <div style={{ width: 52, height: 72, background: T.paperDark, border: `1px solid ${T.paperDark}` }} />}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                    <span className="friend-arrow">→</span>
+                  </div>
+                ))}
               </>
             : <>
-                <div style={{ marginBottom: 8 }}>
-                  <div className="board-name" style={{ fontSize: 28, marginBottom: 2 }}>{currName}</div>
-                  <div className="board-sub">@{viewing ? viewing.username : user.username}</div>
-                </div>
-                {viewing && (
-                  <div style={{ marginBottom: 16 }}>
-                    <button className="btn btn-ghost" onClick={() => { setViewing(null); setTab("friends"); }}>← Back to Buddies</button>
+                <div className="board-header">
+                  <div>
+                    <div className="board-name">
+                      {currName}
+                      {viewing && <span style={{ fontWeight: 400, fontSize: 16, color: T.inkLight, marginLeft: 10 }}>@{viewing}</span>}
+                    </div>
+                    <div className="board-sub">
+                      {isOwn ? user.displayName : `${currName}'s board`}
+                    </div>
                   </div>
-                )}
-                <div className="ornament"><span>—</span><span>✦</span><span>—</span></div>
+                  {viewing && <button className="btn btn-ghost" onClick={() => { setViewing(null); setTab("friends"); }}>← Back</button>}
+                </div>
+                <div className="ornament">— ✦ —</div>
 
-                <VouchSection board={currBoard} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={() => setVouchModal(true)} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} />
+                <VouchSection board={currBoard} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={setAddModal} />
 
                 {CATEGORIES.map(cat => (
-                  <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={currBoard[cat.key] || []} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={setAddModal} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} />
+                  <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={currBoard[cat.key] || []} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={setAddModal} />
                 ))}
-
-                <MutualMentions reactions={boardReactions} myReactions={myReactions} isOwn={isOwn} boardOwnerName={currName} buddies={buddies} onViewBuddy={(b) => { setViewing(b); setTab("board"); loadViewBoard(b.userId); loadBoardReactions(b.userId); }} />
-
-                {/* BUDDIES LIST at bottom of every board */}
-                {(() => {
-                  const displayBuddies = isOwn
-                    ? buddies.map(b => ({ id: b.userId, display_name: b.displayName, avatar_url: b.avatarUrl, buddyRowId: b.buddyRowId, ...b }))
-                    : viewBuddies;
-                  if (!displayBuddies.length) return null;
-                  return (
-                    <div style={{ marginTop: 52, borderTop: `1px solid ${T.paperDark}`, paddingTop: 28 }}>
-                      <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", color: T.inkMid, marginBottom: 16 }}>Buddies</div>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: "12px 20px" }}>
-                        {displayBuddies.map((b, i) => {
-                          const name = b.displayName || b.display_name;
-                          const avatarUrl = b.avatarUrl || b.avatar_url;
-                          const onClick = isOwn
-                            ? () => viewBuddy(b)
-                            : null;
-                          return (
-                            <div key={b.buddyRowId || b.id || i} onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 10, cursor: isOwn ? "pointer" : "default" }}>
-                              <Avatar name={name} size={32} avatarUrl={avatarUrl} />
-                              <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.inkMid }}>{name}</div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })()}
               </>
           }
         </main>
@@ -1703,35 +629,15 @@ export default function Vouch() {
           return <Lightbox items={items} start={lightbox.idx} catLabel={CATEGORIES.find(c => c.key === lightbox.catKey)?.label} onClose={() => setLightbox(null)} />;
         })()}
 
-        {buddyModal && (
-          <BuddyModal userId={userId} onClose={() => { setBuddyModal(false); setInviteLink(null); }} onSendRequest={sendBuddyRequest} onGenerateLink={generateInviteLink} inviteLink={inviteLink} existingBuddyIds={buddies.map(b => b.userId)} />
-        )}
-
-        {vouchModal && (
-          <UniversalSearchModal
-            used={vouchedCount}
-            onClose={() => setVouchModal(false)}
-            onAdd={(catKey, item) => {
-              return addItem(catKey, { ...item, vouched: true });
-            }}
+        {addModal && (
+          <AddModal
+            catKey={addModal}
+            catLabel={CATEGORIES.find(c => c.key === addModal)?.label}
+            used={(board[addModal] || []).length}
+            onClose={() => { setAddModal(null); setMasterQ(""); }}
+            onAdd={addItem}
           />
         )}
-
-        {addModal && (
-          <AddModal catKey={addModal} catLabel={CATEGORIES.find(c => c.key === addModal)?.label} used={(board[addModal] || []).filter(i => !i.vouched).length} onClose={() => setAddModal(null)} onAdd={addItem} />
-        )}
-
-        {legalPage && <LegalModal page={legalPage} onClose={() => setLegalPage(null)} />}
-
-        <footer style={{ borderTop: `3px double ${T.ink}`, marginTop: 64, padding: "24px 28px", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid }}>
-            © {new Date().getFullYear()} Vouch. All Rights Reserved.
-          </div>
-          <div style={{ display: "flex", gap: 20 }}>
-            <button onClick={() => setLegalPage("terms")} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkMid, textDecoration: "underline" }}>Terms of Use</button>
-            <button onClick={() => setLegalPage("privacy")} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkMid, textDecoration: "underline" }}>Privacy Policy</button>
-          </div>
-        </footer>
       </div>
     </>
   );
