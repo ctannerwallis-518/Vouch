@@ -1434,7 +1434,8 @@ export default function Vouch() {
     const shareUserId = viewing ? viewing.userId : userId;
     const shareUsername = viewing ? viewing.username : user.username;
     const shareName = viewing ? viewing.displayName : user.displayName;
-    const shareUrl = `${window.location.origin}?invite=${shareUserId}`;
+    const shareUsername2 = viewing ? viewing.username : user.username;
+    const shareUrl = `${window.location.origin}/@${shareUsername2}`;
     const vouchedCount = Object.values(currBoard).flat().filter(i => i.vouched).length;
     const topItem = Object.values(currBoard).flat().find(i => i.vouched) || Object.values(currBoard).flat()[0];
 
@@ -1552,12 +1553,17 @@ export default function Vouch() {
       ctx.fillText("SEE MY FULL BOARD  →", 540, 1818);
       ctx.textAlign = "left";
 
-      // URL
-      ctx.fillStyle = "#999";
-      ctx.font = "400 26px Georgia";
+      // Link in bio text
+      ctx.fillStyle = "#666";
+      ctx.font = "italic 400 32px Georgia";
       ctx.textAlign = "center";
-      ctx.fillText(shareUrl, 540, 1884);
-      ctx.textAlign = "left";
+      ctx.fillStyle = "#aaa";
+      ctx.font = "400 28px Georgia";
+      ctx.textAlign = "center";
+      ctx.fillText("vouch5.com/@" + (shareUsername2 || shareUsername), 540, 1866);
+      ctx.fillStyle = "#777";
+      ctx.font = "italic 400 26px Georgia";
+      ctx.fillText("link in bio", 540, 1900);
 
       // Bottom rule
       ctx.fillStyle = "#111008";
@@ -1594,18 +1600,17 @@ export default function Vouch() {
   };
 
   const doShare = async (canvas, shareUrl, shareName) => {
+    try { await navigator.clipboard.writeText(shareUrl); } catch(e) {}
     canvas.toBlob(async (blob) => {
       const file = new File([blob], "vouch-board.png", { type: "image/png" });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
-          await navigator.share({
-            files: [file],
-            title: `${shareName}'s Vouch Board`,
-            text: `See what I'm vouching for — ${shareUrl}`,
-          });
+          await navigator.share({ files: [file], title: `${shareName}'s Vouch Board`, text: shareUrl });
+          setTimeout(() => {
+            alert(`Link copied!\n\n${shareUrl}\n\nAdd this as your Instagram bio link — anyone who sees your story can tap straight to your board.`);
+          }, 800);
         } catch (e) {
           if (e.name !== "AbortError") {
-            // Fallback: download
             const a = document.createElement("a");
             a.href = canvas.toDataURL("image/png");
             a.download = "vouch-board.png";
@@ -1613,11 +1618,11 @@ export default function Vouch() {
           }
         }
       } else {
-        // Fallback for non-supporting browsers: download
         const a = document.createElement("a");
         a.href = canvas.toDataURL("image/png");
         a.download = "vouch-board.png";
         a.click();
+        alert(`Your Vouch link:\n\n${shareUrl}\n\nAdd this as your Instagram bio link so followers can tap straight to your board.`);
       }
     }, "image/png");
   };
@@ -1770,13 +1775,26 @@ export default function Vouch() {
     buddyCounts[String(row.item_id)] = (buddyCounts[String(row.item_id)] || 0) + 1;
   });
   const inviteParam  = new URLSearchParams(window.location.search).get("invite");
+  // Support /@username clean URLs
+  const pathUsername = window.location.pathname.startsWith("/@") ? window.location.pathname.slice(2) : null;
+
+  const [pathUserId, setPathUserId] = React.useState(null);
+  React.useEffect(() => {
+    if (pathUsername) {
+      supabase.from("profiles").select("id").eq("username", pathUsername).maybeSingle()
+        .then(({ data }) => { if (data) setPathUserId(data.id); });
+    }
+  }, [pathUsername]);
+
+  const resolvedInviteId = inviteParam || pathUserId;
 
   if (!user) {
-    if (inviteParam) {
-      return <PublicBoard inviteUserId={inviteParam} onSignUp={() => {
-        supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin + `?invite=${inviteParam}` } });
+    if (resolvedInviteId) {
+      return <PublicBoard inviteUserId={resolvedInviteId} onSignUp={() => {
+        supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin + `?invite=${resolvedInviteId}` } });
       }} />;
     }
+    if (pathUsername && !pathUserId) return <><Styles /><div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#C8C2B4" }}><div style={{ fontFamily: "Georgia, serif", fontStyle: "italic", color: "#666" }}>Loading...</div></div></>;
     return <><Styles /><Auth /></>;
   }
   if (loading) return <><Styles /><div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: T.bg }}><div className="loading">Loading…</div></div></>;
