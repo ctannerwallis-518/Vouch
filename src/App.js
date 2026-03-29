@@ -1996,17 +1996,24 @@ export default function Vouch() {
                   return (
                     <div style={{ marginTop: 52, borderTop: `1px solid ${T.paperDark}`, paddingTop: 28 }}>
                       <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", color: T.inkMid, marginBottom: 16 }}>Buddies</div>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: "12px 20px" }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "12px" }}>
                         {displayBuddies.map((b, i) => {
                           const name = b.displayName || b.display_name;
                           const avatarUrl = b.avatarUrl || b.avatar_url;
-                          const onClick = isOwn
-                            ? () => viewBuddy(b)
-                            : null;
+                          const bid = b.id || b.userId;
+                          const buser = b.username;
+                          const handleClick = () => {
+                            const buddyObj = isOwn ? b : { userId: bid, username: buser, displayName: name, avatarUrl };
+                            setViewing(buddyObj);
+                            setTab("board");
+                            loadViewBoard(bid);
+                            loadBoardReactions(bid);
+                            window.scrollTo(0, 0);
+                          };
                           return (
-                            <div key={b.buddyRowId || b.id || i} onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 10, cursor: isOwn ? "pointer" : "default" }}>
-                              <Avatar name={name} size={32} avatarUrl={avatarUrl} />
-                              <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.inkMid }}>{name}</div>
+                            <div key={b.buddyRowId || bid || i} onClick={handleClick} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "6px 0" }}>
+                              <Avatar name={name} size={36} avatarUrl={avatarUrl} />
+                              <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.ink, borderBottom: `1px solid ${T.paperDark}`, lineHeight: 1.3 }}>{name}</div>
                             </div>
                           );
                         })}
