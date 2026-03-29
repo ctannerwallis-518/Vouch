@@ -1536,32 +1536,31 @@ export default function Vouch() {
 
       // CTA question
       ctx.fillStyle = "#333";
-      ctx.font = "italic 400 40px Georgia";
+      ctx.font = "italic 400 38px Georgia";
       ctx.textAlign = "center";
-      ctx.fillText("What five things are you putting", 540, 1680);
-      ctx.fillText("your name behind right now?", 540, 1728);
+      ctx.fillText("What five things are you putting your name behind?", 540, 1660);
       ctx.textAlign = "left";
 
-      // CTA button - wider
+      // Divider
+      ctx.strokeStyle = "rgba(17,16,8,0.2)";
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(72, 1690); ctx.lineTo(1008, 1690); ctx.stroke();
+
+      // Clean URL - prominent
       ctx.fillStyle = "#111008";
-      ctx.fillRect(190, 1760, 700, 96);
-      ctx.fillStyle = "#C8C2B4";
-      ctx.font = "400 36px Georgia";
+      ctx.font = "900 48px 'Times New Roman', serif";
       ctx.textAlign = "center";
-      ctx.fillText("SEE MY FULL BOARD  →", 540, 1818);
+      ctx.fillText("vouch5.com/@" + shareUsername, 540, 1760);
       ctx.textAlign = "left";
 
-      // Link in bio text
-      ctx.fillStyle = "#666";
-      ctx.font = "italic 400 32px Georgia";
+      // Link in bio label
+      ctx.fillStyle = "#C8C2B4";
+      ctx.fillRect(340, 1785, 400, 72);
+      ctx.fillStyle = "#111008";
+      ctx.font = "400 32px Georgia";
       ctx.textAlign = "center";
-      ctx.fillStyle = "#aaa";
-      ctx.font = "400 28px Georgia";
-      ctx.textAlign = "center";
-      ctx.fillText("vouch5.com/@" + (shareUsername), 540, 1866);
-      ctx.fillStyle = "#777";
-      ctx.font = "italic 400 26px Georgia";
-      ctx.fillText("link in bio", 540, 1900);
+      ctx.fillText("LINK IN BIO  →", 540, 1832);
+      ctx.textAlign = "left";
 
       // Bottom rule
       ctx.fillStyle = "#111008";
