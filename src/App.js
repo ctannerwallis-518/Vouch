@@ -1299,6 +1299,18 @@ export default function Vouch() {
       }
     });
     setViewBoard(b);
+    // Also load this person's buddies
+    const { data: buddyRows } = await supabase.from("buddies")
+      .select("requester_id, receiver_id")
+      .or(`requester_id.eq.${uid},receiver_id.eq.${uid}`)
+      .eq("status", "accepted");
+    if (buddyRows && buddyRows.length > 0) {
+      const ids = buddyRows.map(b => b.requester_id === uid ? b.receiver_id : b.requester_id);
+      const { data: profiles } = await supabase.from("profiles").select("id, display_name, avatar_url, username").in("id", ids);
+      setViewBuddies(profiles || []);
+    } else {
+      setViewBuddies([]);
+    }
   };
 
   const loadAllBuddyBoards = async (buddyList, uid) => {
