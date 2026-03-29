@@ -924,22 +924,54 @@ function MutualMentions({ reactions, myReactions, isOwn, boardOwnerName, buddies
 }
 
 function BuddyModal({ userId, onClose, onSendRequest, onGenerateLink, inviteLink, existingBuddyIds }) {
-  const [q, setQ]             = useState("");
-  const [results, setResults] = useState([]);
-  const [busy, setBusy]       = useState(false);
-  const [sent, setSent]       = useState([]);
-  const timer                 = useRef(null);
+  const [q, setQ]               = useState("");
+  const [results, setResults]   = useState([]);
+  const [suggested, setSuggested] = useState([]);
+  const [busy, setBusy]         = useState(false);
+  const [sent, setSent]         = useState([]);
+  const timer                   = useRef(null);
+
+  // Load all users as suggestions on mount
+  useEffect(() => {
+    supabase.from("profiles").select("id, username, display_name, avatar_url")
+      .neq("id", userId).order("display_name").limit(50)
+      .then(({ data }) => setSuggested(data || []));
+  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!q.trim()) { setResults([]); return; }
     clearTimeout(timer.current);
     timer.current = setTimeout(async () => {
       setBusy(true);
-      const { data } = await supabase.from("profiles").select("id, username, display_name").or(`username.ilike.%${q}%,display_name.ilike.%${q}%`).neq("id", userId).limit(8);
+      const { data } = await supabase.from("profiles").select("id, username, display_name, avatar_url").or(`username.ilike.%${q}%,display_name.ilike.%${q}%`).neq("id", userId).limit(8);
       setResults(data || []);
       setBusy(false);
     }, 300);
-  }, [q, userId]);
+  }, [q, userId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const UserRow = ({ r }) => {
+    const isAlready = existingBuddyIds.includes(r.id);
+    const isSent    = sent.includes(r.id);
+    return (
+      <div key={r.id} className="result-item" style={{ justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <Avatar name={r.display_name} size={32} avatarUrl={r.avatar_url} />
+          <div>
+            <div className="result-title">{r.display_name}</div>
+            <div className="result-sub">@{r.username}</div>
+          </div>
+        </div>
+        {isAlready
+          ? <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkFaint }}>Buddies</span>
+          : isSent
+          ? <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkFaint }}>Sent</span>
+          : <button className="btn btn-solid" style={{ padding: "4px 12px" }} onClick={() => { onSendRequest(r.id); setSent(s => [...s, r.id]); }}>Add</button>
+        }
+      </div>
+    );
+  };
+
+  const displayList = q.trim() ? results : suggested;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -957,28 +989,13 @@ function BuddyModal({ userId, onClose, onSendRequest, onGenerateLink, inviteLink
             {inviteLink && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 6, wordBreak: "break-all" }}>{inviteLink}</div>}
           </div>
           <div style={{ borderBottom: `1px solid ${T.paperDark}`, marginBottom: 16 }} />
-          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9.5px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 10 }}>Search by Username</div>
           <input className="search-input" placeholder="Search name or username…" value={q} onChange={e => setQ(e.target.value)} autoFocus />
+          {!q.trim() && suggested.length > 0 && (
+            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkFaint, margin: "12px 0 8px" }}>On Vouch</div>
+          )}
           {busy && <div className="loading">Searching…</div>}
           {!busy && q.trim() && results.length === 0 && <div className="no-results">No users found.</div>}
-          {results.map(r => {
-            const isAlready = existingBuddyIds.includes(r.id);
-            const isSent    = sent.includes(r.id);
-            return (
-              <div key={r.id} className="result-item" style={{ justifyContent: "space-between" }}>
-                <div>
-                  <div className="result-title">{r.display_name}</div>
-                  <div className="result-sub">@{r.username}</div>
-                </div>
-                {isAlready
-                  ? <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkFaint }}>Buddies</span>
-                  : isSent
-                  ? <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkFaint }}>Sent</span>
-                  : <button className="btn btn-solid" style={{ padding: "4px 12px" }} onClick={() => { onSendRequest(r.id); setSent(s => [...s, r.id]); }}>Add</button>
-                }
-              </div>
-            );
-          })}
+          {!busy && displayList.map(r => <UserRow key={r.id} r={r} />)}
         </div>
       </div>
     </div>
