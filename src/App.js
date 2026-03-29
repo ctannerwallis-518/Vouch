@@ -1431,11 +1431,9 @@ export default function Vouch() {
   };
 
   const shareBoard = async () => {
-    const shareUserId = viewing ? viewing.userId : userId;
     const shareUsername = viewing ? viewing.username : user.username;
     const shareName = viewing ? viewing.displayName : user.displayName;
-    const shareUsername2 = viewing ? viewing.username : user.username;
-    const shareUrl = `${window.location.origin}/@${shareUsername2}`;
+    const shareUrl = `${window.location.origin}/@${shareUsername}`;
     const vouchedCount = Object.values(currBoard).flat().filter(i => i.vouched).length;
     const topItem = Object.values(currBoard).flat().find(i => i.vouched) || Object.values(currBoard).flat()[0];
 
@@ -1560,7 +1558,7 @@ export default function Vouch() {
       ctx.fillStyle = "#aaa";
       ctx.font = "400 28px Georgia";
       ctx.textAlign = "center";
-      ctx.fillText("vouch5.com/@" + (shareUsername2 || shareUsername), 540, 1866);
+      ctx.fillText("vouch5.com/@" + (shareUsername), 540, 1866);
       ctx.fillStyle = "#777";
       ctx.font = "italic 400 26px Georgia";
       ctx.fillText("link in bio", 540, 1900);
