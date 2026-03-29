@@ -1,6 +1,7 @@
 {
   "short_name": "Vouch.",
   "name": "Vouch. — Love it? Vouch for it.",
+  "description": "The five things worth putting your name behind right now.",
   "icons": [
     {
       "src": "favicon.ico",
@@ -10,16 +11,20 @@
     {
       "src": "logo192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
       "src": "logo512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "theme_color": "#C8C2B4",
   "background_color": "#C8C2B4"
 }
