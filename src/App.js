@@ -423,6 +423,31 @@ function Avatar({ name, size = 36, avatarUrl }) {
   );
 }
 
+function IOSInstallBanner() {
+  const [show, setShow] = React.useState(false);
+  React.useEffect(() => {
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isStandalone = window.navigator.standalone;
+    const dismissed = localStorage.getItem("vouch-install-dismissed");
+    if (isIOS && !isStandalone && !dismissed) setShow(true);
+  }, []);
+  if (!show) return null;
+  return (
+    <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 9999, background: T.ink, color: T.bg, padding: "14px 20px 28px", display: "flex", alignItems: "flex-start", gap: 14, boxShadow: "0 -4px 20px rgba(0,0,0,0.3)" }}>
+      <div style={{ width: 44, height: 44, background: T.bg, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <span style={{ fontFamily: "'Times New Roman',Times,serif", fontWeight: 900, fontSize: 22, color: T.ink, fontStyle: "italic" }}>V.</span>
+      </div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.12em", marginBottom: 4 }}>Add Vouch to your Home Screen</div>
+        <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: "rgba(200,194,180,0.7)", lineHeight: 1.5 }}>
+          Tap <span style={{ fontStyle: "normal" }}>⎙</span> then <strong style={{ fontStyle: "normal" }}>"Add to Home Screen"</strong> for the full app experience.
+        </div>
+      </div>
+      <button onClick={() => { setShow(false); localStorage.setItem("vouch-install-dismissed", "1"); }} style={{ background: "transparent", border: "none", color: "rgba(200,194,180,0.5)", fontSize: 22, cursor: "pointer", padding: 0, lineHeight: 1, flexShrink: 0 }}>×</button>
+    </div>
+  );
+}
+
 function Lightbox({ items, start, catLabel, onClose }) {
   const [i, setI] = useState(start);
   const item = items[i];
@@ -1803,6 +1828,7 @@ export default function Vouch() {
         )}
 
         {legalPage && <LegalModal page={legalPage} onClose={() => setLegalPage(null)} />}
+        <IOSInstallBanner />
 
         <footer style={{ borderTop: `3px double ${T.ink}`, marginTop: 64, padding: "24px 28px", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
           <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid }}>
