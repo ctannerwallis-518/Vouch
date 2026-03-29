@@ -1563,9 +1563,10 @@ export default function Vouch() {
     };
 
     if (topItem?.poster) {
-      // Use a proxy to avoid CORS — fetch the image as blob first
+      // Use image proxy to avoid CORS
       try {
-        const response = await fetch(topItem.poster);
+        const proxyUrl = `/api/imgproxy?url=${encodeURIComponent(topItem.poster)}`;
+        const response = await fetch(proxyUrl);
         const blob = await response.blob();
         const objectUrl = URL.createObjectURL(blob);
         const img = new Image();
