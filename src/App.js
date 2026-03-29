@@ -1257,6 +1257,8 @@ export default function Vouch() {
   const [legalPage,      setLegalPage]      = useState(null);
   const [allBuddyBoards, setAllBuddyBoards] = useState([]);
   const [viewBuddies,    setViewBuddies]    = useState([]);
+  const [showBuddyList,  setShowBuddyList]  = useState(false);
+  const [sentRequests,   setSentRequests]   = useState([]);
   const [suggested,      setSuggested]      = useState([]);
 
   const loadMyReactions = async (uid) => {
@@ -1936,7 +1938,14 @@ export default function Vouch() {
                 <div style={{ marginBottom: 8, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
                   <div>
                     <div className="board-name" style={{ fontSize: 28, marginBottom: 2 }}>{viewing ? (currName || "").split(" ")[0] + "'s Board" : currName}</div>
-                    <div className="board-sub">@{viewing ? viewing.username : user.username}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 4 }}>
+                      <div className="board-sub">@{viewing ? viewing.username : user.username}</div>
+                      {(isOwn ? buddies.length > 0 : viewBuddies.length > 0) && (
+                        <div onClick={() => setShowBuddyList(true)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkMid, cursor: "pointer", borderBottom: `1px solid ${T.paperDark}` }}>
+                          {isOwn ? buddies.length : viewBuddies.length} {(isOwn ? buddies.length : viewBuddies.length) === 1 ? "Buddy" : "Buddies"}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div style={{ display: "flex", gap: 8, marginTop: 4, flexShrink: 0 }}>
                     {viewing && !buddies.find(b => b.userId === viewing.userId) && (
@@ -2030,6 +2039,48 @@ export default function Vouch() {
         )}
 
         {legalPage && <LegalModal page={legalPage} onClose={() => setLegalPage(null)} />}
+
+        {showBuddyList && (
+          <div className="modal-overlay" onClick={() => setShowBuddyList(false)}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <div className="modal-head">
+                <div className="modal-title">{isOwn ? "Your Buddies" : (currName || "").split(" ")[0] + "'s Buddies"}</div>
+                <button className="modal-x" onClick={() => setShowBuddyList(false)}>×</button>
+              </div>
+              <div className="modal-body">
+                {(isOwn ? buddies : viewBuddies).length === 0 && (
+                  <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight }}>No buddies yet.</div>
+                )}
+                {(isOwn ? buddies.map(b => ({ id: b.userId, display_name: b.displayName, username: b.username, avatar_url: b.avatarUrl, buddyRowId: b.buddyRowId })) : viewBuddies).map((b, i) => {
+                  const bid = b.id || b.userId;
+                  const bname = b.display_name || b.displayName;
+                  const buser = b.username;
+                  const bavatar = b.avatar_url || b.avatarUrl;
+                  const isAlreadyBuddy = buddies.find(x => x.userId === bid);
+                  const isSelf = bid === userId;
+                  const isSent = sentRequests.includes(bid);
+                  return (
+                    <div key={bid || i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => { setShowBuddyList(false); setViewing({ userId: bid, username: buser, displayName: bname, avatarUrl: bavatar }); setTab("board"); loadViewBoard(bid); loadBoardReactions(bid); }}>
+                        <Avatar name={bname} size={36} avatarUrl={bavatar} />
+                        <div>
+                          <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 15, borderBottom: `1px solid ${T.paperDark}` }}>{bname}</div>
+                          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.1em", color: T.inkLight }}>@{buser}</div>
+                        </div>
+                      </div>
+                      {!isSelf && !isAlreadyBuddy && (
+                        isSent
+                          ? <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.12em", color: T.inkFaint }}>Sent</span>
+                          : <button className="btn btn-solid" style={{ padding: "4px 12px" }} onClick={() => { sendBuddyRequest(bid); setSentRequests(prev => [...prev, bid]); }}>Add</button>
+                      )}
+                      {isAlreadyBuddy && <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.12em", color: T.inkFaint }}>Buddies</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
         <IOSInstallBanner />
 
         <footer style={{ borderTop: `3px double ${T.ink}`, marginTop: 64, padding: "24px 28px", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
