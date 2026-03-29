@@ -1805,7 +1805,7 @@ export default function Vouch() {
             <button className={`nav-btn${tab === "friends" ? " active" : ""}`} onClick={() => { setTab("friends"); setViewing(null); }}>
               Buddies {pendingIn.length > 0 && <span style={{ background: T.ink, color: T.bg, borderRadius: "50%", fontSize: 9, padding: "1px 5px", marginLeft: 4 }}>{pendingIn.length}</span>}
             </button>
-            {viewing && <button className="nav-btn active">{currName}'s Board</button>}
+            {viewing && <button className="nav-btn active">{(currName || "").split(" ")[0]}'s Board</button>}
           </nav>
         </header>
 
@@ -1938,11 +1938,15 @@ export default function Vouch() {
                 <div style={{ marginBottom: 8, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
                   <div>
                     <div className="board-name" style={{ fontSize: 28, marginBottom: 2 }}>{viewing ? (currName || "").split(" ")[0] + "'s Board" : currName}</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 4 }}>
-                      <div className="board-sub">@{viewing ? viewing.username : user.username}</div>
-                      {(isOwn ? buddies.length > 0 : viewBuddies.length > 0) && (
-                        <div onClick={() => setShowBuddyList(true)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkMid, cursor: "pointer", borderBottom: `1px solid ${T.paperDark}` }}>
-                          {isOwn ? buddies.length : viewBuddies.length} {(isOwn ? buddies.length : viewBuddies.length) === 1 ? "Buddy" : "Buddies"}
+                    <div className="board-sub" style={{ marginBottom: 10 }}>@{viewing ? viewing.username : user.username}</div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.12em", color: T.inkLight }}>
+                        <span style={{ fontWeight: 700, color: T.ink, fontSize: "12px", fontFamily: "'Spectral',serif" }}>{Object.values(currBoard).flat().length}</span> {" vouches"}
+                      </div>
+                      {(isOwn ? buddies.length : viewBuddies.length) > 0 && (
+                        <div onClick={() => setShowBuddyList(true)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.12em", color: T.inkLight, cursor: "pointer" }}>
+                          <span style={{ fontWeight: 700, color: T.ink, fontSize: "12px", fontFamily: "'Spectral',serif" }}>{isOwn ? buddies.length : viewBuddies.length}</span>
+                          {" "}{(isOwn ? buddies.length : viewBuddies.length) === 1 ? "buddy" : "buddies"}
                         </div>
                       )}
                     </div>
