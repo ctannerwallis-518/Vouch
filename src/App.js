@@ -904,9 +904,7 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
                 ? <div key={`e${idx}`} className="slot-empty-sm" onClick={() => onAdd(catKey)}>
                     <div className="slot-empty-inner"><span className="slot-empty-plus">+</span>Vouch</div>
                   </div>
-                : <div key={`e${idx}`} className="slot-empty-sm" style={{ cursor: "default", opacity: 0.4 }}>
-                    <div className="slot-empty-inner"><span className="slot-empty-plus">—</span></div>
-                  </div>
+                : null
           )}
         </div>
       )}
