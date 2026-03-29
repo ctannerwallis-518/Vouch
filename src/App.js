@@ -1604,7 +1604,7 @@ export default function Vouch() {
         try {
           await navigator.share({ files: [file], title: `${shareName}'s Vouch Board`, text: shareUrl });
           setTimeout(() => {
-            alert(`Link copied!\n\n${shareUrl}\n\nAdd this as your Instagram bio link — anyone who sees your story can tap straight to your board.`);
+            try { navigator.clipboard.writeText(shareUrl); } catch(e) {}
           }, 800);
         } catch (e) {
           if (e.name !== "AbortError") {
@@ -1619,7 +1619,7 @@ export default function Vouch() {
         a.href = canvas.toDataURL("image/png");
         a.download = "vouch-board.png";
         a.click();
-        alert(`Your Vouch link:\n\n${shareUrl}\n\nAdd this as your Instagram bio link so followers can tap straight to your board.`);
+        try { navigator.clipboard.writeText(shareUrl); } catch(e) {}
       }
     }, "image/png");
   };
