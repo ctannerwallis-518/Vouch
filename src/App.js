@@ -1428,6 +1428,193 @@ export default function Vouch() {
     navigator.clipboard?.writeText(link);
   };
 
+  const shareBoard = async () => {
+    const shareUserId = viewing ? viewing.userId : userId;
+    const shareUsername = viewing ? viewing.username : user.username;
+    const shareName = viewing ? viewing.displayName : user.displayName;
+    const shareUrl = `${window.location.origin}?invite=${shareUserId}`;
+
+    // Get top vouched item for the card
+    const topItem = Object.values(currBoard).flat().find(i => i.vouched) || Object.values(currBoard).flat()[0];
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 1080;
+    canvas.height = 1920;
+    const ctx = canvas.getContext("2d");
+
+    // Background
+    ctx.fillStyle = "#C8C2B4";
+    ctx.fillRect(0, 0, 1080, 1920);
+
+    const drawCard = (posterImg) => {
+      // Masthead top bar
+      ctx.fillStyle = "#111008";
+      ctx.fillRect(0, 0, 1080, 4);
+
+      // Est / vouch5.com labels
+      ctx.fillStyle = "#888";
+      ctx.font = "400 28px Georgia";
+      ctx.fillText("Est. 2026", 64, 100);
+      ctx.textAlign = "right";
+      ctx.fillText("vouch5.com", 1016, 100);
+      ctx.textAlign = "left";
+
+      // Vouch. wordmark
+      ctx.fillStyle = "#111008";
+      ctx.font = "900 180px 'Times New Roman', Times, serif";
+      ctx.textAlign = "center";
+      ctx.fillText("Vouch.", 540, 280);
+      ctx.textAlign = "left";
+
+      // Tagline
+      ctx.fillStyle = "#555";
+      ctx.font = "italic 400 38px Georgia";
+      ctx.textAlign = "center";
+      ctx.fillText("Love it? Vouch for it.", 540, 340);
+      ctx.textAlign = "left";
+
+      // Double rule line
+      ctx.strokeStyle = "#111008";
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(64, 370); ctx.lineTo(1016, 370); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(64, 378); ctx.lineTo(1016, 378); ctx.stroke();
+
+      // Byline
+      ctx.fillStyle = "#555";
+      ctx.font = "400 32px Georgia";
+      ctx.letterSpacing = "6px";
+      ctx.fillText((shareName || shareUsername).toUpperCase() + " IS VOUCHING FOR", 64, 440);
+
+      // Poster image
+      const posterX = 64, posterY = 470, posterW = 952, posterH = 900;
+      ctx.fillStyle = "#111008";
+      ctx.fillRect(posterX, posterY, posterW, posterH);
+
+      if (posterImg) {
+        // Draw poster image covering the card
+        const imgRatio = posterImg.naturalWidth / posterImg.naturalHeight;
+        const cardRatio = posterW / posterH;
+        let sx, sy, sw, sh;
+        if (imgRatio > cardRatio) {
+          sh = posterImg.naturalHeight; sw = sh * cardRatio;
+          sx = (posterImg.naturalWidth - sw) / 2; sy = 0;
+        } else {
+          sw = posterImg.naturalWidth; sh = sw / cardRatio;
+          sx = 0; sy = (posterImg.naturalHeight - sh) / 2;
+        }
+        ctx.drawImage(posterImg, sx, sy, sw, sh, posterX, posterY, posterW, posterH);
+        // Dark overlay at bottom
+        const grad = ctx.createLinearGradient(0, posterY + posterH * 0.5, 0, posterY + posterH);
+        grad.addColorStop(0, "rgba(0,0,0,0)");
+        grad.addColorStop(1, "rgba(0,0,0,0.85)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(posterX, posterY, posterW, posterH);
+      }
+
+      // Category label on poster
+      if (topItem) {
+        ctx.fillStyle = "rgba(200,194,180,0.5)";
+        ctx.font = "400 26px Georgia";
+        ctx.fillText((topItem._cat || topItem.catKey || "").toUpperCase(), posterX + 28, posterY + 50);
+
+        // Title on poster
+        ctx.fillStyle = "#C8C2B4";
+        ctx.font = "900 72px 'Times New Roman', serif";
+        const title = topItem.title || "";
+        ctx.fillText(title.length > 20 ? title.slice(0, 20) + "…" : title, posterX + 28, posterY + posterH - 80);
+
+        // Subtitle
+        ctx.fillStyle = "rgba(200,194,180,0.7)";
+        ctx.font = "400 40px Georgia";
+        ctx.fillText(topItem.sub || topItem.artist || topItem.author || "", posterX + 28, posterY + posterH - 28);
+      }
+
+      // More vouches line
+      ctx.strokeStyle = "rgba(17,16,8,0.3)";
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(64, 1420); ctx.lineTo(420, 1420); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(660, 1420); ctx.lineTo(1016, 1420); ctx.stroke();
+      ctx.fillStyle = "#666";
+      ctx.font = "italic 400 34px Georgia";
+      ctx.textAlign = "center";
+      ctx.fillText("+ 4 more vouches", 540, 1430);
+      ctx.textAlign = "left";
+
+      // CTA text
+      ctx.fillStyle = "#333";
+      ctx.font = "italic 400 38px Georgia";
+      ctx.textAlign = "center";
+      ctx.fillText("What five things are you putting your name behind?", 540, 1520);
+      ctx.textAlign = "left";
+
+      // CTA button
+      ctx.fillStyle = "#111008";
+      ctx.fillRect(340, 1560, 400, 90);
+      ctx.fillStyle = "#C8C2B4";
+      ctx.font = "400 30px Georgia";
+      ctx.textAlign = "center";
+      ctx.fillText("SEE MY FULL BOARD →", 540, 1615);
+      ctx.textAlign = "left";
+
+      // Share URL at bottom
+      ctx.fillStyle = "#888";
+      ctx.font = "400 28px Georgia";
+      ctx.textAlign = "center";
+      ctx.fillText(shareUrl, 540, 1860);
+      ctx.textAlign = "left";
+
+      // Bottom rule
+      ctx.fillStyle = "#111008";
+      ctx.fillRect(0, 1916, 1080, 4);
+    };
+
+    if (topItem?.poster) {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = async () => {
+        drawCard(img);
+        await doShare(canvas, shareUrl, shareName);
+      };
+      img.onerror = async () => {
+        drawCard(null);
+        await doShare(canvas, shareUrl, shareName);
+      };
+      img.src = topItem.poster;
+    } else {
+      drawCard(null);
+      await doShare(canvas, shareUrl, shareName);
+    }
+  };
+
+  const doShare = async (canvas, shareUrl, shareName) => {
+    canvas.toBlob(async (blob) => {
+      const file = new File([blob], "vouch-board.png", { type: "image/png" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: `${shareName}'s Vouch Board`,
+            text: `See what I'm vouching for — ${shareUrl}`,
+          });
+        } catch (e) {
+          if (e.name !== "AbortError") {
+            // Fallback: download
+            const a = document.createElement("a");
+            a.href = canvas.toDataURL("image/png");
+            a.download = "vouch-board.png";
+            a.click();
+          }
+        }
+      } else {
+        // Fallback for non-supporting browsers: download
+        const a = document.createElement("a");
+        a.href = canvas.toDataURL("image/png");
+        a.download = "vouch-board.png";
+        a.click();
+      }
+    }, "image/png");
+  };
+
   const sendBuddyRequest = async (receiverId) => {
     // Check if connection already exists in either direction
     const { data: existing } = await supabase.from("buddies")
@@ -1741,9 +1928,12 @@ export default function Vouch() {
                 )}
               </>
             : <>
-                <div style={{ marginBottom: 8 }}>
-                  <div className="board-name" style={{ fontSize: 28, marginBottom: 2 }}>{currName}</div>
-                  <div className="board-sub">@{viewing ? viewing.username : user.username}</div>
+                <div style={{ marginBottom: 8, display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+                  <div>
+                    <div className="board-name" style={{ fontSize: 28, marginBottom: 2 }}>{currName}</div>
+                    <div className="board-sub">@{viewing ? viewing.username : user.username}</div>
+                  </div>
+                  <button onClick={shareBoard} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "6px 14px", background: T.ink, color: T.bg, border: "none", cursor: "pointer", marginTop: 4, whiteSpace: "nowrap" }}>Share Board</button>
                 </div>
                 {viewing && (
                   <div style={{ marginBottom: 16 }}>
