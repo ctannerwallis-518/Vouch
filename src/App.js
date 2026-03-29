@@ -424,8 +424,8 @@ function Avatar({ name, size = 36, avatarUrl }) {
 }
 
 function IOSInstallBanner() {
-  const [show, setShow] = React.useState(false);
-  React.useEffect(() => {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
     const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
     const isStandalone = window.navigator.standalone;
     const dismissed = localStorage.getItem("vouch-install-dismissed");
