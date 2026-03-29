@@ -1226,6 +1226,7 @@ export default function Vouch() {
   const [legalPage,      setLegalPage]      = useState(null);
   const [allBuddyBoards, setAllBuddyBoards] = useState([]);
   const [viewBuddies,    setViewBuddies]    = useState([]);
+  const [suggested,      setSuggested]      = useState([]);
 
   const loadMyReactions = async (uid) => {
     const { data } = await supabase.from("reactions").select("*").eq("user_id", uid).order("created_at", { ascending: false });
@@ -1296,6 +1297,13 @@ export default function Vouch() {
       setBuddies(accepted);
       setPendingIn(incoming);
       if (accepted.length > 0) loadAllBuddyBoards(accepted, uid);
+      // Load suggested users (not already buddies or pending)
+      const allIds = [...accepted.map(b => b.userId), ...incoming.map(b => b.userId), uid];
+      const { data: suggestedData } = await supabase.from("profiles")
+        .select("id, username, display_name, avatar_url")
+        .not("id", "in", `(${allIds.join(",")})`)
+        .order("display_name").limit(20);
+      setSuggested(suggestedData || []);
     }
   };
 
@@ -1681,6 +1689,25 @@ export default function Vouch() {
                     </div>
                   );
                 })}
+
+                {/* SUGGESTED BUDDIES */}
+                {suggested.length > 0 && (
+                  <div style={{ marginTop: 36, borderTop: `1px solid ${T.paperDark}`, paddingTop: 24 }}>
+                    <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.18em", color: T.inkMid, marginBottom: 16 }}>People on Vouch</div>
+                    {suggested.map(s => (
+                      <div key={s.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <Avatar name={s.display_name} size={36} avatarUrl={s.avatar_url} />
+                          <div>
+                            <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 16 }}>{s.display_name}</div>
+                            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.1em", color: T.inkLight }}>@{s.username}</div>
+                          </div>
+                        </div>
+                        <button className="btn btn-solid" style={{ padding: "4px 14px" }} onClick={() => sendBuddyRequest(s.id).then(() => setSuggested(prev => prev.filter(x => x.id !== s.id)))}>Add</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </>
             : <>
                 <div style={{ marginBottom: 8 }}>
