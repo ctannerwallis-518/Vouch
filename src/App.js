@@ -1478,9 +1478,9 @@ export default function Vouch() {
       ctx.beginPath(); ctx.moveTo(72, 412); ctx.lineTo(1008, 412); ctx.stroke();
 
       // Byline
-      ctx.fillStyle = "#555";
-      ctx.font = "400 34px Georgia";
-      ctx.fillText((shareName || shareUsername).toUpperCase() + " IS VOUCHING FOR", 72, 468);
+      ctx.fillStyle = "#444";
+      ctx.font = "italic 400 40px Georgia";
+      ctx.fillText((shareName || shareUsername).split(" ")[0] + " is vouching for", 72, 468);
 
       // Poster - takes up most of middle
       const posterX = 72, posterY = 490, posterW = 936, posterH = 1050;
@@ -1553,11 +1553,11 @@ export default function Vouch() {
 
       // Link in bio label
       ctx.fillStyle = "#C8C2B4";
-      ctx.fillRect(340, 1785, 400, 72);
+      ctx.fillRect(72, 1785, 936, 72);
       ctx.fillStyle = "#111008";
-      ctx.font = "400 32px Georgia";
+      ctx.font = "400 30px Georgia";
       ctx.textAlign = "center";
-      ctx.fillText("LINK IN BIO  →", 540, 1832);
+      ctx.fillText("See " + (shareName || shareUsername).split(" ")[0] + "'s Vouch Board - Link in Bio", 540, 1832);
       ctx.textAlign = "left";
 
       // Bottom rule
