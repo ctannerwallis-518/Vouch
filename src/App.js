@@ -206,7 +206,7 @@ function Auth({ inviteUserId }) {
   const signInWithGoogle = async () => {
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin + (inviteUserId ? `?invite=${inviteUserId}` : "") }
+      options: { redirectTo: window.location.origin + `?invite=${inviteUserId}` }
     });
   };
   return (
@@ -1424,7 +1424,7 @@ export default function Vouch() {
   };
 
   const generateInviteLink = () => {
-    const link = `${window.location.origin}?invite=${userId}`;
+    const link = `${window.location.origin}/@${user.username}`;
     setInviteLink(link);
     navigator.clipboard?.writeText(link);
   };
@@ -2127,8 +2127,8 @@ export default function Vouch() {
                       <div style={{ flex: 1, fontFamily: "'Spectral',serif", fontSize: 13, background: T.paperDark, padding: "10px 12px", color: T.ink, letterSpacing: "0.02em" }}>{shareUrl}</div>
                       <button className="btn btn-solid" style={{ padding: "0 16px", whiteSpace: "nowrap" }} onClick={() => { navigator.clipboard.writeText(shareUrl); }}>Copy</button>
                     </div>
-                    <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 8, lineHeight: 1.6 }}>
-                      Add this link to your Instagram bio — your followers can tap straight to your Vouch board.
+                    <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.ink, marginTop: 10, lineHeight: 1.7, borderLeft: `3px solid ${T.ink}`, paddingLeft: 12 }}>
+                      <strong>Add this link to your Instagram bio.</strong> Your followers can tap straight to your Vouch board — it's the easiest way to grow your circle.
                     </div>
                   </div>
 
