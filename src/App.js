@@ -2006,10 +2006,10 @@ export default function Vouch() {
                             const buddyObj = isOwn ? b : { userId: bid, username: buser, displayName: name, avatarUrl };
                             setViewing(buddyObj);
                             setTab("board");
-                            setTab("board");
                             await loadViewBoard(bid);
                             await loadBoardReactions(bid);
                             window.scrollTo({ top: 0, behavior: "instant" });
+                          };
                           return (
                             <div key={b.buddyRowId || bid || i} onClick={handleClick} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "6px 0" }}>
                               <Avatar name={name} size={36} avatarUrl={avatarUrl} />
