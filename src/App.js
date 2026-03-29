@@ -2002,14 +2002,14 @@ export default function Vouch() {
                           const avatarUrl = b.avatarUrl || b.avatar_url;
                           const bid = b.id || b.userId;
                           const buser = b.username;
-                          const handleClick = () => {
+                          const handleClick = async () => {
                             const buddyObj = isOwn ? b : { userId: bid, username: buser, displayName: name, avatarUrl };
                             setViewing(buddyObj);
                             setTab("board");
-                            loadViewBoard(bid);
-                            loadBoardReactions(bid);
-                            window.scrollTo(0, 0);
-                          };
+                            setTab("board");
+                            await loadViewBoard(bid);
+                            await loadBoardReactions(bid);
+                            window.scrollTo({ top: 0, behavior: "instant" });
                           return (
                             <div key={b.buddyRowId || bid || i} onClick={handleClick} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "6px 0" }}>
                               <Avatar name={name} size={36} avatarUrl={avatarUrl} />
