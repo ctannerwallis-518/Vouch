@@ -344,7 +344,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
           })}
           <div style={{ marginTop: 48, padding: "32px 0", borderTop: `3px double ${T.ink}`, textAlign: "center" }}>
             <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 26, fontWeight: 900, marginBottom: 8 }}>Make your own board.</div>
-            <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkMid, marginBottom: 24 }}>What five things would you put your name behind right now?</div>
+            <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkMid, marginBottom: 24 }}>What would you put your name behind right now?</div>
             <button onClick={onSignUp} className="btn btn-solid" style={{ fontSize: 13, padding: "12px 32px" }}>Get Started — It's Free</button>
           </div>
         </main>
@@ -386,7 +386,7 @@ function HowItWorks() {
         <div style={{ borderTop: `1px solid ${T.paperDark}` }} />
         <div>
           <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>Categories</div>
-          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Go deeper. Add up to five per category across Film, Music, Books, and Television.</div>
+          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Add anything worth putting your name behind — a film, an album, a book. One or five, it's your call.</div>
         </div>
         <div style={{ borderTop: `1px solid ${T.paperDark}` }} />
         <div>
@@ -555,7 +555,7 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
         </div>
         <div className="modal-body">
           {remaining <= 0
-            ? <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkLight, padding: "12px 0" }}>You've used all 5 {catLabel} vouches.</div>
+            ? <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkLight, padding: "12px 0" }}>You've added 5 {catLabel} picks — remove one to swap it out.</div>
             : picked
               ? <>
                   <div className="selected-preview">
@@ -573,7 +573,7 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
                 </>
               : <>
                   <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9.5px", letterSpacing: "0.16em", color: T.inkFaint, marginBottom: 12 }}>
-                    {remaining} slot{remaining !== 1 ? "s" : ""} remaining
+                    {remaining > 0 ? `${remaining} more can be added` : ""}
                   </div>
                   <input className="search-input" placeholder={`Search ${catLabel.toLowerCase()}…`} value={q} onChange={e => setQ(e.target.value)} autoFocus />
                   {busy && <div className="loading">Searching…</div>}
@@ -688,7 +688,7 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
                 </>
               : <>
                   <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9.5px", letterSpacing: "0.16em", color: T.inkFaint, marginBottom: 12 }}>
-                    {remaining} slot{remaining !== 1 ? "s" : ""} remaining
+                    {remaining > 0 ? `${remaining} more can be added` : ""}
                   </div>
                   <input className="search-input" placeholder="Search films, shows, songs, albums, artists, books…" value={q} onChange={e => setQ(e.target.value)} autoFocus />
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
@@ -877,7 +877,7 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
       <div className="cat-header" style={{ cursor: isMobile ? "pointer" : "default" }} onClick={() => isMobile && setOpen(o => !o)}>
         <div className="cat-label">{label}</div>
         <div className="cat-sublabel">Mentions</div>
-        <div className="cat-count">{items.length} of 5</div>
+        <div className="cat-count">{items.length > 0 ? items.length : ""}</div>
         {isMobile && <span style={{ marginLeft: "auto", fontFamily: "'Spectral SC',serif", fontSize: "11px", color: T.inkFaint, paddingLeft: 8 }}>{open ? "▴" : "▾"}</span>}
         {isOwn && !isMobile && <button className="cat-add" onClick={() => onAdd(catKey)}>+ Vouch</button>}
         {isOwn && isMobile && open && <button className="cat-add" style={{ marginLeft: 8 }} onClick={e => { e.stopPropagation(); onAdd(catKey); }}>+ Vouch</button>}
@@ -1537,7 +1537,7 @@ export default function Vouch() {
       ctx.fillStyle = "#333";
       ctx.font = "italic 400 38px Georgia";
       ctx.textAlign = "center";
-      ctx.fillText("What five things are you putting your name behind?", 540, 1660);
+      ctx.fillText("What would you put your name behind right now?", 540, 1660);
       ctx.textAlign = "left";
 
       // Divider
@@ -1949,7 +1949,7 @@ export default function Vouch() {
                 )}
               </>
             : <>
-                <div style={{ marginBottom: 8, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+                <div style={{ marginBottom: 8, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, paddingTop: 16 }}>
                   <div>
                     <div className="board-name" style={{ fontSize: 28, marginBottom: 2 }}>{viewing ? (currName || "").split(" ")[0] + "'s Board" : currName}</div>
                     <div className="board-sub" style={{ marginBottom: 10 }}>@{viewing ? viewing.username : user.username}</div>
