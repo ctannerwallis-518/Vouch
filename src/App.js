@@ -440,7 +440,7 @@ function IOSInstallBanner() {
       <div style={{ flex: 1 }}>
         <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.12em", marginBottom: 4 }}>Add Vouch to your Home Screen</div>
         <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: "rgba(200,194,180,0.7)", lineHeight: 1.5 }}>
-          Tap <span style={{ fontStyle: "normal" }}>⎙</span> then <strong style={{ fontStyle: "normal" }}>"Add to Home Screen"</strong> for the full app experience.
+          Tap <strong style={{ fontStyle: "normal" }}>Share</strong> in your browser then <strong style={{ fontStyle: "normal" }}>"Add to Home Screen"</strong> for the full app experience.
         </div>
       </div>
       <button onClick={() => { setShow(false); localStorage.setItem("vouch-install-dismissed", "1"); }} style={{ background: "transparent", border: "none", color: "rgba(200,194,180,0.5)", fontSize: 22, cursor: "pointer", padding: 0, lineHeight: 1, flexShrink: 0 }}>×</button>
@@ -1935,14 +1935,16 @@ export default function Vouch() {
             : <>
                 <div style={{ marginBottom: 8, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
                   <div>
-                    <div className="board-name" style={{ fontSize: 28, marginBottom: 2 }}>{currName}</div>
+                    <div className="board-name" style={{ fontSize: 28, marginBottom: 2 }}>{viewing ? (currName || "").split(" ")[0] + "'s Board" : currName}</div>
                     <div className="board-sub">@{viewing ? viewing.username : user.username}</div>
                   </div>
                   <div style={{ display: "flex", gap: 8, marginTop: 4, flexShrink: 0 }}>
                     {viewing && !buddies.find(b => b.userId === viewing.userId) && (
                       <button onClick={() => sendBuddyRequest(viewing.userId)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "6px 14px", background: "transparent", color: T.ink, border: `1px solid ${T.ink}`, cursor: "pointer", whiteSpace: "nowrap" }}>+ Add Buddy</button>
                     )}
-                    <button onClick={shareBoard} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "6px 14px", background: T.ink, color: T.bg, border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>Share</button>
+                    {!viewing && (
+                      <button onClick={shareBoard} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "6px 14px", background: T.ink, color: T.bg, border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>Share</button>
+                    )}
                   </div>
                 </div>
                 {viewing && (
