@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef } from "react";
+import { supabase } from "./supabase";
 
-// Register service worker for PWA
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/service-worker.js').catch(() => {});
   });
 }
-import { supabase } from "./supabase";
 
 const TMDB = "24f3b03466f2f7db2d54a0f53607da4f";
 
