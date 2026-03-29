@@ -1256,6 +1256,7 @@ export default function Vouch() {
   const [allBuddyBoards, setAllBuddyBoards] = useState([]);
   const [viewBuddies,    setViewBuddies]    = useState([]);
   const [showBuddyList,  setShowBuddyList]  = useState(false);
+  const [shareModal,     setShareModal]     = useState(false);
   const [sentRequests,   setSentRequests]   = useState([]);
   const [suggested,      setSuggested]      = useState([]);
 
@@ -1969,7 +1970,7 @@ export default function Vouch() {
                       <button onClick={() => sendBuddyRequest(viewing.userId)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "6px 14px", background: "transparent", color: T.ink, border: `1px solid ${T.ink}`, cursor: "pointer", whiteSpace: "nowrap" }}>+ Add Buddy</button>
                     )}
                     {!viewing && (
-                      <button onClick={shareBoard} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "6px 14px", background: T.ink, color: T.bg, border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>Share</button>
+                      <button onClick={() => setShareModal(true)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "6px 14px", background: T.ink, color: T.bg, border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>Share</button>
                     )}
                   </div>
                 </div>
@@ -2106,6 +2107,47 @@ export default function Vouch() {
           </div>
         )}
         <IOSInstallBanner />
+
+        {shareModal && (() => {
+          const shareUsername = user.username;
+          const shareUrl = `${window.location.origin}/@${shareUsername}`;
+          return (
+            <div className="modal-overlay" onClick={() => setShareModal(false)}>
+              <div className="modal" onClick={e => e.stopPropagation()}>
+                <div className="modal-head">
+                  <div className="modal-title">Share Your Board</div>
+                  <button className="modal-x" onClick={() => setShareModal(false)}>×</button>
+                </div>
+                <div className="modal-body">
+
+                  {/* Copy link section */}
+                  <div style={{ marginBottom: 24 }}>
+                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9.5px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 8 }}>Your Vouch Link</div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <div style={{ flex: 1, fontFamily: "'Spectral',serif", fontSize: 13, background: T.paperDark, padding: "10px 12px", color: T.ink, letterSpacing: "0.02em" }}>{shareUrl}</div>
+                      <button className="btn btn-solid" style={{ padding: "0 16px", whiteSpace: "nowrap" }} onClick={() => { navigator.clipboard.writeText(shareUrl); }}>Copy</button>
+                    </div>
+                    <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 8, lineHeight: 1.6 }}>
+                      Add this link to your Instagram bio — your followers can tap straight to your Vouch board.
+                    </div>
+                  </div>
+
+                  <div style={{ borderBottom: `1px solid ${T.paperDark}`, marginBottom: 20 }} />
+
+                  {/* Instagram story */}
+                  <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9.5px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 8 }}>Share to Instagram Story</div>
+                  <button className="btn btn-solid" style={{ width: "100%", padding: "12px", fontSize: 13 }} onClick={() => { setShareModal(false); shareBoard(); }}>
+                    Share Story Card →
+                  </button>
+                  <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 8, lineHeight: 1.6 }}>
+                    Generates a story card with your top vouch. Post it to your story, then add your Vouch link to your bio.
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         <footer style={{ borderTop: `3px double ${T.ink}`, marginTop: 64, padding: "24px 28px", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
           <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid }}>
