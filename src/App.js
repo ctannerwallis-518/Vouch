@@ -1778,8 +1778,8 @@ export default function Vouch() {
   // Support /@username clean URLs
   const pathUsername = window.location.pathname.startsWith("/@") ? window.location.pathname.slice(2) : null;
 
-  const [pathUserId, setPathUserId] = React.useState(null);
-  React.useEffect(() => {
+  const [pathUserId, setPathUserId] = useState(null);
+  useEffect(() => {
     if (pathUsername) {
       supabase.from("profiles").select("id").eq("username", pathUsername).maybeSingle()
         .then(({ data }) => { if (data) setPathUserId(data.id); });
