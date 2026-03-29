@@ -407,16 +407,16 @@ function Avatar({ name, size = 36, avatarUrl }) {
   if (avatarUrl && !imgFailed) {
     return (
       <img src={avatarUrl} alt={name} onError={() => setImgFailed(true)}
-        style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", flexShrink: 0, display: "block", border: `1px solid ${T.paperDark}` }} />
+        style={{ width: size, height: size, objectFit: "cover", flexShrink: 0, display: "block", border: `1px solid ${T.paperDark}` }} />
     );
   }
   return (
     <div style={{
-      width: size, height: size, borderRadius: "50%",
+      width: size, height: size,
       background: T.ink, color: T.bg, flexShrink: 0,
       display: "flex", alignItems: "center", justifyContent: "center",
-      fontFamily: "'Spectral SC', serif", fontWeight: 700,
-      fontSize: size * 0.33, letterSpacing: "0.05em", userSelect: "none"
+      fontFamily: "'Times New Roman', Times, serif", fontWeight: 900,
+      fontSize: size * 0.33, letterSpacing: "0.04em", userSelect: "none"
     }}>
       {initials}
     </div>
@@ -1919,10 +1919,10 @@ export default function Vouch() {
                     <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.18em", color: T.inkMid, marginBottom: 16 }}>People on Vouch</div>
                     {suggested.map(s => (
                       <div key={s.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={() => { setViewing({ userId: s.id, username: s.username, displayName: s.display_name, avatarUrl: s.avatar_url }); setTab("board"); loadViewBoard(s.id); loadBoardReactions(s.id); }}>
                           <Avatar name={s.display_name} size={36} avatarUrl={s.avatar_url} />
                           <div>
-                            <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 16 }}>{s.display_name}</div>
+                            <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 16, borderBottom: `1px solid ${T.paperDark}` }}>{s.display_name}</div>
                             <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.1em", color: T.inkLight }}>@{s.username}</div>
                           </div>
                         </div>
@@ -1933,12 +1933,17 @@ export default function Vouch() {
                 )}
               </>
             : <>
-                <div style={{ marginBottom: 8, display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+                <div style={{ marginBottom: 8, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
                   <div>
                     <div className="board-name" style={{ fontSize: 28, marginBottom: 2 }}>{currName}</div>
                     <div className="board-sub">@{viewing ? viewing.username : user.username}</div>
                   </div>
-                  <button onClick={shareBoard} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "6px 14px", background: T.ink, color: T.bg, border: "none", cursor: "pointer", marginTop: 4, whiteSpace: "nowrap" }}>Share Board</button>
+                  <div style={{ display: "flex", gap: 8, marginTop: 4, flexShrink: 0 }}>
+                    {viewing && !buddies.find(b => b.userId === viewing.userId) && (
+                      <button onClick={() => sendBuddyRequest(viewing.userId)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "6px 14px", background: "transparent", color: T.ink, border: `1px solid ${T.ink}`, cursor: "pointer", whiteSpace: "nowrap" }}>+ Add Buddy</button>
+                    )}
+                    <button onClick={shareBoard} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "6px 14px", background: T.ink, color: T.bg, border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>Share</button>
+                  </div>
                 </div>
                 {viewing && (
                   <div style={{ marginBottom: 16 }}>
