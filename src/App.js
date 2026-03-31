@@ -1,6 +1,29 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabase";
 
+const AVATAR_OPTIONS = [
+  { file: "book",               label: "Book" },
+  { file: "cassette",           label: "Cassette" },
+  { file: "cassette-deck",      label: "Cassette Deck" },
+  { file: "cd",                 label: "CD" },
+  { file: "clapper",            label: "Clapper" },
+  { file: "drums",              label: "Drums" },
+  { file: "dvds",               label: "DVDs" },
+  { file: "earbuds",            label: "Earbuds" },
+  { file: "film-camera",        label: "Film Camera" },
+  { file: "gameboy",            label: "Game Boy" },
+  { file: "guitar",             label: "Guitar" },
+  { file: "headphones",         label: "Headphones" },
+  { file: "microphone-studio",  label: "Studio Mic" },
+  { file: "microphone-vintage", label: "Vintage Mic" },
+  { file: "pen",                label: "Pen & Paper" },
+  { file: "sheet-music",        label: "Sheet Music" },
+  { file: "stone-tablet",       label: "Stone Tablet" },
+  { file: "typewriter",         label: "Typewriter" },
+  { file: "vhs",                label: "VHS" },
+  { file: "vinyl",              label: "Vinyl" },
+];
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/service-worker.js').catch(() => {});
@@ -1257,6 +1280,7 @@ export default function Vouch() {
   const [viewBuddies,    setViewBuddies]    = useState([]);
   const [showBuddyList,  setShowBuddyList]  = useState(false);
   const [shareModal,     setShareModal]     = useState(false);
+  const [avatarPicker,   setAvatarPicker]   = useState(false);
   const [sentRequests,   setSentRequests]   = useState([]);
   const [suggested,      setSuggested]      = useState([]);
 
@@ -1635,6 +1659,26 @@ export default function Vouch() {
     }, "image/png");
   };
 
+  const saveAvatar = async (file) => {
+    const url = `/avatars/${file}.jpg`;
+    await supabase.from("profiles").update({ avatar_url: url }).eq("id", userId);
+    setUser(prev => ({ ...prev, avatarUrl: url }));
+    setAvatarPicker(false);
+  };
+
+  const uploadAvatar = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const ext = file.name.split(".").pop();
+    const path = `${userId}.${ext}`;
+    const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+    if (error) { console.error("Avatar upload error:", error); return; }
+    const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+    const url = data.publicUrl;
+    await supabase.from("profiles").update({ avatar_url: url }).eq("id", userId);
+    setUser(prev => ({ ...prev, avatarUrl: url }));
+  };
+
   const sendBuddyRequest = async (receiverId) => {
     // Check if connection already exists in either direction
     const { data: existing } = await supabase.from("buddies")
@@ -1963,7 +2007,14 @@ export default function Vouch() {
             : <>
                 <div style={{ marginBottom: 8, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, paddingTop: 16 }}>
                   <div>
-                    <div className="board-name" style={{ fontSize: 28, marginBottom: 2 }}>{viewing ? (currName || "").split(" ")[0] + "'s Board" : currName}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                      {!viewing && (
+                        <div onClick={() => setAvatarPicker(true)} style={{ cursor: "pointer", flexShrink: 0, title: "Change avatar" }}>
+                          <Avatar name={user.displayName} size={44} avatarUrl={user.avatarUrl} />
+                        </div>
+                      )}
+                      <div className="board-name" style={{ fontSize: 28, marginBottom: 0 }}>{viewing ? (currName || "").split(" ")[0] + "'s Board" : currName}</div>
+                    </div>
                     <div className="board-sub" style={{ marginBottom: 10 }}>@{viewing ? viewing.username : user.username}</div>
                     <div style={{ display: "flex", gap: 8 }}>
                       <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.12em", color: T.inkLight }}>
@@ -2119,6 +2170,55 @@ export default function Vouch() {
           </div>
         )}
         <IOSInstallBanner />
+
+        {avatarPicker && (
+          <div className="modal-overlay" onClick={() => setAvatarPicker(false)}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <div className="modal-head">
+                <div className="modal-title">Choose Your Avatar</div>
+                <button className="modal-x" onClick={() => setAvatarPicker(false)}>×</button>
+              </div>
+              <div className="modal-body">
+
+                {/* Upload own photo */}
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9.5px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 10 }}>Upload a Photo</div>
+                  <label style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
+                    <div style={{ width: 56, height: 56, background: T.ink, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      {user.avatarUrl
+                        ? <img src={user.avatarUrl} alt="avatar" style={{ width: 56, height: 56, objectFit: "cover" }} />
+                        : <span style={{ fontFamily: "'Times New Roman',serif", fontWeight: 900, fontSize: 20, color: T.bg }}>{(user.displayName || "").split(" ").map(w => w[0]).join("").slice(0,2)}</span>
+                      }
+                    </div>
+                    <div>
+                      <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.ink, borderBottom: `1px solid ${T.paperDark}` }}>Choose from camera roll</div>
+                      <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 4 }}>JPG or PNG</div>
+                    </div>
+                    <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { uploadAvatar(e); setAvatarPicker(false); }} />
+                  </label>
+                </div>
+
+                <div style={{ borderBottom: `1px solid ${T.paperDark}`, marginBottom: 16 }} />
+
+                {/* Stock photo options */}
+                <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9.5px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 10 }}>Or Pick One</div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+                  {AVATAR_OPTIONS.map(av => (
+                    <div key={av.file} onClick={() => saveAvatar(av.file)} style={{ cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                      <img
+                        src={`/avatars/${av.file}.jpg`}
+                        alt={av.label}
+                        style={{ width: "100%", aspectRatio: "1", objectFit: "cover", border: user.avatarUrl === `/avatars/${av.file}.jpg` ? `2px solid ${T.ink}` : `1px solid ${T.paperDark}` }}
+                      />
+                      <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: T.inkMid, textAlign: "center" }}>{av.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+              </div>
+            </div>
+          </div>
+        )}
 
         {shareModal && (() => {
           const shareUsername = user.username;
