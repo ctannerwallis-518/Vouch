@@ -430,7 +430,7 @@ function Avatar({ name, size = 36, avatarUrl }) {
   if (avatarUrl && !imgFailed) {
     return (
       <img src={avatarUrl} alt={name} onError={() => setImgFailed(true)}
-        style={{ width: size, height: size, objectFit: "cover", flexShrink: 0, display: "block", border: `1px solid ${T.paperDark}` }} />
+        style={{ width: size, height: size, objectFit: "cover", flexShrink: 0, display: "block", border: `1px solid ${T.paperDark}`, filter: "grayscale(100%)" }} />
     );
   }
   return (
@@ -2186,7 +2186,7 @@ export default function Vouch() {
                   <label style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
                     <div style={{ width: 56, height: 56, background: T.ink, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       {user.avatarUrl
-                        ? <img src={user.avatarUrl} alt="avatar" style={{ width: 56, height: 56, objectFit: "cover" }} />
+                        ? <img src={user.avatarUrl} alt="avatar" style={{ width: 56, height: 56, objectFit: "cover", filter: "grayscale(100%)" }} />
                         : <span style={{ fontFamily: "'Times New Roman',serif", fontWeight: 900, fontSize: 20, color: T.bg }}>{(user.displayName || "").split(" ").map(w => w[0]).join("").slice(0,2)}</span>
                       }
                     </div>
