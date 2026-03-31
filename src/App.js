@@ -346,7 +346,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
               <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
                 {publicBuddies.map((b, i) => (
                   <div key={i} onClick={() => setShowSignupNudge(true)} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
-                    <Avatar name={b.display_name} size={48} avatarUrl={b.avatar_url} />
+                    <Avatar name={b.display_name} size={56} avatarUrl={b.avatar_url} />
                     <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.inkMid, borderBottom: `1px solid transparent` }}
                       onMouseEnter={e => e.currentTarget.style.borderBottomColor = T.inkLight}
                       onMouseLeave={e => e.currentTarget.style.borderBottomColor = "transparent"}>
@@ -1007,7 +1007,7 @@ function BuddyModal({ userId, onClose, onSendRequest, onGenerateLink, inviteLink
     return (
       <div key={r.id} className="result-item" style={{ justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Avatar name={r.display_name} size={44} avatarUrl={r.avatar_url} />
+          <Avatar name={r.display_name} size={52} avatarUrl={r.avatar_url} />
           <div>
             <div className="result-title">{r.display_name}</div>
             <div className="result-sub">@{r.username}</div>
@@ -1962,7 +1962,7 @@ export default function Vouch() {
                     <div key={b.buddyRowId} style={{ borderBottom: `1px solid ${T.paperDark}`, padding: "16px 0", cursor: "pointer" }} onClick={() => viewBuddy(b)}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: bPreviews.length > 0 ? 12 : 0 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                          <Avatar name={b.displayName} size={44} avatarUrl={b.avatarUrl} />
+                          <Avatar name={b.displayName} size={52} avatarUrl={b.avatarUrl} />
                           <div>
                             <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 20 }}>{b.displayName}</div>
                             <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.1em", color: T.inkLight, marginTop: 2 }}>@{b.username}</div>
@@ -1992,7 +1992,7 @@ export default function Vouch() {
                     {suggested.map(s => (
                       <div key={s.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={() => { setViewing({ userId: s.id, username: s.username, displayName: s.display_name, avatarUrl: s.avatar_url }); setTab("board"); loadViewBoard(s.id); loadBoardReactions(s.id); }}>
-                          <Avatar name={s.display_name} size={48} avatarUrl={s.avatar_url} />
+                          <Avatar name={s.display_name} size={56} avatarUrl={s.avatar_url} />
                           <div>
                             <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 16, borderBottom: `1px solid ${T.paperDark}` }}>{s.display_name}</div>
                             <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.1em", color: T.inkLight }}>@{s.username}</div>
@@ -2010,7 +2010,7 @@ export default function Vouch() {
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
                       {!viewing && (
                         <div onClick={() => setAvatarPicker(true)} style={{ cursor: "pointer", flexShrink: 0, title: "Change avatar" }}>
-                          <Avatar name={user.displayName} size={44} avatarUrl={user.avatarUrl} />
+                          <Avatar name={user.displayName} size={56} avatarUrl={user.avatarUrl} />
                         </div>
                       )}
                       <div className="board-name" style={{ fontSize: 28, marginBottom: 0 }}>{viewing ? currName : currName}</div>
@@ -2089,7 +2089,7 @@ export default function Vouch() {
                           };
                           return (
                             <div key={b.buddyRowId || bid || i} onClick={handleClick} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "6px 0" }}>
-                              <Avatar name={name} size={48} avatarUrl={avatarUrl} />
+                              <Avatar name={name} size={56} avatarUrl={avatarUrl} />
                               <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.ink, borderBottom: `1px solid ${T.paperDark}`, lineHeight: 1.3 }}>{name}</div>
                             </div>
                           );
@@ -2150,7 +2150,7 @@ export default function Vouch() {
                   return (
                     <div key={bid || i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => { setShowBuddyList(false); setViewing({ userId: bid, username: buser, displayName: bname, avatarUrl: bavatar }); setTab("board"); loadViewBoard(bid); loadBoardReactions(bid); }}>
-                        <Avatar name={bname} size={48} avatarUrl={bavatar} />
+                        <Avatar name={bname} size={56} avatarUrl={bavatar} />
                         <div>
                           <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 15, borderBottom: `1px solid ${T.paperDark}` }}>{bname}</div>
                           <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.1em", color: T.inkLight }}>@{buser}</div>
