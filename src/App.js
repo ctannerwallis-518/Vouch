@@ -2009,8 +2009,9 @@ export default function Vouch() {
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
                       {!viewing && (
-                        <div onClick={() => setAvatarPicker(true)} style={{ cursor: "pointer", flexShrink: 0, title: "Change avatar" }}>
+                        <div onClick={() => setAvatarPicker(true)} style={{ cursor: "pointer", flexShrink: 0, position: "relative", display: "inline-block" }}>
                           <Avatar name={user.displayName} size={56} avatarUrl={user.avatarUrl} />
+                          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(17,16,8,0.55)", fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.12em", color: "rgba(200,194,180,0.9)", textAlign: "center", padding: "3px 0", pointerEvents: "none" }}>edit</div>
                         </div>
                       )}
                       <div className="board-name" style={{ fontSize: 28, marginBottom: 0 }}>{viewing ? currName : currName}</div>
