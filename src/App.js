@@ -1379,14 +1379,20 @@ export default function Vouch() {
     const setUserFromSession = async (session) => {
       if (session?.user) {
         const uid = session.user.id;
-        const avatarUrl = session.user.user_metadata?.avatar_url || null;
-        await supabase.from("profiles").upsert({
-          id: uid,
-          username: session.user.email.split("@")[0],
-          display_name: session.user.user_metadata?.full_name || session.user.email.split("@")[0],
-          avatar_url: avatarUrl,
-        }, { onConflict: "id" });
-        setUser({ username: session.user.email.split("@")[0], displayName: session.user.user_metadata?.full_name || session.user.email.split("@")[0], avatarUrl });
+        const googleAvatar = session.user.user_metadata?.avatar_url || null;
+        // Check if profile already exists with a custom avatar
+        const { data: existingProfile } = await supabase.from("profiles").select("avatar_url, username, display_name").eq("id", uid).maybeSingle();
+        const avatarUrl = existingProfile?.avatar_url || googleAvatar;
+        // Only upsert without overwriting avatar if profile exists
+        if (!existingProfile) {
+          await supabase.from("profiles").upsert({
+            id: uid,
+            username: session.user.email.split("@")[0],
+            display_name: session.user.user_metadata?.full_name || session.user.email.split("@")[0],
+            avatar_url: googleAvatar,
+          }, { onConflict: "id" });
+        }
+        setUser({ username: existingProfile?.username || session.user.email.split("@")[0], displayName: existingProfile?.display_name || session.user.user_metadata?.full_name || session.user.email.split("@")[0], avatarUrl });
         setUserId(uid);
         loadBoard(uid);
         loadBuddies(uid);
@@ -1674,7 +1680,7 @@ export default function Vouch() {
     const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type });
     if (error) { console.error("Avatar upload error:", error); return; }
     const { data } = supabase.storage.from("avatars").getPublicUrl(path);
-    const url = data.publicUrl + "?t=" + Date.now();
+    const url = data.publicUrl;
     await supabase.from("profiles").update({ avatar_url: url }).eq("id", userId);
     setUser(prev => ({ ...prev, avatarUrl: url }));
     setAvatarPicker(false);
