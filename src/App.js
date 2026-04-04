@@ -1876,12 +1876,8 @@ export default function Vouch() {
             scrollToTop();
           }
         });
-    } else if (user && !pathUsername) {
-      // URL is / — always show own board
-      setViewing(null);
-      setTab("board");
     }
-  }, [user, pathUserId, userId, pathUsername]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user, pathUserId, userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!user) {
     if (resolvedInviteId) {
