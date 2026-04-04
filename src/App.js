@@ -1281,6 +1281,7 @@ export default function Vouch() {
   const [showBuddyList,  setShowBuddyList]  = useState(false);
   const [shareModal,     setShareModal]     = useState(false);
   const [avatarPicker,   setAvatarPicker]   = useState(false);
+  const [avatarLightbox, setAvatarLightbox] = useState(null);
   const [sentRequests,   setSentRequests]   = useState([]);
   const [suggested,      setSuggested]      = useState([]);
 
@@ -1388,7 +1389,10 @@ export default function Vouch() {
         const googleAvatar = session.user.user_metadata?.avatar_url || null;
         // Check if profile already exists with a custom avatar
         const { data: existingProfile } = await supabase.from("profiles").select("avatar_url, username, display_name").eq("id", uid).maybeSingle();
-        const avatarUrl = existingProfile?.avatar_url || googleAvatar;
+        // Prefer stored avatar unless it is a Google URL (googleusercontent = Google photo)
+        const storedAvatar = existingProfile?.avatar_url;
+        const isGoogleUrl = storedAvatar && (storedAvatar.includes("googleusercontent") || storedAvatar.includes("google"));
+        const avatarUrl = (storedAvatar && !isGoogleUrl) ? storedAvatar : googleAvatar;
         // Only upsert without overwriting avatar if profile exists
         if (!existingProfile) {
           await supabase.from("profiles").upsert({
@@ -2042,6 +2046,14 @@ export default function Vouch() {
                           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(17,16,8,0.55)", fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.12em", color: "rgba(200,194,180,0.9)", textAlign: "center", padding: "3px 0", pointerEvents: "none" }}>edit</div>
                         </div>
                       )}
+                      {viewing && viewing.avatarUrl && (
+                        <div onClick={() => setAvatarLightbox(viewing.avatarUrl)} style={{ cursor: "zoom-in", flexShrink: 0 }}>
+                          <Avatar name={viewing.displayName} size={56} avatarUrl={viewing.avatarUrl} />
+                        </div>
+                      )}
+                      {viewing && !viewing.avatarUrl && (
+                        <Avatar name={viewing.displayName} size={56} avatarUrl={null} />
+                      )}
                       <div className="board-name" style={{ fontSize: 28, marginBottom: 0 }}>{viewing ? currName : currName}</div>
                     </div>
                     <div className="board-sub" style={{ marginBottom: 10 }}>@{viewing ? viewing.username : user.username}</div>
@@ -2199,6 +2211,12 @@ export default function Vouch() {
           </div>
         )}
         <IOSInstallBanner />
+
+        {avatarLightbox && (
+          <div onClick={() => setAvatarLightbox(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", cursor: "zoom-out" }}>
+            <img src={avatarLightbox} alt="avatar" style={{ width: "min(90vw, 90vh)", height: "min(90vw, 90vh)", objectFit: "cover", filter: "grayscale(100%)" }} onClick={e => e.stopPropagation()} />
+          </div>
+        )}
 
         {avatarPicker && (
           <div className="modal-overlay" onClick={() => setAvatarPicker(false)}>
