@@ -1881,7 +1881,7 @@ export default function Vouch() {
       setViewing(null);
       setTab("board");
     }
-  }, [user, pathUserId, userId, pathUsername]);
+  }, [user, pathUserId, userId, pathUsername]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!user) {
     if (resolvedInviteId) {
