@@ -1323,6 +1323,13 @@ export default function Vouch() {
       }
     });
     setViewBoard(b);
+    // Always fetch fresh profile data including avatar
+    const { data: profile } = await supabase.from("profiles").select("id, display_name, avatar_url, username").eq("id", uid).maybeSingle();
+    if (profile) {
+      setViewing(prev => prev ? { ...prev, avatarUrl: profile.avatar_url, displayName: profile.display_name, username: profile.username } : prev);
+      // Also update URL to support refresh
+      window.history.replaceState({}, "", `/@${profile.username}`);
+    }
     // Also load this person's buddies
     const { data: buddyRows } = await supabase.from("buddies")
       .select("requester_id, receiver_id")
@@ -1846,6 +1853,21 @@ export default function Vouch() {
   }, [pathUsername]);
 
   const resolvedInviteId = inviteParam || pathUserId;
+
+  // When logged in and visiting /@username, auto-load that person's board
+  useEffect(() => {
+    if (user && pathUserId && pathUserId !== userId) {
+      supabase.from("profiles").select("id, display_name, avatar_url, username").eq("id", pathUserId).maybeSingle()
+        .then(({ data }) => {
+          if (data) {
+            setViewing({ userId: data.id, username: data.username, displayName: data.display_name, avatarUrl: data.avatar_url });
+            setTab("board");
+            loadViewBoard(data.id);
+            loadBoardReactions(data.id);
+          }
+        });
+    }
+  }, [user, pathUserId]);
 
   if (!user) {
     if (resolvedInviteId) {
