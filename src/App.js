@@ -1326,8 +1326,7 @@ export default function Vouch() {
     // Always fetch fresh profile data including avatar
     const { data: profile } = await supabase.from("profiles").select("id, display_name, avatar_url, username").eq("id", uid).maybeSingle();
     if (profile) {
-      setViewing(prev => prev ? { ...prev, avatarUrl: profile.avatar_url, displayName: profile.display_name, username: profile.username } : prev);
-      // Also update URL to support refresh
+      setViewing(prev => ({ ...(prev || {}), userId: uid, avatarUrl: profile.avatar_url, displayName: profile.display_name, username: profile.username }));
       window.history.replaceState({}, "", `/@${profile.username}`);
     }
     // Also load this person's buddies
