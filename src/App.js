@@ -1881,7 +1881,7 @@ export default function Vouch() {
       setViewing(null);
       setTab("board");
     }
-  }, [user, pathUserId, userId]);
+  }, [user, pathUserId, userId, pathUsername]);
 
   if (!user) {
     if (resolvedInviteId) {
