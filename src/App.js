@@ -1867,7 +1867,7 @@ export default function Vouch() {
           }
         });
     }
-  }, [user, pathUserId]);
+  }, [user, pathUserId, userId]);
 
   if (!user) {
     if (resolvedInviteId) {
