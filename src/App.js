@@ -1282,6 +1282,8 @@ export default function Vouch() {
   const [shareModal,     setShareModal]     = useState(false);
   const [avatarPicker,   setAvatarPicker]   = useState(false);
   const [avatarLightbox, setAvatarLightbox] = useState(null);
+
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "instant" });
   const [sentRequests,   setSentRequests]   = useState([]);
   const [suggested,      setSuggested]      = useState([]);
 
@@ -1328,7 +1330,10 @@ export default function Vouch() {
     const { data: profile } = await supabase.from("profiles").select("id, display_name, avatar_url, username").eq("id", uid).maybeSingle();
     if (profile) {
       setViewing(prev => ({ ...(prev || {}), userId: uid, avatarUrl: profile.avatar_url, displayName: profile.display_name, username: profile.username }));
-      window.history.replaceState({}, "", `/@${profile.username}`);
+      if (profile.username !== user?.username) {
+        window.history.replaceState({}, "", `/@${profile.username}`);
+      }
+      scrollToTop();
     }
     // Also load this person's buddies
     const { data: buddyRows } = await supabase.from("buddies")
@@ -1720,6 +1725,7 @@ export default function Vouch() {
   const viewBuddy = async (buddy) => {
     setViewing(buddy);
     setTab("board");
+    scrollToTop();
     await loadViewBoard(buddy.userId);
     await loadBoardReactions(buddy.userId);
     // Load this buddy's own buddies for display at bottom of their board
@@ -1867,8 +1873,13 @@ export default function Vouch() {
             setTab("board");
             loadViewBoard(data.id);
             loadBoardReactions(data.id);
+            scrollToTop();
           }
         });
+    } else if (user && !pathUsername) {
+      // URL is / — always show own board
+      setViewing(null);
+      setTab("board");
     }
   }, [user, pathUserId, userId]);
 
@@ -1893,18 +1904,18 @@ export default function Vouch() {
             <span className="masthead-meta-stars" style={{ flex: "0 0 auto" }}>✦ · ✦ · ✦</span>
             <span style={{ flex: 1, display: "flex", justifyContent: "flex-end", gap: 16 }}>
               <span className="clickable" onClick={() => setLegalPage("how")}>How it Works</span>
-              <span className="clickable" onClick={() => { setTab("board"); setViewing(null); }}>@{user.username}</span>
+              <span className="clickable" onClick={() => { setTab("board"); setViewing(null); window.history.replaceState({}, "", "/"); scrollToTop(); }}>@{user.username}</span>
               <span className="clickable" onClick={signOut}>Sign out</span>
             </span>
           </div>
-          <div className="masthead-nameplate" onClick={() => { setTab("board"); setViewing(null); }}>
+          <div className="masthead-nameplate" onClick={() => { setTab("board"); setViewing(null); window.history.replaceState({}, "", "/"); scrollToTop(); }}>
             <span className="nameplate-word">Vouch.</span>
           </div>
           <div className="masthead-rule-ornament"><span>—</span><span>✦</span><span>—</span></div>
           <div className="masthead-tagline">Love it? Vouch for it.</div>
           <nav className="nav">
-            <button className={`nav-btn${tab === "board" && !viewing ? " active" : ""}`} onClick={() => { setTab("board"); setViewing(null); }}>My Board</button>
-            <button className={`nav-btn${tab === "friends" ? " active" : ""}`} onClick={() => { setTab("friends"); setViewing(null); }}>
+            <button className={`nav-btn${tab === "board" && !viewing ? " active" : ""}`} onClick={() => { setTab("board"); setViewing(null); window.history.replaceState({}, "", "/"); scrollToTop(); }}>My Board</button>
+            <button className={`nav-btn${tab === "friends" ? " active" : ""}`} onClick={() => { setTab("friends"); setViewing(null); window.history.replaceState({}, "", "/"); scrollToTop(); }}>
               Buddies {pendingIn.length > 0 && <span style={{ background: T.ink, color: T.bg, borderRadius: "50%", fontSize: 9, padding: "1px 5px", marginLeft: 4 }}>{pendingIn.length}</span>}
             </button>
             {viewing && <button className="nav-btn active">{currName}</button>}
@@ -2080,7 +2091,7 @@ export default function Vouch() {
                 </div>
                 {viewing && (
                   <div style={{ marginBottom: 16 }}>
-                    <button className="btn btn-ghost" onClick={() => { setViewing(null); setTab("friends"); }}>← Back to Buddies</button>
+                    <button className="btn btn-ghost" onClick={() => { setViewing(null); setTab("friends"); window.history.replaceState({}, "", "/"); scrollToTop(); }}>← Back to Buddies</button>
                   </div>
                 )}
                 <div className="ornament"><span>—</span><span>✦</span><span>—</span></div>
