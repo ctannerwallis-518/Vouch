@@ -18,7 +18,7 @@ const AVATAR_OPTIONS = [
   { file: "microphone-vintage", label: "Vintage Mic" },
   { file: "pen",                label: "Pen & Paper" },
   { file: "sheet-music",        label: "Sheet Music" },
-  { file: "stone-tablet",       label: "Stone Tablet" },
+  { file: "stone-tablet",       label: "Vintage TV" },
   { file: "typewriter",         label: "Typewriter" },
   { file: "vhs",                label: "VHS" },
   { file: "vinyl",              label: "Vinyl" },
@@ -1671,12 +1671,13 @@ export default function Vouch() {
     if (!file) return;
     const ext = file.name.split(".").pop();
     const path = `${userId}.${ext}`;
-    const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+    const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type });
     if (error) { console.error("Avatar upload error:", error); return; }
     const { data } = supabase.storage.from("avatars").getPublicUrl(path);
-    const url = data.publicUrl;
+    const url = data.publicUrl + "?t=" + Date.now();
     await supabase.from("profiles").update({ avatar_url: url }).eq("id", userId);
     setUser(prev => ({ ...prev, avatarUrl: url }));
+    setAvatarPicker(false);
   };
 
   const sendBuddyRequest = async (receiverId) => {
@@ -2195,7 +2196,7 @@ export default function Vouch() {
                       <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.ink, borderBottom: `1px solid ${T.paperDark}` }}>Choose from camera roll</div>
                       <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 4 }}>JPG or PNG</div>
                     </div>
-                    <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { uploadAvatar(e); setAvatarPicker(false); }} />
+                    <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { uploadAvatar(e); }} />
                   </label>
                 </div>
 
