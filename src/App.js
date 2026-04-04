@@ -1725,7 +1725,7 @@ export default function Vouch() {
   const viewBuddy = async (buddy) => {
     setViewing(buddy);
     setTab("board");
-    scrollToTop();
+    setTimeout(() => window.scrollTo({ top: 0, behavior: "instant" }), 50);
     await loadViewBoard(buddy.userId);
     await loadBoardReactions(buddy.userId);
     // Load this buddy's own buddies for display at bottom of their board
@@ -2030,7 +2030,7 @@ export default function Vouch() {
                     <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.18em", color: T.inkMid, marginBottom: 16 }}>People on Vouch</div>
                     {suggested.map(s => (
                       <div key={s.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={() => { setViewing({ userId: s.id, username: s.username, displayName: s.display_name, avatarUrl: s.avatar_url }); setTab("board"); loadViewBoard(s.id); loadBoardReactions(s.id); }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={() => { setViewing({ userId: s.id, username: s.username, displayName: s.display_name, avatarUrl: s.avatar_url }); setTab("board"); loadViewBoard(s.id); loadBoardReactions(s.id); setTimeout(() => window.scrollTo({ top: 0, behavior: "instant" }), 50); }}>
                           <Avatar name={s.display_name} size={56} avatarUrl={s.avatar_url} />
                           <div>
                             <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 16, borderBottom: `1px solid ${T.paperDark}` }}>{s.display_name}</div>
@@ -2110,7 +2110,7 @@ export default function Vouch() {
                   });
                 })()}
 
-                <MutualMentions reactions={boardReactions} myReactions={myReactions} isOwn={isOwn} boardOwnerName={currName} buddies={buddies} onViewBuddy={(b) => { setViewing(b); setTab("board"); loadViewBoard(b.userId); loadBoardReactions(b.userId); }} />
+                <MutualMentions reactions={boardReactions} myReactions={myReactions} isOwn={isOwn} boardOwnerName={currName} buddies={buddies} onViewBuddy={(b) => { setViewing(b); setTab("board"); loadViewBoard(b.userId); loadBoardReactions(b.userId); setTimeout(() => window.scrollTo({ top: 0, behavior: "instant" }), 50); }} />
 
                 {/* BUDDIES LIST at bottom of every board */}
                 {(() => {
@@ -2133,7 +2133,7 @@ export default function Vouch() {
                             setTab("board");
                             await loadViewBoard(bid);
                             await loadBoardReactions(bid);
-                            window.scrollTo({ top: 0, behavior: "instant" });
+                            setTimeout(() => window.scrollTo({ top: 0, behavior: "instant" }), 50);
                           };
                           return (
                             <div key={b.buddyRowId || bid || i} onClick={handleClick} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "6px 0" }}>
@@ -2197,7 +2197,7 @@ export default function Vouch() {
                   const isSent = sentRequests.includes(bid);
                   return (
                     <div key={bid || i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => { setShowBuddyList(false); setViewing({ userId: bid, username: buser, displayName: bname, avatarUrl: bavatar }); setTab("board"); loadViewBoard(bid); loadBoardReactions(bid); }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => { setShowBuddyList(false); setViewing({ userId: bid, username: buser, displayName: bname, avatarUrl: bavatar }); setTab("board"); loadViewBoard(bid); loadBoardReactions(bid); setTimeout(() => window.scrollTo({ top: 0, behavior: "instant" }), 50); }}>
                         <Avatar name={bname} size={56} avatarUrl={bavatar} />
                         <div>
                           <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 15, borderBottom: `1px solid ${T.paperDark}` }}>{bname}</div>
