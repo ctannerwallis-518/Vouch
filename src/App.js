@@ -2329,7 +2329,7 @@ export default function Vouch() {
                         <div className="vouch-section-label">Vouch 5</div>
                         {activeBoard?.name && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: "rgba(200,194,180,0.7)", marginTop: 2 }}>{activeBoard.name}{activeBoard.theme ? ` · ${activeBoard.theme}` : ""}</div>}
                         {activeBoard?.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 2 }}>{activeBoard.description}</div>}
-                        {activeBoard?.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.12em", color: "rgba(200,194,180,0.35)", marginTop: 4 }}>Published {new Date(activeBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>}
+                        {activeBoard?.published_at && <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}><div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.12em", color: "rgba(200,194,180,0.35)" }}>Published {new Date(activeBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div><div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", background: "rgba(200,194,180,0.15)", color: "rgba(200,194,180,0.6)", padding: "1px 6px" }}>Current Vouch</div></div>}
                       </div>
                       <div style={{ display: "flex", gap: 8, marginLeft: "auto", alignItems: "flex-start" }}>
                         {canPublish
