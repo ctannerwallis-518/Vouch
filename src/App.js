@@ -746,7 +746,7 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
   );
 }
 
-function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, buddyCounts }) {
+function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, buddyCounts, hideHeader }) {
   const [idx, setIdx]      = useState(0);
   const touchStartX        = useRef(null);
   const touchStartY        = useRef(null);
@@ -844,11 +844,13 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
 
   return (
     <div className="vouch-section">
-      <div className="vouch-section-header">
-        <div className="vouch-section-label">Vouch 5</div>
-        <div className="vouch-section-sub">1 to 5 — your choice, your moment</div>
-        {isOwn && <button className="vouch-section-add" onClick={onAdd}>+ Add</button>}
-      </div>
+      {!hideHeader && (
+        <div className="vouch-section-header">
+          <div className="vouch-section-label">Vouch 5</div>
+          <div className="vouch-section-sub">1 to 5 — your choice, your moment</div>
+          {isOwn && <button className="vouch-section-add" onClick={onAdd}>+ Add</button>}
+        </div>
+      )}
       {isMobile ? (
         <div ref={containerRef} style={{ overflow: "hidden", userSelect: "none" }}>
           {allItems.length === 0 && isOwn ? (
@@ -2325,18 +2327,15 @@ export default function Vouch() {
                 {isOwn ? (
                   <div className="vouch-section" style={{ marginBottom: 52 }}>
                     <div className="vouch-section-header">
-                      <div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
                         <div className="vouch-section-label">Vouch 5</div>
-                        {activeBoard?.name && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: "rgba(200,194,180,0.7)", marginTop: 2 }}>{activeBoard.name}{activeBoard.theme ? ` · ${activeBoard.theme}` : ""}</div>}
-                        {activeBoard?.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 2 }}>{activeBoard.description}</div>}
-                        {activeBoard?.published_at && <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}><div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.12em", color: "rgba(200,194,180,0.35)" }}>Published {new Date(activeBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div><div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", background: "rgba(200,194,180,0.15)", color: "rgba(200,194,180,0.6)", padding: "1px 6px" }}>Current Vouch</div></div>}
+                        {activeBoard?.name && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: "rgba(200,194,180,0.6)", marginTop: 2 }}>{activeBoard.name}{activeBoard.theme ? ` · ${activeBoard.theme}` : ""}</div>}
+                        {activeBoard?.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: "rgba(200,194,180,0.4)", marginTop: 2 }}>{activeBoard.description}</div>}
+                        {activeBoard?.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.3)", marginTop: 4 }}>Published {new Date(activeBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} · Current Vouch</div>}
                       </div>
-                      <div style={{ display: "flex", gap: 8, marginLeft: "auto", alignItems: "flex-start" }}>
-                        {canPublish
-                          ? <button className="vouch-section-add" onClick={() => { setEditingBoard(null); setBoardEditor(true); }}>+ New Vouch</button>
-                          : <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.4)", paddingTop: 6 }}>Next: {nextPublishDate}</div>
-                        }
-                        {boardArchive.length > 1 && <button className="vouch-section-add" onClick={() => setArchivePage(true)}>Archive</button>}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end", flexShrink: 0 }}>
+                        {canPublish ? <button className="vouch-section-add" onClick={() => { setEditingBoard(null); setBoardEditor(true); }}>+ New Vouch</button> : <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.35)" }}>Next: {nextPublishDate}</div>}
+                        {boardArchive.length > 1 && <button className="vouch-section-add" style={{ fontSize: "8px" }} onClick={() => setArchivePage(true)}>Archive</button>}
                       </div>
                     </div>
                     {activeBoard?.vouch_board_items?.length > 0 ? (
