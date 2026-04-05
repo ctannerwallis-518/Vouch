@@ -413,12 +413,12 @@ function HowItWorks() {
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <div>
           <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>Vouch 5</div>
-          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Pick the five things you'd put your name behind today. A movie, an album, a book, whatever. These are your top-of-the-fold picks.</div>
+          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Create and publish a named board of up to 5 titles. One Vouch 5 published at a time — once live, you can update again in 7 days.</div>
         </div>
         <div style={{ borderTop: `1px solid ${T.paperDark}` }} />
         <div>
           <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>My Shelf</div>
-          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>The stuff on your shelf — films, albums, books, shows worth putting your name behind.</div>
+          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Your personal shelf — add up to 5 each of films, albums, books, songs, artists, and shows. Browse what your buddies have on theirs.</div>
         </div>
         <div style={{ borderTop: `1px solid ${T.paperDark}` }} />
         <div>
@@ -1721,9 +1721,11 @@ export default function Vouch() {
         const { data: prof } = await supabase.from("profiles").select("categories").eq("id", uid).maybeSingle();
         if (prof?.categories && prof.categories.length > 0) {
           setUserCategories(prof.categories);
-        } else {
-          // New user - show onboarding
+        } else if (prof && !prof.categories) {
+          // Brand new user — show onboarding once
           setOnboarding(true);
+          setUserCategories(CATEGORIES.map(c => c.key));
+        } else {
           setUserCategories(CATEGORIES.map(c => c.key));
         }
         const params = new URLSearchParams(window.location.search);
@@ -2504,7 +2506,7 @@ export default function Vouch() {
                   if (visibleCats.length === 0) return null;
                   return <>
                     <div style={{ marginBottom: 28, borderBottom: `2px solid ${T.ink}`, paddingBottom: 12 }}>
-                      <div style={{ fontFamily: "'Times New Roman', Times, serif", fontWeight: 900, fontSize: 42, color: T.ink, letterSpacing: "0.02em" }}>
+                      <div style={{ fontFamily: "'Spectral', serif", fontWeight: 700, fontSize: 38, color: T.ink, letterSpacing: "0.01em" }}>
                         {isOwn ? "My Shelf" : `${(currName || "").split(" ")[0]}'s Shelf`}
                       </div>
                       <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkLight, marginTop: 3 }}>
@@ -2513,7 +2515,7 @@ export default function Vouch() {
                     </div>
                     {visibleCats.map(cat => {
                       const items = currBoard[cat.key] || [];
-                      return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={setAddModal} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} />;
+                      return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={(key) => { if (!activeBoard) { alert("Publish your first Vouch 5 before adding to your shelf."); return; } setAddModal(key); }} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} />;
                     })}
                   </>;
                 })()}
