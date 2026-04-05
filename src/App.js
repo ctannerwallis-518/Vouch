@@ -1228,7 +1228,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
 
   const handlePublish = () => {
     if (!theme) { alert("Pick a category for your Vouch."); return; }
-    if (theme === "Other" && !name.trim()) { alert("Give your custom Vouch a name — like 'Summer of 2009' or 'Scorsese\'s Best'"); return; }
+    if (theme === "Other" && !name.trim()) { alert("Give your custom Vouch a name — like 'Summer of 2009' or 'Scorsese's Best'"); return; }
     if (items.length === 0) { alert("Add at least one title to your Vouch."); return; }
     const finalName = theme === "Other" ? name : theme;
     onPublish({ name: finalName, theme, description, singleCategory: singleCat, items });
