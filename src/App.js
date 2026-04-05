@@ -212,12 +212,13 @@ const Styles = () => (
       .card-poster-large { width: 100%; height: auto; aspect-ratio: 2/3; }
       .card-poster-placeholder-large { width: 100%; aspect-ratio: 2/3; height: auto; }
       .slot-empty-large { width: 100%; aspect-ratio: 2/3; height: auto; margin-bottom: 0; }
-      .cards-row { flex-direction: column; gap: 0; }
-      .card { width: 100%; display: flex; flex-direction: row; gap: 14px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid ${T.paperDark}; }
-      .card-poster { width: 72px; height: 100px; flex-shrink: 0; }
-      .card-poster-placeholder { width: 72px; height: 100px; flex-shrink: 0; font-size: 10px; }
+      .cards-row { flex-direction: row; flex-wrap: nowrap; overflow-x: auto; gap: 10px; padding-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+      .cards-row::-webkit-scrollbar { display: none; }
+      .card { width: 90px; flex-shrink: 0; }
+      .card-poster { width: 90px; height: 124px; flex-shrink: 0; }
+      .card-poster-placeholder { width: 90px; height: 124px; flex-shrink: 0; font-size: 9px; }
       .card:hover .card-poster { transform: none; box-shadow: none; }
-      .slot-empty-sm { width: 100%; height: 56px; aspect-ratio: unset; border-style: dashed; margin: 4px 0; }
+      .slot-empty-sm { width: 90px; height: 124px; flex-shrink: 0; }
       .page { padding: 0 16px 60px; }
       .masthead-meta { padding: 7px 16px; }
       .vouch-section { padding: 16px 14px 20px; }
@@ -408,8 +409,8 @@ function HowItWorks() {
         </div>
         <div style={{ borderTop: `1px solid ${T.paperDark}` }} />
         <div>
-          <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>Categories</div>
-          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Add anything worth putting your name behind — a film, an album, a book. One or five, it's your call.</div>
+          <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>Collection</div>
+          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Your shelf — films, albums, books, shows you'd put your name behind. Add freely, no pressure.</div>
         </div>
         <div style={{ borderTop: `1px solid ${T.paperDark}` }} />
         <div>
@@ -839,7 +840,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
     <div className="vouch-section">
       <div className="vouch-section-header">
         <div className="vouch-section-label">Vouch 5</div>
-        <div className="vouch-section-sub">The five that define this moment</div>
+        <div className="vouch-section-sub">1 to 5 — your choice, your moment</div>
         {isOwn && <button className="vouch-section-add" onClick={onAdd}>+ Add</button>}
       </div>
       {isMobile ? (
@@ -899,7 +900,7 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
     <div className="cat-section">
       <div className="cat-header" style={{ cursor: isMobile ? "pointer" : "default" }} onClick={() => isMobile && setOpen(o => !o)}>
         <div className="cat-label">{label}</div>
-        <div className="cat-sublabel">Mentions</div>
+        <div className="cat-sublabel">Collection</div>
         <div className="cat-count">{items.length > 0 ? items.length : ""}</div>
         {isMobile && <span style={{ marginLeft: "auto", fontFamily: "'Spectral SC',serif", fontSize: "11px", color: T.inkFaint, paddingLeft: 8 }}>{open ? "▴" : "▾"}</span>}
         {isOwn && !isMobile && <button className="cat-add" onClick={() => onAdd(catKey)}>+ Vouch</button>}
