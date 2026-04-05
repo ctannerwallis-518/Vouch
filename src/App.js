@@ -1192,7 +1192,6 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
     timer.current = setTimeout(async () => {
       setBusy(true);
       try {
-        const catFilter = singleCat || "all";
         const fetches = [];
         if (!singleCat || singleCat === "movies") fetches.push(fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`).then(r=>r.json()).then(d=>(d.results||[]).slice(0,3).map(r=>({ id:r.id, title:r.title, sub:r.release_date?.slice(0,4)||"", poster:r.poster_path?`https://image.tmdb.org/t/p/w500${r.poster_path}`:null, catKey:"movies" }))));
         if (!singleCat || singleCat === "shows") fetches.push(fetch(`https://api.themoviedb.org/3/search/tv?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`).then(r=>r.json()).then(d=>(d.results||[]).slice(0,2).map(r=>({ id:r.id, title:r.name, sub:r.first_air_date?.slice(0,4)||"", poster:r.poster_path?`https://image.tmdb.org/t/p/w500${r.poster_path}`:null, catKey:"shows" }))));
@@ -1224,7 +1223,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
   const removeItem = (idx) => setItems(prev => prev.filter((_, i) => i !== idx));
 
   const handlePublish = () => {
-    if (!name.trim()) { alert("Give your Vouch a name — like 'Summer of 2009' or 'Scorsese\'s Best'"); return; }
+    if (!name.trim()) { alert("Give your Vouch a name — like 'Summer of 2009' or 'Scorsese's Best'"); return; }
     if (!theme) { alert("Pick a theme for your Vouch."); return; }
     if (items.length === 0) { alert("Add at least one title to your Vouch."); return; }
     onPublish({ name, theme, description, singleCategory: singleCat, items });
@@ -1463,16 +1462,6 @@ export default function Vouch() {
       setActiveBoard(active);
       setBoardArchive(data);
     }
-  };
-
-  const loadActiveBoardForUser = async (uid) => {
-    const { data } = await supabase
-      .from("vouch_boards")
-      .select("*, vouch_board_items(*)")
-      .eq("user_id", uid)
-      .eq("is_active", true)
-      .maybeSingle();
-    return data;
   };
 
   const publishBoard = async (boardData) => {
