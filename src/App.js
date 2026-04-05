@@ -2388,7 +2388,7 @@ export default function Vouch() {
                   </div>
                 )}
               </>
-            : <>
+            : (tab === "board" || viewing) && <>
                 <div style={{ marginBottom: 8, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, paddingTop: 16 }}>
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
@@ -2482,7 +2482,7 @@ export default function Vouch() {
                   if (visibleCats.length === 0) return null;
                   return <>
                     <div style={{ marginBottom: 28, borderBottom: `2px solid ${T.ink}`, paddingBottom: 12 }}>
-                      <div style={{ fontFamily: "'Times New Roman', Times, serif", fontWeight: 900, fontSize: 36, color: T.ink, letterSpacing: "0.02em" }}>
+                      <div style={{ fontFamily: "'Times New Roman', Times, serif", fontWeight: 900, fontSize: 42, color: T.ink, letterSpacing: "0.02em" }}>
                         {isOwn ? "My Shelf" : `${(currName || "").split(" ")[0]}'s Shelf`}
                       </div>
                       <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkLight, marginTop: 3 }}>
