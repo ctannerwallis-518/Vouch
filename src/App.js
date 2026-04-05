@@ -2506,7 +2506,7 @@ export default function Vouch() {
                   if (visibleCats.length === 0) return null;
                   return <>
                     <div style={{ marginBottom: 28, borderBottom: `2px solid ${T.ink}`, paddingBottom: 12 }}>
-                      <div style={{ fontFamily: "'Spectral', serif", fontWeight: 700, fontSize: 38, color: T.ink, letterSpacing: "0.01em" }}>
+                      <div style={{ fontFamily: "'Spectral SC', serif", fontWeight: 700, fontSize: 32, color: T.ink, letterSpacing: "0.08em" }}>
                         {isOwn ? "My Shelf" : `${(currName || "").split(" ")[0]}'s Shelf`}
                       </div>
                       <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkLight, marginTop: 3 }}>
