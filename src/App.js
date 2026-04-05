@@ -45,6 +45,12 @@ const EMPTY_BOARD = {
   movies: [], albums: [], artists: [], songs: [], books: [], shows: [],
 };
 
+const BOARD_THEMES = [
+  "Seasonal", "All-Timers", "Feelin Lately", "Nostalgic",
+  "New Releases", "Deep Cuts", "Underrated", "No Boundaries",
+  "Locals Only", "Other"
+];
+
 const T = {
   bg:        "#C8C2B4",
   ink:       "#111008",
@@ -1167,6 +1173,154 @@ function LegalModal({ page, onClose }) {
   );
 }
 
+function BoardEditorModal({ onClose, onPublish, existing, categories, themes, userId }) {
+  const [name, setName]               = useState(existing?.name || "");
+  const [theme, setTheme]             = useState(existing?.theme || "");
+  const [description, setDescription] = useState(existing?.description || "");
+  const [singleCat, setSingleCat]     = useState(existing?.single_category || "");
+  const [items, setItems]             = useState(existing?.vouch_board_items?.sort((a,b)=>a.position-b.position).map(i => ({ ...i, id: i.item_id, sub: i.subtitle, catKey: i.category })) || []);
+  const [addingItem, setAddingItem]   = useState(false);
+  const [q, setQ]                     = useState("");
+  const [results, setResults]         = useState([]);
+  const [busy, setBusy]               = useState(false);
+  const timer                         = useRef(null);
+  const TMDB_KEY                      = "24f3b03466f2f7db2d54a0f53607da4f";
+
+  useEffect(() => {
+    if (!q.trim()) { setResults([]); return; }
+    clearTimeout(timer.current);
+    timer.current = setTimeout(async () => {
+      setBusy(true);
+      try {
+        const catFilter = singleCat || "all";
+        const fetches = [];
+        if (!singleCat || singleCat === "movies") fetches.push(fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`).then(r=>r.json()).then(d=>(d.results||[]).slice(0,3).map(r=>({ id:r.id, title:r.title, sub:r.release_date?.slice(0,4)||"", poster:r.poster_path?`https://image.tmdb.org/t/p/w500${r.poster_path}`:null, catKey:"movies" }))));
+        if (!singleCat || singleCat === "shows") fetches.push(fetch(`https://api.themoviedb.org/3/search/tv?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`).then(r=>r.json()).then(d=>(d.results||[]).slice(0,2).map(r=>({ id:r.id, title:r.name, sub:r.first_air_date?.slice(0,4)||"", poster:r.poster_path?`https://image.tmdb.org/t/p/w500${r.poster_path}`:null, catKey:"shows" }))));
+        if (!singleCat || ["albums","songs","artists"].includes(singleCat)) {
+          const type = singleCat === "albums" ? "album" : singleCat === "songs" ? "track" : singleCat === "artists" ? "artist" : "track,album,artist";
+          fetches.push(fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=${type}`).then(r=>r.json()).then(d=>{
+            const res = [];
+            if (!singleCat || singleCat==="songs") (d.tracks?.items||[]).slice(0,2).forEach(r=>res.push({ id:r.id, title:r.name, sub:r.artists?.[0]?.name||"", poster:r.album?.images?.[0]?.url||null, catKey:"songs" }));
+            if (!singleCat || singleCat==="albums") (d.albums?.items||[]).slice(0,2).forEach(r=>res.push({ id:r.id, title:r.name, sub:r.artists?.[0]?.name||"", poster:r.images?.[0]?.url||null, catKey:"albums" }));
+            if (!singleCat || singleCat==="artists") (d.artists?.items||[]).slice(0,2).forEach(r=>res.push({ id:r.id, title:r.name, sub:r.genres?.[0]||"", poster:r.images?.[0]?.url||null, catKey:"artists" }));
+            return res;
+          }));
+        }
+        if (!singleCat || singleCat === "books") fetches.push(fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=3`).then(r=>r.json()).then(d=>(d.docs||[]).slice(0,2).map(r=>({ id:r.key||r.title, title:r.title, sub:(r.author_name||[]).join(", "), poster:r.cover_i?`https://covers.openlibrary.org/b/id/${r.cover_i}-L.jpg`:null, catKey:"books" }))));
+        const all = (await Promise.all(fetches)).flat();
+        setResults(all);
+      } catch(e) { console.error(e); }
+      setBusy(false);
+    }, 400);
+  }, [q, singleCat]);
+
+  const addItem = (item) => {
+    if (items.length >= 5) return;
+    if (items.find(i => String(i.id) === String(item.id))) return;
+    setItems(prev => [...prev, item]);
+    setQ(""); setResults([]); setAddingItem(false);
+  };
+
+  const removeItem = (idx) => setItems(prev => prev.filter((_, i) => i !== idx));
+
+  const handlePublish = () => {
+    if (!name.trim()) { alert("Give your Vouch a name — like 'Summer of 2009' or 'Scorsese\'s Best'"); return; }
+    if (!theme) { alert("Pick a theme for your Vouch."); return; }
+    if (items.length === 0) { alert("Add at least one title to your Vouch."); return; }
+    onPublish({ name, theme, description, singleCategory: singleCat, items });
+  };
+
+  const catLabel = (key) => categories.find(c => c.key === key)?.label || key;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxHeight: "88vh" }}>
+        <div className="modal-head">
+          <div className="modal-title">Create Your Vouch 5</div>
+          <button className="modal-x" onClick={onClose}>×</button>
+        </div>
+        <div className="modal-body">
+
+          {/* Name */}
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>Name Your Vouch</div>
+            <input className="search-input" style={{ marginBottom: 4 }} placeholder="e.g. Summer of 2009, Scorsese's Best…" value={name} onChange={e => setName(e.target.value)} maxLength={60} />
+          </div>
+
+          {/* Theme */}
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>Theme</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {themes.map(t => (
+                <button key={t} onClick={() => setTheme(t)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "4px 10px", border: `1px solid ${theme === t ? T.ink : T.paperDark}`, background: theme === t ? T.ink : "transparent", color: theme === t ? T.bg : T.inkMid, cursor: "pointer" }}>{t}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Single category toggle */}
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>Single Category (optional)</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              <button onClick={() => setSingleCat("")} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "4px 10px", border: `1px solid ${!singleCat ? T.ink : T.paperDark}`, background: !singleCat ? T.ink : "transparent", color: !singleCat ? T.bg : T.inkMid, cursor: "pointer" }}>All</button>
+              {categories.map(c => (
+                <button key={c.key} onClick={() => setSingleCat(c.key)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "4px 10px", border: `1px solid ${singleCat === c.key ? T.ink : T.paperDark}`, background: singleCat === c.key ? T.ink : "transparent", color: singleCat === c.key ? T.bg : T.inkMid, cursor: "pointer" }}>{c.label}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Description */}
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>One Line About This Vouch (optional)</div>
+            <input className="search-input" style={{ marginBottom: 0 }} placeholder="e.g. These artists remind me of the summer…" value={description} onChange={e => setDescription(e.target.value)} maxLength={120} />
+          </div>
+
+          {/* Current items */}
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 8 }}>Titles ({items.length}/5)</div>
+            {items.length > 0 && (
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+                {items.map((item, i) => (
+                  <div key={i} style={{ position: "relative", width: 70 }}>
+                    {item.poster
+                      ? <img src={item.poster} alt={item.title} style={{ width: 70, height: 96, objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block" }} onError={e => e.target.style.display="none"} />
+                      : <div style={{ width: 70, height: 96, background: T.paperDark, border: `1px solid ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 4 }}>{item.title}</div>}
+                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: T.inkFaint, marginTop: 2, textAlign: "center" }}>{catLabel(item.catKey || item.category)}</div>
+                    <button onClick={() => removeItem(i)} style={{ position: "absolute", top: 2, right: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 20, height: 20, cursor: "pointer", fontSize: 14, lineHeight: "20px", textAlign: "center" }}>×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {items.length < 5 && (
+              addingItem ? (
+                <div>
+                  <input className="search-input" placeholder="Search to add a title…" value={q} onChange={e => setQ(e.target.value)} autoFocus />
+                  {busy && <div className="loading">Searching…</div>}
+                  {results.map((r, i) => (
+                    <div key={i} className="result-item" onClick={() => addItem(r)}>
+                      {r.poster ? <img src={r.poster} alt={r.title} className="result-img" /> : <div className="result-img" />}
+                      <div style={{ flex: 1 }}>
+                        <div className="result-title">{r.title}</div>
+                        <div className="result-sub">{r.sub}</div>
+                      </div>
+                      <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", color: T.inkFaint }}>{catLabel(r.catKey)}</div>
+                    </div>
+                  ))}
+                  <button className="btn btn-ghost" style={{ marginTop: 8, width: "100%" }} onClick={() => { setAddingItem(false); setQ(""); setResults([]); }}>Cancel</button>
+                </div>
+              ) : (
+                <button className="btn btn-ghost" style={{ width: "100%" }} onClick={() => setAddingItem(true)}>+ Add Title</button>
+              )
+            )}
+          </div>
+
+          <button className="btn btn-solid" style={{ width: "100%", padding: "12px" }} onClick={handlePublish}>Publish Vouch 5</button>
+          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 8, textAlign: "center" }}>Once published, you can update again in 7 days.</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function GroupVouchSlideshow({ items, isMobile }) {
   const [idx, setIdx] = useState(0);
   const touchStartX = useRef(null);
@@ -1286,11 +1440,82 @@ export default function Vouch() {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "instant" });
   const [sentRequests,   setSentRequests]   = useState([]);
+  const [activeBoard,    setActiveBoard]    = useState(null);
+  const [boardArchive,   setBoardArchive]   = useState([]);
+  const [boardEditor,    setBoardEditor]    = useState(false);
+  const [archivePage,    setArchivePage]    = useState(false);
+  const [editingBoard,   setEditingBoard]   = useState(null);
   const [suggested,      setSuggested]      = useState([]);
 
   const loadMyReactions = async (uid) => {
     const { data } = await supabase.from("reactions").select("*").eq("user_id", uid).order("created_at", { ascending: false });
     setMyReactions(data || []);
+  };
+
+  const loadVouchBoards = async (uid) => {
+    const { data } = await supabase
+      .from("vouch_boards")
+      .select("*, vouch_board_items(*)")
+      .eq("user_id", uid)
+      .order("created_at", { ascending: false });
+    if (data) {
+      const active = data.find(b => b.is_active) || null;
+      setActiveBoard(active);
+      setBoardArchive(data);
+    }
+  };
+
+  const loadActiveBoardForUser = async (uid) => {
+    const { data } = await supabase
+      .from("vouch_boards")
+      .select("*, vouch_board_items(*)")
+      .eq("user_id", uid)
+      .eq("is_active", true)
+      .maybeSingle();
+    return data;
+  };
+
+  const publishBoard = async (boardData) => {
+    const { name, theme, description, singleCategory, items } = boardData;
+    // Deactivate current active board
+    await supabase.from("vouch_boards").update({ is_active: false }).eq("user_id", userId).eq("is_active", true);
+    // Create new board
+    const { data: newBoard } = await supabase.from("vouch_boards").insert({
+      user_id: userId,
+      name,
+      theme,
+      description,
+      single_category: singleCategory || null,
+      published_at: new Date().toISOString(),
+      is_active: true,
+    }).select().single();
+    if (!newBoard) return;
+    // Insert items
+    if (items.length > 0) {
+      await supabase.from("vouch_board_items").insert(
+        items.map((item, i) => ({
+          board_id: newBoard.id,
+          item_id: String(item.id),
+          title: item.title,
+          subtitle: item.sub || item.subtitle || "",
+          poster: item.poster || null,
+          source_url: item.sourceUrl || item.source_url || null,
+          category: item.catKey || item.category || "",
+          position: i,
+        }))
+      );
+    }
+    await loadVouchBoards(userId);
+    setBoardEditor(false);
+    setEditingBoard(null);
+  };
+
+  const republishBoard = async (archivedBoard) => {
+    // Deactivate current
+    await supabase.from("vouch_boards").update({ is_active: false }).eq("user_id", userId).eq("is_active", true);
+    // Reactivate archived board with new published_at
+    await supabase.from("vouch_boards").update({ is_active: true, published_at: new Date().toISOString() }).eq("id", archivedBoard.id);
+    await loadVouchBoards(userId);
   };
 
   const loadBoardReactions = async (ownerId) => {
@@ -1413,6 +1638,7 @@ export default function Vouch() {
         loadBoard(uid);
         loadBuddies(uid);
         loadMyReactions(uid);
+        loadVouchBoards(uid);
         const params = new URLSearchParams(window.location.search);
         const inviteFrom = params.get("invite");
         if (inviteFrom && inviteFrom !== uid) {
@@ -1841,6 +2067,20 @@ export default function Vouch() {
 
   const vouchedCount = Object.values(board).flat().filter(item => item.vouched).length;
 
+  const canPublish = (() => {
+    if (!activeBoard?.published_at) return true;
+    const publishedAt = new Date(activeBoard.published_at);
+    const daysSince = (Date.now() - publishedAt.getTime()) / (1000 * 60 * 60 * 24);
+    return daysSince >= 7;
+  })();
+
+  const nextPublishDate = (() => {
+    if (!activeBoard?.published_at || canPublish) return null;
+    const d = new Date(activeBoard.published_at);
+    d.setDate(d.getDate() + 7);
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  })();
+
   // Build a map of item_id -> unique user count across all buddy boards (for badges)
   const buddyCounts = {};
   const seenBadge = new Set();
@@ -2093,7 +2333,41 @@ export default function Vouch() {
                 )}
                 <div className="ornament"><span>—</span><span>✦</span><span>—</span></div>
 
-                <VouchSection board={currBoard} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={() => setVouchModal(true)} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} />
+                {isOwn ? (
+                  <div className="vouch-section" style={{ marginBottom: 52 }}>
+                    <div className="vouch-section-header">
+                      <div>
+                        <div className="vouch-section-label">Vouch 5</div>
+                        {activeBoard?.name && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: "rgba(200,194,180,0.7)", marginTop: 2 }}>{activeBoard.name}{activeBoard.theme ? ` · ${activeBoard.theme}` : ""}</div>}
+                        {activeBoard?.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 2 }}>{activeBoard.description}</div>}
+                        {activeBoard?.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.12em", color: "rgba(200,194,180,0.35)", marginTop: 4 }}>Published {new Date(activeBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>}
+                      </div>
+                      <div style={{ display: "flex", gap: 8, marginLeft: "auto", alignItems: "flex-start" }}>
+                        {canPublish
+                          ? <button className="vouch-section-add" onClick={() => { setEditingBoard(null); setBoardEditor(true); }}>+ New Vouch</button>
+                          : <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.4)", paddingTop: 6 }}>Next: {nextPublishDate}</div>
+                        }
+                        {boardArchive.length > 1 && <button className="vouch-section-add" onClick={() => setArchivePage(true)}>Archive</button>}
+                      </div>
+                    </div>
+                    {activeBoard?.vouch_board_items?.length > 0 ? (
+                      <VouchSection board={(() => {
+                        const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
+                        (activeBoard.vouch_board_items || []).sort((a,b) => a.position - b.position).forEach(item => {
+                          if (b[item.category]) b[item.category].push({ id: item.item_id, title: item.title, sub: item.subtitle || "", poster: item.poster, comment: "", vouched: true, sourceUrl: item.source_url, _cat: item.category, _catLabel: CATEGORIES.find(c=>c.key===item.category)?.label || item.category });
+                        });
+                        return b;
+                      })()} isOwn={true} onCard={(k, i) => {}} onAdd={() => { setEditingBoard(null); setBoardEditor(true); }} onRemove={() => {}} onDudeSame={() => {}} myReactions={[]} buddyCounts={buddyCounts} hideHeader={true} />
+                    ) : (
+                      <div style={{ height: 220, border: "1px dashed rgba(200,194,180,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 10, cursor: "pointer" }} onClick={() => { setEditingBoard(null); setBoardEditor(true); }}>
+                        <span style={{ fontSize: 28, color: "rgba(200,194,180,0.4)" }}>+</span>
+                        <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)" }}>Create Your Vouch 5</span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <VouchSection board={currBoard} isOwn={false} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={() => {}} onRemove={() => {}} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} />
+                )}
 
                 {(() => {
                   // On own board show all categories; on others' boards hide empty ones and sort filled first
@@ -2270,6 +2544,57 @@ export default function Vouch() {
                   ))}
                 </div>
 
+              </div>
+            </div>
+          </div>
+        )}
+
+        {boardEditor && (
+          <BoardEditorModal
+            onClose={() => { setBoardEditor(false); setEditingBoard(null); }}
+            onPublish={publishBoard}
+            existing={editingBoard}
+            categories={CATEGORIES}
+            themes={BOARD_THEMES}
+            userId={userId}
+          />
+        )}
+
+        {archivePage && (
+          <div className="modal-overlay" onClick={() => setArchivePage(false)}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <div className="modal-head">
+                <div className="modal-title">Your Vouch Archive</div>
+                <button className="modal-x" onClick={() => setArchivePage(false)}>×</button>
+              </div>
+              <div className="modal-body">
+                {boardArchive.length === 0 && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight }}>No archived boards yet.</div>}
+                {boardArchive.map(b => (
+                  <div key={b.id} style={{ borderBottom: `1px solid ${T.paperDark}`, padding: "14px 0" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                      <div>
+                        <div style={{ fontFamily: "'Spectral',serif", fontWeight: 700, fontSize: 15 }}>{b.name || "Untitled Vouch"}</div>
+                        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.12em", color: T.inkLight, marginTop: 2 }}>
+                          {b.theme}{b.published_at ? ` · ${new Date(b.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}` : ""}
+                          {b.is_active && <span style={{ marginLeft: 8, color: T.ink, fontWeight: 700 }}>· Active</span>}
+                        </div>
+                        {b.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkMid, marginTop: 3 }}>{b.description}</div>}
+                      </div>
+                      {!b.is_active && canPublish && (
+                        <button className="btn btn-solid" style={{ padding: "4px 12px", fontSize: 10 }} onClick={() => { republishBoard(b); setArchivePage(false); }}>Republish</button>
+                      )}
+                    </div>
+                    {b.vouch_board_items?.length > 0 && (
+                      <div style={{ display: "flex", gap: 6 }}>
+                        {b.vouch_board_items.sort((a,b) => a.position - b.position).slice(0,5).map((item, i) => (
+                          item.poster
+                            ? <img key={i} src={item.poster} alt={item.title} style={{ width: 44, height: 60, objectFit: "cover", border: `1px solid ${T.paperDark}` }} onError={e => e.target.style.display = "none"} />
+                            : <div key={i} style={{ width: 44, height: 60, background: T.paperDark, border: `1px solid ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 3 }}>{item.title}</div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
