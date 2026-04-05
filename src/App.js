@@ -121,7 +121,7 @@ const Styles = () => (
 
     .ornament { text-align: center; font-family: 'Spectral', serif; font-size: 13px; color: ${T.inkFaint}; margin: 4px 0 28px; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
-    .vouch-section { margin-bottom: 52px; border: 3px double #8B7355; box-shadow: 0 0 0 1px #6B5A3E; background: ${T.ink}; padding: 22px 22px 22px; position: relative; }
+    .vouch-section { margin-bottom: 52px; border: 3px double #C9A84C; box-shadow: 0 0 0 1px #A07830; background: ${T.ink}; padding: 22px 22px 22px; position: relative; }
     .vouch-section-header { display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; border-bottom: 1px solid rgba(200,194,180,0.25); padding-bottom: 12px; margin-bottom: 24px; }
     .vouch-section-label { font-family: 'Times New Roman', Times, serif; font-weight: 900; font-size: 22px; letter-spacing: 0.04em; white-space: nowrap; color: ${T.bg}; }
     .vouch-section-sub   { font-family: 'Spectral', serif; font-style: italic; font-size: 11px; color: rgba(200,194,180,0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1632,14 +1632,36 @@ export default function Vouch() {
   };
 
   const loadAllBuddyBoards = async (buddyList, uid) => {
-    const allBoards = await Promise.all(buddyList.map(async b => {
-      const { data } = await supabase.from("endorsements").select("*").eq("user_id", b.userId);
-      return data || [];
-    }));
-    // Also include own board
     const ownId = uid || userId;
-    const { data: ownData } = await supabase.from("endorsements").select("*").eq("user_id", ownId);
-    const allRows = [...(ownData || []), ...allBoards.flat()];
+    const allUserIds = [...buddyList.map(b => b.userId), ownId];
+
+    // Pull all vouch_board_items from ALL boards (active + archived) for all buddies + self
+    const { data: boardRows } = await supabase
+      .from("vouch_boards")
+      .select("user_id, vouch_board_items(item_id, title, subtitle, poster, source_url, category, position)")
+      .in("user_id", allUserIds);
+
+    // Flatten into endorsement-like rows, deduped per user+item
+    const seen = new Set();
+    const allRows = [];
+    (boardRows || []).forEach(board => {
+      (board.vouch_board_items || []).forEach(item => {
+        const key = board.user_id + ":" + item.item_id;
+        if (seen.has(key)) return;
+        seen.add(key);
+        allRows.push({
+          user_id: board.user_id,
+          item_id: item.item_id,
+          title: item.title,
+          subtitle: item.subtitle,
+          poster: item.poster,
+          source_url: item.source_url,
+          category: item.category,
+          vouched: true,
+        });
+      });
+    });
+
     setAllBuddyBoards(allRows);
   };
 
