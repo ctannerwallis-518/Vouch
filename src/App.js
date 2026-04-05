@@ -121,7 +121,7 @@ const Styles = () => (
 
     .ornament { text-align: center; font-family: 'Spectral', serif; font-size: 13px; color: ${T.inkFaint}; margin: 4px 0 28px; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
-    .vouch-section { margin-bottom: 52px; border: 3px double ${T.ink}; background: ${T.ink}; padding: 28px 28px 32px; position: relative; }
+    .vouch-section { margin-bottom: 52px; border: 3px double #8B7355; box-shadow: 0 0 0 1px #6B5A3E; background: ${T.ink}; padding: 28px 28px 32px; position: relative; }
     .vouch-section-header { display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; border-bottom: 1px solid rgba(200,194,180,0.25); padding-bottom: 12px; margin-bottom: 24px; }
     .vouch-section-label { font-family: 'Times New Roman', Times, serif; font-weight: 900; font-size: 22px; letter-spacing: 0.04em; white-space: nowrap; color: ${T.bg}; }
     .vouch-section-sub   { font-family: 'Spectral', serif; font-style: italic; font-size: 11px; color: rgba(200,194,180,0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -910,7 +910,7 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
     <div className="cat-section">
       <div className="cat-header" style={{ cursor: isMobile ? "pointer" : "default" }} onClick={() => isMobile && setOpen(o => !o)}>
         <div className="cat-label">{label}</div>
-        <div className="cat-sublabel">My Shelf</div>
+        
         <div className="cat-count">{items.length > 0 ? items.length : ""}</div>
         {isMobile && <span style={{ marginLeft: "auto", fontFamily: "'Spectral SC',serif", fontSize: "11px", color: T.inkFaint, paddingLeft: 8 }}>{open ? "▴" : "▾"}</span>}
         {isOwn && !isMobile && <button className="cat-add" onClick={() => onAdd(catKey)}>+ Vouch</button>}
@@ -2358,7 +2358,6 @@ export default function Vouch() {
                 )}
 
                 {(() => {
-                  // On own board show all categories; on others' boards hide empty ones and sort filled first
                   const cats = isOwn
                     ? CATEGORIES
                     : [...CATEGORIES].sort((a, b) => {
@@ -2366,11 +2365,22 @@ export default function Vouch() {
                         const bLen = (currBoard[b.key] || []).length;
                         return bLen - aLen;
                       });
-                  return cats.map(cat => {
-                    const items = currBoard[cat.key] || [];
-                    if (!isOwn && items.length === 0) return null;
-                    return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={setAddModal} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} />;
-                  });
+                  const visibleCats = cats.filter(cat => isOwn || (currBoard[cat.key] || []).length > 0);
+                  if (visibleCats.length === 0) return null;
+                  return <>
+                    <div style={{ marginBottom: 28, borderBottom: `2px solid ${T.ink}`, paddingBottom: 12 }}>
+                      <div style={{ fontFamily: "'Times New Roman', Times, serif", fontWeight: 900, fontSize: 36, color: T.ink, letterSpacing: "0.02em" }}>
+                        {isOwn ? "My Shelf" : `${(currName || "").split(" ")[0]}'s Shelf`}
+                      </div>
+                      <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkLight, marginTop: 3 }}>
+                        {isOwn ? "The stuff on your shelf — films, albums, books, shows worth putting your name behind." : `What ${(currName || "").split(" ")[0]} has on their shelf.`}
+                      </div>
+                    </div>
+                    {visibleCats.map(cat => {
+                      const items = currBoard[cat.key] || [];
+                      return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={setAddModal} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} />;
+                    })}
+                  </>;
                 })()}
 
                 <MutualMentions reactions={isOwn ? boardReactions : boardReactions.filter(r => r.user_id === viewing?.userId)} myReactions={myReactions} isOwn={isOwn} boardOwnerName={currName} buddies={buddies} onViewBuddy={(b) => { setViewing(b); setTab("board"); loadViewBoard(b.userId); loadBoardReactions(b.userId); window.scrollTo(0, 0); }} />
