@@ -1179,8 +1179,6 @@ function LegalModal({ page, onClose }) {
 
 function CategoryPicker({ selected, all, onSave, isOnboarding }) {
   const [cats, setCats] = useState(selected || all.map(c => c.key));
-  const [dragging, setDragging] = useState(null);
-
   const toggle = (key) => {
     setCats(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
   };
@@ -1507,7 +1505,6 @@ export default function Vouch() {
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "instant" });
   const [sentRequests,   setSentRequests]   = useState([]);
   const [userCategories, setUserCategories] = useState(null);
-  const [settingsTab,    setSettingsTab]    = useState(false);
   const [onboarding,     setOnboarding]     = useState(false);
   const [activeBoard,    setActiveBoard]    = useState(null);
   const [boardArchive,   setBoardArchive]   = useState([]);
@@ -1979,7 +1976,6 @@ export default function Vouch() {
     await supabase.from("profiles").update({ categories: cats }).eq("id", userId);
     setUserCategories(cats);
     setOnboarding(false);
-    setSettingsTab(false);
   };
 
   const saveAvatar = async (file) => {
