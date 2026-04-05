@@ -1494,6 +1494,7 @@ export default function Vouch() {
   const [inviteLink,     setInviteLink]     = useState(null);
   const [myReactions,    setMyReactions]    = useState([]);
   const [boardReactions, setBoardReactions] = useState([]);
+  const [viewerReactions, setViewerReactions] = useState([]);
   const [legalPage,      setLegalPage]      = useState(null);
   const [allBuddyBoards, setAllBuddyBoards] = useState([]);
   const [viewBuddies,    setViewBuddies]    = useState([]);
@@ -1574,9 +1575,14 @@ export default function Vouch() {
     await loadVouchBoards(userId);
   };
 
-  const loadBoardReactions = async (ownerId) => {
+  const loadBoardReactions = async (ownerId, isViewing = false) => {
     const { data } = await supabase.from("reactions").select("*").eq("item_owner_id", ownerId).order("created_at", { ascending: false });
     setBoardReactions(data || []);
+    if (isViewing) {
+      // Also load what this person has agreed with on others boards
+      const { data: theirAgreements } = await supabase.from("reactions").select("*").eq("user_id", ownerId).order("created_at", { ascending: false });
+      setViewerReactions(theirAgreements || []);
+    }
   };
 
   const loadBoard = async (uid) => {
@@ -2049,7 +2055,7 @@ export default function Vouch() {
     setViewing(buddy);
     setTab("board");
     await loadViewBoard(buddy.userId);
-    await loadBoardReactions(buddy.userId);
+    await loadBoardReactions(buddy.userId, true);
     // Load this buddy's own buddies for display at bottom of their board
     const { data } = await supabase.from("buddies")
       .select("requester_id, receiver_id")
@@ -2208,7 +2214,7 @@ export default function Vouch() {
             setViewing({ userId: data.id, username: data.username, displayName: data.display_name, avatarUrl: data.avatar_url });
             setTab("board");
             loadViewBoard(data.id);
-            loadBoardReactions(data.id);
+            loadBoardReactions(data.id, true);
             scrollToTop();
           }
         });
@@ -2399,7 +2405,7 @@ export default function Vouch() {
                     <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.18em", color: T.inkMid, marginBottom: 16 }}>People on Vouch</div>
                     {suggested.map(s => (
                       <div key={s.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={() => { setViewing({ userId: s.id, username: s.username, displayName: s.display_name, avatarUrl: s.avatar_url }); setTab("board"); loadViewBoard(s.id); loadBoardReactions(s.id); window.scrollTo(0, 0); }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={() => { setViewing({ userId: s.id, username: s.username, displayName: s.display_name, avatarUrl: s.avatar_url }); setTab("board"); loadViewBoard(s.id); loadBoardReactions(s.id, true); window.scrollTo(0, 0); }}>
                           <Avatar name={s.display_name} size={56} avatarUrl={s.avatar_url} />
                           <div>
                             <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 16, borderBottom: `1px solid ${T.paperDark}` }}>{s.display_name}</div>
@@ -2520,7 +2526,7 @@ export default function Vouch() {
                   </>;
                 })()}
 
-                <MutualMentions reactions={isOwn ? boardReactions : boardReactions.filter(r => r.user_id === viewing?.userId)} myReactions={myReactions} isOwn={isOwn} boardOwnerName={currName} buddies={buddies} onViewBuddy={(b) => { setViewing(b); setTab("board"); loadViewBoard(b.userId); loadBoardReactions(b.userId); window.scrollTo(0, 0); }} />
+                <MutualMentions reactions={isOwn ? boardReactions : viewerReactions} myReactions={myReactions} isOwn={isOwn} boardOwnerName={currName} buddies={buddies} onViewBuddy={(b) => { setViewing(b); setTab("board"); loadViewBoard(b.userId); loadBoardReactions(b.userId, true); window.scrollTo(0, 0); }} />
 
                 {/* BUDDIES LIST at bottom of every board */}
                 {(() => {
@@ -2542,7 +2548,7 @@ export default function Vouch() {
                             setViewing(buddyObj);
                             setTab("board");
                             await loadViewBoard(bid);
-                            await loadBoardReactions(bid);
+                            await loadBoardReactions(bid, true);
                             window.scrollTo(0, 0);
                           };
                           return (
@@ -2607,7 +2613,7 @@ export default function Vouch() {
                   const isSent = sentRequests.includes(bid);
                   return (
                     <div key={bid || i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => { setShowBuddyList(false); setViewing({ userId: bid, username: buser, displayName: bname, avatarUrl: bavatar }); setTab("board"); loadViewBoard(bid); loadBoardReactions(bid); window.scrollTo(0, 0); }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => { setShowBuddyList(false); setViewing({ userId: bid, username: buser, displayName: bname, avatarUrl: bavatar }); setTab("board"); loadViewBoard(bid); loadBoardReactions(bid, true); window.scrollTo(0, 0); }}>
                         <Avatar name={bname} size={56} avatarUrl={bavatar} />
                         <div>
                           <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 15, borderBottom: `1px solid ${T.paperDark}` }}>{bname}</div>
