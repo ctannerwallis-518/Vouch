@@ -121,7 +121,7 @@ const Styles = () => (
 
     .ornament { text-align: center; font-family: 'Spectral', serif; font-size: 13px; color: ${T.inkFaint}; margin: 4px 0 28px; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
-    .vouch-section { margin-bottom: 52px; border: 3px double #8B7355; box-shadow: 0 0 0 1px #6B5A3E; background: ${T.ink}; padding: 28px 28px 32px; position: relative; }
+    .vouch-section { margin-bottom: 52px; border: 3px double #8B7355; box-shadow: 0 0 0 1px #6B5A3E; background: ${T.ink}; padding: 22px 22px 22px; position: relative; }
     .vouch-section-header { display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; border-bottom: 1px solid rgba(200,194,180,0.25); padding-bottom: 12px; margin-bottom: 24px; }
     .vouch-section-label { font-family: 'Times New Roman', Times, serif; font-weight: 900; font-size: 22px; letter-spacing: 0.04em; white-space: nowrap; color: ${T.bg}; }
     .vouch-section-sub   { font-family: 'Spectral', serif; font-style: italic; font-size: 11px; color: rgba(200,194,180,0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1177,6 +1177,71 @@ function LegalModal({ page, onClose }) {
   );
 }
 
+function CategoryPicker({ selected, all, onSave, isOnboarding }) {
+  const [cats, setCats] = useState(selected || all.map(c => c.key));
+  const [dragging, setDragging] = useState(null);
+
+  const toggle = (key) => {
+    setCats(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
+  };
+
+  const moveUp = (i) => {
+    if (i === 0) return;
+    const next = [...cats];
+    [next[i-1], next[i]] = [next[i], next[i-1]];
+    setCats(next);
+  };
+
+  const moveDown = (i) => {
+    if (i === cats.length - 1) return;
+    const next = [...cats];
+    [next[i], next[i+1]] = [next[i+1], next[i]];
+    setCats(next);
+  };
+
+  return (
+    <div>
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 10 }}>Your selected categories — tap arrows to reorder</div>
+        {cats.map((key, i) => {
+          const cat = all.find(c => c.key === key);
+          if (!cat) return null;
+          return (
+            <div key={key} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0", borderBottom: `1px solid ${T.paperDark}` }}>
+              <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 15, flex: 1 }}>{cat.label}</div>
+              <div style={{ display: "flex", gap: 4 }}>
+                <button onClick={() => moveUp(i)} disabled={i === 0} style={{ background: "transparent", border: `1px solid ${T.paperDark}`, cursor: i === 0 ? "default" : "pointer", opacity: i === 0 ? 0.3 : 1, width: 28, height: 28, fontFamily: "monospace", fontSize: 14 }}>↑</button>
+                <button onClick={() => moveDown(i)} disabled={i === cats.length - 1} style={{ background: "transparent", border: `1px solid ${T.paperDark}`, cursor: i === cats.length - 1 ? "default" : "pointer", opacity: i === cats.length - 1 ? 0.3 : 1, width: 28, height: 28, fontFamily: "monospace", fontSize: 14 }}>↓</button>
+                <button onClick={() => toggle(key)} style={{ background: T.ink, border: "none", color: T.bg, cursor: "pointer", width: 28, height: 28, fontSize: 16 }}>×</button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {all.filter(c => !cats.includes(c.key)).length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkFaint, marginBottom: 10 }}>Add more</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {all.filter(c => !cats.includes(c.key)).map(cat => (
+              <button key={cat.key} onClick={() => toggle(cat.key)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "6px 14px", border: `1px solid ${T.paperDark}`, background: "transparent", color: T.inkMid, cursor: "pointer" }}>+ {cat.label}</button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <button className="btn btn-solid" style={{ width: "100%", padding: "12px" }} onClick={() => onSave(cats)}>
+        {isOnboarding ? "Set Up My Shelf →" : "Save Changes"}
+      </button>
+      {isOnboarding && (
+        <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 8, textAlign: "center" }}>
+          You can always change this later in Settings.
+        </div>
+      )}
+    </div>
+  );
+}
+
 function BoardEditorModal({ onClose, onPublish, existing, categories, themes, userId }) {
   const [name, setName]               = useState(existing?.name || "");
   const [theme, setTheme]             = useState(existing?.theme || "");
@@ -1441,6 +1506,9 @@ export default function Vouch() {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "instant" });
   const [sentRequests,   setSentRequests]   = useState([]);
+  const [userCategories, setUserCategories] = useState(null);
+  const [settingsTab,    setSettingsTab]    = useState(false);
+  const [onboarding,     setOnboarding]     = useState(false);
   const [activeBoard,    setActiveBoard]    = useState(null);
   const [boardArchive,   setBoardArchive]   = useState([]);
   const [boardEditor,    setBoardEditor]    = useState(false);
@@ -1630,6 +1698,15 @@ export default function Vouch() {
         loadBuddies(uid);
         loadMyReactions(uid);
         loadVouchBoards(uid);
+        // Load category preferences
+        const { data: prof } = await supabase.from("profiles").select("categories").eq("id", uid).maybeSingle();
+        if (prof?.categories && prof.categories.length > 0) {
+          setUserCategories(prof.categories);
+        } else {
+          // New user - show onboarding
+          setOnboarding(true);
+          setUserCategories(CATEGORIES.map(c => c.key));
+        }
         const params = new URLSearchParams(window.location.search);
         const inviteFrom = params.get("invite");
         if (inviteFrom && inviteFrom !== uid) {
@@ -1898,6 +1975,13 @@ export default function Vouch() {
     }, "image/png");
   };
 
+  const saveCategories = async (cats) => {
+    await supabase.from("profiles").update({ categories: cats }).eq("id", userId);
+    setUserCategories(cats);
+    setOnboarding(false);
+    setSettingsTab(false);
+  };
+
   const saveAvatar = async (file) => {
     const url = `/avatars/${file}.jpg`;
     await supabase.from("profiles").update({ avatar_url: url }).eq("id", userId);
@@ -2146,6 +2230,8 @@ export default function Vouch() {
             <button className={`nav-btn${tab === "friends" ? " active" : ""}`} onClick={() => { setTab("friends"); setViewing(null); window.history.replaceState({}, "", "/"); scrollToTop(); }}>
               Buddies {pendingIn.length > 0 && <span style={{ background: T.ink, color: T.bg, borderRadius: "50%", fontSize: 9, padding: "1px 5px", marginLeft: 4 }}>{pendingIn.length}</span>}
             </button>
+            <button className={`nav-btn${tab === "how" ? " active" : ""}`} onClick={() => { setTab("how"); setViewing(null); scrollToTop(); }}>How It Works</button>
+            <button className={`nav-btn${tab === "settings" ? " active" : ""}`} onClick={() => { setTab("settings"); setViewing(null); scrollToTop(); }}>Settings</button>
             {viewing && <button className="nav-btn active">{currName}</button>}
           </nav>
         </header>
@@ -2157,6 +2243,37 @@ export default function Vouch() {
                 <strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11, letterSpacing: "0.12em" }}>{pendingIn.length} buddy request{pendingIn.length > 1 ? "s" : ""}</strong> waiting for you
               </div>
               <span style={{ fontFamily: "'Spectral SC',serif", fontSize: 10, letterSpacing: "0.12em" }}>Review →</span>
+            </div>
+          )}
+
+          {tab === "how" && !viewing && (
+            <div style={{ maxWidth: 540, margin: "32px auto" }}>
+              <div className="board-name" style={{ fontSize: 28, marginBottom: 24 }}>How It Works</div>
+              <HowItWorks />
+            </div>
+          )}
+
+          {tab === "settings" && !viewing && (
+            <div style={{ maxWidth: 540, margin: "32px auto" }}>
+              <div className="board-name" style={{ fontSize: 28, marginBottom: 8 }}>Settings</div>
+              <div className="board-sub" style={{ marginBottom: 32 }}>Customize your Vouch experience</div>
+
+              <div style={{ marginBottom: 40 }}>
+                <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 8 }}>My Shelf Categories</div>
+                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 20, lineHeight: 1.6 }}>
+                  Choose which categories appear on your shelf. Drag to reorder — your shelf shows up in this order.
+                </div>
+                <CategoryPicker
+                  selected={userCategories || CATEGORIES.map(c => c.key)}
+                  all={CATEGORIES}
+                  onSave={saveCategories}
+                />
+              </div>
+
+              <div style={{ borderTop: `1px solid ${T.paperDark}`, paddingTop: 28 }}>
+                <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 16 }}>Avatar</div>
+                <button className="btn btn-ghost" onClick={() => setAvatarPicker(true)}>Change Avatar</button>
+              </div>
             </div>
           )}
 
@@ -2359,7 +2476,7 @@ export default function Vouch() {
 
                 {(() => {
                   const cats = isOwn
-                    ? CATEGORIES
+                    ? (userCategories ? CATEGORIES.filter(c => userCategories.includes(c.key)).sort((a,b) => userCategories.indexOf(a.key) - userCategories.indexOf(b.key)) : CATEGORIES)
                     : [...CATEGORIES].sort((a, b) => {
                         const aLen = (currBoard[a.key] || []).length;
                         const bLen = (currBoard[b.key] || []).length;
@@ -2542,6 +2659,27 @@ export default function Vouch() {
                   ))}
                 </div>
 
+              </div>
+            </div>
+          </div>
+        )}
+
+        {onboarding && (
+          <div className="modal-overlay">
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <div className="modal-head">
+                <div className="modal-title">Welcome to Vouch.</div>
+              </div>
+              <div className="modal-body">
+                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkMid, marginBottom: 24, lineHeight: 1.7 }}>
+                  Pick which categories you want on your shelf and put them in the order that feels right for you.
+                </div>
+                <CategoryPicker
+                  selected={userCategories || CATEGORIES.map(c => c.key)}
+                  all={CATEGORIES}
+                  onSave={saveCategories}
+                  isOnboarding={true}
+                />
               </div>
             </div>
           </div>
