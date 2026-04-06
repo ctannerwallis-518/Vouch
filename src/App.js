@@ -1664,7 +1664,13 @@ export default function Vouch() {
       .select("user_id, vouch_board_items(item_id, title, subtitle, poster, source_url, category, position)")
       .in("user_id", allUserIds);
 
-    // Flatten into endorsement-like rows, deduped per user+item
+    // Also pull all reactions from all buddies + self
+    const { data: allReactions } = await supabase
+      .from("reactions")
+      .select("user_id, item_id, title, subtitle, poster, source_url, category")
+      .in("user_id", allUserIds);
+
+    // Flatten vouch board items, deduped per user+item
     const seen = new Set();
     const allRows = [];
     (boardRows || []).forEach(board => {
@@ -1681,7 +1687,26 @@ export default function Vouch() {
           source_url: item.source_url,
           category: item.category,
           vouched: true,
+          type: "vouch",
         });
+      });
+    });
+
+    // Add reactions as separate rows (agreements count toward total)
+    (allReactions || []).forEach(r => {
+      const key = r.user_id + ":reaction:" + r.item_id;
+      if (seen.has(key)) return;
+      seen.add(key);
+      allRows.push({
+        user_id: r.user_id,
+        item_id: r.item_id,
+        title: r.title,
+        subtitle: r.subtitle,
+        poster: r.poster,
+        source_url: r.source_url,
+        category: r.category || "",
+        vouched: false,
+        type: "reaction",
       });
     });
 
@@ -2221,7 +2246,7 @@ export default function Vouch() {
   const buddyCounts = {};
   const seenBadge = new Set();
   allBuddyBoards.forEach(row => {
-    const key = row.user_id + ":" + row.item_id;
+    const key = row.user_id + ":" + row.item_id + ":" + (row.type || "vouch");
     if (seenBadge.has(key)) return;
     seenBadge.add(key);
     buddyCounts[String(row.item_id)] = (buddyCounts[String(row.item_id)] || 0) + 1;
@@ -2358,25 +2383,18 @@ export default function Vouch() {
                   const seenUserItem = new Set();
                   const itemCount = {};
                   allBuddyBoards.forEach(row => {
-                    const userItemKey = row.user_id + ":" + row.item_id;
-                    if (seenUserItem.has(userItemKey)) return; // skip dupes from same user
+                    // Unique key per user+item+type so a vouch and an agree on same item by same person both count
+                    const userItemKey = row.user_id + ":" + row.item_id + ":" + (row.type || "vouch");
+                    if (seenUserItem.has(userItemKey)) return;
                     seenUserItem.add(userItemKey);
                     const key = row.category + ":" + row.item_id;
                     if (!itemCount[key]) itemCount[key] = { ...row, count: 0, vouchers: [] };
                     itemCount[key].count++;
-                    const voucher = [...buddies, { userId, displayName: user?.displayName }].find(b => b.userId === row.user_id);
-                    if (voucher && !itemCount[key].vouchers.includes(voucher.displayName)) {
-                      itemCount[key].vouchers.push(voucher.displayName);
-                    }
-                  });
-                  // Add reactions as bonus votes (max 1 per reacter)
-                  myReactions.forEach(r => {
-                    const matchKey = Object.keys(itemCount).find(k => k.endsWith(":" + r.item_id));
-                    if (matchKey) {
-                      itemCount[matchKey].count += 1;
-                      if (!itemCount[matchKey].vouchers.includes("You agreed")) {
-                        itemCount[matchKey].vouchers.push("You agreed");
-                      }
+                    const allPeople = [...buddies, { userId, displayName: user?.displayName }];
+                    const person = allPeople.find(b => b.userId === row.user_id);
+                    const label = person ? (row.type === "reaction" ? `${person.displayName.split(" ")[0]} agreed` : person.displayName.split(" ")[0]) : null;
+                    if (label && !itemCount[key].vouchers.includes(label)) {
+                      itemCount[key].vouchers.push(label);
                     }
                   });
                   const top5 = Object.values(itemCount).sort((a, b) => b.count - a.count).slice(0, 5);
