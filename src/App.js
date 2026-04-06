@@ -2287,7 +2287,6 @@ export default function Vouch() {
             <button className={`nav-btn${tab === "friends" ? " active" : ""}`} onClick={() => { setTab("friends"); setViewing(null); window.history.replaceState({}, "", "/"); scrollToTop(); }}>
               Buddies {pendingIn.length > 0 && <span style={{ background: T.ink, color: T.bg, borderRadius: "50%", fontSize: 9, padding: "1px 5px", marginLeft: 4 }}>{pendingIn.length}</span>}
             </button>
-            <button className={`nav-btn${tab === "how" ? " active" : ""}`} onClick={() => { setTab("how"); setViewing(null); scrollToTop(); }}>How It Works</button>
             <button className={`nav-btn${tab === "settings" ? " active" : ""}`} onClick={() => { setTab("settings"); setViewing(null); scrollToTop(); }}>Settings</button>
             {viewing && <button className="nav-btn active">{currName}</button>}
           </nav>
@@ -2312,13 +2311,6 @@ export default function Vouch() {
                 <strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11, letterSpacing: "0.12em" }}>{pendingIn.length} buddy request{pendingIn.length > 1 ? "s" : ""}</strong> waiting for you
               </div>
               <span style={{ fontFamily: "'Spectral SC',serif", fontSize: 10, letterSpacing: "0.12em" }}>Review →</span>
-            </div>
-          )}
-
-          {tab === "how" && !viewing && (
-            <div style={{ maxWidth: 540, margin: "32px auto" }}>
-              <div className="board-name" style={{ fontSize: 28, marginBottom: 24 }}>How It Works</div>
-              <HowItWorks />
             </div>
           )}
 
