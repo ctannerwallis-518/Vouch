@@ -1694,10 +1694,13 @@ export default function Vouch() {
       .select("*, requester:requester_id(id, username, display_name, avatar_url), receiver:receiver_id(id, username, display_name, avatar_url)")
       .or(`requester_id.eq.${uid},receiver_id.eq.${uid}`);
     if (data) {
-      const accepted = data.filter(b => b.status === "accepted").map(b => {
+      const acceptedRaw = data.filter(b => b.status === "accepted").map(b => {
         const other = b.requester_id === uid ? b.receiver : b.requester;
         return { buddyRowId: b.id, userId: other.id, username: other.username, displayName: other.display_name, avatarUrl: other.avatar_url || null };
       });
+      // Dedup by userId - keep first occurrence only
+      const seen = new Set();
+      const accepted = acceptedRaw.filter(b => { if (seen.has(b.userId)) return false; seen.add(b.userId); return true; });
       const incoming = data.filter(b => b.status === "pending" && b.receiver_id === uid).map(b => ({
         buddyRowId: b.id, userId: b.requester.id, username: b.requester.username, displayName: b.requester.display_name, avatarUrl: b.requester.avatar_url || null
       }));
