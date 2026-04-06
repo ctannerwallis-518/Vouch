@@ -1511,6 +1511,7 @@ export default function Vouch() {
   const [boardReactions, setBoardReactions] = useState([]);
   const [viewerReactions, setViewerReactions] = useState([]);
   const [newAgreements,   setNewAgreements]   = useState([]);
+  const [showAgreements,  setShowAgreements]  = useState(false);
   const [legalPage,      setLegalPage]      = useState(null);
   const [allBuddyBoards, setAllBuddyBoards] = useState([]);
   const [viewBuddies,    setViewBuddies]    = useState([]);
@@ -2294,14 +2295,14 @@ export default function Vouch() {
 
         <main className="page">
           {newAgreements.length > 0 && !viewing && tab === "board" && (
-            <div style={{ background: T.ink, color: T.bg, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ background: T.ink, color: T.bg, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }} onClick={() => setShowAgreements(true)}>
               <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13 }}>
                 {newAgreements.length === 1
-                  ? <><strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11 }}>{newAgreements[0].display_name}</strong> agreed with <strong style={{ fontStyle: "normal" }}>{newAgreements[0].title}</strong></>
-                  : <><strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11 }}>{newAgreements.length} people</strong> agreed with your titles since your last visit</>
+                  ? <><strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11 }}>{newAgreements[0].display_name}</strong> agreed with <strong style={{ fontStyle: "normal" }}>{newAgreements[0].title}</strong> →</>
+                  : <><strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11 }}>{newAgreements.length} people</strong> agreed with your titles — tap to see →</>
                 }
               </div>
-              <button onClick={() => setNewAgreements([])} style={{ background: "transparent", border: "none", color: "rgba(200,194,180,0.5)", fontSize: 20, cursor: "pointer", padding: 0 }}>×</button>
+              <button onClick={e => { e.stopPropagation(); setNewAgreements([]); }} style={{ background: "transparent", border: "none", color: "rgba(200,194,180,0.5)", fontSize: 20, cursor: "pointer", padding: 0, flexShrink: 0 }}>×</button>
             </div>
           )}
 
@@ -2741,6 +2742,38 @@ export default function Vouch() {
                   onSave={saveCategories}
                   isOnboarding={true}
                 />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showAgreements && (
+          <div className="modal-overlay" onClick={() => setShowAgreements(false)}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <div className="modal-head">
+                <div className="modal-title">New Agreements</div>
+                <button className="modal-x" onClick={() => setShowAgreements(false)}>×</button>
+              </div>
+              <div className="modal-body">
+                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkLight, marginBottom: 16 }}>Since your last visit</div>
+                {newAgreements.map((r, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
+                    <div style={{ width: 36, height: 36, background: T.ink, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <span style={{ fontFamily: "'Times New Roman',serif", fontWeight: 900, fontSize: 13, color: T.bg }}>
+                        {(r.display_name || "?").split(" ").map(w => w[0]).join("").slice(0,2).toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 14 }}>
+                        {r.display_name.split(" ")[0]} {r.display_name.split(" ")[1]?.[0]}.
+                      </div>
+                      <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkMid, marginTop: 1 }}>
+                        agreed with <strong style={{ fontStyle: "normal" }}>{r.title}</strong>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <button className="btn btn-ghost" style={{ width: "100%", marginTop: 16 }} onClick={() => { setShowAgreements(false); setNewAgreements([]); }}>Dismiss</button>
               </div>
             </div>
           </div>
