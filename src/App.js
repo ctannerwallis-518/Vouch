@@ -1658,11 +1658,11 @@ export default function Vouch() {
     const ownId = uid || userId;
     const allUserIds = [...buddyList.map(b => b.userId), ownId];
 
-    // Pull all vouch_board_items from ALL boards (active + archived) for all buddies + self
-    const { data: boardRows } = await supabase
-      .from("vouch_boards")
-      .select("user_id, vouch_board_items(item_id, title, subtitle, poster, source_url, category, position)")
-      .in("user_id", allUserIds);
+    // Pull board items directly from vouch_board_items joined to vouch_boards
+    const { data: itemRows } = await supabase
+      .from("vouch_board_items")
+      .select("item_id, title, subtitle, poster, source_url, category, vouch_boards(user_id)")
+      .in("vouch_boards.user_id", allUserIds);
 
     // Also pull all reactions from all buddies + self
     const { data: allReactions } = await supabase
@@ -1670,29 +1670,30 @@ export default function Vouch() {
       .select("user_id, item_id, title, subtitle, poster, source_url, category")
       .in("user_id", allUserIds);
 
-    // Flatten vouch board items, deduped per user+item
     const seen = new Set();
     const allRows = [];
-    (boardRows || []).forEach(board => {
-      (board.vouch_board_items || []).forEach(item => {
-        const key = board.user_id + ":" + item.item_id;
-        if (seen.has(key)) return;
-        seen.add(key);
-        allRows.push({
-          user_id: board.user_id,
-          item_id: item.item_id,
-          title: item.title,
-          subtitle: item.subtitle,
-          poster: item.poster,
-          source_url: item.source_url,
-          category: item.category,
-          vouched: true,
-          type: "vouch",
-        });
+
+    // Add vouch board items
+    (itemRows || []).forEach(item => {
+      const userId = item.vouch_boards?.user_id;
+      if (!userId) return;
+      const key = userId + ":" + item.item_id;
+      if (seen.has(key)) return;
+      seen.add(key);
+      allRows.push({
+        user_id: userId,
+        item_id: item.item_id,
+        title: item.title,
+        subtitle: item.subtitle,
+        poster: item.poster,
+        source_url: item.source_url,
+        category: item.category || "",
+        vouched: true,
+        type: "vouch",
       });
     });
 
-    // Add reactions as separate rows (agreements count toward total)
+    // Add reactions
     (allReactions || []).forEach(r => {
       const key = r.user_id + ":reaction:" + r.item_id;
       if (seen.has(key)) return;
@@ -1710,6 +1711,7 @@ export default function Vouch() {
       });
     });
 
+    console.log("allBuddyBoards loaded:", allRows.length, "rows for", allUserIds.length, "users");
     setAllBuddyBoards(allRows);
   };
 
@@ -2246,7 +2248,7 @@ export default function Vouch() {
   const buddyCounts = {};
   const seenBadge = new Set();
   allBuddyBoards.forEach(row => {
-    const key = row.user_id + ":" + row.item_id + ":" + (row.type || "vouch");
+    const key = row.user_id + ":" + String(row.item_id) + ":" + (row.type || "vouch");
     if (seenBadge.has(key)) return;
     seenBadge.add(key);
     buddyCounts[String(row.item_id)] = (buddyCounts[String(row.item_id)] || 0) + 1;
@@ -2387,7 +2389,7 @@ export default function Vouch() {
                     const userItemKey = row.user_id + ":" + row.item_id + ":" + (row.type || "vouch");
                     if (seenUserItem.has(userItemKey)) return;
                     seenUserItem.add(userItemKey);
-                    const key = row.category + ":" + row.item_id;
+                    const key = String(row.item_id);
                     if (!itemCount[key]) itemCount[key] = { ...row, count: 0, vouchers: [] };
                     itemCount[key].count++;
                     const allPeople = [...buddies, { userId, displayName: user?.displayName }];
