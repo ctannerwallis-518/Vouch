@@ -47,9 +47,8 @@ const EMPTY_BOARD = {
 };
 
 const BOARD_THEMES = [
-  "Film", "Albums", "Artists", "Songs", "Books", "Television",
-  "Seasonal", "All-Timers", "Feelin Lately", "Nostalgic",
-  "New Releases", "Deep Cuts", "Underrated", "No Boundaries",
+  "Feelin' Lately", "All-Timers", "Nostalgic", "Deep Cuts",
+  "New Releases", "Underrated", "Seasonal", "No Boundaries",
   "Locals Only", "Other"
 ];
 
@@ -814,33 +813,35 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
   }, [idx, isMobile]);
 
   const CardFace = ({ it }) => (
-    <div style={{ position: "relative", cursor: it.sourceUrl ? "pointer" : "default" }}
+    <div style={{ cursor: it.sourceUrl ? "pointer" : "default" }}
       onClick={() => {
         if (Math.abs(currentOffsetX.current) > 8) return;
         it.sourceUrl ? window.open(it.sourceUrl, "_blank") : onCard(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id));
       }}>
-      {it.poster
-        ? <img src={it.poster} alt={it.title} style={{ width: "100%", height: 340, objectFit: "cover", display: "block", border: `1px solid ${T.paperDark}` }} onError={e => e.target.style.display = "none"} />
-        : <div style={{ width: "100%", height: 340, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 18, color: T.inkLight, padding: 24, textAlign: "center" }}>{it.title}</div>}
+      <div style={{ position: "relative" }}>
+        {it.poster
+          ? <img src={it.poster} alt={it.title} style={{ width: "100%", height: 340, objectFit: "cover", display: "block", border: `1px solid ${T.paperDark}` }} onError={e => e.target.style.display = "none"} />
+          : <div style={{ width: "100%", height: 340, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 18, color: T.inkLight, padding: 24, textAlign: "center" }}>{it.title}</div>}
+        {isOwn && (
+          <button onClick={e => { e.stopPropagation(); onRemove(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id), true); }}
+            style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 36, height: 36, cursor: "pointer", fontSize: 20, lineHeight: "36px", textAlign: "center", borderRadius: 2 }}>×</button>
+        )}
+        {!isOwn && (
+          <button onClick={e => { e.stopPropagation(); onDudeSame(it); }}
+            style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: myReactions?.includes(String(it.id)) ? "#C8C2B4" : "rgba(17,16,8,0.7)", border: "none", color: myReactions?.includes(String(it.id)) ? "#111008" : "#C8C2B4", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "5px 8px", whiteSpace: "nowrap", fontWeight: myReactions?.includes(String(it.id)) ? 700 : 400 }}>
+            {myReactions?.includes(String(it.id)) ? "✓ Agreed" : "Agree"}
+          </button>
+        )}
+        {buddyCounts?.[String(it.id)] > 0 && (
+          <div style={{ position: "absolute", bottom: 8, left: 8, zIndex: 2, background: "rgba(17,16,8,0.6)", color: "rgba(200,194,180,0.7)", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.08em", padding: "2px 6px" }}>{buddyCounts[String(it.id)]} {buddyCounts[String(it.id)] === 1 ? "vouch" : "vouches"}</div>
+        )}
+      </div>
       <div style={{ padding: "14px 4px 4px" }}>
         <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 4 }}>{it._catLabel}</div>
         <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: T.bg }}>{it.title}</div>
         <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "rgba(200,194,180,0.7)" }}>{it.artist || it.author || it.sub || ""}</div>
         {it.comment && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: "rgba(200,194,180,0.55)", marginTop: 6 }}>"{it.comment}"</div>}
       </div>
-      {isOwn && (
-        <button onClick={e => { e.stopPropagation(); onRemove(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id), true); }}
-          style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 36, height: 36, cursor: "pointer", fontSize: 20, lineHeight: "36px", textAlign: "center", borderRadius: 2 }}>×</button>
-      )}
-      {!isOwn && (
-        <button onClick={e => { e.stopPropagation(); onDudeSame(it); }}
-          style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: myReactions?.includes(String(it.id)) ? "#C8C2B4" : "rgba(17,16,8,0.7)", border: "none", color: myReactions?.includes(String(it.id)) ? "#111008" : "#C8C2B4", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "5px 8px", whiteSpace: "nowrap", fontWeight: myReactions?.includes(String(it.id)) ? 700 : 400 }}>
-          {myReactions?.includes(String(it.id)) ? "✓ Agreed" : "Agree"}
-        </button>
-      )}
-      {buddyCounts?.[String(it.id)] > 0 && (
-        <div title="Total Buddy Vouches" style={{ position: "absolute", bottom: 8, left: 8, zIndex: 2, background: "rgba(17,16,8,0.6)", color: "rgba(200,194,180,0.7)", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.08em", padding: "2px 6px", cursor: "default" }}>{buddyCounts[String(it.id)]} {buddyCounts[String(it.id)] === 1 ? "vouch" : "vouches"}</div>
-      )}
     </div>
   );
 
@@ -920,20 +921,23 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
         <div className="cards-row">
           {slots.map((item, idx) =>
             item
-              ? <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => item.sourceUrl ? window.open(item.sourceUrl, "_blank") : onCard(catKey, idx)}>
-                  {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx, false); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 30, height: 30, cursor: "pointer", fontSize: 16, lineHeight: "30px", textAlign: "center", borderRadius: 2 }}>×</button>}
-                  {!isOwn && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: myReactions?.includes(String(item.id)) ? "#C8C2B4" : "rgba(17,16,8,0.7)", border: "none", color: myReactions?.includes(String(item.id)) ? "#111008" : "#C8C2B4", cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 5px", whiteSpace: "nowrap", fontWeight: myReactions?.includes(String(item.id)) ? 700 : 400 }}>{myReactions?.includes(String(item.id)) ? "✓ Agreed" : "Agree"}</button>}
-                {buddyCounts?.[String(item.id)] > 0 && (
-                  <div title="Total Buddy Vouches" style={{ position: "absolute", bottom: 4, left: 4, zIndex: 2, background: "rgba(17,16,8,0.6)", color: "rgba(200,194,180,0.7)", fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.06em", padding: "2px 5px", cursor: "default" }}>{buddyCounts[String(item.id)]} {buddyCounts[String(item.id)] === 1 ? "vouch" : "vouches"}</div>
-                )}
-                  {item.poster ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} /> : null}
-                  <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
+              ? <div key={item.id} className="card" onClick={() => item.sourceUrl ? window.open(item.sourceUrl, "_blank") : onCard(catKey, idx)}>
+                  <div style={{ position: "relative", display: "block", flexShrink: 0 }}>
+                    {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx, false); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 30, height: 30, cursor: "pointer", fontSize: 16, lineHeight: "30px", textAlign: "center", borderRadius: 2 }}>×</button>}
+                    {!isOwn && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: myReactions?.includes(String(item.id)) ? "#C8C2B4" : "rgba(17,16,8,0.7)", border: "none", color: myReactions?.includes(String(item.id)) ? "#111008" : "#C8C2B4", cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 5px", whiteSpace: "nowrap", fontWeight: myReactions?.includes(String(item.id)) ? 700 : 400 }}>{myReactions?.includes(String(item.id)) ? "✓ Agreed" : "Agree"}</button>}
+                    {buddyCounts?.[String(item.id)] > 0 && (
+                      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 2, background: "rgba(17,16,8,0.5)", color: "rgba(200,194,180,0.6)", fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.06em", padding: "2px 6px", textAlign: "center" }}>{buddyCounts[String(item.id)]} {buddyCounts[String(item.id)] === 1 ? "vouch" : "vouches"}</div>
+                    )}
+                    {item.poster ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} /> : null}
+                    <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
+                    <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
+                  </div>
                   <div style={{ flex: 1 }}>
                     <div className="card-title">{item.title}</div>
                     <div className="card-sub">{item.artist || item.author || item.year || item.sub || ""}</div>
                     {item.comment && <div className="card-comment">"{item.comment}"</div>}
                   </div>
-                </div>
+                  </div>
               : isOwn
                 ? <div key={`e${idx}`} className="slot-empty-sm" onClick={() => onAdd(catKey)}>
                     <div className="slot-empty-inner"><span className="slot-empty-plus">+</span>Vouch</div>
@@ -1328,15 +1332,19 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
             )}
           </div>
 
-          {/* Single category toggle */}
+          {/* Single category checkbox */}
           <div style={{ marginBottom: 16 }}>
-            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>Single Category (optional)</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              <button onClick={() => setSingleCat("")} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "4px 10px", border: `1px solid ${!singleCat ? T.ink : T.paperDark}`, background: !singleCat ? T.ink : "transparent", color: !singleCat ? T.bg : T.inkMid, cursor: "pointer" }}>All</button>
-              {categories.map(c => (
-                <button key={c.key} onClick={() => setSingleCat(c.key)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "4px 10px", border: `1px solid ${singleCat === c.key ? T.ink : T.paperDark}`, background: singleCat === c.key ? T.ink : "transparent", color: singleCat === c.key ? T.bg : T.inkMid, cursor: "pointer" }}>{c.label}</button>
-              ))}
-            </div>
+            <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+              <input type="checkbox" checked={!!singleCat} onChange={e => setSingleCat(e.target.checked ? categories[0].key : "")} style={{ width: 16, height: 16, cursor: "pointer" }} />
+              <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid }}>This is all one category</div>
+            </label>
+            {singleCat && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
+                {categories.map(c => (
+                  <button key={c.key} onClick={() => setSingleCat(c.key)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "4px 10px", border: `1px solid ${singleCat === c.key ? T.ink : T.paperDark}`, background: singleCat === c.key ? T.ink : "transparent", color: singleCat === c.key ? T.bg : T.inkMid, cursor: "pointer" }}>{c.label}</button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Description */}
