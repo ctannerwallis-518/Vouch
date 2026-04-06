@@ -834,12 +834,12 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
       )}
       {!isOwn && (
         <button onClick={e => { e.stopPropagation(); onDudeSame(it); }}
-          style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: myReactions?.includes(String(it.id)) ? T.ink : "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "5px 8px", whiteSpace: "nowrap" }}>
+          style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: myReactions?.includes(String(it.id)) ? "#C8C2B4" : "rgba(17,16,8,0.7)", border: "none", color: myReactions?.includes(String(it.id)) ? "#111008" : "#C8C2B4", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "5px 8px", whiteSpace: "nowrap", fontWeight: myReactions?.includes(String(it.id)) ? 700 : 400 }}>
           {myReactions?.includes(String(it.id)) ? "✓ Agreed" : "Agree"}
         </button>
       )}
       {buddyCounts?.[String(it.id)] > 0 && (
-        <div title="Total Buddy Vouches" style={{ position: "absolute", top: 8, left: 8, zIndex: 2, background: "rgba(200,194,180,0.9)", color: "#111008", fontFamily: "'Spectral SC',serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "default" }}>{buddyCounts[String(it.id)]} {buddyCounts[String(it.id)] === 1 ? "Vouch" : "Vouches"}</div>
+        <div title="Total Buddy Vouches" style={{ position: "absolute", bottom: 8, left: 8, zIndex: 2, background: "rgba(17,16,8,0.6)", color: "rgba(200,194,180,0.7)", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.08em", padding: "2px 6px", cursor: "default" }}>{buddyCounts[String(it.id)]} {buddyCounts[String(it.id)] === 1 ? "vouch" : "vouches"}</div>
       )}
     </div>
   );
@@ -922,9 +922,9 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
             item
               ? <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => item.sourceUrl ? window.open(item.sourceUrl, "_blank") : onCard(catKey, idx)}>
                   {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx, false); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 30, height: 30, cursor: "pointer", fontSize: 16, lineHeight: "30px", textAlign: "center", borderRadius: 2 }}>×</button>}
-                  {!isOwn && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: myReactions?.includes(String(item.id)) ? "#C8C2B4" : "rgba(17,16,8,0.7)", border: "none", color: myReactions?.includes(String(item.id)) ? T.ink : "#C8C2B4", cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 5px", whiteSpace: "nowrap", fontWeight: myReactions?.includes(String(item.id)) ? 700 : 400 }}>{myReactions?.includes(String(item.id)) ? "✓ Agreed" : "Agree"}</button>}
+                  {!isOwn && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: myReactions?.includes(String(item.id)) ? "#C8C2B4" : "rgba(17,16,8,0.7)", border: "none", color: myReactions?.includes(String(item.id)) ? "#111008" : "#C8C2B4", cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 5px", whiteSpace: "nowrap", fontWeight: myReactions?.includes(String(item.id)) ? 700 : 400 }}>{myReactions?.includes(String(item.id)) ? "✓ Agreed" : "Agree"}</button>}
                 {buddyCounts?.[String(item.id)] > 0 && (
-                  <div title="Total Buddy Vouches" style={{ position: "absolute", top: 4, left: 4, zIndex: 2, background: "rgba(17,16,8,0.75)", color: "#C8C2B4", fontFamily: "'Spectral SC',serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", padding: "2px 6px", cursor: "default" }}>{buddyCounts[String(item.id)]} {buddyCounts[String(item.id)] === 1 ? "Vouch" : "Vouches"}</div>
+                  <div title="Total Buddy Vouches" style={{ position: "absolute", bottom: 4, left: 4, zIndex: 2, background: "rgba(17,16,8,0.6)", color: "rgba(200,194,180,0.7)", fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.06em", padding: "2px 5px", cursor: "default" }}>{buddyCounts[String(item.id)]} {buddyCounts[String(item.id)] === 1 ? "vouch" : "vouches"}</div>
                 )}
                   {item.poster ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} /> : null}
                   <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
@@ -947,9 +947,11 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
 }
 
 function MutualMentions({ reactions, myReactions, isOwn, boardOwnerName, buddies, onViewBuddy }) {
+  const [expanded, setExpanded] = useState(false);
   if (!reactions.length && !myReactions.length) return null;
-  const items = isOwn ? myReactions : reactions;
-  if (!items.length) return null;
+  const allItems = isOwn ? myReactions : reactions;
+  if (!allItems.length) return null;
+  const items = expanded ? allItems.slice(0, 20) : allItems.slice(0, 6);
   return (
     <div style={{ marginTop: 52, borderTop: `1px solid ${T.paperDark}`, paddingTop: 28 }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 18 }}>
@@ -982,6 +984,11 @@ function MutualMentions({ reactions, myReactions, isOwn, boardOwnerName, buddies
           );
         })}
       </div>
+      {allItems.length > 6 && (
+        <button onClick={() => setExpanded(e => !e)} style={{ marginTop: 14, fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", background: "transparent", border: `1px solid ${T.paperDark}`, color: T.inkMid, padding: "6px 16px", cursor: "pointer" }}>
+          {expanded ? "Show Less" : `Show More (${allItems.length - 6} more)`}
+        </button>
+      )}
     </div>
   );
 }
@@ -1495,6 +1502,7 @@ export default function Vouch() {
   const [myReactions,    setMyReactions]    = useState([]);
   const [boardReactions, setBoardReactions] = useState([]);
   const [viewerReactions, setViewerReactions] = useState([]);
+  const [newAgreements,   setNewAgreements]   = useState([]);
   const [legalPage,      setLegalPage]      = useState(null);
   const [allBuddyBoards, setAllBuddyBoards] = useState([]);
   const [viewBuddies,    setViewBuddies]    = useState([]);
@@ -1723,6 +1731,21 @@ export default function Vouch() {
         loadBuddies(uid);
         loadMyReactions(uid);
         loadVouchBoards(uid);
+        // Check for new agreements since last visit
+        const lastVisit = localStorage.getItem("vouch-last-visit") || new Date(0).toISOString();
+        const { data: newAgrees } = await supabase.from("reactions")
+          .select("user_id, title")
+          .eq("item_owner_id", uid)
+          .gt("created_at", lastVisit)
+          .order("created_at", { ascending: false })
+          .limit(5);
+        if (newAgrees && newAgrees.length > 0) {
+          const uids = [...new Set(newAgrees.map(r => r.user_id))];
+          const { data: profs } = await supabase.from("profiles").select("id, display_name").in("id", uids);
+          newAgrees.forEach(r => { r.display_name = profs?.find(p => p.id === r.user_id)?.display_name || "Someone"; });
+        }
+        if (newAgrees && newAgrees.length > 0) setNewAgreements(newAgrees);
+        localStorage.setItem("vouch-last-visit", new Date().toISOString());
         // Load category preferences
         const { data: prof } = await supabase.from("profiles").select("categories").eq("id", uid).maybeSingle();
         if (prof?.categories && prof.categories.length > 0) {
@@ -2263,6 +2286,18 @@ export default function Vouch() {
         </header>
 
         <main className="page">
+          {newAgreements.length > 0 && !viewing && tab === "board" && (
+            <div style={{ background: T.ink, color: T.bg, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13 }}>
+                {newAgreements.length === 1
+                  ? <><strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11 }}>{newAgreements[0].display_name}</strong> agreed with <strong style={{ fontStyle: "normal" }}>{newAgreements[0].title}</strong></>
+                  : <><strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11 }}>{newAgreements.length} people</strong> agreed with your titles since your last visit</>
+                }
+              </div>
+              <button onClick={() => setNewAgreements([])} style={{ background: "transparent", border: "none", color: "rgba(200,194,180,0.5)", fontSize: 20, cursor: "pointer", padding: 0 }}>×</button>
+            </div>
+          )}
+
           {tab === "board" && !viewing && pendingIn.length > 0 && (
             <div onClick={() => setTab("friends")} style={{ background: T.ink, color: T.bg, padding: "12px 16px", marginBottom: 20, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14 }}>
