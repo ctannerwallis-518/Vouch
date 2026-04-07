@@ -1451,7 +1451,6 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
           </div>
 
           <button className="btn btn-solid" style={{ width: "100%", padding: "12px" }} onClick={handlePublish}>Publish Vouch 5</button>
-          <button className="btn btn-solid" style={{ width: "100%", padding: "12px" }} onClick={handlePublish}>Publish Vouch 5</button>
           <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 8, textAlign: "center" }}>Once published, you can update again next week.</div>
 
           {confirming && (
@@ -1468,7 +1467,8 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
               </div>
             </div>
           )}
-      </div>
+          )}
+        </div>
     </div>
   );
 }
