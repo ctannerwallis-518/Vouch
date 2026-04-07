@@ -1188,6 +1188,48 @@ function LegalModal({ page, onClose }) {
   );
 }
 
+function EditMetaForm({ board, themes, onSave, onClose }) {
+  const [name, setName]               = useState(board.name || "");
+  const [theme, setTheme]             = useState(board.theme || "");
+  const [description, setDescription] = useState(board.description || "");
+
+  const handleSave = () => {
+    const finalName = theme === "Other" ? name : (theme || name);
+    if (!finalName.trim()) { alert("Give your Vouch a name."); return; }
+    onSave({ name: finalName, theme: theme || null, description: description || null });
+  };
+
+  return (
+    <div className="modal-body">
+      <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkLight, marginBottom: 20 }}>
+        Change the name, theme, or description. Titles cannot be changed after publishing.
+      </div>
+
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>Theme</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {themes.map(t => (
+            <button key={t} onClick={() => setTheme(t)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "4px 10px", border: `1px solid ${theme === t ? T.ink : T.paperDark}`, background: theme === t ? T.ink : "transparent", color: theme === t ? T.bg : T.inkMid, cursor: "pointer" }}>{t === "Other" ? "Other — Create Your Own" : t}</button>
+          ))}
+        </div>
+        {theme === "Other" && (
+          <input className="search-input" style={{ marginTop: 10, marginBottom: 0 }} placeholder="e.g. Summer of 2009…" value={name} onChange={e => setName(e.target.value)} maxLength={60} />
+        )}
+      </div>
+
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>One Line Description (optional)</div>
+        <input className="search-input" style={{ marginBottom: 0 }} placeholder="e.g. These artists remind me of the summer…" value={description} onChange={e => setDescription(e.target.value)} maxLength={120} />
+      </div>
+
+      <div style={{ display: "flex", gap: 10 }}>
+        <button className="btn btn-solid" style={{ flex: 1, padding: "12px" }} onClick={handleSave}>Save Changes</button>
+        <button className="btn btn-ghost" style={{ flex: 1, padding: "12px" }} onClick={onClose}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
 function CategoryPicker({ selected, all, onSave, isOnboarding }) {
   const [cats, setCats] = useState(selected || all.map(c => c.key));
   const toggle = (key) => {
@@ -1259,11 +1301,12 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
   const [theme, setTheme]             = useState(savedDraft?.theme ?? existing?.theme ?? "");
   const [description, setDescription] = useState(savedDraft?.description ?? existing?.description ?? "");
   const [singleCat, setSingleCat]     = useState(savedDraft?.singleCat ?? existing?.single_category ?? "");
-  const [items, setItems]             = useState(savedDraft?.items ?? existing?.vouch_board_items?.sort((a,b)=>a.position-b.position).map(i => ({ ...i, id: i.item_id, sub: i.subtitle, catKey: i.category })) ?? []);
+  const [items, setItems]             = useState(savedDraft?.items ?? existing?.vouch_board_items?.sort((p,q)=>p.position-q.position).map(i => ({ ...i, id: i.item_id, sub: i.subtitle, catKey: i.category })) ?? []);
   const [addingItem, setAddingItem]   = useState(false);
   const [q, setQ]                     = useState("");
   const [results, setResults]         = useState([]);
   const [busy, setBusy]               = useState(false);
+  const [confirming, setConfirming]   = useState(false);
   const timer                         = useRef(null);
   const TMDB_KEY                      = "24f3b03466f2f7db2d54a0f53607da4f";
 
@@ -1310,11 +1353,16 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
   const removeItem = (idx) => setItems(prev => prev.filter((_, i) => i !== idx));
 
   const handlePublish = () => {
-    if (!theme) { alert("Pick a category for your Vouch."); return; }
+    if (!theme) { alert("Pick a theme for your Vouch."); return; }
     if (theme === "Other" && !name.trim()) { alert("Give your custom Vouch a name — like 'Summer of 2009' or 'Scorsese's Best'"); return; }
     if (items.length === 0) { alert("Add at least one title to your Vouch."); return; }
+    setConfirming(true);
+  };
+
+  const handleConfirmPublish = () => {
     const finalName = theme === "Other" ? name : theme;
     localStorage.removeItem(DRAFT_KEY);
+    setConfirming(false);
     onPublish({ name: finalName, theme, description, singleCategory: singleCat, items });
   };
 
@@ -1403,8 +1451,23 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
           </div>
 
           <button className="btn btn-solid" style={{ width: "100%", padding: "12px" }} onClick={handlePublish}>Publish Vouch 5</button>
+          <button className="btn btn-solid" style={{ width: "100%", padding: "12px" }} onClick={handlePublish}>Publish Vouch 5</button>
           <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 8, textAlign: "center" }}>Once published, you can update again next week.</div>
-        </div>
+
+          {confirming && (
+            <div style={{ position: "fixed", inset: 0, background: "rgba(17,16,8,0.85)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+              <div style={{ background: T.paper, border: `2px double ${T.ink}`, padding: 32, maxWidth: 380, width: "100%" }}>
+                <div style={{ fontFamily: "'Times New Roman',serif", fontWeight: 900, fontSize: 22, marginBottom: 12 }}>Ready to publish?</div>
+                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkMid, lineHeight: 1.7, marginBottom: 24 }}>
+                  Once published, your Vouch 5 is live for all your buddies to see. You can only publish once a week — so make it count.
+                </div>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button className="btn btn-solid" style={{ flex: 1, padding: "12px" }} onClick={handleConfirmPublish}>Yes, Publish</button>
+                  <button className="btn btn-ghost" style={{ flex: 1, padding: "12px" }} onClick={() => setConfirming(false)}>Go Back</button>
+                </div>
+              </div>
+            </div>
+          )}
       </div>
     </div>
   );
@@ -1524,6 +1587,7 @@ export default function Vouch() {
   const [showAgreements,  setShowAgreements]  = useState(false);
   const [legalPage,      setLegalPage]      = useState(null);
   const [allBuddyBoards, setAllBuddyBoards] = useState([]);
+  const [viewActiveBoard, setViewActiveBoard] = useState(null);
   const [viewBuddies,    setViewBuddies]    = useState([]);
   const [showBuddyList,  setShowBuddyList]  = useState(false);
   const [shareModal,     setShareModal]     = useState(false);
@@ -1539,6 +1603,7 @@ export default function Vouch() {
   const [boardEditor,    setBoardEditor]    = useState(false);
   const [archivePage,    setArchivePage]    = useState(false);
   const [editingBoard,   setEditingBoard]   = useState(null);
+  const [editingMeta,    setEditingMeta]    = useState(false);
   const [suggested,      setSuggested]      = useState([]);
 
   const loadMyReactions = async (uid) => {
@@ -1630,6 +1695,16 @@ export default function Vouch() {
   };
 
   const loadViewBoard = async (uid) => {
+    // Load their active vouch board
+    const { data: boardData } = await supabase
+      .from("vouch_boards")
+      .select("*, vouch_board_items(*)")
+      .eq("user_id", uid)
+      .eq("is_active", true)
+      .maybeSingle();
+    setViewActiveBoard(boardData || null);
+
+    // Also load shelf (endorsements)
     const { data, error } = await supabase
       .from("endorsements").select("*").eq("user_id", uid).order("created_at", { ascending: true });
     if (error) { console.error("loadViewBoard error:", error); return; }
@@ -2548,12 +2623,13 @@ export default function Vouch() {
                       <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end", flexShrink: 0 }}>
                         {canPublish ? <button className="vouch-section-add" onClick={() => { setEditingBoard(null); setBoardEditor(true); }}>+ New Vouch</button> : <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.35)", textAlign: "right" }}>Locked until<br />{nextPublishDate}</div>}
                         {boardArchive.length > 1 && <button className="vouch-section-add" style={{ fontSize: "8px" }} onClick={() => setArchivePage(true)}>Archive</button>}
+                        {activeBoard && <button className="vouch-section-add" style={{ fontSize: "8px" }} onClick={() => setEditingMeta(true)}>Edit</button>}
                       </div>
                     </div>
                     {activeBoard?.vouch_board_items?.length > 0 ? (
                       <VouchSection board={(() => {
                         const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
-                        (activeBoard.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0,5).forEach(item => {
+                        (activeBoard.vouch_board_items || []).sort((a,x) => a.position - x.position).slice(0,5).forEach(item => {
                           if (b[item.category]) b[item.category].push({ id: item.item_id, title: item.title, sub: item.subtitle || "", poster: item.poster, comment: "", vouched: true, sourceUrl: item.source_url, _cat: item.category, _catLabel: CATEGORIES.find(c=>c.key===item.category)?.label || item.category });
                         });
                         return b;
@@ -2566,12 +2642,24 @@ export default function Vouch() {
                     )}
                   </div>
                 ) : (
-                  <VouchSection board={currBoard} isOwn={false} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={() => {}} onRemove={() => {}} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} />
+                  viewActiveBoard?.vouch_board_items?.length > 0
+                    ? <div className="vouch-section" style={{ marginBottom: 52 }}>
+                        <div className="vouch-section-header">
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginBottom: 6 }}>Vouch 5{viewActiveBoard.theme ? " · " + viewActiveBoard.theme : ""}</div>
+                            {viewActiveBoard.name && <div style={{ fontFamily: "'Times New Roman', Times, serif", fontWeight: 900, fontSize: 28, color: "rgba(200,194,180,0.95)", lineHeight: 1.1 }}>{viewActiveBoard.name}</div>}
+                            {viewActiveBoard.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 5 }}>{viewActiveBoard.description}</div>}
+                            {viewActiveBoard.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.3)", marginTop: 4 }}>Published {new Date(viewActiveBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>}
+                          </div>
+                        </div>
+                        <VouchSection board={(() => { const brd = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] }; (viewActiveBoard.vouch_board_items || []).sort((a,x) => a.position - x.position).slice(0,5).forEach(item => { if (brd[item.category]) brd[item.category].push({ id: item.item_id, title: item.title, sub: item.subtitle || "", poster: item.poster, comment: "", vouched: true, sourceUrl: item.source_url, _cat: item.category, _catLabel: CATEGORIES.find(c=>c.key===item.category)?.label || item.category }); }); return brd; })()} isOwn={false} onCard={(k, i) => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} hideHeader={true} />
+                      </div>
+                    : null
                 )}
 
                 {(() => {
                   const cats = isOwn
-                    ? (userCategories ? CATEGORIES.filter(c => userCategories.includes(c.key)).sort((a,b) => userCategories.indexOf(a.key) - userCategories.indexOf(b.key)) : CATEGORIES)
+                    ? (userCategories ? CATEGORIES.filter(c => userCategories.includes(c.key)).sort((p,q) => userCategories.indexOf(p.key) - userCategories.indexOf(q.key)) : CATEGORIES)
                     : [...CATEGORIES].sort((a, b) => {
                         const aLen = (currBoard[a.key] || []).length;
                         const bLen = (currBoard[b.key] || []).length;
@@ -2812,6 +2900,27 @@ export default function Vouch() {
           </div>
         )}
 
+        {editingMeta && activeBoard && (
+          <div className="modal-overlay" onClick={() => setEditingMeta(false)}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <div className="modal-head">
+                <div className="modal-title">Edit Vouch Details</div>
+                <button className="modal-x" onClick={() => setEditingMeta(false)}>×</button>
+              </div>
+              <EditMetaForm
+                board={activeBoard}
+                themes={BOARD_THEMES}
+                onSave={async (updates) => {
+                  await supabase.from("vouch_boards").update(updates).eq("id", activeBoard.id);
+                  await loadVouchBoards(userId);
+                  setEditingMeta(false);
+                }}
+                onClose={() => setEditingMeta(false)}
+              />
+            </div>
+          </div>
+        )}
+
         {boardEditor && (
           <BoardEditorModal
             onClose={() => { setBoardEditor(false); setEditingBoard(null); }}
@@ -2849,7 +2958,7 @@ export default function Vouch() {
                     </div>
                     {b.vouch_board_items?.length > 0 && (
                       <div style={{ display: "flex", gap: 6 }}>
-                        {b.vouch_board_items.sort((a,b) => a.position - b.position).slice(0,5).map((item, i) => (
+                        {b.vouch_board_items.sort((p,q) => p.position - q.position).slice(0,5).map((item, i) => (
                           item.poster
                             ? <img key={i} src={item.poster} alt={item.title} style={{ width: 44, height: 60, objectFit: "cover", border: `1px solid ${T.paperDark}` }} onError={e => e.target.style.display = "none"} />
                             : <div key={i} style={{ width: 44, height: 60, background: T.paperDark, border: `1px solid ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 3 }}>{item.title}</div>
