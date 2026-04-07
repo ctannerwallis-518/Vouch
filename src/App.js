@@ -1467,7 +1467,6 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
               </div>
             </div>
           )}
-          )}
         </div>
     </div>
   );
