@@ -1252,17 +1252,26 @@ function CategoryPicker({ selected, all, onSave, isOnboarding }) {
 }
 
 function BoardEditorModal({ onClose, onPublish, existing, categories, themes, userId }) {
-  const [name, setName]               = useState(existing?.name || "");
-  const [theme, setTheme]             = useState(existing?.theme || "");
-  const [description, setDescription] = useState(existing?.description || "");
-  const [singleCat, setSingleCat]     = useState(existing?.single_category || "");
-  const [items, setItems]             = useState(existing?.vouch_board_items?.sort((a,b)=>a.position-b.position).map(i => ({ ...i, id: i.item_id, sub: i.subtitle, catKey: i.category })) || []);
+  const DRAFT_KEY = "vouch-board-draft";
+  const savedDraft = !existing ? (() => { try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || "null"); } catch(e) { return null; } })() : null;
+
+  const [name, setName]               = useState(savedDraft?.name ?? existing?.name ?? "");
+  const [theme, setTheme]             = useState(savedDraft?.theme ?? existing?.theme ?? "");
+  const [description, setDescription] = useState(savedDraft?.description ?? existing?.description ?? "");
+  const [singleCat, setSingleCat]     = useState(savedDraft?.singleCat ?? existing?.single_category ?? "");
+  const [items, setItems]             = useState(savedDraft?.items ?? existing?.vouch_board_items?.sort((a,b)=>a.position-b.position).map(i => ({ ...i, id: i.item_id, sub: i.subtitle, catKey: i.category })) ?? []);
   const [addingItem, setAddingItem]   = useState(false);
   const [q, setQ]                     = useState("");
   const [results, setResults]         = useState([]);
   const [busy, setBusy]               = useState(false);
   const timer                         = useRef(null);
   const TMDB_KEY                      = "24f3b03466f2f7db2d54a0f53607da4f";
+
+  // Save draft to localStorage whenever fields change
+  useEffect(() => {
+    if (existing) return; // don't save drafts when editing existing board
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({ name, theme, description, singleCat, items }));
+  }, [name, theme, description, singleCat, items]);
 
   useEffect(() => {
     if (!q.trim()) { setResults([]); return; }
@@ -1305,6 +1314,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
     if (theme === "Other" && !name.trim()) { alert("Give your custom Vouch a name — like 'Summer of 2009' or 'Scorsese's Best'"); return; }
     if (items.length === 0) { alert("Add at least one title to your Vouch."); return; }
     const finalName = theme === "Other" ? name : theme;
+    localStorage.removeItem(DRAFT_KEY);
     onPublish({ name: finalName, theme, description, singleCategory: singleCat, items });
   };
 
@@ -1315,7 +1325,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
       <div className="modal" onClick={e => e.stopPropagation()} style={{ maxHeight: "88vh" }}>
         <div className="modal-head">
           <div className="modal-title">Create Your Vouch 5</div>
-          <button className="modal-x" onClick={onClose}>×</button>
+          <button className="modal-x" onClick={() => { localStorage.removeItem(DRAFT_KEY); onClose(); }}>×</button>
         </div>
         <div className="modal-body">
 
