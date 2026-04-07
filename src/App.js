@@ -1271,7 +1271,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
   useEffect(() => {
     if (existing) return; // don't save drafts when editing existing board
     localStorage.setItem(DRAFT_KEY, JSON.stringify({ name, theme, description, singleCat, items }));
-  }, [name, theme, description, singleCat, items]);
+  }, [name, theme, description, singleCat, items, existing]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!q.trim()) { setResults([]); return; }
