@@ -47,8 +47,9 @@ const EMPTY_BOARD = {
 };
 
 const BOARD_THEMES = [
-  "Feelin' Lately", "All-Timers", "Nostalgic", "Deep Cuts",
-  "New Releases", "Underrated", "Seasonal", "No Boundaries",
+  "Film", "Albums", "Artists", "Songs", "Books", "Television",
+  "Seasonal", "All-Timers", "Feelin Lately", "Nostalgic",
+  "New Releases", "Deep Cuts", "Underrated", "No Boundaries",
   "Locals Only", "Other"
 ];
 
@@ -120,7 +121,7 @@ const Styles = () => (
 
     .ornament { text-align: center; font-family: 'Spectral', serif; font-size: 13px; color: ${T.inkFaint}; margin: 4px 0 28px; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
-    .vouch-section { margin-bottom: 52px; border: 3px double #C9A84C; box-shadow: 0 0 0 1px #A07830; background: ${T.ink}; padding: 22px 22px 22px; position: relative; }
+    .vouch-section { margin-bottom: 52px; border: 3px double ${T.ink}; background: ${T.ink}; padding: 28px 28px 32px; position: relative; }
     .vouch-section-header { display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; border-bottom: 1px solid rgba(200,194,180,0.25); padding-bottom: 12px; margin-bottom: 24px; }
     .vouch-section-label { font-family: 'Times New Roman', Times, serif; font-weight: 900; font-size: 22px; letter-spacing: 0.04em; white-space: nowrap; color: ${T.bg}; }
     .vouch-section-sub   { font-family: 'Spectral', serif; font-style: italic; font-size: 11px; color: rgba(200,194,180,0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -151,7 +152,7 @@ const Styles = () => (
     .card-poster-placeholder { width: 150px; height: 206px; background: ${T.paperDark}; border: 1px solid ${T.paperDark}; display: flex; align-items: center; justify-content: center; font-family: 'Spectral', serif; font-style: italic; font-size: 11px; color: ${T.inkLight}; text-align: center; padding: 10px; }
     .card-title   { font-family: 'Spectral', serif; font-weight: 600; font-size: 12.5px; line-height: 1.35; margin-top: 7px; }
     .card-sub     { font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.06em; color: ${T.inkLight}; margin-top: 2px; }
-    .card-comment { font-family: 'Spectral', serif; font-style: italic; font-size: 10.5px; line-height: 1.5; color: ${T.inkMid}; margin-top: 4px; }
+    .card-comment { font-family: 'Spectral', serif; font-style: italic; font-size: 10.5px; line-height: 1.5; color: ${T.inkMid}; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .slot-empty-sm { width: 150px; height: 206px; border: 1px dashed ${T.paperDark}; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.14s, background 0.14s; flex-shrink: 0; }
     .slot-empty-sm:hover { border-color: ${T.ink}; background: rgba(17,16,8,0.03); }
 
@@ -412,12 +413,12 @@ function HowItWorks() {
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <div>
           <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>Vouch 5</div>
-          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Create and publish a named board of up to 5 titles. One Vouch 5 published at a time — once live, you can update again next week.</div>
+          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Pick the five things you'd put your name behind today. A movie, an album, a book, whatever. These are your top-of-the-fold picks.</div>
         </div>
         <div style={{ borderTop: `1px solid ${T.paperDark}` }} />
         <div>
           <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>My Shelf</div>
-          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Your personal shelf — add up to 5 each of films, albums, books, songs, artists, and shows. Browse what your buddies have on theirs.</div>
+          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>The stuff on your shelf — films, albums, books, shows worth putting your name behind.</div>
         </div>
         <div style={{ borderTop: `1px solid ${T.paperDark}` }} />
         <div>
@@ -813,35 +814,33 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
   }, [idx, isMobile]);
 
   const CardFace = ({ it }) => (
-    <div style={{ cursor: it.sourceUrl ? "pointer" : "default" }}
+    <div style={{ position: "relative", cursor: it.sourceUrl ? "pointer" : "default" }}
       onClick={() => {
         if (Math.abs(currentOffsetX.current) > 8) return;
         it.sourceUrl ? window.open(it.sourceUrl, "_blank") : onCard(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id));
       }}>
-      <div style={{ position: "relative" }}>
-        {it.poster
-          ? <img src={it.poster} alt={it.title} style={{ width: "100%", height: 340, objectFit: "cover", display: "block", border: `1px solid ${T.paperDark}` }} onError={e => e.target.style.display = "none"} />
-          : <div style={{ width: "100%", height: 340, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 18, color: T.inkLight, padding: 24, textAlign: "center" }}>{it.title}</div>}
-        {isOwn && (
-          <button onClick={e => { e.stopPropagation(); onRemove(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id), true); }}
-            style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 36, height: 36, cursor: "pointer", fontSize: 20, lineHeight: "36px", textAlign: "center", borderRadius: 2 }}>×</button>
-        )}
-        {!isOwn && (
-          <button onClick={e => { e.stopPropagation(); onDudeSame(it); }}
-            style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: myReactions?.includes(String(it.id)) ? "#C8C2B4" : "rgba(17,16,8,0.7)", border: "none", color: myReactions?.includes(String(it.id)) ? "#111008" : "#C8C2B4", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "5px 8px", whiteSpace: "nowrap", fontWeight: myReactions?.includes(String(it.id)) ? 700 : 400 }}>
-            {myReactions?.includes(String(it.id)) ? "✓ Agreed" : "Agree"}
-          </button>
-        )}
-        {buddyCounts?.[String(it.id)] > 0 && (
-          <div style={{ position: "absolute", bottom: 8, left: 8, zIndex: 2, background: "rgba(17,16,8,0.6)", color: "rgba(200,194,180,0.7)", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.08em", padding: "2px 6px" }}>{buddyCounts[String(it.id)]} {buddyCounts[String(it.id)] === 1 ? "vouch" : "vouches"}</div>
-        )}
-      </div>
+      {it.poster
+        ? <img src={it.poster} alt={it.title} style={{ width: "100%", height: 340, objectFit: "cover", display: "block", border: `1px solid ${T.paperDark}` }} onError={e => e.target.style.display = "none"} />
+        : <div style={{ width: "100%", height: 340, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 18, color: T.inkLight, padding: 24, textAlign: "center" }}>{it.title}</div>}
       <div style={{ padding: "14px 4px 4px" }}>
         <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 4 }}>{it._catLabel}</div>
         <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: T.bg }}>{it.title}</div>
         <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "rgba(200,194,180,0.7)" }}>{it.artist || it.author || it.sub || ""}</div>
         {it.comment && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: "rgba(200,194,180,0.55)", marginTop: 6 }}>"{it.comment}"</div>}
       </div>
+      {isOwn && (
+        <button onClick={e => { e.stopPropagation(); onRemove(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id), true); }}
+          style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 36, height: 36, cursor: "pointer", fontSize: 20, lineHeight: "36px", textAlign: "center", borderRadius: 2 }}>×</button>
+      )}
+      {!isOwn && (
+        <button onClick={e => { e.stopPropagation(); onDudeSame(it); }}
+          style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: myReactions?.includes(String(it.id)) ? T.ink : "rgba(17,16,8,0.7)", border: "none", color: "#C8C2B4", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "5px 8px", whiteSpace: "nowrap" }}>
+          {myReactions?.includes(String(it.id)) ? "✓ Agreed" : "Agree"}
+        </button>
+      )}
+      {buddyCounts?.[String(it.id)] > 0 && (
+        <div title="Total Buddy Vouches" style={{ position: "absolute", top: 8, left: 8, zIndex: 2, background: "rgba(200,194,180,0.9)", color: "#111008", fontFamily: "'Spectral SC',serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "default" }}>{buddyCounts[String(it.id)]} {buddyCounts[String(it.id)] === 1 ? "Vouch" : "Vouches"}</div>
+      )}
     </div>
   );
 
@@ -911,7 +910,7 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
     <div className="cat-section">
       <div className="cat-header" style={{ cursor: isMobile ? "pointer" : "default" }} onClick={() => isMobile && setOpen(o => !o)}>
         <div className="cat-label">{label}</div>
-        
+        <div className="cat-sublabel">My Shelf</div>
         <div className="cat-count">{items.length > 0 ? items.length : ""}</div>
         {isMobile && <span style={{ marginLeft: "auto", fontFamily: "'Spectral SC',serif", fontSize: "11px", color: T.inkFaint, paddingLeft: 8 }}>{open ? "▴" : "▾"}</span>}
         {isOwn && !isMobile && <button className="cat-add" onClick={() => onAdd(catKey)}>+ Vouch</button>}
@@ -921,23 +920,20 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
         <div className="cards-row">
           {slots.map((item, idx) =>
             item
-              ? <div key={item.id} className="card" onClick={() => item.sourceUrl ? window.open(item.sourceUrl, "_blank") : onCard(catKey, idx)}>
-                  <div style={{ position: "relative", display: "block", flexShrink: 0 }}>
-                    {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx, false); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 30, height: 30, cursor: "pointer", fontSize: 16, lineHeight: "30px", textAlign: "center", borderRadius: 2 }}>×</button>}
-                    {!isOwn && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: myReactions?.includes(String(item.id)) ? "#C8C2B4" : "rgba(17,16,8,0.7)", border: "none", color: myReactions?.includes(String(item.id)) ? "#111008" : "#C8C2B4", cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 5px", whiteSpace: "nowrap", fontWeight: myReactions?.includes(String(item.id)) ? 700 : 400 }}>{myReactions?.includes(String(item.id)) ? "✓ Agreed" : "Agree"}</button>}
-                    {buddyCounts?.[String(item.id)] > 0 && (
-                      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 2, background: "rgba(17,16,8,0.5)", color: "rgba(200,194,180,0.6)", fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.06em", padding: "2px 6px", textAlign: "center" }}>{buddyCounts[String(item.id)]} {buddyCounts[String(item.id)] === 1 ? "vouch" : "vouches"}</div>
-                    )}
-                    {item.poster ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} /> : null}
-                    <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
-                    <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
-                  </div>
+              ? <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => item.sourceUrl ? window.open(item.sourceUrl, "_blank") : onCard(catKey, idx)}>
+                  {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx, false); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 30, height: 30, cursor: "pointer", fontSize: 16, lineHeight: "30px", textAlign: "center", borderRadius: 2 }}>×</button>}
+                  {!isOwn && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: myReactions?.includes(String(item.id)) ? "#C8C2B4" : "rgba(17,16,8,0.7)", border: "none", color: myReactions?.includes(String(item.id)) ? T.ink : "#C8C2B4", cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 5px", whiteSpace: "nowrap", fontWeight: myReactions?.includes(String(item.id)) ? 700 : 400 }}>{myReactions?.includes(String(item.id)) ? "✓ Agreed" : "Agree"}</button>}
+                {buddyCounts?.[String(item.id)] > 0 && (
+                  <div title="Total Buddy Vouches" style={{ position: "absolute", top: 4, left: 4, zIndex: 2, background: "rgba(17,16,8,0.75)", color: "#C8C2B4", fontFamily: "'Spectral SC',serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", padding: "2px 6px", cursor: "default" }}>{buddyCounts[String(item.id)]} {buddyCounts[String(item.id)] === 1 ? "Vouch" : "Vouches"}</div>
+                )}
+                  {item.poster ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} /> : null}
+                  <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
                   <div style={{ flex: 1 }}>
                     <div className="card-title">{item.title}</div>
                     <div className="card-sub">{item.artist || item.author || item.year || item.sub || ""}</div>
                     {item.comment && <div className="card-comment">"{item.comment}"</div>}
                   </div>
-                  </div>
+                </div>
               : isOwn
                 ? <div key={`e${idx}`} className="slot-empty-sm" onClick={() => onAdd(catKey)}>
                     <div className="slot-empty-inner"><span className="slot-empty-plus">+</span>Vouch</div>
@@ -951,11 +947,9 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
 }
 
 function MutualMentions({ reactions, myReactions, isOwn, boardOwnerName, buddies, onViewBuddy }) {
-  const [expanded, setExpanded] = useState(false);
   if (!reactions.length && !myReactions.length) return null;
-  const allItems = isOwn ? myReactions : reactions;
-  if (!allItems.length) return null;
-  const items = expanded ? allItems.slice(0, 20) : allItems.slice(0, 6);
+  const items = isOwn ? myReactions : reactions;
+  if (!items.length) return null;
   return (
     <div style={{ marginTop: 52, borderTop: `1px solid ${T.paperDark}`, paddingTop: 28 }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 18 }}>
@@ -988,11 +982,6 @@ function MutualMentions({ reactions, myReactions, isOwn, boardOwnerName, buddies
           );
         })}
       </div>
-      {allItems.length > 6 && (
-        <button onClick={() => setExpanded(e => !e)} style={{ marginTop: 14, fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", background: "transparent", border: `1px solid ${T.paperDark}`, color: T.inkMid, padding: "6px 16px", cursor: "pointer" }}>
-          {expanded ? "Show Less" : `Show More (${allItems.length - 6} more)`}
-        </button>
-      )}
     </div>
   );
 }
@@ -1188,133 +1177,18 @@ function LegalModal({ page, onClose }) {
   );
 }
 
-function EditMetaForm({ board, themes, onSave, onClose }) {
-  const [name, setName]               = useState(board.name || "");
-  const [theme, setTheme]             = useState(board.theme || "");
-  const [description, setDescription] = useState(board.description || "");
-
-  const handleSave = () => {
-    const finalName = theme === "Other" ? name : (theme || name);
-    if (!finalName.trim()) { alert("Give your Vouch a name."); return; }
-    onSave({ name: finalName, theme: theme || null, description: description || null });
-  };
-
-  return (
-    <div className="modal-body">
-      <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkLight, marginBottom: 20 }}>
-        Change the name, theme, or description. Titles cannot be changed after publishing.
-      </div>
-
-      <div style={{ marginBottom: 16 }}>
-        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>Theme</div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          {themes.map(t => (
-            <button key={t} onClick={() => setTheme(t)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "4px 10px", border: `1px solid ${theme === t ? T.ink : T.paperDark}`, background: theme === t ? T.ink : "transparent", color: theme === t ? T.bg : T.inkMid, cursor: "pointer" }}>{t === "Other" ? "Other — Create Your Own" : t}</button>
-          ))}
-        </div>
-        {theme === "Other" && (
-          <input className="search-input" style={{ marginTop: 10, marginBottom: 0 }} placeholder="e.g. Summer of 2009…" value={name} onChange={e => setName(e.target.value)} maxLength={60} />
-        )}
-      </div>
-
-      <div style={{ marginBottom: 16 }}>
-        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>One Line Description (optional)</div>
-        <input className="search-input" style={{ marginBottom: 0 }} placeholder="e.g. These artists remind me of the summer…" value={description} onChange={e => setDescription(e.target.value)} maxLength={120} />
-      </div>
-
-      <div style={{ display: "flex", gap: 10 }}>
-        <button className="btn btn-solid" style={{ flex: 1, padding: "12px" }} onClick={handleSave}>Save Changes</button>
-        <button className="btn btn-ghost" style={{ flex: 1, padding: "12px" }} onClick={onClose}>Cancel</button>
-      </div>
-    </div>
-  );
-}
-
-function CategoryPicker({ selected, all, onSave, isOnboarding }) {
-  const [cats, setCats] = useState(selected || all.map(c => c.key));
-  const toggle = (key) => {
-    setCats(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
-  };
-
-  const moveUp = (i) => {
-    if (i === 0) return;
-    const next = [...cats];
-    [next[i-1], next[i]] = [next[i], next[i-1]];
-    setCats(next);
-  };
-
-  const moveDown = (i) => {
-    if (i === cats.length - 1) return;
-    const next = [...cats];
-    [next[i], next[i+1]] = [next[i+1], next[i]];
-    setCats(next);
-  };
-
-  return (
-    <div>
-      <div style={{ marginBottom: 16 }}>
-        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 10 }}>Your selected categories — tap arrows to reorder</div>
-        {cats.map((key, i) => {
-          const cat = all.find(c => c.key === key);
-          if (!cat) return null;
-          return (
-            <div key={key} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0", borderBottom: `1px solid ${T.paperDark}` }}>
-              <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 15, flex: 1 }}>{cat.label}</div>
-              <div style={{ display: "flex", gap: 4 }}>
-                <button onClick={() => moveUp(i)} disabled={i === 0} style={{ background: "transparent", border: `1px solid ${T.paperDark}`, cursor: i === 0 ? "default" : "pointer", opacity: i === 0 ? 0.3 : 1, width: 28, height: 28, fontFamily: "monospace", fontSize: 14 }}>↑</button>
-                <button onClick={() => moveDown(i)} disabled={i === cats.length - 1} style={{ background: "transparent", border: `1px solid ${T.paperDark}`, cursor: i === cats.length - 1 ? "default" : "pointer", opacity: i === cats.length - 1 ? 0.3 : 1, width: 28, height: 28, fontFamily: "monospace", fontSize: 14 }}>↓</button>
-                <button onClick={() => toggle(key)} style={{ background: T.ink, border: "none", color: T.bg, cursor: "pointer", width: 28, height: 28, fontSize: 16 }}>×</button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {all.filter(c => !cats.includes(c.key)).length > 0 && (
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkFaint, marginBottom: 10 }}>Add more</div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {all.filter(c => !cats.includes(c.key)).map(cat => (
-              <button key={cat.key} onClick={() => toggle(cat.key)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "6px 14px", border: `1px solid ${T.paperDark}`, background: "transparent", color: T.inkMid, cursor: "pointer" }}>+ {cat.label}</button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <button className="btn btn-solid" style={{ width: "100%", padding: "12px" }} onClick={() => onSave(cats)}>
-        {isOnboarding ? "Set Up My Shelf →" : "Save Changes"}
-      </button>
-      {isOnboarding && (
-        <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 8, textAlign: "center" }}>
-          You can always change this later in Settings.
-        </div>
-      )}
-    </div>
-  );
-}
-
 function BoardEditorModal({ onClose, onPublish, existing, categories, themes, userId }) {
-  const DRAFT_KEY = "vouch-board-draft";
-  const savedDraft = !existing ? (() => { try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || "null"); } catch(e) { return null; } })() : null;
-
-  const [name, setName]               = useState(savedDraft?.name ?? existing?.name ?? "");
-  const [theme, setTheme]             = useState(savedDraft?.theme ?? existing?.theme ?? "");
-  const [description, setDescription] = useState(savedDraft?.description ?? existing?.description ?? "");
-  const [singleCat, setSingleCat]     = useState(savedDraft?.singleCat ?? existing?.single_category ?? "");
-  const [items, setItems]             = useState(savedDraft?.items ?? existing?.vouch_board_items?.sort((p,q)=>p.position-q.position).map(i => ({ ...i, id: i.item_id, sub: i.subtitle, catKey: i.category })) ?? []);
+  const [name, setName]               = useState(existing?.name || "");
+  const [theme, setTheme]             = useState(existing?.theme || "");
+  const [description, setDescription] = useState(existing?.description || "");
+  const [singleCat, setSingleCat]     = useState(existing?.single_category || "");
+  const [items, setItems]             = useState(existing?.vouch_board_items?.sort((a,b)=>a.position-b.position).map(i => ({ ...i, id: i.item_id, sub: i.subtitle, catKey: i.category })) || []);
   const [addingItem, setAddingItem]   = useState(false);
   const [q, setQ]                     = useState("");
   const [results, setResults]         = useState([]);
   const [busy, setBusy]               = useState(false);
-  const [confirming, setConfirming]   = useState(false);
   const timer                         = useRef(null);
   const TMDB_KEY                      = "24f3b03466f2f7db2d54a0f53607da4f";
-
-  // Save draft to localStorage whenever fields change
-  useEffect(() => {
-    if (existing) return; // don't save drafts when editing existing board
-    localStorage.setItem(DRAFT_KEY, JSON.stringify({ name, theme, description, singleCat, items }));
-  }, [name, theme, description, singleCat, items, existing]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!q.trim()) { setResults([]); return; }
@@ -1353,16 +1227,10 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
   const removeItem = (idx) => setItems(prev => prev.filter((_, i) => i !== idx));
 
   const handlePublish = () => {
-    if (!theme) { alert("Pick a theme for your Vouch."); return; }
-    if (theme === "Other" && !name.trim()) { alert("Give your custom Vouch a name — like 'Summer of 2009' or 'Scorsese's Best'"); return; }
+    if (!theme) { alert("Pick a category for your Vouch."); return; }
+    if (theme === "Other" && !name.trim()) { alert("Give your custom Vouch a name — like 'Summer of 2009' or 'Scorsese\'s Best'"); return; }
     if (items.length === 0) { alert("Add at least one title to your Vouch."); return; }
-    setConfirming(true);
-  };
-
-  const handleConfirmPublish = () => {
     const finalName = theme === "Other" ? name : theme;
-    localStorage.removeItem(DRAFT_KEY);
-    setConfirming(false);
     onPublish({ name: finalName, theme, description, singleCategory: singleCat, items });
   };
 
@@ -1373,13 +1241,13 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
       <div className="modal" onClick={e => e.stopPropagation()} style={{ maxHeight: "88vh" }}>
         <div className="modal-head">
           <div className="modal-title">Create Your Vouch 5</div>
-          <button className="modal-x" onClick={() => { localStorage.removeItem(DRAFT_KEY); onClose(); }}>×</button>
+          <button className="modal-x" onClick={onClose}>×</button>
         </div>
         <div className="modal-body">
 
-          {/* Theme */}
+          {/* Category */}
           <div style={{ marginBottom: 16 }}>
-            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>Theme</div>
+            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>Category</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {themes.map(t => (
                 <button key={t} onClick={() => setTheme(t)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "4px 10px", border: `1px solid ${theme === t ? T.ink : T.paperDark}`, background: theme === t ? T.ink : "transparent", color: theme === t ? T.bg : T.inkMid, cursor: "pointer" }}>{t === "Other" ? "Other — Create Your Own" : t}</button>
@@ -1390,19 +1258,15 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
             )}
           </div>
 
-          {/* Single category checkbox */}
+          {/* Single category toggle */}
           <div style={{ marginBottom: 16 }}>
-            <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
-              <input type="checkbox" checked={!!singleCat} onChange={e => setSingleCat(e.target.checked ? categories[0].key : "")} style={{ width: 16, height: 16, cursor: "pointer" }} />
-              <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid }}>This is all one category</div>
-            </label>
-            {singleCat && (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
-                {categories.map(c => (
-                  <button key={c.key} onClick={() => setSingleCat(c.key)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "4px 10px", border: `1px solid ${singleCat === c.key ? T.ink : T.paperDark}`, background: singleCat === c.key ? T.ink : "transparent", color: singleCat === c.key ? T.bg : T.inkMid, cursor: "pointer" }}>{c.label}</button>
-                ))}
-              </div>
-            )}
+            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>Single Category (optional)</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              <button onClick={() => setSingleCat("")} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "4px 10px", border: `1px solid ${!singleCat ? T.ink : T.paperDark}`, background: !singleCat ? T.ink : "transparent", color: !singleCat ? T.bg : T.inkMid, cursor: "pointer" }}>All</button>
+              {categories.map(c => (
+                <button key={c.key} onClick={() => setSingleCat(c.key)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "4px 10px", border: `1px solid ${singleCat === c.key ? T.ink : T.paperDark}`, background: singleCat === c.key ? T.ink : "transparent", color: singleCat === c.key ? T.bg : T.inkMid, cursor: "pointer" }}>{c.label}</button>
+              ))}
+            </div>
           </div>
 
           {/* Description */}
@@ -1451,23 +1315,9 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
           </div>
 
           <button className="btn btn-solid" style={{ width: "100%", padding: "12px" }} onClick={handlePublish}>Publish Vouch 5</button>
-          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 8, textAlign: "center" }}>Once published, you can update again next week.</div>
-
-          {confirming && (
-            <div style={{ position: "fixed", inset: 0, background: "rgba(17,16,8,0.85)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-              <div style={{ background: T.paper, border: `2px double ${T.ink}`, padding: 32, maxWidth: 380, width: "100%" }}>
-                <div style={{ fontFamily: "'Times New Roman',serif", fontWeight: 900, fontSize: 22, marginBottom: 12 }}>Ready to publish?</div>
-                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkMid, lineHeight: 1.7, marginBottom: 24 }}>
-                  Once published, your Vouch 5 is live for all your buddies to see. You can only publish once a week — so make it count.
-                </div>
-                <div style={{ display: "flex", gap: 10 }}>
-                  <button className="btn btn-solid" style={{ flex: 1, padding: "12px" }} onClick={handleConfirmPublish}>Yes, Publish</button>
-                  <button className="btn btn-ghost" style={{ flex: 1, padding: "12px" }} onClick={() => setConfirming(false)}>Go Back</button>
-                </div>
-              </div>
-            </div>
-          )}
+          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 8, textAlign: "center" }}>Once published, you can update again in 7 days.</div>
         </div>
+      </div>
     </div>
   );
 }
@@ -1570,6 +1420,7 @@ export default function Vouch() {
   const [viewing,        setViewing]        = useState(null);
   const [board,          setBoard]          = useState({ ...EMPTY_BOARD });
   const [viewBoard,      setViewBoard]      = useState({ ...EMPTY_BOARD });
+  const [viewActiveBoard, setViewActiveBoard] = useState(null);
   const [loading,        setLoading]        = useState(false);
   const [lightbox,       setLightbox]       = useState(null);
   const [addModal,       setAddModal]       = useState(null);
@@ -1581,12 +1432,8 @@ export default function Vouch() {
   const [inviteLink,     setInviteLink]     = useState(null);
   const [myReactions,    setMyReactions]    = useState([]);
   const [boardReactions, setBoardReactions] = useState([]);
-  const [viewerReactions, setViewerReactions] = useState([]);
-  const [newAgreements,   setNewAgreements]   = useState([]);
-  const [showAgreements,  setShowAgreements]  = useState(false);
   const [legalPage,      setLegalPage]      = useState(null);
   const [allBuddyBoards, setAllBuddyBoards] = useState([]);
-  const [viewActiveBoard, setViewActiveBoard] = useState(null);
   const [viewBuddies,    setViewBuddies]    = useState([]);
   const [showBuddyList,  setShowBuddyList]  = useState(false);
   const [shareModal,     setShareModal]     = useState(false);
@@ -1595,14 +1442,11 @@ export default function Vouch() {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "instant" });
   const [sentRequests,   setSentRequests]   = useState([]);
-  const [userCategories, setUserCategories] = useState(null);
-  const [onboarding,     setOnboarding]     = useState(false);
   const [activeBoard,    setActiveBoard]    = useState(null);
   const [boardArchive,   setBoardArchive]   = useState([]);
   const [boardEditor,    setBoardEditor]    = useState(false);
   const [archivePage,    setArchivePage]    = useState(false);
   const [editingBoard,   setEditingBoard]   = useState(null);
-  const [editingMeta,    setEditingMeta]    = useState(false);
   const [suggested,      setSuggested]      = useState([]);
 
   const loadMyReactions = async (uid) => {
@@ -1666,14 +1510,9 @@ export default function Vouch() {
     await loadVouchBoards(userId);
   };
 
-  const loadBoardReactions = async (ownerId, isViewing = false) => {
+  const loadBoardReactions = async (ownerId) => {
     const { data } = await supabase.from("reactions").select("*").eq("item_owner_id", ownerId).order("created_at", { ascending: false });
     setBoardReactions(data || []);
-    if (isViewing) {
-      // Also load what this person has agreed with on others boards
-      const { data: theirAgreements } = await supabase.from("reactions").select("*").eq("user_id", ownerId).order("created_at", { ascending: false });
-      setViewerReactions(theirAgreements || []);
-    }
   };
 
   const loadBoard = async (uid) => {
@@ -1694,16 +1533,6 @@ export default function Vouch() {
   };
 
   const loadViewBoard = async (uid) => {
-    // Load their active vouch board
-    const { data: boardData } = await supabase
-      .from("vouch_boards")
-      .select("*, vouch_board_items(*)")
-      .eq("user_id", uid)
-      .eq("is_active", true)
-      .maybeSingle();
-    setViewActiveBoard(boardData || null);
-
-    // Also load shelf (endorsements)
     const { data, error } = await supabase
       .from("endorsements").select("*").eq("user_id", uid).order("created_at", { ascending: true });
     if (error) { console.error("loadViewBoard error:", error); return; }
@@ -1715,6 +1544,9 @@ export default function Vouch() {
       }
     });
     setViewBoard(b);
+    // Load this buddy's active vouch board
+    const { data: activeBoardData } = await supabase.from("vouch_boards").select("*, vouch_board_items(*)").eq("user_id", uid).eq("is_active", true).maybeSingle();
+    setViewActiveBoard(activeBoardData || null);
     // Always fetch fresh profile data including avatar
     const { data: profile } = await supabase.from("profiles").select("id, display_name, avatar_url, username").eq("id", uid).maybeSingle();
     if (profile) {
@@ -1739,63 +1571,14 @@ export default function Vouch() {
   };
 
   const loadAllBuddyBoards = async (buddyList, uid) => {
+    const allBoards = await Promise.all(buddyList.map(async b => {
+      const { data } = await supabase.from("endorsements").select("*").eq("user_id", b.userId);
+      return data || [];
+    }));
+    // Also include own board
     const ownId = uid || userId;
-    const allUserIds = [...buddyList.map(b => b.userId), ownId];
-
-    // Pull board items directly from vouch_board_items joined to vouch_boards
-    const { data: itemRows } = await supabase
-      .from("vouch_board_items")
-      .select("item_id, title, subtitle, poster, source_url, category, vouch_boards(user_id)")
-      .in("vouch_boards.user_id", allUserIds);
-
-    // Also pull all reactions from all buddies + self
-    const { data: allReactions } = await supabase
-      .from("reactions")
-      .select("user_id, item_id, title, subtitle, poster, source_url, category")
-      .in("user_id", allUserIds);
-
-    const seen = new Set();
-    const allRows = [];
-
-    // Add vouch board items
-    (itemRows || []).forEach(item => {
-      const userId = item.vouch_boards?.user_id;
-      if (!userId) return;
-      const key = userId + ":" + item.item_id;
-      if (seen.has(key)) return;
-      seen.add(key);
-      allRows.push({
-        user_id: userId,
-        item_id: item.item_id,
-        title: item.title,
-        subtitle: item.subtitle,
-        poster: item.poster,
-        source_url: item.source_url,
-        category: item.category || "",
-        vouched: true,
-        type: "vouch",
-      });
-    });
-
-    // Add reactions
-    (allReactions || []).forEach(r => {
-      const key = r.user_id + ":reaction:" + r.item_id;
-      if (seen.has(key)) return;
-      seen.add(key);
-      allRows.push({
-        user_id: r.user_id,
-        item_id: r.item_id,
-        title: r.title,
-        subtitle: r.subtitle,
-        poster: r.poster,
-        source_url: r.source_url,
-        category: r.category || "",
-        vouched: false,
-        type: "reaction",
-      });
-    });
-
-    console.log("allBuddyBoards loaded:", allRows.length, "rows for", allUserIds.length, "users");
+    const { data: ownData } = await supabase.from("endorsements").select("*").eq("user_id", ownId);
+    const allRows = [...(ownData || []), ...allBoards.flat()];
     setAllBuddyBoards(allRows);
   };
 
@@ -1805,13 +1588,10 @@ export default function Vouch() {
       .select("*, requester:requester_id(id, username, display_name, avatar_url), receiver:receiver_id(id, username, display_name, avatar_url)")
       .or(`requester_id.eq.${uid},receiver_id.eq.${uid}`);
     if (data) {
-      const acceptedRaw = data.filter(b => b.status === "accepted").map(b => {
+      const accepted = data.filter(b => b.status === "accepted").map(b => {
         const other = b.requester_id === uid ? b.receiver : b.requester;
         return { buddyRowId: b.id, userId: other.id, username: other.username, displayName: other.display_name, avatarUrl: other.avatar_url || null };
       });
-      // Dedup by userId - keep first occurrence only
-      const seen = new Set();
-      const accepted = acceptedRaw.filter(b => { if (seen.has(b.userId)) return false; seen.add(b.userId); return true; });
       const incoming = data.filter(b => b.status === "pending" && b.receiver_id === uid).map(b => ({
         buddyRowId: b.id, userId: b.requester.id, username: b.requester.username, displayName: b.requester.display_name, avatarUrl: b.requester.avatar_url || null
       }));
@@ -1854,32 +1634,6 @@ export default function Vouch() {
         loadBuddies(uid);
         loadMyReactions(uid);
         loadVouchBoards(uid);
-        // Check for new agreements since last visit
-        const lastVisit = localStorage.getItem("vouch-last-visit") || new Date(0).toISOString();
-        const { data: newAgrees } = await supabase.from("reactions")
-          .select("user_id, title")
-          .eq("item_owner_id", uid)
-          .gt("created_at", lastVisit)
-          .order("created_at", { ascending: false })
-          .limit(5);
-        if (newAgrees && newAgrees.length > 0) {
-          const uids = [...new Set(newAgrees.map(r => r.user_id))];
-          const { data: profs } = await supabase.from("profiles").select("id, display_name").in("id", uids);
-          newAgrees.forEach(r => { r.display_name = profs?.find(p => p.id === r.user_id)?.display_name || "Someone"; });
-        }
-        if (newAgrees && newAgrees.length > 0) setNewAgreements(newAgrees);
-        localStorage.setItem("vouch-last-visit", new Date().toISOString());
-        // Load category preferences
-        const { data: prof } = await supabase.from("profiles").select("categories").eq("id", uid).maybeSingle();
-        if (prof?.categories && prof.categories.length > 0) {
-          setUserCategories(prof.categories);
-        } else if (prof && !prof.categories) {
-          // Brand new user — show onboarding once
-          setOnboarding(true);
-          setUserCategories(CATEGORIES.map(c => c.key));
-        } else {
-          setUserCategories(CATEGORIES.map(c => c.key));
-        }
         const params = new URLSearchParams(window.location.search);
         const inviteFrom = params.get("invite");
         if (inviteFrom && inviteFrom !== uid) {
@@ -2148,12 +1902,6 @@ export default function Vouch() {
     }, "image/png");
   };
 
-  const saveCategories = async (cats) => {
-    await supabase.from("profiles").update({ categories: cats }).eq("id", userId);
-    setUserCategories(cats);
-    setOnboarding(false);
-  };
-
   const saveAvatar = async (file) => {
     const url = `/avatars/${file}.jpg`;
     await supabase.from("profiles").update({ avatar_url: url }).eq("id", userId);
@@ -2201,7 +1949,7 @@ export default function Vouch() {
     setViewing(buddy);
     setTab("board");
     await loadViewBoard(buddy.userId);
-    await loadBoardReactions(buddy.userId, true);
+    await loadBoardReactions(buddy.userId);
     // Load this buddy's own buddies for display at bottom of their board
     const { data } = await supabase.from("buddies")
       .select("requester_id, receiver_id")
@@ -2332,7 +2080,7 @@ export default function Vouch() {
   const buddyCounts = {};
   const seenBadge = new Set();
   allBuddyBoards.forEach(row => {
-    const key = row.user_id + ":" + String(row.item_id) + ":" + (row.type || "vouch");
+    const key = row.user_id + ":" + row.item_id;
     if (seenBadge.has(key)) return;
     seenBadge.add(key);
     buddyCounts[String(row.item_id)] = (buddyCounts[String(row.item_id)] || 0) + 1;
@@ -2360,7 +2108,7 @@ export default function Vouch() {
             setViewing({ userId: data.id, username: data.username, displayName: data.display_name, avatarUrl: data.avatar_url });
             setTab("board");
             loadViewBoard(data.id);
-            loadBoardReactions(data.id, true);
+            loadBoardReactions(data.id);
             scrollToTop();
           }
         });
@@ -2402,54 +2150,17 @@ export default function Vouch() {
             <button className={`nav-btn${tab === "friends" ? " active" : ""}`} onClick={() => { setTab("friends"); setViewing(null); window.history.replaceState({}, "", "/"); scrollToTop(); }}>
               Buddies {pendingIn.length > 0 && <span style={{ background: T.ink, color: T.bg, borderRadius: "50%", fontSize: 9, padding: "1px 5px", marginLeft: 4 }}>{pendingIn.length}</span>}
             </button>
-            <button className={`nav-btn${tab === "settings" ? " active" : ""}`} onClick={() => { setTab("settings"); setViewing(null); scrollToTop(); }}>Settings</button>
             {viewing && <button className="nav-btn active">{currName}</button>}
           </nav>
         </header>
 
         <main className="page">
-          {newAgreements.length > 0 && !viewing && tab === "board" && (
-            <div style={{ background: T.ink, color: T.bg, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }} onClick={() => setShowAgreements(true)}>
-              <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13 }}>
-                {newAgreements.length === 1
-                  ? <><strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11 }}>{newAgreements[0].display_name}</strong> agreed with <strong style={{ fontStyle: "normal" }}>{newAgreements[0].title}</strong> →</>
-                  : <><strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11 }}>{newAgreements.length} people</strong> agreed with your titles — tap to see →</>
-                }
-              </div>
-              <button onClick={e => { e.stopPropagation(); setNewAgreements([]); }} style={{ background: "transparent", border: "none", color: "rgba(200,194,180,0.5)", fontSize: 20, cursor: "pointer", padding: 0, flexShrink: 0 }}>×</button>
-            </div>
-          )}
-
           {tab === "board" && !viewing && pendingIn.length > 0 && (
             <div onClick={() => setTab("friends")} style={{ background: T.ink, color: T.bg, padding: "12px 16px", marginBottom: 20, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14 }}>
                 <strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11, letterSpacing: "0.12em" }}>{pendingIn.length} buddy request{pendingIn.length > 1 ? "s" : ""}</strong> waiting for you
               </div>
               <span style={{ fontFamily: "'Spectral SC',serif", fontSize: 10, letterSpacing: "0.12em" }}>Review →</span>
-            </div>
-          )}
-
-          {tab === "settings" && !viewing && (
-            <div style={{ maxWidth: 540, margin: "32px auto" }}>
-              <div className="board-name" style={{ fontSize: 28, marginBottom: 8 }}>Settings</div>
-              <div className="board-sub" style={{ marginBottom: 32 }}>Customize your Vouch experience</div>
-
-              <div style={{ marginBottom: 40 }}>
-                <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 8 }}>My Shelf Categories</div>
-                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 20, lineHeight: 1.6 }}>
-                  Choose which categories appear on your shelf. Drag to reorder — your shelf shows up in this order.
-                </div>
-                <CategoryPicker
-                  selected={userCategories || CATEGORIES.map(c => c.key)}
-                  all={CATEGORIES}
-                  onSave={saveCategories}
-                />
-              </div>
-
-              <div style={{ borderTop: `1px solid ${T.paperDark}`, paddingTop: 28 }}>
-                <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 16 }}>Avatar</div>
-                <button className="btn btn-ghost" onClick={() => setAvatarPicker(true)}>Change Avatar</button>
-              </div>
             </div>
           )}
 
@@ -2469,18 +2180,25 @@ export default function Vouch() {
                   const seenUserItem = new Set();
                   const itemCount = {};
                   allBuddyBoards.forEach(row => {
-                    // Unique key per user+item+type so a vouch and an agree on same item by same person both count
-                    const userItemKey = row.user_id + ":" + row.item_id + ":" + (row.type || "vouch");
-                    if (seenUserItem.has(userItemKey)) return;
+                    const userItemKey = row.user_id + ":" + row.item_id;
+                    if (seenUserItem.has(userItemKey)) return; // skip dupes from same user
                     seenUserItem.add(userItemKey);
-                    const key = String(row.item_id);
+                    const key = row.category + ":" + row.item_id;
                     if (!itemCount[key]) itemCount[key] = { ...row, count: 0, vouchers: [] };
                     itemCount[key].count++;
-                    const allPeople = [...buddies, { userId, displayName: user?.displayName }];
-                    const person = allPeople.find(b => b.userId === row.user_id);
-                    const label = person ? (row.type === "reaction" ? `${person.displayName.split(" ")[0]} agreed` : person.displayName.split(" ")[0]) : null;
-                    if (label && !itemCount[key].vouchers.includes(label)) {
-                      itemCount[key].vouchers.push(label);
+                    const voucher = [...buddies, { userId, displayName: user?.displayName }].find(b => b.userId === row.user_id);
+                    if (voucher && !itemCount[key].vouchers.includes(voucher.displayName)) {
+                      itemCount[key].vouchers.push(voucher.displayName);
+                    }
+                  });
+                  // Add reactions as bonus votes (max 1 per reacter)
+                  myReactions.forEach(r => {
+                    const matchKey = Object.keys(itemCount).find(k => k.endsWith(":" + r.item_id));
+                    if (matchKey) {
+                      itemCount[matchKey].count += 1;
+                      if (!itemCount[matchKey].vouchers.includes("You agreed")) {
+                        itemCount[matchKey].vouchers.push("You agreed");
+                      }
                     }
                   });
                   const top5 = Object.values(itemCount).sort((a, b) => b.count - a.count).slice(0, 5);
@@ -2548,7 +2266,7 @@ export default function Vouch() {
                     <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.18em", color: T.inkMid, marginBottom: 16 }}>People on Vouch</div>
                     {suggested.map(s => (
                       <div key={s.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={() => { setViewing({ userId: s.id, username: s.username, displayName: s.display_name, avatarUrl: s.avatar_url }); setTab("board"); loadViewBoard(s.id); loadBoardReactions(s.id, true); window.scrollTo(0, 0); }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={() => { setViewing({ userId: s.id, username: s.username, displayName: s.display_name, avatarUrl: s.avatar_url }); setTab("board"); loadViewBoard(s.id); loadBoardReactions(s.id); window.scrollTo(0, 0); }}>
                           <Avatar name={s.display_name} size={56} avatarUrl={s.avatar_url} />
                           <div>
                             <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 16, borderBottom: `1px solid ${T.paperDark}` }}>{s.display_name}</div>
@@ -2561,7 +2279,7 @@ export default function Vouch() {
                   </div>
                 )}
               </>
-            : (tab === "board" || viewing) && <>
+            : <>
                 <div style={{ marginBottom: 8, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, paddingTop: 16 }}>
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
@@ -2614,21 +2332,20 @@ export default function Vouch() {
                   <div className="vouch-section" style={{ marginBottom: 52 }}>
                     <div className="vouch-section-header">
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginBottom: 6 }}>Vouch 5{activeBoard?.theme ? " · " + activeBoard.theme : ""}</div>
-                        {activeBoard?.name && <div style={{ fontFamily: "'Times New Roman', Times, serif", fontWeight: 900, fontSize: 28, color: "rgba(200,194,180,0.95)", lineHeight: 1.1 }}>{activeBoard.name}</div>}
-                        {activeBoard?.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 5 }}>{activeBoard.description}</div>}
+                        <div className="vouch-section-label">Vouch 5</div>
+                        {activeBoard?.name && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: "rgba(200,194,180,0.6)", marginTop: 2 }}>{activeBoard.name}{activeBoard.theme ? ` · ${activeBoard.theme}` : ""}</div>}
+                        {activeBoard?.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: "rgba(200,194,180,0.4)", marginTop: 2 }}>{activeBoard.description}</div>}
                         {activeBoard?.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.3)", marginTop: 4 }}>Published {new Date(activeBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} · Current Vouch</div>}
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end", flexShrink: 0 }}>
                         {canPublish ? <button className="vouch-section-add" onClick={() => { setEditingBoard(null); setBoardEditor(true); }}>+ New Vouch</button> : <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.35)", textAlign: "right" }}>Locked until<br />{nextPublishDate}</div>}
                         {boardArchive.length > 1 && <button className="vouch-section-add" style={{ fontSize: "8px" }} onClick={() => setArchivePage(true)}>Archive</button>}
-                        {activeBoard && <button className="vouch-section-add" style={{ fontSize: "8px" }} onClick={() => setEditingMeta(true)}>Edit</button>}
                       </div>
                     </div>
                     {activeBoard?.vouch_board_items?.length > 0 ? (
                       <VouchSection board={(() => {
                         const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
-                        (activeBoard.vouch_board_items || []).sort((a,x) => a.position - x.position).slice(0,5).forEach(item => {
+                        (activeBoard.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0,5).forEach(item => {
                           if (b[item.category]) b[item.category].push({ id: item.item_id, title: item.title, sub: item.subtitle || "", poster: item.poster, comment: "", vouched: true, sourceUrl: item.source_url, _cat: item.category, _catLabel: CATEGORIES.find(c=>c.key===item.category)?.label || item.category });
                         });
                         return b;
@@ -2640,49 +2357,43 @@ export default function Vouch() {
                       </div>
                     )}
                   </div>
-                ) : (
-                  viewActiveBoard?.vouch_board_items?.length > 0
-                    ? <div className="vouch-section" style={{ marginBottom: 52 }}>
-                        <div className="vouch-section-header">
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginBottom: 6 }}>Vouch 5{viewActiveBoard.theme ? " · " + viewActiveBoard.theme : ""}</div>
-                            {viewActiveBoard.name && <div style={{ fontFamily: "'Times New Roman', Times, serif", fontWeight: 900, fontSize: 28, color: "rgba(200,194,180,0.95)", lineHeight: 1.1 }}>{viewActiveBoard.name}</div>}
-                            {viewActiveBoard.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 5 }}>{viewActiveBoard.description}</div>}
-                            {viewActiveBoard.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.3)", marginTop: 4 }}>Published {new Date(viewActiveBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>}
-                          </div>
-                        </div>
-                        <VouchSection board={(() => { const brd = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] }; (viewActiveBoard.vouch_board_items || []).sort((a,x) => a.position - x.position).slice(0,5).forEach(item => { if (brd[item.category]) brd[item.category].push({ id: item.item_id, title: item.title, sub: item.subtitle || "", poster: item.poster, comment: "", vouched: true, sourceUrl: item.source_url, _cat: item.category, _catLabel: CATEGORIES.find(c=>c.key===item.category)?.label || item.category }); }); return brd; })()} isOwn={false} onCard={(k, i) => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} hideHeader={true} />
+                ) : viewActiveBoard?.vouch_board_items?.length > 0 ? (
+                  <div className="vouch-section" style={{ marginBottom: 52 }}>
+                    <div className="vouch-section-header">
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginBottom: 6 }}>Vouch 5{viewActiveBoard.theme ? " · " + viewActiveBoard.theme : ""}</div>
+                        {viewActiveBoard.name && <div style={{ fontFamily: "'Times New Roman', Times, serif", fontWeight: 900, fontSize: 28, color: "rgba(200,194,180,0.95)", lineHeight: 1.1 }}>{viewActiveBoard.name}</div>}
+                        {viewActiveBoard.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 5 }}>{viewActiveBoard.description}</div>}
+                        {viewActiveBoard.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.3)", marginTop: 4 }}>Published {new Date(viewActiveBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>}
                       </div>
-                    : null
-                )}
+                    </div>
+                    <VouchSection board={(() => {
+                      const brd = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
+                      (viewActiveBoard.vouch_board_items || []).sort((a,x) => a.position - x.position).slice(0,5).forEach(item => {
+                        if (brd[item.category]) brd[item.category].push({ id: item.item_id, title: item.title, sub: item.subtitle || "", poster: item.poster, comment: "", vouched: true, sourceUrl: item.source_url, _cat: item.category, _catLabel: CATEGORIES.find(c=>c.key===item.category)?.label || item.category });
+                      });
+                      return brd;
+                    })()} isOwn={false} onCard={(k, i) => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} hideHeader={true} />
+                  </div>
+                ) : null}
 
                 {(() => {
+                  // On own board show all categories; on others' boards hide empty ones and sort filled first
                   const cats = isOwn
-                    ? (userCategories ? CATEGORIES.filter(c => userCategories.includes(c.key)).sort((p,q) => userCategories.indexOf(p.key) - userCategories.indexOf(q.key)) : CATEGORIES)
+                    ? CATEGORIES
                     : [...CATEGORIES].sort((a, b) => {
                         const aLen = (currBoard[a.key] || []).length;
                         const bLen = (currBoard[b.key] || []).length;
                         return bLen - aLen;
                       });
-                  const visibleCats = cats.filter(cat => isOwn || (currBoard[cat.key] || []).length > 0);
-                  if (visibleCats.length === 0) return null;
-                  return <>
-                    <div style={{ marginBottom: 28, borderBottom: `2px solid ${T.ink}`, paddingBottom: 12 }}>
-                      <div style={{ fontFamily: "'Spectral SC', serif", fontWeight: 700, fontSize: 32, color: T.ink, letterSpacing: "0.08em" }}>
-                        {isOwn ? "My Shelf" : `${(currName || "").split(" ")[0]}'s Shelf`}
-                      </div>
-                      <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkLight, marginTop: 3 }}>
-                        {isOwn ? "The stuff on your shelf — films, albums, books, shows worth putting your name behind." : `What ${(currName || "").split(" ")[0]} has on their shelf.`}
-                      </div>
-                    </div>
-                    {visibleCats.map(cat => {
-                      const items = currBoard[cat.key] || [];
-                      return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={(key) => { if (!activeBoard) { alert("Publish your first Vouch 5 before adding to your shelf."); return; } setAddModal(key); }} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} />;
-                    })}
-                  </>;
+                  return cats.map(cat => {
+                    const items = currBoard[cat.key] || [];
+                    if (!isOwn && items.length === 0) return null;
+                    return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={setAddModal} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} />;
+                  });
                 })()}
 
-                <MutualMentions reactions={isOwn ? boardReactions : viewerReactions} myReactions={myReactions} isOwn={isOwn} boardOwnerName={currName} buddies={buddies} onViewBuddy={(b) => { setViewing(b); setTab("board"); loadViewBoard(b.userId); loadBoardReactions(b.userId, true); window.scrollTo(0, 0); }} />
+                <MutualMentions reactions={isOwn ? boardReactions : boardReactions.filter(r => r.user_id === viewing?.userId)} myReactions={myReactions} isOwn={isOwn} boardOwnerName={currName} buddies={buddies} onViewBuddy={(b) => { setViewing(b); setTab("board"); loadViewBoard(b.userId); loadBoardReactions(b.userId); window.scrollTo(0, 0); }} />
 
                 {/* BUDDIES LIST at bottom of every board */}
                 {(() => {
@@ -2704,7 +2415,7 @@ export default function Vouch() {
                             setViewing(buddyObj);
                             setTab("board");
                             await loadViewBoard(bid);
-                            await loadBoardReactions(bid, true);
+                            await loadBoardReactions(bid);
                             window.scrollTo(0, 0);
                           };
                           return (
@@ -2769,7 +2480,7 @@ export default function Vouch() {
                   const isSent = sentRequests.includes(bid);
                   return (
                     <div key={bid || i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => { setShowBuddyList(false); setViewing({ userId: bid, username: buser, displayName: bname, avatarUrl: bavatar }); setTab("board"); loadViewBoard(bid); loadBoardReactions(bid, true); window.scrollTo(0, 0); }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => { setShowBuddyList(false); setViewing({ userId: bid, username: buser, displayName: bname, avatarUrl: bavatar }); setTab("board"); loadViewBoard(bid); loadBoardReactions(bid); window.scrollTo(0, 0); }}>
                         <Avatar name={bname} size={56} avatarUrl={bavatar} />
                         <div>
                           <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 15, borderBottom: `1px solid ${T.paperDark}` }}>{bname}</div>
@@ -2846,80 +2557,6 @@ export default function Vouch() {
           </div>
         )}
 
-        {onboarding && (
-          <div className="modal-overlay">
-            <div className="modal" onClick={e => e.stopPropagation()}>
-              <div className="modal-head">
-                <div className="modal-title">Welcome to Vouch.</div>
-              </div>
-              <div className="modal-body">
-                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkMid, marginBottom: 24, lineHeight: 1.7 }}>
-                  Pick which categories you want on your shelf and put them in the order that feels right for you.
-                </div>
-                <CategoryPicker
-                  selected={userCategories || CATEGORIES.map(c => c.key)}
-                  all={CATEGORIES}
-                  onSave={saveCategories}
-                  isOnboarding={true}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {showAgreements && (
-          <div className="modal-overlay" onClick={() => setShowAgreements(false)}>
-            <div className="modal" onClick={e => e.stopPropagation()}>
-              <div className="modal-head">
-                <div className="modal-title">New Agreements</div>
-                <button className="modal-x" onClick={() => setShowAgreements(false)}>×</button>
-              </div>
-              <div className="modal-body">
-                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkLight, marginBottom: 16 }}>Since your last visit</div>
-                {newAgreements.map((r, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
-                    <div style={{ width: 36, height: 36, background: T.ink, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <span style={{ fontFamily: "'Times New Roman',serif", fontWeight: 900, fontSize: 13, color: T.bg }}>
-                        {(r.display_name || "?").split(" ").map(w => w[0]).join("").slice(0,2).toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
-                      <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 14 }}>
-                        {r.display_name.split(" ")[0]} {r.display_name.split(" ")[1]?.[0]}.
-                      </div>
-                      <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkMid, marginTop: 1 }}>
-                        agreed with <strong style={{ fontStyle: "normal" }}>{r.title}</strong>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <button className="btn btn-ghost" style={{ width: "100%", marginTop: 16 }} onClick={() => { setShowAgreements(false); setNewAgreements([]); }}>Dismiss</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {editingMeta && activeBoard && (
-          <div className="modal-overlay" onClick={() => setEditingMeta(false)}>
-            <div className="modal" onClick={e => e.stopPropagation()}>
-              <div className="modal-head">
-                <div className="modal-title">Edit Vouch Details</div>
-                <button className="modal-x" onClick={() => setEditingMeta(false)}>×</button>
-              </div>
-              <EditMetaForm
-                board={activeBoard}
-                themes={BOARD_THEMES}
-                onSave={async (updates) => {
-                  await supabase.from("vouch_boards").update(updates).eq("id", activeBoard.id);
-                  await loadVouchBoards(userId);
-                  setEditingMeta(false);
-                }}
-                onClose={() => setEditingMeta(false)}
-              />
-            </div>
-          </div>
-        )}
-
         {boardEditor && (
           <BoardEditorModal
             onClose={() => { setBoardEditor(false); setEditingBoard(null); }}
@@ -2957,7 +2594,7 @@ export default function Vouch() {
                     </div>
                     {b.vouch_board_items?.length > 0 && (
                       <div style={{ display: "flex", gap: 6 }}>
-                        {b.vouch_board_items.sort((p,q) => p.position - q.position).slice(0,5).map((item, i) => (
+                        {b.vouch_board_items.sort((a,b) => a.position - b.position).slice(0,5).map((item, i) => (
                           item.poster
                             ? <img key={i} src={item.poster} alt={item.title} style={{ width: 44, height: 60, objectFit: "cover", border: `1px solid ${T.paperDark}` }} onError={e => e.target.style.display = "none"} />
                             : <div key={i} style={{ width: 44, height: 60, background: T.paperDark, border: `1px solid ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 3 }}>{item.title}</div>
