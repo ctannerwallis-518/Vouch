@@ -257,6 +257,7 @@ function Auth({ inviteUserId }) {
 
 function PublicBoard({ inviteUserId, onSignUp }) {
   const [board, setBoard]           = useState(null);
+  const [activeBoard, setActiveBoard] = useState(null);
   const [profile, setProfile]       = useState(null);
   const [loading, setLoading]       = useState(true);
   const [showSignupNudge, setShowSignupNudge] = useState(false);
@@ -283,6 +284,10 @@ function PublicBoard({ inviteUserId, onSignUp }) {
             .from("profiles").select("id, display_name, avatar_url").in("id", buddyIds);
           if (profiles) setPublicBuddies(profiles);
         }
+        const { data: activeBoardData } = await supabase
+          .from("vouch_boards").select("*, vouch_board_items(*)").eq("user_id", inviteUserId).eq("is_active", true).maybeSingle();
+        if (activeBoardData) setActiveBoard(activeBoardData);
+
         const { data: rows } = await supabase
           .from("endorsements").select("*").eq("user_id", inviteUserId).order("created_at", { ascending: true });
         if (rows && rows.length > 0) {
@@ -348,7 +353,26 @@ function PublicBoard({ inviteUserId, onSignUp }) {
             ))}
           </div>
           <div className="ornament"><span>—</span><span>✦</span><span>—</span></div>
-          <VouchSection board={board} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} />
+          {activeBoard?.vouch_board_items?.length > 0 ? (
+            <div className="vouch-section" style={{ marginBottom: 52 }}>
+              <div className="vouch-section-header">
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginBottom: 6 }}>Vouch 5{activeBoard.theme ? " · " + activeBoard.theme : ""}</div>
+                  {activeBoard.name && <div style={{ fontFamily: "'Times New Roman', Times, serif", fontWeight: 900, fontSize: 28, color: "rgba(200,194,180,0.95)", lineHeight: 1.1 }}>{activeBoard.name}</div>}
+                  {activeBoard.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 5 }}>{activeBoard.description}</div>}
+                </div>
+              </div>
+              <VouchSection board={(() => {
+                const brd = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
+                (activeBoard.vouch_board_items || []).sort((a,x) => a.position - x.position).slice(0,5).forEach(item => {
+                  if (brd[item.category]) brd[item.category].push({ id: item.item_id, title: item.title, sub: item.subtitle || "", poster: item.poster, comment: "", vouched: true, sourceUrl: item.source_url, _cat: item.category, _catLabel: CATEGORIES.find(c=>c.key===item.category)?.label || item.category });
+                });
+                return brd;
+              })()} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} hideHeader={true} />
+            </div>
+          ) : (
+            <VouchSection board={board} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} />
+          )}
           {publicBuddies.length > 0 && (
             <div style={{ margin: "32px 0", borderTop: `1px solid ${T.paperDark}`, paddingTop: 24 }}>
               <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.18em", color: T.inkMid, marginBottom: 16 }}>Also on Vouch</div>
