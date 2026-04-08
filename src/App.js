@@ -47,6 +47,12 @@ const EMPTY_BOARD = {
 };
 
 const BOARD_THEMES = [
+  "Feelin' Lately", "All-Timers", "Nostalgic", "Deep Cuts",
+  "New Releases", "Underrated", "Seasonal", "No Boundaries",
+  "Locals Only", "Other"
+];
+
+const BOARD_THEMES = [
   "Film", "Albums", "Artists", "Songs", "Books", "Television",
   "Seasonal", "All-Timers", "Feelin Lately", "Nostalgic",
   "New Releases", "Deep Cuts", "Underrated", "No Boundaries",
@@ -121,7 +127,7 @@ const Styles = () => (
 
     .ornament { text-align: center; font-family: 'Spectral', serif; font-size: 13px; color: ${T.inkFaint}; margin: 4px 0 28px; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
-    .vouch-section { margin-bottom: 52px; border: 3px double ${T.ink}; background: ${T.ink}; padding: 28px 28px 32px; position: relative; }
+    .vouch-section { margin-bottom: 52px; border: 3px double #C9A84C; box-shadow: 0 0 0 1px #A07830; background: ${T.ink}; padding: 22px 22px 22px; position: relative; }
     .vouch-section-header { display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; border-bottom: 1px solid rgba(200,194,180,0.25); padding-bottom: 12px; margin-bottom: 24px; }
     .vouch-section-label { font-family: 'Times New Roman', Times, serif; font-weight: 900; font-size: 22px; letter-spacing: 0.04em; white-space: nowrap; color: ${T.bg}; }
     .vouch-section-sub   { font-family: 'Spectral', serif; font-style: italic; font-size: 11px; color: rgba(200,194,180,0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -257,7 +263,6 @@ function Auth({ inviteUserId }) {
 
 function PublicBoard({ inviteUserId, onSignUp }) {
   const [board, setBoard]           = useState(null);
-  const [activeBoard, setActiveBoard] = useState(null);
   const [profile, setProfile]       = useState(null);
   const [loading, setLoading]       = useState(true);
   const [showSignupNudge, setShowSignupNudge] = useState(false);
@@ -284,10 +289,6 @@ function PublicBoard({ inviteUserId, onSignUp }) {
             .from("profiles").select("id, display_name, avatar_url").in("id", buddyIds);
           if (profiles) setPublicBuddies(profiles);
         }
-        const { data: activeBoardData } = await supabase
-          .from("vouch_boards").select("*, vouch_board_items(*)").eq("user_id", inviteUserId).eq("is_active", true).maybeSingle();
-        if (activeBoardData) setActiveBoard(activeBoardData);
-
         const { data: rows } = await supabase
           .from("endorsements").select("*").eq("user_id", inviteUserId).order("created_at", { ascending: true });
         if (rows && rows.length > 0) {
@@ -353,26 +354,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
             ))}
           </div>
           <div className="ornament"><span>—</span><span>✦</span><span>—</span></div>
-          {activeBoard?.vouch_board_items?.length > 0 ? (
-            <div className="vouch-section" style={{ marginBottom: 52 }}>
-              <div className="vouch-section-header">
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginBottom: 6 }}>Vouch 5{activeBoard.theme ? " · " + activeBoard.theme : ""}</div>
-                  {activeBoard.name && <div style={{ fontFamily: "'Times New Roman', Times, serif", fontWeight: 900, fontSize: 34, color: "rgba(200,194,180,0.95)", lineHeight: 1, marginBottom: 4 }}>{activeBoard.name}{activeBoard?.theme && activeBoard.theme !== "Other" ? <span style={{ fontFamily: "'Spectral SC',serif", fontSize: 14, fontWeight: 400, letterSpacing: "0.12em", color: "rgba(200,194,180,0.45)", marginLeft: 10 }}>{activeBoard.theme}</span> : ""}</div>}
-                  {activeBoard.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 5 }}>{activeBoard.description}</div>}
-                </div>
-              </div>
-              <VouchSection board={(() => {
-                const brd = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
-                (activeBoard.vouch_board_items || []).sort((a,x) => a.position - x.position).slice(0,5).forEach(item => {
-                  if (brd[item.category]) brd[item.category].push({ id: item.item_id, title: item.title, sub: item.subtitle || "", poster: item.poster, comment: "", vouched: true, sourceUrl: item.source_url, _cat: item.category, _catLabel: CATEGORIES.find(c=>c.key===item.category)?.label || item.category });
-                });
-                return brd;
-              })()} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} hideHeader={true} />
-            </div>
-          ) : (
-            <VouchSection board={board} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} />
-          )}
+          <VouchSection board={board} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} />
           {publicBuddies.length > 0 && (
             <div style={{ margin: "32px 0", borderTop: `1px solid ${T.paperDark}`, paddingTop: 24 }}>
               <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.18em", color: T.inkMid, marginBottom: 16 }}>Also on Vouch</div>
@@ -1252,7 +1234,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
 
   const handlePublish = () => {
     if (!theme) { alert("Pick a category for your Vouch."); return; }
-    if (theme === "Other" && !name.trim()) { alert("Give your custom Vouch a name — like 'Summer of 2009' or 'Scorsese's Best'"); return; }
+    if (theme === "Other" && !name.trim()) { alert("Give your custom Vouch a name — like 'Summer of 2009' or 'Scorsese\'s Best'"); return; }
     if (items.length === 0) { alert("Add at least one title to your Vouch."); return; }
     const finalName = theme === "Other" ? name : theme;
     onPublish({ name: finalName, theme, description, singleCategory: singleCat, items });
@@ -1340,6 +1322,236 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
 
           <button className="btn btn-solid" style={{ width: "100%", padding: "12px" }} onClick={handlePublish}>Publish Vouch 5</button>
           <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 8, textAlign: "center" }}>Once published, you can update again in 7 days.</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CategoryPicker({ selected, all, onSave, isOnboarding }) {
+  const [cats, setCats] = useState(selected || all.map(c => c.key));
+  const toggle = (key) => setCats(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
+  const moveUp = (i) => { if (i === 0) return; const next = [...cats]; [next[i-1], next[i]] = [next[i], next[i-1]]; setCats(next); };
+  const moveDown = (i) => { if (i === cats.length - 1) return; const next = [...cats]; [next[i], next[i+1]] = [next[i+1], next[i]]; setCats(next); };
+  return (
+    <div>
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 10 }}>Your categories — tap arrows to reorder</div>
+        {cats.map((key, i) => {
+          const cat = all.find(c => c.key === key);
+          if (!cat) return null;
+          return (
+            <div key={key} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0", borderBottom: `1px solid ${T.paperDark}` }}>
+              <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 15, flex: 1 }}>{cat.label}</div>
+              <div style={{ display: "flex", gap: 4 }}>
+                <button onClick={() => moveUp(i)} disabled={i === 0} style={{ background: "transparent", border: `1px solid ${T.paperDark}`, cursor: i === 0 ? "default" : "pointer", opacity: i === 0 ? 0.3 : 1, width: 28, height: 28, fontFamily: "monospace", fontSize: 14 }}>↑</button>
+                <button onClick={() => moveDown(i)} disabled={i === cats.length - 1} style={{ background: "transparent", border: `1px solid ${T.paperDark}`, cursor: i === cats.length - 1 ? "default" : "pointer", opacity: i === cats.length - 1 ? 0.3 : 1, width: 28, height: 28, fontFamily: "monospace", fontSize: 14 }}>↓</button>
+                <button onClick={() => toggle(key)} style={{ background: T.ink, border: "none", color: T.bg, cursor: "pointer", width: 28, height: 28, fontSize: 16 }}>×</button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {all.filter(c => !cats.includes(c.key)).length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkFaint, marginBottom: 10 }}>Add more</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {all.filter(c => !cats.includes(c.key)).map(cat => (
+              <button key={cat.key} onClick={() => toggle(cat.key)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "6px 14px", border: `1px solid ${T.paperDark}`, background: "transparent", color: T.inkMid, cursor: "pointer" }}>+ {cat.label}</button>
+            ))}
+          </div>
+        </div>
+      )}
+      <button className="btn btn-solid" style={{ width: "100%", padding: "12px" }} onClick={() => onSave(cats)}>
+        {isOnboarding ? "Set Up My Shelf →" : "Save Changes"}
+      </button>
+      {isOnboarding && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 8, textAlign: "center" }}>You can always change this later in Settings.</div>}
+    </div>
+  );
+}
+
+function EditMetaForm({ board, themes, onSave, onClose }) {
+  const [name, setName]               = useState(board.name || "");
+  const [theme, setTheme]             = useState(board.theme || "");
+  const [description, setDescription] = useState(board.description || "");
+  const handleSave = () => {
+    const finalName = theme === "Other" ? name : (theme || name);
+    if (!finalName.trim()) { alert("Give your Vouch a name."); return; }
+    onSave({ name: finalName, theme: theme || null, description: description || null });
+  };
+  return (
+    <div className="modal-body">
+      <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkLight, marginBottom: 20 }}>Change the name, theme, or description. Titles cannot be changed after publishing.</div>
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>Theme</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {themes.map(t => (
+            <button key={t} onClick={() => setTheme(t)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "4px 10px", border: `1px solid ${theme === t ? T.ink : T.paperDark}`, background: theme === t ? T.ink : "transparent", color: theme === t ? T.bg : T.inkMid, cursor: "pointer" }}>{t === "Other" ? "Other — Create Your Own" : t}</button>
+          ))}
+        </div>
+        {theme === "Other" && <input className="search-input" style={{ marginTop: 10, marginBottom: 0 }} placeholder="e.g. Summer of 2009…" value={name} onChange={e => setName(e.target.value)} maxLength={60} />}
+      </div>
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>One Line Description (optional)</div>
+        <input className="search-input" style={{ marginBottom: 0 }} placeholder="e.g. These artists remind me of the summer…" value={description} onChange={e => setDescription(e.target.value)} maxLength={120} />
+      </div>
+      <div style={{ display: "flex", gap: 10 }}>
+        <button className="btn btn-solid" style={{ flex: 1, padding: "12px" }} onClick={handleSave}>Save Changes</button>
+        <button className="btn btn-ghost" style={{ flex: 1, padding: "12px" }} onClick={onClose}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
+function BoardEditorModal({ onClose, onPublish, existing, categories, themes }) {
+  const DRAFT_KEY = "vouch-board-draft";
+  const savedDraft = !existing ? (() => { try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || "null"); } catch(e) { return null; } })() : null;
+  const [name, setName]               = useState(savedDraft?.name ?? existing?.name ?? "");
+  const [theme, setTheme]             = useState(savedDraft?.theme ?? existing?.theme ?? "");
+  const [description, setDescription] = useState(savedDraft?.description ?? existing?.description ?? "");
+  const [singleCat, setSingleCat]     = useState(savedDraft?.singleCat ?? existing?.single_category ?? "");
+  const [items, setItems]             = useState(savedDraft?.items ?? existing?.vouch_board_items?.sort((a,b)=>a.position-b.position).map(i => ({ ...i, id: i.item_id, sub: i.subtitle, catKey: i.category })) ?? []);
+  const [addingItem, setAddingItem]   = useState(false);
+  const [q, setQ]                     = useState("");
+  const [results, setResults]         = useState([]);
+  const [busy, setBusy]               = useState(false);
+  const [confirming, setConfirming]   = useState(false);
+  const timer                         = useRef(null);
+  const TMDB_KEY                      = "24f3b03466f2f7db2d54a0f53607da4f";
+
+  useEffect(() => {
+    if (existing) return;
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({ name, theme, description, singleCat, items }));
+  }, [name, theme, description, singleCat, items, existing]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!q.trim()) { setResults([]); return; }
+    clearTimeout(timer.current);
+    timer.current = setTimeout(async () => {
+      setBusy(true);
+      try {
+        const fetches = [];
+        if (!singleCat || singleCat === "movies") fetches.push(fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`).then(r=>r.json()).then(d=>(d.results||[]).slice(0,3).map(r=>({ id:r.id, title:r.title, sub:r.release_date?.slice(0,4)||"", poster:r.poster_path?`https://image.tmdb.org/t/p/w500${r.poster_path}`:null, catKey:"movies" }))));
+        if (!singleCat || singleCat === "shows") fetches.push(fetch(`https://api.themoviedb.org/3/search/tv?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`).then(r=>r.json()).then(d=>(d.results||[]).slice(0,2).map(r=>({ id:r.id, title:r.name, sub:r.first_air_date?.slice(0,4)||"", poster:r.poster_path?`https://image.tmdb.org/t/p/w500${r.poster_path}`:null, catKey:"shows" }))));
+        if (!singleCat || ["albums","songs","artists"].includes(singleCat)) {
+          const type = singleCat === "albums" ? "album" : singleCat === "songs" ? "track" : singleCat === "artists" ? "artist" : "track,album,artist";
+          fetches.push(fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=${type}`).then(r=>r.json()).then(d=>{
+            const res = [];
+            if (!singleCat || singleCat==="songs") (d.tracks?.items||[]).slice(0,2).forEach(r=>res.push({ id:r.id, title:r.name, sub:r.artists?.[0]?.name||"", poster:r.album?.images?.[0]?.url||null, catKey:"songs" }));
+            if (!singleCat || singleCat==="albums") (d.albums?.items||[]).slice(0,2).forEach(r=>res.push({ id:r.id, title:r.name, sub:r.artists?.[0]?.name||"", poster:r.images?.[0]?.url||null, catKey:"albums" }));
+            if (!singleCat || singleCat==="artists") (d.artists?.items||[]).slice(0,2).forEach(r=>res.push({ id:r.id, title:r.name, sub:r.genres?.[0]||"", poster:r.images?.[0]?.url||null, catKey:"artists" }));
+            return res;
+          }));
+        }
+        if (!singleCat || singleCat === "books") fetches.push(fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=3`).then(r=>r.json()).then(d=>(d.docs||[]).slice(0,2).map(r=>({ id:r.key||r.title, title:r.title, sub:(r.author_name||[]).join(", "), poster:r.cover_i?`https://covers.openlibrary.org/b/id/${r.cover_i}-L.jpg`:null, catKey:"books" }))));
+        const all = (await Promise.all(fetches)).flat();
+        setResults(all);
+      } catch(e) { console.error(e); }
+      setBusy(false);
+    }, 400);
+  }, [q, singleCat]);
+
+  const addItem = (item) => {
+    if (items.length >= 5) return;
+    if (items.find(i => String(i.id) === String(item.id))) return;
+    setItems(prev => [...prev, item]);
+    setQ(""); setResults([]); setAddingItem(false);
+  };
+  const removeItem = (idx) => setItems(prev => prev.filter((_, i) => i !== idx));
+  const handlePublish = () => {
+    if (!theme) { alert("Pick a theme for your Vouch."); return; }
+    if (theme === "Other" && !name.trim()) { alert("Give your Vouch a name."); return; }
+    if (items.length === 0) { alert("Add at least one title."); return; }
+    setConfirming(true);
+  };
+  const handleConfirmPublish = () => {
+    const finalName = theme === "Other" ? name : theme;
+    localStorage.removeItem(DRAFT_KEY);
+    setConfirming(false);
+    onPublish({ name: finalName, theme, description, singleCategory: singleCat, items });
+  };
+  const catLabel = (key) => categories.find(c => c.key === key)?.label || key;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxHeight: "88vh" }}>
+        <div className="modal-head">
+          <div className="modal-title">Create Your Vouch 5</div>
+          <button className="modal-x" onClick={() => { localStorage.removeItem(DRAFT_KEY); onClose(); }}>×</button>
+        </div>
+        <div className="modal-body">
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>Theme</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {themes.map(t => (
+                <button key={t} onClick={() => setTheme(t)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "4px 10px", border: `1px solid ${theme === t ? T.ink : T.paperDark}`, background: theme === t ? T.ink : "transparent", color: theme === t ? T.bg : T.inkMid, cursor: "pointer" }}>{t === "Other" ? "Other — Create Your Own" : t}</button>
+              ))}
+            </div>
+            {theme === "Other" && <input className="search-input" style={{ marginTop: 10, marginBottom: 0 }} placeholder="e.g. Summer of 2009, Scorsese's Best…" value={name} onChange={e => setName(e.target.value)} maxLength={60} />}
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+              <input type="checkbox" checked={!!singleCat} onChange={e => setSingleCat(e.target.checked ? categories[0].key : "")} style={{ width: 16, height: 16, cursor: "pointer" }} />
+              <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid }}>This is all one category</div>
+            </label>
+            {singleCat && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
+                {categories.map(c => (
+                  <button key={c.key} onClick={() => setSingleCat(c.key)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "4px 10px", border: `1px solid ${singleCat === c.key ? T.ink : T.paperDark}`, background: singleCat === c.key ? T.ink : "transparent", color: singleCat === c.key ? T.bg : T.inkMid, cursor: "pointer" }}>{c.label}</button>
+                ))}
+              </div>
+            )}
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>One Line About This Vouch (optional)</div>
+            <input className="search-input" style={{ marginBottom: 0 }} placeholder="e.g. These artists remind me of the summer…" value={description} onChange={e => setDescription(e.target.value)} maxLength={120} />
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 8 }}>Titles ({items.length}/5)</div>
+            {items.length > 0 && (
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+                {items.map((item, i) => (
+                  <div key={i} style={{ position: "relative", width: 70 }}>
+                    {item.poster ? <img src={item.poster} alt={item.title} style={{ width: 70, height: 96, objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block" }} onError={e => e.target.style.display="none"} /> : <div style={{ width: 70, height: 96, background: T.paperDark, border: `1px solid ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 4 }}>{item.title}</div>}
+                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: T.inkFaint, marginTop: 2, textAlign: "center" }}>{catLabel(item.catKey || item.category)}</div>
+                    <button onClick={() => removeItem(i)} style={{ position: "absolute", top: 2, right: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 20, height: 20, cursor: "pointer", fontSize: 14, lineHeight: "20px", textAlign: "center" }}>×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {items.length < 5 && (
+              addingItem ? (
+                <div>
+                  <input className="search-input" placeholder="Search to add a title…" value={q} onChange={e => setQ(e.target.value)} autoFocus />
+                  {busy && <div className="loading">Searching…</div>}
+                  {results.map((r, i) => (
+                    <div key={i} className="result-item" onClick={() => addItem(r)}>
+                      {r.poster ? <img src={r.poster} alt={r.title} className="result-img" /> : <div className="result-img" />}
+                      <div style={{ flex: 1 }}><div className="result-title">{r.title}</div><div className="result-sub">{r.sub}</div></div>
+                      <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", color: T.inkFaint }}>{catLabel(r.catKey)}</div>
+                    </div>
+                  ))}
+                  <button className="btn btn-ghost" style={{ marginTop: 8, width: "100%" }} onClick={() => { setAddingItem(false); setQ(""); setResults([]); }}>Cancel</button>
+                </div>
+              ) : (
+                <button className="btn btn-ghost" style={{ width: "100%" }} onClick={() => setAddingItem(true)}>+ Add Title</button>
+              )
+            )}
+          </div>
+          <button className="btn btn-solid" style={{ width: "100%", padding: "12px" }} onClick={handlePublish}>Publish Vouch 5</button>
+          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 8, textAlign: "center" }}>Once published, you can update again next week.</div>
+          {confirming && (
+            <div style={{ position: "fixed", inset: 0, background: "rgba(17,16,8,0.85)", zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+              <div style={{ background: T.paper, border: `2px double ${T.ink}`, padding: 32, maxWidth: 380, width: "100%" }}>
+                <div style={{ fontFamily: "'Times New Roman',serif", fontWeight: 900, fontSize: 22, marginBottom: 12 }}>Ready to publish?</div>
+                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkMid, lineHeight: 1.7, marginBottom: 24 }}>Once published, your Vouch 5 is live for all your buddies to see. You can only publish once a week — so make it count.</div>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button className="btn btn-solid" style={{ flex: 1, padding: "12px" }} onClick={handleConfirmPublish}>Yes, Publish</button>
+                  <button className="btn btn-ghost" style={{ flex: 1, padding: "12px" }} onClick={() => setConfirming(false)}>Go Back</button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -1444,7 +1656,6 @@ export default function Vouch() {
   const [viewing,        setViewing]        = useState(null);
   const [board,          setBoard]          = useState({ ...EMPTY_BOARD });
   const [viewBoard,      setViewBoard]      = useState({ ...EMPTY_BOARD });
-  const [viewActiveBoard, setViewActiveBoard] = useState(null);
   const [loading,        setLoading]        = useState(false);
   const [lightbox,       setLightbox]       = useState(null);
   const [addModal,       setAddModal]       = useState(null);
@@ -1466,6 +1677,18 @@ export default function Vouch() {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "instant" });
   const [sentRequests,   setSentRequests]   = useState([]);
+  const [userCategories, setUserCategories] = useState(null);
+  const [onboarding,     setOnboarding]     = useState(false);
+  const [activeBoard,    setActiveBoard]    = useState(null);
+  const [boardArchive,   setBoardArchive]   = useState([]);
+  const [boardEditor,    setBoardEditor]    = useState(false);
+  const [archivePage,    setArchivePage]    = useState(false);
+  const [editingBoard,   setEditingBoard]   = useState(null);
+  const [editingMeta,    setEditingMeta]    = useState(false);
+  const [newAgreements,  setNewAgreements]  = useState([]);
+  const [showAgreements, setShowAgreements] = useState(false);
+  const [viewerReactions,setViewerReactions]= useState([]);
+  const [viewActiveBoard,setViewActiveBoard]= useState(null);
   const [activeBoard,    setActiveBoard]    = useState(null);
   const [boardArchive,   setBoardArchive]   = useState([]);
   const [boardEditor,    setBoardEditor]    = useState(false);
@@ -1534,9 +1757,56 @@ export default function Vouch() {
     await loadVouchBoards(userId);
   };
 
-  const loadBoardReactions = async (ownerId) => {
+  const loadBoardReactions = async (ownerId, isViewing = false) => {
     const { data } = await supabase.from("reactions").select("*").eq("item_owner_id", ownerId).order("created_at", { ascending: false });
     setBoardReactions(data || []);
+    if (isViewing) {
+      const { data: theirAgreements } = await supabase.from("reactions").select("*").eq("user_id", ownerId).order("created_at", { ascending: false });
+      setViewerReactions(theirAgreements || []);
+    }
+  };
+
+  const loadVouchBoards = async (uid) => {
+    const { data } = await supabase
+      .from("vouch_boards")
+      .select("*, vouch_board_items(*)")
+      .eq("user_id", uid)
+      .order("created_at", { ascending: false });
+    if (data) {
+      const active = data.find(b => b.is_active) || null;
+      setActiveBoard(active);
+      setBoardArchive(data);
+    }
+  };
+
+  const publishBoard = async (boardData) => {
+    const { name, theme, description, singleCategory, items } = boardData;
+    await supabase.from("vouch_boards").update({ is_active: false }).eq("user_id", userId).eq("is_active", true);
+    const { data: newBoard } = await supabase.from("vouch_boards").insert({
+      user_id: userId, name, theme, description,
+      single_category: singleCategory || null,
+      published_at: new Date().toISOString(), is_active: true,
+    }).select().single();
+    if (!newBoard) return;
+    if (items.length > 0) {
+      await supabase.from("vouch_board_items").insert(
+        items.map((item, i) => ({
+          board_id: newBoard.id, item_id: String(item.id),
+          title: item.title, subtitle: item.sub || item.subtitle || "",
+          poster: item.poster || null,
+          source_url: item.sourceUrl || item.source_url || null,
+          category: item.catKey || item.category || "", position: i,
+        }))
+      );
+    }
+    await loadVouchBoards(userId);
+    setBoardEditor(false); setEditingBoard(null);
+  };
+
+  const republishBoard = async (archivedBoard) => {
+    await supabase.from("vouch_boards").update({ is_active: false }).eq("user_id", userId).eq("is_active", true);
+    await supabase.from("vouch_boards").update({ is_active: true, published_at: new Date().toISOString() }).eq("id", archivedBoard.id);
+    await loadVouchBoards(userId);
   };
 
   const loadBoard = async (uid) => {
@@ -1568,7 +1838,6 @@ export default function Vouch() {
       }
     });
     setViewBoard(b);
-    // Load this buddy's active vouch board
     const { data: activeBoardData } = await supabase.from("vouch_boards").select("*, vouch_board_items(*)").eq("user_id", uid).eq("is_active", true).maybeSingle();
     setViewActiveBoard(activeBoardData || null);
     // Always fetch fresh profile data including avatar
@@ -1658,6 +1927,32 @@ export default function Vouch() {
         loadBuddies(uid);
         loadMyReactions(uid);
         loadVouchBoards(uid);
+        // Check for new agreements since last visit
+        const lastVisit = localStorage.getItem("vouch-last-visit") || new Date(0).toISOString();
+        const { data: newAgrees } = await supabase.from("reactions")
+          .select("user_id, title")
+          .eq("item_owner_id", uid)
+          .gt("created_at", lastVisit)
+          .order("created_at", { ascending: false })
+          .limit(5);
+        if (newAgrees && newAgrees.length > 0) {
+          const uids = [...new Set(newAgrees.map(r => r.user_id))];
+          const { data: profs } = await supabase.from("profiles").select("id, display_name").in("id", uids);
+          newAgrees.forEach(r => { r.display_name = profs?.find(p => p.id === r.user_id)?.display_name || "Someone"; });
+          setNewAgreements(newAgrees);
+        }
+        localStorage.setItem("vouch-last-visit", new Date().toISOString());
+        // Load category preferences
+        const { data: prof } = await supabase.from("profiles").select("categories").eq("id", uid).maybeSingle();
+        if (prof?.categories && prof.categories.length > 0) {
+          setUserCategories(prof.categories);
+        } else if (prof && !prof.categories) {
+          setOnboarding(true);
+          setUserCategories(CATEGORIES.map(c => c.key));
+        } else {
+          setUserCategories(CATEGORIES.map(c => c.key));
+        }
+        loadVouchBoards(uid);
         const params = new URLSearchParams(window.location.search);
         const inviteFrom = params.get("invite");
         if (inviteFrom && inviteFrom !== uid) {
@@ -1736,11 +2031,8 @@ export default function Vouch() {
     const shareUsername = viewing ? viewing.username : user.username;
     const shareName = viewing ? viewing.displayName : user.displayName;
     const shareUrl = `${window.location.origin}/@${shareUsername}`;
-    const boardItems = isOwn && activeBoard?.vouch_board_items?.length > 0
-      ? activeBoard.vouch_board_items.sort((a,x) => a.position - x.position).slice(0,5).map(i => ({ ...i, id: i.item_id, _cat: i.category, sub: i.subtitle }))
-      : Object.values(currBoard).flat().filter(i => i.vouched);
-    const vouchedCount = boardItems.length;
-    const topItem = boardItems[0] || null;
+    const vouchedCount = Object.values(currBoard).flat().filter(i => i.vouched).length;
+    const topItem = Object.values(currBoard).flat().find(i => i.vouched) || Object.values(currBoard).flat()[0];
 
     const canvas = document.createElement("canvas");
     canvas.width = 1080;
@@ -1929,6 +2221,12 @@ export default function Vouch() {
     }, "image/png");
   };
 
+  const saveCategories = async (cats) => {
+    await supabase.from("profiles").update({ categories: cats }).eq("id", userId);
+    setUserCategories(cats);
+    setOnboarding(false);
+  };
+
   const saveAvatar = async (file) => {
     const url = `/avatars/${file}.jpg`;
     await supabase.from("profiles").update({ avatar_url: url }).eq("id", userId);
@@ -2103,6 +2401,20 @@ export default function Vouch() {
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   })();
 
+  const canPublish = (() => {
+    if (!activeBoard?.published_at) return true;
+    const publishedAt = new Date(activeBoard.published_at);
+    const daysSince = (Date.now() - publishedAt.getTime()) / (1000 * 60 * 60 * 24);
+    return daysSince >= 7;
+  })();
+
+  const nextPublishDate = (() => {
+    if (!activeBoard?.published_at || canPublish) return null;
+    const d = new Date(activeBoard.published_at);
+    d.setDate(d.getDate() + 7);
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  })();
+
   // Build a map of item_id -> unique user count across all buddy boards (for badges)
   const buddyCounts = {};
   const seenBadge = new Set();
@@ -2177,11 +2489,42 @@ export default function Vouch() {
             <button className={`nav-btn${tab === "friends" ? " active" : ""}`} onClick={() => { setTab("friends"); setViewing(null); window.history.replaceState({}, "", "/"); scrollToTop(); }}>
               Buddies {pendingIn.length > 0 && <span style={{ background: T.ink, color: T.bg, borderRadius: "50%", fontSize: 9, padding: "1px 5px", marginLeft: 4 }}>{pendingIn.length}</span>}
             </button>
+            <button className={`nav-btn${tab === "settings" ? " active" : ""}`} onClick={() => { setTab("settings"); setViewing(null); scrollToTop(); }}>Settings</button>
             {viewing && <button className="nav-btn active">{currName}</button>}
           </nav>
         </header>
 
         <main className="page">
+          {newAgreements.length > 0 && !viewing && tab === "board" && (
+            <div style={{ background: T.ink, color: T.bg, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }} onClick={() => setShowAgreements(true)}>
+              <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13 }}>
+                {newAgreements.length === 1
+                  ? <><strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11 }}>{newAgreements[0].display_name}</strong> agreed with <strong style={{ fontStyle: "normal" }}>{newAgreements[0].title}</strong> →</>
+                  : <><strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11 }}>{newAgreements.length} people</strong> agreed with your titles — tap to see →</>
+                }
+              </div>
+              <button onClick={e => { e.stopPropagation(); setNewAgreements([]); }} style={{ background: "transparent", border: "none", color: "rgba(200,194,180,0.5)", fontSize: 20, cursor: "pointer", padding: 0, flexShrink: 0 }}>×</button>
+            </div>
+          )}
+
+          {tab === "settings" && !viewing && (
+            <div style={{ maxWidth: 540, margin: "32px auto" }}>
+              <div className="board-name" style={{ fontSize: 28, marginBottom: 8 }}>Settings</div>
+              <div className="board-sub" style={{ marginBottom: 32 }}>Customize your Vouch experience</div>
+              <div style={{ marginBottom: 40 }}>
+                <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 8 }}>My Shelf Categories</div>
+                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 20, lineHeight: 1.6 }}>
+                  Choose which categories appear on your shelf. Drag to reorder.
+                </div>
+                <CategoryPicker selected={userCategories || CATEGORIES.map(c => c.key)} all={CATEGORIES} onSave={saveCategories} />
+              </div>
+              <div style={{ borderTop: `1px solid ${T.paperDark}`, paddingTop: 28 }}>
+                <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 16 }}>Avatar</div>
+                <button className="btn btn-ghost" onClick={() => setAvatarPicker(true)}>Change Avatar</button>
+              </div>
+            </div>
+          )}
+
           {tab === "board" && !viewing && pendingIn.length > 0 && (
             <div onClick={() => setTab("friends")} style={{ background: T.ink, color: T.bg, padding: "12px 16px", marginBottom: 20, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14 }}>
@@ -2359,10 +2702,10 @@ export default function Vouch() {
                   <div className="vouch-section" style={{ marginBottom: 52 }}>
                     <div className="vouch-section-header">
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.35)", marginBottom: 6 }}>Vouch 5</div>
-                        {activeBoard?.name && <div style={{ fontFamily: "'Times New Roman', Times, serif", fontWeight: 900, fontSize: 34, color: "rgba(200,194,180,0.95)", lineHeight: 1, marginBottom: 4 }}>{activeBoard.name}{activeBoard?.theme && activeBoard.theme !== "Other" ? <span style={{ fontFamily: "'Spectral SC',serif", fontSize: 14, fontWeight: 400, letterSpacing: "0.12em", color: "rgba(200,194,180,0.45)", marginLeft: 10 }}>{activeBoard.theme}</span> : ""}</div>}
-                        {activeBoard?.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.4)", marginTop: 3 }}>{activeBoard.description}</div>}
-                        {activeBoard?.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.25)", marginTop: 5 }}>Published {new Date(activeBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>}
+                        <div className="vouch-section-label">Vouch 5</div>
+                        {activeBoard?.name && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: "rgba(200,194,180,0.6)", marginTop: 2 }}>{activeBoard.name}{activeBoard.theme ? ` · ${activeBoard.theme}` : ""}</div>}
+                        {activeBoard?.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: "rgba(200,194,180,0.4)", marginTop: 2 }}>{activeBoard.description}</div>}
+                        {activeBoard?.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.3)", marginTop: 4 }}>Published {new Date(activeBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} · Current Vouch</div>}
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end", flexShrink: 0 }}>
                         {canPublish ? <button className="vouch-section-add" onClick={() => { setEditingBoard(null); setBoardEditor(true); }}>+ New Vouch</button> : <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.35)", textAlign: "right" }}>Locked until<br />{nextPublishDate}</div>}
@@ -2388,7 +2731,7 @@ export default function Vouch() {
                   <div className="vouch-section" style={{ marginBottom: 52 }}>
                     <div className="vouch-section-header">
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginBottom: 6 }}>Vouch 5{viewActiveBoard.theme ? " · " + viewActiveBoard.theme : ""}</div>
+                        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginBottom: 6 }}>Vouch 5</div>
                         {viewActiveBoard.name && <div style={{ fontFamily: "'Times New Roman', Times, serif", fontWeight: 900, fontSize: 34, color: "rgba(200,194,180,0.95)", lineHeight: 1, marginBottom: 4 }}>{viewActiveBoard.name}{viewActiveBoard?.theme && viewActiveBoard.theme !== "Other" ? <span style={{ fontFamily: "'Spectral SC',serif", fontSize: 14, fontWeight: 400, letterSpacing: "0.12em", color: "rgba(200,194,180,0.45)", marginLeft: 10 }}>{viewActiveBoard.theme}</span> : ""}</div>}
                         {viewActiveBoard.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 5 }}>{viewActiveBoard.description}</div>}
                         {viewActiveBoard.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.3)", marginTop: 4 }}>Published {new Date(viewActiveBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>}
@@ -2400,27 +2743,37 @@ export default function Vouch() {
                         if (brd[item.category]) brd[item.category].push({ id: item.item_id, title: item.title, sub: item.subtitle || "", poster: item.poster, comment: "", vouched: true, sourceUrl: item.source_url, _cat: item.category, _catLabel: CATEGORIES.find(c=>c.key===item.category)?.label || item.category });
                       });
                       return brd;
-                    })()} isOwn={false} onCard={(k, i) => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} hideHeader={true} />
+                    })()} isOwn={false} onCard={(k,i)=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} hideHeader={true} />
                   </div>
                 ) : null}
 
                 {(() => {
-                  // On own board show all categories; on others' boards hide empty ones and sort filled first
                   const cats = isOwn
-                    ? CATEGORIES
+                    ? (userCategories ? CATEGORIES.filter(c => userCategories.includes(c.key)).sort((a,b) => userCategories.indexOf(a.key) - userCategories.indexOf(b.key)) : CATEGORIES)
                     : [...CATEGORIES].sort((a, b) => {
                         const aLen = (currBoard[a.key] || []).length;
                         const bLen = (currBoard[b.key] || []).length;
                         return bLen - aLen;
                       });
-                  return cats.map(cat => {
-                    const items = currBoard[cat.key] || [];
-                    if (!isOwn && items.length === 0) return null;
-                    return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={setAddModal} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} />;
-                  });
+                  const visibleCats = cats.filter(cat => isOwn || (currBoard[cat.key] || []).length > 0);
+                  if (visibleCats.length === 0) return null;
+                  return <>
+                    <div style={{ marginBottom: 28, borderBottom: `2px solid ${T.ink}`, paddingBottom: 12 }}>
+                      <div style={{ fontFamily: "'Spectral SC', serif", fontWeight: 700, fontSize: 32, color: T.ink, letterSpacing: "0.08em" }}>
+                        {isOwn ? "My Shelf" : `${(currName || "").split(" ")[0]}'s Shelf`}
+                      </div>
+                      <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkLight, marginTop: 3 }}>
+                        {isOwn ? "The stuff on your shelf — films, albums, books, shows worth putting your name behind." : `What ${(currName || "").split(" ")[0]} has on their shelf.`}
+                      </div>
+                    </div>
+                    {visibleCats.map(cat => {
+                      const items = currBoard[cat.key] || [];
+                      return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={(key) => { if (!activeBoard) { alert("Publish your first Vouch 5 before adding to your shelf."); return; } setAddModal(key); }} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} />;
+                    })}
+                  </>;
                 })()}
 
-                <MutualMentions reactions={isOwn ? boardReactions : boardReactions.filter(r => r.user_id === viewing?.userId)} myReactions={myReactions} isOwn={isOwn} boardOwnerName={currName} buddies={buddies} onViewBuddy={(b) => { setViewing(b); setTab("board"); loadViewBoard(b.userId); loadBoardReactions(b.userId); window.scrollTo(0, 0); }} />
+                <MutualMentions reactions={isOwn ? boardReactions : viewerReactions} myReactions={myReactions} isOwn={isOwn} boardOwnerName={currName} buddies={buddies} onViewBuddy={(b) => { setViewing(b); setTab("board"); loadViewBoard(b.userId); loadBoardReactions(b.userId); window.scrollTo(0, 0); }} />
 
                 {/* BUDDIES LIST at bottom of every board */}
                 {(() => {
@@ -2593,6 +2946,113 @@ export default function Vouch() {
             themes={BOARD_THEMES}
             userId={userId}
           />
+        )}
+
+        {archivePage && (
+          <div className="modal-overlay" onClick={() => setArchivePage(false)}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <div className="modal-head">
+                <div className="modal-title">Your Vouch Archive</div>
+                <button className="modal-x" onClick={() => setArchivePage(false)}>×</button>
+              </div>
+              <div className="modal-body">
+                {boardArchive.length === 0 && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight }}>No archived boards yet.</div>}
+                {boardArchive.map(b => (
+                  <div key={b.id} style={{ borderBottom: `1px solid ${T.paperDark}`, padding: "14px 0" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                      <div>
+                        <div style={{ fontFamily: "'Spectral',serif", fontWeight: 700, fontSize: 15 }}>{b.name || "Untitled Vouch"}</div>
+                        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.12em", color: T.inkLight, marginTop: 2 }}>
+                          {b.theme}{b.published_at ? ` · ${new Date(b.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}` : ""}
+                          {b.is_active && <span style={{ marginLeft: 8, color: T.ink, fontWeight: 700 }}>· Active</span>}
+                        </div>
+                        {b.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkMid, marginTop: 3 }}>{b.description}</div>}
+                      </div>
+                      {!b.is_active && canPublish && (
+                        <button className="btn btn-solid" style={{ padding: "4px 12px", fontSize: 10 }} onClick={() => { republishBoard(b); setArchivePage(false); }}>Republish</button>
+                      )}
+                    </div>
+                    {b.vouch_board_items?.length > 0 && (
+                      <div style={{ display: "flex", gap: 6 }}>
+                        {b.vouch_board_items.sort((a,b) => a.position - b.position).slice(0,5).map((item, i) => (
+                          item.poster
+                            ? <img key={i} src={item.poster} alt={item.title} style={{ width: 44, height: 60, objectFit: "cover", border: `1px solid ${T.paperDark}` }} onError={e => e.target.style.display = "none"} />
+                            : <div key={i} style={{ width: 44, height: 60, background: T.paperDark, border: `1px solid ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 3 }}>{item.title}</div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showAgreements && (
+          <div className="modal-overlay" onClick={() => setShowAgreements(false)}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <div className="modal-head">
+                <div className="modal-title">New Agreements</div>
+                <button className="modal-x" onClick={() => setShowAgreements(false)}>×</button>
+              </div>
+              <div className="modal-body">
+                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkLight, marginBottom: 16 }}>Since your last visit</div>
+                {newAgreements.map((r, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
+                    <div style={{ width: 36, height: 36, background: T.ink, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <span style={{ fontFamily: "'Times New Roman',serif", fontWeight: 900, fontSize: 13, color: T.bg }}>{(r.display_name || "?").split(" ").map(w => w[0]).join("").slice(0,2).toUpperCase()}</span>
+                    </div>
+                    <div>
+                      <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 14 }}>{r.display_name.split(" ")[0]} {r.display_name.split(" ")[1]?.[0]}.</div>
+                      <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkMid, marginTop: 1 }}>agreed with <strong style={{ fontStyle: "normal" }}>{r.title}</strong></div>
+                    </div>
+                  </div>
+                ))}
+                <button className="btn btn-ghost" style={{ width: "100%", marginTop: 16 }} onClick={() => { setShowAgreements(false); setNewAgreements([]); }}>Dismiss</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {onboarding && (
+          <div className="modal-overlay">
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <div className="modal-head"><div className="modal-title">Welcome to Vouch.</div></div>
+              <div className="modal-body">
+                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkMid, marginBottom: 24, lineHeight: 1.7 }}>
+                  Pick which categories you want on your shelf and put them in the order that feels right for you.
+                </div>
+                <CategoryPicker selected={userCategories || CATEGORIES.map(c => c.key)} all={CATEGORIES} onSave={saveCategories} isOnboarding={true} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {boardEditor && (
+          <BoardEditorModal
+            onClose={() => { setBoardEditor(false); setEditingBoard(null); }}
+            onPublish={publishBoard}
+            existing={editingBoard}
+            categories={CATEGORIES}
+            themes={BOARD_THEMES}
+            userId={userId}
+          />
+        )}
+
+        {editingMeta && activeBoard && (
+          <div className="modal-overlay" onClick={() => setEditingMeta(false)}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <div className="modal-head">
+                <div className="modal-title">Edit Vouch Details</div>
+                <button className="modal-x" onClick={() => setEditingMeta(false)}>×</button>
+              </div>
+              <EditMetaForm board={activeBoard} themes={BOARD_THEMES} onSave={async (updates) => {
+                await supabase.from("vouch_boards").update(updates).eq("id", activeBoard.id);
+                await loadVouchBoards(userId);
+                setEditingMeta(false);
+              }} onClose={() => setEditingMeta(false)} />
+            </div>
+          </div>
         )}
 
         {archivePage && (
