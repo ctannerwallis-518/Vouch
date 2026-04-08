@@ -358,7 +358,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
               <div className="vouch-section-header">
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginBottom: 6 }}>Vouch 5{activeBoard.theme ? " · " + activeBoard.theme : ""}</div>
-                  {activeBoard.name && <div style={{ fontFamily: "'Times New Roman', Times, serif", fontWeight: 900, fontSize: 28, color: "rgba(200,194,180,0.95)", lineHeight: 1.1 }}>{activeBoard.name}</div>}
+                  {activeBoard.name && <div style={{ fontFamily: "'Times New Roman', Times, serif", fontWeight: 900, fontSize: 34, color: "rgba(200,194,180,0.95)", lineHeight: 1, marginBottom: 4 }}>{activeBoard.name}{activeBoard?.theme && activeBoard.theme !== "Other" ? <span style={{ fontFamily: "'Spectral SC',serif", fontSize: 14, fontWeight: 400, letterSpacing: "0.12em", color: "rgba(200,194,180,0.45)", marginLeft: 10 }}>{activeBoard.theme}</span> : ""}</div>}
                   {activeBoard.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 5 }}>{activeBoard.description}</div>}
                 </div>
               </div>
@@ -1736,8 +1736,11 @@ export default function Vouch() {
     const shareUsername = viewing ? viewing.username : user.username;
     const shareName = viewing ? viewing.displayName : user.displayName;
     const shareUrl = `${window.location.origin}/@${shareUsername}`;
-    const vouchedCount = Object.values(currBoard).flat().filter(i => i.vouched).length;
-    const topItem = Object.values(currBoard).flat().find(i => i.vouched) || Object.values(currBoard).flat()[0];
+    const boardItems = isOwn && activeBoard?.vouch_board_items?.length > 0
+      ? activeBoard.vouch_board_items.sort((a,x) => a.position - x.position).slice(0,5).map(i => ({ ...i, id: i.item_id, _cat: i.category, sub: i.subtitle }))
+      : Object.values(currBoard).flat().filter(i => i.vouched);
+    const vouchedCount = boardItems.length;
+    const topItem = boardItems[0] || null;
 
     const canvas = document.createElement("canvas");
     canvas.width = 1080;
@@ -2356,10 +2359,10 @@ export default function Vouch() {
                   <div className="vouch-section" style={{ marginBottom: 52 }}>
                     <div className="vouch-section-header">
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div className="vouch-section-label">Vouch 5</div>
-                        {activeBoard?.name && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: "rgba(200,194,180,0.6)", marginTop: 2 }}>{activeBoard.name}{activeBoard.theme ? ` · ${activeBoard.theme}` : ""}</div>}
-                        {activeBoard?.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: "rgba(200,194,180,0.4)", marginTop: 2 }}>{activeBoard.description}</div>}
-                        {activeBoard?.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.3)", marginTop: 4 }}>Published {new Date(activeBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} · Current Vouch</div>}
+                        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.35)", marginBottom: 6 }}>Vouch 5</div>
+                        {activeBoard?.name && <div style={{ fontFamily: "'Times New Roman', Times, serif", fontWeight: 900, fontSize: 34, color: "rgba(200,194,180,0.95)", lineHeight: 1, marginBottom: 4 }}>{activeBoard.name}{activeBoard?.theme && activeBoard.theme !== "Other" ? <span style={{ fontFamily: "'Spectral SC',serif", fontSize: 14, fontWeight: 400, letterSpacing: "0.12em", color: "rgba(200,194,180,0.45)", marginLeft: 10 }}>{activeBoard.theme}</span> : ""}</div>}
+                        {activeBoard?.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.4)", marginTop: 3 }}>{activeBoard.description}</div>}
+                        {activeBoard?.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.25)", marginTop: 5 }}>Published {new Date(activeBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>}
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end", flexShrink: 0 }}>
                         {canPublish ? <button className="vouch-section-add" onClick={() => { setEditingBoard(null); setBoardEditor(true); }}>+ New Vouch</button> : <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.35)", textAlign: "right" }}>Locked until<br />{nextPublishDate}</div>}
@@ -2386,7 +2389,7 @@ export default function Vouch() {
                     <div className="vouch-section-header">
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginBottom: 6 }}>Vouch 5{viewActiveBoard.theme ? " · " + viewActiveBoard.theme : ""}</div>
-                        {viewActiveBoard.name && <div style={{ fontFamily: "'Times New Roman', Times, serif", fontWeight: 900, fontSize: 28, color: "rgba(200,194,180,0.95)", lineHeight: 1.1 }}>{viewActiveBoard.name}</div>}
+                        {viewActiveBoard.name && <div style={{ fontFamily: "'Times New Roman', Times, serif", fontWeight: 900, fontSize: 34, color: "rgba(200,194,180,0.95)", lineHeight: 1, marginBottom: 4 }}>{viewActiveBoard.name}{viewActiveBoard?.theme && viewActiveBoard.theme !== "Other" ? <span style={{ fontFamily: "'Spectral SC',serif", fontSize: 14, fontWeight: 400, letterSpacing: "0.12em", color: "rgba(200,194,180,0.45)", marginLeft: 10 }}>{viewActiveBoard.theme}</span> : ""}</div>}
                         {viewActiveBoard.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 5 }}>{viewActiveBoard.description}</div>}
                         {viewActiveBoard.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.3)", marginTop: 4 }}>Published {new Date(viewActiveBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>}
                       </div>
