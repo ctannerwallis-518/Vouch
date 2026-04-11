@@ -52,13 +52,6 @@ const BOARD_THEMES = [
   "Locals Only", "Other"
 ];
 
-const BOARD_THEMES = [
-  "Film", "Albums", "Artists", "Songs", "Books", "Television",
-  "Seasonal", "All-Timers", "Feelin Lately", "Nostalgic",
-  "New Releases", "Deep Cuts", "Underrated", "No Boundaries",
-  "Locals Only", "Other"
-];
-
 const T = {
   bg:        "#C8C2B4",
   ink:       "#111008",
@@ -1689,11 +1682,6 @@ export default function Vouch() {
   const [showAgreements, setShowAgreements] = useState(false);
   const [viewerReactions,setViewerReactions]= useState([]);
   const [viewActiveBoard,setViewActiveBoard]= useState(null);
-  const [activeBoard,    setActiveBoard]    = useState(null);
-  const [boardArchive,   setBoardArchive]   = useState([]);
-  const [boardEditor,    setBoardEditor]    = useState(false);
-  const [archivePage,    setArchivePage]    = useState(false);
-  const [editingBoard,   setEditingBoard]   = useState(null);
   const [suggested,      setSuggested]      = useState([]);
 
   const loadMyReactions = async (uid) => {
@@ -1766,48 +1754,6 @@ export default function Vouch() {
     }
   };
 
-  const loadVouchBoards = async (uid) => {
-    const { data } = await supabase
-      .from("vouch_boards")
-      .select("*, vouch_board_items(*)")
-      .eq("user_id", uid)
-      .order("created_at", { ascending: false });
-    if (data) {
-      const active = data.find(b => b.is_active) || null;
-      setActiveBoard(active);
-      setBoardArchive(data);
-    }
-  };
-
-  const publishBoard = async (boardData) => {
-    const { name, theme, description, singleCategory, items } = boardData;
-    await supabase.from("vouch_boards").update({ is_active: false }).eq("user_id", userId).eq("is_active", true);
-    const { data: newBoard } = await supabase.from("vouch_boards").insert({
-      user_id: userId, name, theme, description,
-      single_category: singleCategory || null,
-      published_at: new Date().toISOString(), is_active: true,
-    }).select().single();
-    if (!newBoard) return;
-    if (items.length > 0) {
-      await supabase.from("vouch_board_items").insert(
-        items.map((item, i) => ({
-          board_id: newBoard.id, item_id: String(item.id),
-          title: item.title, subtitle: item.sub || item.subtitle || "",
-          poster: item.poster || null,
-          source_url: item.sourceUrl || item.source_url || null,
-          category: item.catKey || item.category || "", position: i,
-        }))
-      );
-    }
-    await loadVouchBoards(userId);
-    setBoardEditor(false); setEditingBoard(null);
-  };
-
-  const republishBoard = async (archivedBoard) => {
-    await supabase.from("vouch_boards").update({ is_active: false }).eq("user_id", userId).eq("is_active", true);
-    await supabase.from("vouch_boards").update({ is_active: true, published_at: new Date().toISOString() }).eq("id", archivedBoard.id);
-    await loadVouchBoards(userId);
-  };
 
   const loadBoard = async (uid) => {
     setLoading(true);
@@ -2386,20 +2332,6 @@ export default function Vouch() {
   };
 
   const vouchedCount = Object.values(board).flat().filter(item => item.vouched).length;
-
-  const canPublish = (() => {
-    if (!activeBoard?.published_at) return true;
-    const publishedAt = new Date(activeBoard.published_at);
-    const daysSince = (Date.now() - publishedAt.getTime()) / (1000 * 60 * 60 * 24);
-    return daysSince >= 7;
-  })();
-
-  const nextPublishDate = (() => {
-    if (!activeBoard?.published_at || canPublish) return null;
-    const d = new Date(activeBoard.published_at);
-    d.setDate(d.getDate() + 7);
-    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  })();
 
   const canPublish = (() => {
     if (!activeBoard?.published_at) return true;
