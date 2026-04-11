@@ -1250,14 +1250,14 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()} style={{ maxHeight: "88vh" }}>
         <div className="modal-head">
-          <div className="modal-title">Create Your Vouch</div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}><div className="modal-title">Create Your Vouch</div><div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: T.inkFaint }}>up to 5 tiles</div></div>
           <button className="modal-x" onClick={onClose}>×</button>
         </div>
         <div className="modal-body">
 
           {/* Category */}
           <div style={{ marginBottom: 16 }}>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 6 }}><div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid }}>Title</div><div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: T.inkFaint }}>— up to 5 tiles</div></div>
+            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>Theme</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {themes.map(t => (
                 <button key={t} onClick={() => setTheme(t)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "4px 10px", border: `1px solid ${theme === t ? T.ink : T.paperDark}`, background: theme === t ? T.ink : "transparent", color: theme === t ? T.bg : T.inkMid, cursor: "pointer" }}>{t === "Other" ? "Other — Create Your Own" : t}</button>
