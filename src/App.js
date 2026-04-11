@@ -52,14 +52,6 @@ const BOARD_THEMES = [
   "Locals Only", "Other"
 ];
 
-const BOARD_THEMES = [
-  "Film", "Albums", "Artists", "Songs", "Books", "Television",
-  "Seasonal", "All-Timers", "Feelin Lately", "Nostalgic",
-  "New Releases", "Deep Cuts", "Underrated", "No Boundaries",
-  "Locals Only", "Other"
-];
-
-const T = {
   bg:        "#C8C2B4",
   ink:       "#111008",
   inkMid:    "#3a3830",
