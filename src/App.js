@@ -1236,7 +1236,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
   const removeItem = (idx) => setItems(prev => prev.filter((_, i) => i !== idx));
 
   const handlePublish = () => {
-    if (!theme) { alert("Pick a category for your Vouch."); return; }
+    if (!theme) { alert("Pick a title for your Vouch."); return; }
     if (theme === "Other" && !name.trim()) { alert("Give your custom Vouch a name — like 'Summer of 2009' or 'Scorsese’s Best'"); return; }
     if (items.length === 0) { alert("Add at least one title to your Vouch."); return; }
     const finalName = theme === "Other" ? name : theme;
@@ -1250,14 +1250,14 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()} style={{ maxHeight: "88vh" }}>
         <div className="modal-head">
-          <div className="modal-title">Create Your Vouch 5</div>
+          <div className="modal-title">Create Your Vouch</div>
           <button className="modal-x" onClick={onClose}>×</button>
         </div>
         <div className="modal-body">
 
           {/* Category */}
           <div style={{ marginBottom: 16 }}>
-            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>Category</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 6 }}><div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid }}>Title</div><div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: T.inkFaint }}>— up to 5 tiles</div></div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {themes.map(t => (
                 <button key={t} onClick={() => setTheme(t)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "4px 10px", border: `1px solid ${theme === t ? T.ink : T.paperDark}`, background: theme === t ? T.ink : "transparent", color: theme === t ? T.bg : T.inkMid, cursor: "pointer" }}>{t === "Other" ? "Other — Create Your Own" : t}</button>
@@ -1309,7 +1309,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
                   <button className="btn btn-ghost" style={{ marginTop: 8, width: "100%" }} onClick={() => { setAddingItem(false); setQ(""); setResults([]); }}>Cancel</button>
                 </div>
               ) : (
-                <button onClick={() => setAddingItem(true)} style={{ width: "100%", padding: "12px", background: T.ink, border: "2px solid #c9a820", color: "#c9a820", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", cursor: "pointer" }}>+ Add Title</button>
+                <button onClick={() => setAddingItem(true)} style={{ width: "100%", padding: "12px", background: T.ink, border: `1px solid ${T.paperDark}`, color: T.bg, fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", cursor: "pointer" }}>+ Add Title</button>
               )
             )}
           </div>
@@ -1320,7 +1320,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
             <input className="search-input" style={{ marginBottom: 0 }} placeholder="e.g. These artists remind me of the summer…" value={description} onChange={e => setDescription(e.target.value)} maxLength={120} />
           </div>
 
-          <button className="btn btn-solid" style={{ width: "100%", padding: "12px" }} onClick={handlePublish}>Publish Vouch 5</button>
+          <button onClick={handlePublish} disabled={items.length === 0} style={{ width: "100%", padding: "12px", background: items.length > 0 ? T.ink : "transparent", border: `2px solid ${items.length > 0 ? "#c9a820" : T.paperDark}`, color: items.length > 0 ? "#c9a820" : T.inkFaint, fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", cursor: items.length > 0 ? "pointer" : "not-allowed", transition: "all 0.2s" }}>Publish Vouch</button>
           <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 8, textAlign: "center" }}>Once published, you can update again in 7 days.</div>
         </div>
       </div>
@@ -2507,7 +2507,7 @@ export default function Vouch() {
                     ) : (
                       <div style={{ height: 220, border: "1px dashed rgba(200,194,180,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 10, cursor: "pointer" }} onClick={() => { setEditingBoard(null); setBoardEditor(true); }}>
                         <span style={{ fontSize: 28, color: "rgba(200,194,180,0.4)" }}>+</span>
-                        <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)" }}>Create Your Vouch 5</span>
+                        <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)" }}>Create Your Vouch</span>
                       </div>
                     )}
                   </div>
