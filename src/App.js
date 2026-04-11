@@ -282,23 +282,27 @@ function PublicBoard({ inviteUserId, onSignUp }) {
             .from("profiles").select("id, display_name, avatar_url").in("id", buddyIds);
           if (profiles) setPublicBuddies(profiles);
         }
+        // Load active vouch board
+        const { data: activeVouchBoard } = await supabase
+          .from("vouch_boards")
+          .select("*, vouch_board_items(*)")
+          .eq("user_id", inviteUserId)
+          .eq("is_active", true)
+          .maybeSingle();
+        // Load shelf (endorsements)
         const { data: rows } = await supabase
           .from("endorsements").select("*").eq("user_id", inviteUserId).order("created_at", { ascending: true });
-        if (rows && rows.length > 0) {
-          const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
-          rows.forEach(row => {
-            if (b[row.category] && b[row.category].length < 5) {
-              b[row.category].push({
-                id: row.item_id, title: row.title, sub: row.subtitle || "",
-                poster: row.poster || null, comment: row.comment || "",
-                vouched: row.vouched || false, sourceUrl: row.source_url || null,
-              });
-            }
-          });
-          setBoard(b);
-        } else {
-          setBoard({ movies: [], albums: [], artists: [], songs: [], books: [], shows: [] });
-        }
+        const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
+        (rows || []).forEach(row => {
+          if (b[row.category] && b[row.category].length < 5) {
+            b[row.category].push({
+              id: row.item_id, title: row.title, sub: row.subtitle || "",
+              poster: row.poster || null, comment: row.comment || "",
+              vouched: row.vouched || false, sourceUrl: row.source_url || null,
+            });
+          }
+        });
+        setBoard({ shelf: b, activeVouchBoard: activeVouchBoard || null });
       } catch(e) { console.error(e); }
       setLoading(false);
     };
@@ -347,7 +351,21 @@ function PublicBoard({ inviteUserId, onSignUp }) {
             ))}
           </div>
           <div className="ornament"><span>—</span><span>✦</span><span>—</span></div>
-          <VouchSection board={board} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} />
+          {board?.activeVouchBoard && (
+            <div style={{ background: T.ink, border: "2px solid #c9a820", padding: "20px 16px", marginBottom: 24 }}>
+              {board.activeVouchBoard.name && <div style={{ fontFamily: "'Times New Roman', Times, serif", fontWeight: 900, fontSize: 28, color: "rgba(200,194,180,0.95)", lineHeight: 1, marginBottom: 4 }}>{board.activeVouchBoard.name}{board.activeVouchBoard.theme && board.activeVouchBoard.theme !== "Other" ? <span style={{ fontFamily: "'Spectral SC',serif", fontSize: 12, fontWeight: 400, letterSpacing: "0.12em", color: "rgba(200,194,180,0.45)", marginLeft: 10 }}>{board.activeVouchBoard.theme}</span> : ""}</div>}
+              {board.activeVouchBoard.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 4, marginBottom: 12 }}>{board.activeVouchBoard.description}</div>}
+              {board.activeVouchBoard.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.3)", marginBottom: 14 }}>Published {new Date(board.activeVouchBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>}
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                {(board.activeVouchBoard.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0,5).map((item, i) => (
+                  <div key={i} style={{ width: 70 }}>
+                    {item.poster ? <img src={item.poster} alt={item.title} style={{ width: 70, height: 96, objectFit: "cover", display: "block" }} /> : <div style={{ width: 70, height: 96, background: "rgba(200,194,180,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: "rgba(200,194,180,0.5)", textAlign: "center", padding: 4 }}>{item.title}</div>}
+                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: "rgba(200,194,180,0.4)", marginTop: 2, textAlign: "center" }}>{item.title}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {publicBuddies.length > 0 && (
             <div style={{ margin: "32px 0", borderTop: `1px solid ${T.paperDark}`, paddingTop: 24 }}>
               <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.18em", color: T.inkMid, marginBottom: 16 }}>Also on Vouch</div>
@@ -368,8 +386,8 @@ function PublicBoard({ inviteUserId, onSignUp }) {
               </div>
             </div>
           )}
-          {[...CATEGORIES].sort((a, b) => (board[b.key] || []).length - (board[a.key] || []).length).map(cat => {
-            const items = board[cat.key] || [];
+          {[...CATEGORIES].sort((a, b) => ((board?.shelf?.[b.key] || []).length - (board?.shelf?.[a.key] || []).length)).map(cat => {
+            const items = board?.shelf?.[cat.key] || [];
             if (items.length === 0) return null;
             return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} />;
           })}
