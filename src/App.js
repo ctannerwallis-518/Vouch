@@ -1268,17 +1268,6 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
             )}
           </div>
 
-          {/* Single category toggle */}
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>Single Category (optional)</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              <button onClick={() => setSingleCat("")} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "4px 10px", border: `1px solid ${!singleCat ? T.ink : T.paperDark}`, background: !singleCat ? T.ink : "transparent", color: !singleCat ? T.bg : T.inkMid, cursor: "pointer" }}>All</button>
-              {categories.map(c => (
-                <button key={c.key} onClick={() => setSingleCat(c.key)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "4px 10px", border: `1px solid ${singleCat === c.key ? T.ink : T.paperDark}`, background: singleCat === c.key ? T.ink : "transparent", color: singleCat === c.key ? T.bg : T.inkMid, cursor: "pointer" }}>{c.label}</button>
-              ))}
-            </div>
-          </div>
-
           {/* Current items + Add */}
           <div style={{ marginBottom: 16 }}>
             <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 8 }}>Titles ({items.length}/5)</div>
@@ -1298,7 +1287,14 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
             {items.length < 5 && (
               addingItem ? (
                 <div>
-                  <input className="search-input" placeholder="Search to add a title…" value={q} onChange={e => setQ(e.target.value)} autoFocus />
+                  {/* Category filter inside search */}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 10 }}>
+                    <button onClick={() => setSingleCat("")} style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.12em", padding: "3px 8px", border: `1px solid ${!singleCat ? "#c9a820" : T.paperDark}`, background: !singleCat ? T.ink : "transparent", color: !singleCat ? "#c9a820" : T.inkMid, cursor: "pointer" }}>All</button>
+                    {categories.map(c => (
+                      <button key={c.key} onClick={() => setSingleCat(c.key)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.12em", padding: "3px 8px", border: `1px solid ${singleCat === c.key ? "#c9a820" : T.paperDark}`, background: singleCat === c.key ? T.ink : "transparent", color: singleCat === c.key ? "#c9a820" : T.inkMid, cursor: "pointer" }}>{c.label}</button>
+                    ))}
+                  </div>
+                  <input className="search-input" placeholder={singleCat ? `Search ${catLabel(singleCat)}…` : "Search to add a title…"} value={q} onChange={e => setQ(e.target.value)} autoFocus />
                   {busy && <div className="loading">Searching…</div>}
                   {results.map((r, i) => (
                     <div key={i} className="result-item" onClick={() => addItem(r)}>
@@ -1313,7 +1309,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
                   <button className="btn btn-ghost" style={{ marginTop: 8, width: "100%" }} onClick={() => { setAddingItem(false); setQ(""); setResults([]); }}>Cancel</button>
                 </div>
               ) : (
-                <button onClick={() => setAddingItem(true)} style={{ width: "100%", padding: "12px", background: "#b8960c", border: "2px solid #c9a820", color: "#fff", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", cursor: "pointer" }}>+ Add Title</button>
+                <button onClick={() => setAddingItem(true)} style={{ width: "100%", padding: "12px", background: T.ink, border: "2px solid #c9a820", color: "#c9a820", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", cursor: "pointer" }}>+ Add Title</button>
               )
             )}
           </div>
