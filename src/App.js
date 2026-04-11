@@ -266,9 +266,8 @@ function PublicBoard({ inviteUserId, onSignUp }) {
       setLoading(true);
       try {
         const { data: prof } = await supabase
-          .from("profiles").select("id, username, display_name").eq("id", inviteUserId).maybeSingle();
+          .from("profiles").select("id, username, display_name, avatar_url").eq("id", inviteUserId).maybeSingle();
         if (prof) setProfile(prof);
-        // Load buddies for public display
         const { data: buddyRows } = await supabase
           .from("buddies")
           .select("requester_id, receiver_id")
@@ -282,27 +281,13 @@ function PublicBoard({ inviteUserId, onSignUp }) {
             .from("profiles").select("id, display_name, avatar_url").in("id", buddyIds);
           if (profiles) setPublicBuddies(profiles);
         }
-        // Load active vouch board
         const { data: activeVouchBoard } = await supabase
           .from("vouch_boards")
           .select("*, vouch_board_items(*)")
           .eq("user_id", inviteUserId)
           .eq("is_active", true)
           .maybeSingle();
-        // Load shelf (endorsements)
-        const { data: rows } = await supabase
-          .from("endorsements").select("*").eq("user_id", inviteUserId).order("created_at", { ascending: true });
-        const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
-        (rows || []).forEach(row => {
-          if (b[row.category] && b[row.category].length < 5) {
-            b[row.category].push({
-              id: row.item_id, title: row.title, sub: row.subtitle || "",
-              poster: row.poster || null, comment: row.comment || "",
-              vouched: row.vouched || false, sourceUrl: row.source_url || null,
-            });
-          }
-        });
-        setBoard({ shelf: b, activeVouchBoard: activeVouchBoard || null });
+        setBoard({ activeVouchBoard: activeVouchBoard || null });
       } catch(e) { console.error(e); }
       setLoading(false);
     };
@@ -312,20 +297,41 @@ function PublicBoard({ inviteUserId, onSignUp }) {
   if (loading) return <><Styles /><div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: T.bg }}><div className="loading">Loading…</div></div></>;
   if (!board) return <><Styles /><Auth inviteUserId={inviteUserId} /></>;
 
-  const name = profile?.display_name || profile?.username || "Someone";
+  const firstName = (profile?.display_name || profile?.username || "Someone").split(" ")[0];
+  const fullName  = profile?.display_name || profile?.username || "Someone";
+  const av = board.activeVouchBoard;
+  const isMobile = window.innerWidth < 600;
+
+  // Build board object for VouchSection from vouch_board_items
+  const vouchSectionBoard = (() => {
+    const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
+    if (av?.vouch_board_items) {
+      av.vouch_board_items.sort((a, x) => a.position - x.position).slice(0, 5).forEach(item => {
+        if (b[item.category]) b[item.category].push({
+          id: item.item_id, title: item.title, sub: item.subtitle || "",
+          poster: item.poster, comment: "", vouched: true,
+          sourceUrl: item.source_url,
+        });
+      });
+    }
+    return b;
+  })();
 
   return (
     <>
       <Styles />
       <div className="app">
-        <div style={{ background: T.ink, color: T.bg, padding: "14px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
-          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14 }}>
-            You're viewing <strong style={{ fontStyle: "normal" }}>{name}'s</strong> Vouch board.
+        {/* Top CTA bar */}
+        <div style={{ background: T.ink, color: T.bg, padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13 }}>
+            You're on <strong style={{ fontStyle: "normal" }}>{firstName}'s</strong> Vouch.
           </div>
-          <button onClick={onSignUp} style={{ background: T.bg, color: T.ink, border: "none", fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.15em", padding: "10px 18px", cursor: "pointer", width: "100%" }}>
-            Create Your Own →
+          <button onClick={onSignUp} style={{ background: T.bg, color: T.ink, border: "none", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", padding: "8px 14px", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
+            Create Yours →
           </button>
         </div>
+
+        {/* Masthead */}
         <header className="masthead">
           <div className="masthead-meta">
             <span style={{ flex: 1 }}>Est. 2026</span>
@@ -336,47 +342,76 @@ function PublicBoard({ inviteUserId, onSignUp }) {
           <div className="masthead-rule-ornament"><span>—</span><span>✦</span><span>—</span></div>
           <div className="masthead-tagline">Love it? Vouch for it.</div>
         </header>
+
         <main className="page">
-          <div style={{ marginBottom: 20 }}>
-            <div className="board-name" style={{ fontSize: 28, marginBottom: 2 }}>{name}</div>
-            <div className="board-sub" style={{ marginBottom: 14 }}>@{profile?.username || ""}</div>
-            <button onClick={onSignUp} className="btn btn-solid" style={{ width: "100%", padding: "12px", fontSize: 13 }}>Create Your Own Vouch Board →</button>
+          {/* Profile header */}
+          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20, paddingTop: 8 }}>
+            <Avatar name={fullName} size={60} avatarUrl={profile?.avatar_url} />
+            <div>
+              <div className="board-name" style={{ fontSize: 26, marginBottom: 2 }}>{fullName}</div>
+              <div className="board-sub">@{profile?.username || ""}</div>
+            </div>
           </div>
-          <div style={{ marginBottom: 24, borderTop: `1px solid ${T.paperDark}`, borderBottom: `1px solid ${T.paperDark}`, padding: "14px 0", display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 8 }}>
-            {[{label: "Vouch 5", desc: "Your top 5 picks across all media"},{label: "Categories", desc: "Up to 5 per Film, Music, Books, TV"},{label: "Buddies", desc: "See what friends are vouching for"}].map(item => (
-              <div key={item.label} style={{ textAlign: "center", flex: "1 1 100px" }}>
-                <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 10, letterSpacing: "0.15em", color: T.ink }}>{item.label}</div>
-                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkMid, marginTop: 3 }}>{item.desc}</div>
-              </div>
-            ))}
-          </div>
+
           <div className="ornament"><span>—</span><span>✦</span><span>—</span></div>
-          {board?.activeVouchBoard && (
-            <div style={{ background: T.ink, border: "2px solid #c9a820", padding: "20px 16px", marginBottom: 24 }}>
-              {board.activeVouchBoard.name && <div style={{ fontFamily: "'Times New Roman', Times, serif", fontWeight: 900, fontSize: 28, color: "rgba(200,194,180,0.95)", lineHeight: 1, marginBottom: 4 }}>{board.activeVouchBoard.name}{board.activeVouchBoard.theme && board.activeVouchBoard.theme !== "Other" ? <span style={{ fontFamily: "'Spectral SC',serif", fontSize: 12, fontWeight: 400, letterSpacing: "0.12em", color: "rgba(200,194,180,0.45)", marginLeft: 10 }}>{board.activeVouchBoard.theme}</span> : ""}</div>}
-              {board.activeVouchBoard.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 4, marginBottom: 12 }}>{board.activeVouchBoard.description}</div>}
-              {board.activeVouchBoard.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.3)", marginBottom: 14 }}>Published {new Date(board.activeVouchBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>}
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                {(board.activeVouchBoard.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0,5).map((item, i) => (
-                  <div key={i} style={{ width: 70 }}>
-                    {item.poster ? <img src={item.poster} alt={item.title} style={{ width: 70, height: 96, objectFit: "cover", display: "block" }} /> : <div style={{ width: 70, height: 96, background: "rgba(200,194,180,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: "rgba(200,194,180,0.5)", textAlign: "center", padding: 4 }}>{item.title}</div>}
-                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: "rgba(200,194,180,0.4)", marginTop: 2, textAlign: "center" }}>{item.title}</div>
-                  </div>
-                ))}
+
+          {/* Active Vouch Board — same slideshow as signed in */}
+          {av ? (
+            <div className="vouch-section" style={{ marginBottom: 36 }}>
+              <div className="vouch-section-header">
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="vouch-section-label">Vouch 5</div>
+                  {av.name && (
+                    <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: "rgba(200,194,180,0.6)", marginTop: 2 }}>
+                      {av.theme && av.theme !== "Other" && av.theme !== av.name ? `${av.name} · ${av.theme}` : av.name}
+                    </div>
+                  )}
+                  {av.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: "rgba(200,194,180,0.4)", marginTop: 2 }}>{av.description}</div>}
+                  {av.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.3)", marginTop: 4 }}>Published {new Date(av.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>}
+                </div>
               </div>
+              <VouchSection
+                board={vouchSectionBoard}
+                isOwn={false}
+                onCard={() => {}}
+                onAdd={() => {}}
+                onRemove={() => {}}
+                onDudeSame={() => setShowSignupNudge(true)}
+                myReactions={[]}
+                hideHeader={true}
+              />
+            </div>
+          ) : (
+            <div style={{ textAlign: "center", padding: "40px 0", color: T.inkFaint, fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13 }}>
+              {firstName} hasn't published a Vouch yet.
             </div>
           )}
+
+          {/* How It Works — below vouch board */}
+          <div style={{ marginBottom: 36, borderTop: `1px solid ${T.paperDark}`, paddingTop: 28 }}>
+            <HowItWorks />
+          </div>
+
+          {/* CTA */}
+          <div style={{ marginBottom: 48, textAlign: "center" }}>
+            <button onClick={onSignUp} className="btn btn-solid" style={{ fontSize: 13, padding: "13px 32px", width: "100%" }}>
+              Create Your Own Vouch →
+            </button>
+            <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkFaint, marginTop: 8 }}>
+              Publish a Vouch, build your shelf, connect with friends.
+            </div>
+          </div>
+
+          {/* Buddies — bottom of page */}
           {publicBuddies.length > 0 && (
-            <div style={{ margin: "32px 0", borderTop: `1px solid ${T.paperDark}`, paddingTop: 24 }}>
+            <div style={{ marginBottom: 48, borderTop: `1px solid ${T.paperDark}`, paddingTop: 24 }}>
               <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.18em", color: T.inkMid, marginBottom: 16 }}>Also on Vouch</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
                 {publicBuddies.map((b, i) => (
                   <div key={i} onClick={() => setShowSignupNudge(true)} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
-                    <Avatar name={b.display_name} size={56} avatarUrl={b.avatar_url} />
-                    <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.inkMid, borderBottom: `1px solid transparent` }}
-                      onMouseEnter={e => e.currentTarget.style.borderBottomColor = T.inkLight}
-                      onMouseLeave={e => e.currentTarget.style.borderBottomColor = "transparent"}>
-                      {b.display_name}
+                    <Avatar name={b.display_name} size={48} avatarUrl={b.avatar_url} />
+                    <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.inkMid }}>
+                      {(b.display_name || "").split(" ")[0]}
                     </div>
                   </div>
                 ))}
@@ -386,17 +421,8 @@ function PublicBoard({ inviteUserId, onSignUp }) {
               </div>
             </div>
           )}
-          {[...CATEGORIES].sort((a, b) => ((board?.shelf?.[b.key] || []).length - (board?.shelf?.[a.key] || []).length)).map(cat => {
-            const items = board?.shelf?.[cat.key] || [];
-            if (items.length === 0) return null;
-            return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} />;
-          })}
-          <div style={{ marginTop: 48, padding: "32px 0", borderTop: `3px double ${T.ink}`, textAlign: "center" }}>
-            <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 26, fontWeight: 900, marginBottom: 8 }}>Make your own board.</div>
-            <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkMid, marginBottom: 24 }}>What would you put your name behind right now?</div>
-            <button onClick={onSignUp} className="btn btn-solid" style={{ fontSize: 13, padding: "12px 32px" }}>Get Started — It's Free</button>
-          </div>
         </main>
+
         <footer style={{ borderTop: `3px double ${T.ink}`, padding: "24px 28px", textAlign: "center" }}>
           <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid }}>© {new Date().getFullYear()} Vouch. All Rights Reserved.</div>
         </footer>
@@ -418,10 +444,6 @@ function PublicBoard({ inviteUserId, onSignUp }) {
             </div>
           </div>
         )}
-      </div>
-    </>
-  );
-}
 
 function HowItWorks() {
   return (
