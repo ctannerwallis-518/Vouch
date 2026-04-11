@@ -1177,17 +1177,27 @@ function LegalModal({ page, onClose }) {
 }
 
 function BoardEditorModal({ onClose, onPublish, existing, categories, themes, userId }) {
-  const [name, setName]               = useState(existing?.name || "");
-  const [theme, setTheme]             = useState(existing?.theme || "");
-  const [description, setDescription] = useState(existing?.description || "");
-  const [singleCat, setSingleCat]     = useState(existing?.single_category || "");
-  const [items, setItems]             = useState(existing?.vouch_board_items?.sort((a,b)=>a.position-b.position).map(i => ({ ...i, id: i.item_id, sub: i.subtitle, catKey: i.category })) || []);
+  const DRAFT_KEY = "vouch-board-draft-v2";
+  const loadDraft = () => { try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || "null"); } catch(e) { return null; } };
+  const savedDraft = !existing ? loadDraft() : null;
+  const [name, setName]               = useState(savedDraft?.name ?? existing?.name ?? "");
+  const [theme, setTheme]             = useState(savedDraft?.theme ?? existing?.theme ?? "");
+  const [description, setDescription] = useState(savedDraft?.description ?? existing?.description ?? "");
+  const [singleCat, setSingleCat]     = useState(savedDraft?.singleCat ?? existing?.single_category ?? "");
+  const [items, setItems]             = useState(savedDraft?.items ?? existing?.vouch_board_items?.sort((a,b)=>a.position-b.position).map(i => ({ ...i, id: i.item_id, sub: i.subtitle, catKey: i.category })) ?? []);
   const [addingItem, setAddingItem]   = useState(false);
   const [q, setQ]                     = useState("");
   const [results, setResults]         = useState([]);
   const [busy, setBusy]               = useState(false);
   const timer                         = useRef(null);
   const TMDB_KEY                      = "24f3b03466f2f7db2d54a0f53607da4f";
+
+  // Auto-save draft to localStorage whenever state changes
+  useEffect(() => {
+    if (existing) return;
+    const draft = { name, theme, description, singleCat, items };
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  }, [name, theme, description, singleCat, items, existing]);
 
   useEffect(() => {
     if (!q.trim()) { setResults([]); return; }
@@ -1230,6 +1240,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
     if (theme === "Other" && !name.trim()) { alert("Give your custom Vouch a name — like 'Summer of 2009' or 'Scorsese’s Best'"); return; }
     if (items.length === 0) { alert("Add at least one title to your Vouch."); return; }
     const finalName = theme === "Other" ? name : theme;
+    localStorage.removeItem(DRAFT_KEY);
     onPublish({ name: finalName, theme, description, singleCategory: singleCat, items });
   };
 
@@ -1268,13 +1279,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
             </div>
           </div>
 
-          {/* Description */}
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>One Line About This Vouch (optional)</div>
-            <input className="search-input" style={{ marginBottom: 0 }} placeholder="e.g. These artists remind me of the summer…" value={description} onChange={e => setDescription(e.target.value)} maxLength={120} />
-          </div>
-
-          {/* Current items */}
+          {/* Current items + Add */}
           <div style={{ marginBottom: 16 }}>
             <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 8 }}>Titles ({items.length}/5)</div>
             {items.length > 0 && (
@@ -1308,9 +1313,15 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
                   <button className="btn btn-ghost" style={{ marginTop: 8, width: "100%" }} onClick={() => { setAddingItem(false); setQ(""); setResults([]); }}>Cancel</button>
                 </div>
               ) : (
-                <button className="btn btn-ghost" style={{ width: "100%" }} onClick={() => setAddingItem(true)}>+ Add Title</button>
+                <button onClick={() => setAddingItem(true)} style={{ width: "100%", padding: "12px", background: "#b8960c", border: "2px solid #c9a820", color: "#fff", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", cursor: "pointer" }}>+ Add Title</button>
               )
             )}
+          </div>
+
+          {/* Description — below titles */}
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>One Line About This Vouch (optional)</div>
+            <input className="search-input" style={{ marginBottom: 0 }} placeholder="e.g. These artists remind me of the summer…" value={description} onChange={e => setDescription(e.target.value)} maxLength={120} />
           </div>
 
           <button className="btn btn-solid" style={{ width: "100%", padding: "12px" }} onClick={handlePublish}>Publish Vouch 5</button>
