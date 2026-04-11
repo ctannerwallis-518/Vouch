@@ -51,6 +51,7 @@ const BOARD_THEMES = [
   "New Releases", "Underrated", "Seasonal", "No Boundaries",
   "Locals Only", "Other"
 ];
+const T = {
 
   bg:        "#C8C2B4",
   ink:       "#111008",
