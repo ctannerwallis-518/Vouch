@@ -2298,6 +2298,7 @@ export default function Vouch() {
             <button className={`nav-btn${tab === "friends" ? " active" : ""}`} onClick={() => { setTab("friends"); setViewing(null); window.history.replaceState({}, "", "/"); scrollToTop(); }}>
               Buddies {pendingIn.length > 0 && <span style={{ background: T.ink, color: T.bg, borderRadius: "50%", fontSize: 9, padding: "1px 5px", marginLeft: 4 }}>{pendingIn.length}</span>}
             </button>
+            <button className={`nav-btn${tab === "archive" ? " active" : ""}`} onClick={() => { setTab("archive"); setViewing(null); scrollToTop(); }}>Archive</button>
             <button className={`nav-btn${tab === "settings" ? " active" : ""}`} onClick={() => { setTab("settings"); setViewing(null); scrollToTop(); }}>Settings</button>
             {viewing && <button className="nav-btn active">{currName}</button>}
           </nav>
@@ -2316,6 +2317,59 @@ export default function Vouch() {
             </div>
           )}
 
+          {tab === "archive" && !viewing && (
+            <style={{ maxWidth: 540, margin: "32px auto" }}>
+              <div className="board-name" style={{ fontSize: 28, marginBottom: 8 }}>Your Archive</div>
+              <div className="board-sub" style={{ marginBottom: 32 }}>Every Vouch you've published</div>
+              {boardArchive.length === 0 && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight }}>No archived boards yet.</div>}
+              {(() => {
+                const grouped = {};
+                boardArchive.forEach(b => {
+                  const d = b.published_at ? new Date(b.published_at) : null;
+                  const key = d ? `${d.toLocaleString("en-US", { month: "long" })} ${d.getFullYear()}` : "Unpublished";
+                  if (!grouped[key]) grouped[key] = [];
+                  grouped[key].push(b);
+                });
+                return Object.entries(grouped).map(([monthYear, boards]) => (
+                  <div key={monthYear} style={{ marginBottom: 40 }}>
+                    <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 10, letterSpacing: "0.18em", color: T.inkMid, borderBottom: `2px solid ${T.ink}`, paddingBottom: 8, marginBottom: 20 }}>{monthYear}</div>
+                    {boards.map(b => (
+                      <div key={b.id} style={{ marginBottom: 32 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                          <div>
+                            <div style={{ fontFamily: "'Times New Roman',Times,serif", fontWeight: 900, fontSize: 22, color: T.ink }}>{(b.theme && b.theme !== "Other") ? b.theme : (b.name || "Untitled Vouch")}</div>
+                            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.12em", color: T.inkLight, marginTop: 3 }}>
+                              {b.published_at ? new Date(b.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : ""}
+                              {b.is_active && <span style={{ marginLeft: 8, color: "#c9a820", fontWeight: 700 }}>· Active</span>}
+                            </div>
+                            {b.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkMid, marginTop: 4 }}>{b.description}</div>}
+                          </div>
+                          {!b.is_active && canPublish && (
+                            <button className="btn btn-solid" style={{ padding: "6px 14px", flexShrink: 0 }} onClick={() => republishBoard(b)}>Republish</button>
+                          )}
+                          {!b.is_active && !canPublish && (
+                            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", color: T.inkFaint, textAlign: "right" }}>Locked until<br />{nextPublishDate}</div>
+                          )}
+                        </div>
+                        {b.vouch_board_items?.length > 0 && (
+                          <div style={ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4 }}>
+                            {b.vouch_board_items.sort((a,x) => a.position - x.position).slice(0,5).map((item, i) => (
+                              <div key={i} style={{ flexShrink: 0, width: 80 }}>
+                                {item.poster
+                                  ? <img src={item.poster} alt={item.title} style={{ width: 80, height: 110, objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block" }} onError={e => e.target.style.display = "none"} />
+                                  : <div style={{ width: 80, height: 110, background: T.paperDark, border: `1px solid ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 4 }}>{item.title}</div>}
+                                <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: T.inkFaint, marginTop: 4, textAlign: "center", lineHeight: 1.3 }}>{item.title}</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ));
+              })()}
+            </div>
+          )}
           {tab === "settings" && !viewing && (
             <div style={{ maxWidth: 540, margin: "32px auto" }}>
               <div className="board-name" style={{ fontSize: 28, marginBottom: 8 }}>Settings</div>
