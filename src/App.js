@@ -52,6 +52,7 @@ const BOARD_THEMES = [
   "Locals Only", "Other"
 ];
 
+
 const T = {
   bg:        "#C8C2B4",
   ink:       "#111008",
@@ -342,30 +343,38 @@ function PublicBoard({ inviteUserId, onSignUp }) {
             <div className="board-sub" style={{ marginBottom: 14 }}>@{profile?.username || ""}</div>
             <button onClick={onSignUp} className="btn btn-solid" style={{ width: "100%", padding: "12px", fontSize: 13 }}>Create Your Own Vouch Board →</button>
           </div>
-          <div style={{ marginBottom: 24, borderTop: `1px solid ${T.paperDark}`, borderBottom: `1px solid ${T.paperDark}`, padding: "14px 0", display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 8 }}>
-            {[{label: "Vouch 5", desc: "Your top 5 picks across all media"},{label: "Categories", desc: "Up to 5 per Film, Music, Books, TV"},{label: "Buddies", desc: "See what friends are vouching for"}].map(item => (
-              <div key={item.label} style={{ textAlign: "center", flex: "1 1 100px" }}>
-                <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 10, letterSpacing: "0.15em", color: T.ink }}>{item.label}</div>
-                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkMid, marginTop: 3 }}>{item.desc}</div>
-              </div>
-            ))}
+          <div style={{ marginBottom: 24, borderTop: `1px solid ${T.paperDark}`, borderBottom: `1px solid ${T.paperDark}`, padding: "16px 0" }}>
+            <HowItWorks />
           </div>
           <div className="ornament"><span>—</span><span>✦</span><span>—</span></div>
-          {board?.activeVouchBoard && (
-            <div style={{ background: T.ink, border: "2px solid #c9a820", padding: "20px 16px", marginBottom: 24 }}>
-              {board.activeVouchBoard.name && <div style={{ fontFamily: "'Times New Roman', Times, serif", fontWeight: 900, fontSize: 28, color: "rgba(200,194,180,0.95)", lineHeight: 1, marginBottom: 4 }}>{board.activeVouchBoard.name}{board.activeVouchBoard.theme && board.activeVouchBoard.theme !== "Other" ? <span style={{ fontFamily: "'Spectral SC',serif", fontSize: 12, fontWeight: 400, letterSpacing: "0.12em", color: "rgba(200,194,180,0.45)", marginLeft: 10 }}>{board.activeVouchBoard.theme}</span> : ""}</div>}
-              {board.activeVouchBoard.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 4, marginBottom: 12 }}>{board.activeVouchBoard.description}</div>}
-              {board.activeVouchBoard.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.3)", marginBottom: 14 }}>Published {new Date(board.activeVouchBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>}
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                {(board.activeVouchBoard.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0,5).map((item, i) => (
-                  <div key={i} style={{ width: 70 }}>
-                    {item.poster ? <img src={item.poster} alt={item.title} style={{ width: 70, height: 96, objectFit: "cover", display: "block" }} /> : <div style={{ width: 70, height: 96, background: "rgba(200,194,180,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: "rgba(200,194,180,0.5)", textAlign: "center", padding: 4 }}>{item.title}</div>}
-                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: "rgba(200,194,180,0.4)", marginTop: 2, textAlign: "center" }}>{item.title}</div>
+          {board?.activeVouchBoard && (() => {
+            const avb = board.activeVouchBoard;
+            const isMobile = window.innerWidth <= 640;
+            const vbItems = (avb.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0,5);
+            const vbBoard = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
+            vbItems.forEach(item => {
+              if (vbBoard[item.category]) vbBoard[item.category].push({ id: item.item_id, title: item.title, sub: item.subtitle || "", poster: item.poster, comment: "", vouched: true, sourceUrl: item.source_url, _cat: item.category, _catLabel: CATEGORIES.find(c=>c.key===item.category)?.label || item.category });
+            });
+            const theme = avb.theme && avb.theme !== "Other" ? avb.theme : avb.name;
+            return (
+              <div className="vouch-section" style={{ marginBottom: 52 }}>
+                <div className="vouch-section-header">
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="vouch-section-label">{theme || "Vouch"}</div>
+                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginTop: 3 }}>Vouch</div>
+                    {avb.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 4 }}>{avb.description}</div>}
+                    {avb.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.3)", marginTop: 4 }}>Published {new Date(avb.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>}
                   </div>
-                ))}
+                </div>
+                <VouchSection board={vbBoard} isOwn={false} onCard={()=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} hideHeader={true} />
               </div>
-            </div>
-          )}
+            );
+          })()}
+          {[...CATEGORIES].sort((a, b) => ((board?.shelf?.[b.key] || []).length - (board?.shelf?.[a.key] || []).length)).map(cat => {
+            const items = board?.shelf?.[cat.key] || [];
+            if (items.length === 0) return null;
+            return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} />;
+          })}
           {publicBuddies.length > 0 && (
             <div style={{ margin: "32px 0", borderTop: `1px solid ${T.paperDark}`, paddingTop: 24 }}>
               <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.18em", color: T.inkMid, marginBottom: 16 }}>Also on Vouch</div>
@@ -386,11 +395,6 @@ function PublicBoard({ inviteUserId, onSignUp }) {
               </div>
             </div>
           )}
-          {[...CATEGORIES].sort((a, b) => ((board?.shelf?.[b.key] || []).length - (board?.shelf?.[a.key] || []).length)).map(cat => {
-            const items = board?.shelf?.[cat.key] || [];
-            if (items.length === 0) return null;
-            return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} />;
-          })}
           <div style={{ marginTop: 48, padding: "32px 0", borderTop: `3px double ${T.ink}`, textAlign: "center" }}>
             <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 26, fontWeight: 900, marginBottom: 8 }}>Make your own board.</div>
             <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkMid, marginBottom: 24 }}>What would you put your name behind right now?</div>
@@ -429,13 +433,13 @@ function HowItWorks() {
       <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.2em", color: T.ink, marginBottom: 20 }}>How It Works</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <div>
-          <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>Vouch 5</div>
-          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Pick the five things you'd put your name behind today. A movie, an album, a book, whatever. These are your top-of-the-fold picks.</div>
+          <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>Your Vouch</div>
+          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Publish up to 5 tiles — a movie, album, book, show, whatever you'd put your name behind right now. You can only have one Vouch published at a time, and you can update it once a week.</div>
         </div>
         <div style={{ borderTop: `1px solid ${T.paperDark}` }} />
         <div>
           <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>My Shelf</div>
-          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>The stuff on your shelf — films, albums, books, shows worth putting your name behind.</div>
+          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Your permanent record — up to 5 picks per category across Film, Albums, Artists, Songs, Books, and Television. Change it whenever you like. You choose which categories appear on your shelf.</div>
         </div>
         <div style={{ borderTop: `1px solid ${T.paperDark}` }} />
         <div>
@@ -1195,27 +1199,17 @@ function LegalModal({ page, onClose }) {
 }
 
 function BoardEditorModal({ onClose, onPublish, existing, categories, themes, userId }) {
-  const DRAFT_KEY = "vouch-board-draft-v2";
-  const loadDraft = () => { try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || "null"); } catch(e) { return null; } };
-  const savedDraft = !existing ? loadDraft() : null;
-  const [name, setName]               = useState(savedDraft?.name ?? existing?.name ?? "");
-  const [theme, setTheme]             = useState(savedDraft?.theme ?? existing?.theme ?? "");
-  const [description, setDescription] = useState(savedDraft?.description ?? existing?.description ?? "");
-  const [singleCat, setSingleCat]     = useState(savedDraft?.singleCat ?? existing?.single_category ?? "");
-  const [items, setItems]             = useState(savedDraft?.items ?? existing?.vouch_board_items?.sort((a,b)=>a.position-b.position).map(i => ({ ...i, id: i.item_id, sub: i.subtitle, catKey: i.category })) ?? []);
+  const [name, setName]               = useState(existing?.name || "");
+  const [theme, setTheme]             = useState(existing?.theme || "");
+  const [description, setDescription] = useState(existing?.description || "");
+  const [singleCat, setSingleCat]     = useState(existing?.single_category || "");
+  const [items, setItems]             = useState(existing?.vouch_board_items?.sort((a,b)=>a.position-b.position).map(i => ({ ...i, id: i.item_id, sub: i.subtitle, catKey: i.category })) || []);
   const [addingItem, setAddingItem]   = useState(false);
   const [q, setQ]                     = useState("");
   const [results, setResults]         = useState([]);
   const [busy, setBusy]               = useState(false);
   const timer                         = useRef(null);
   const TMDB_KEY                      = "24f3b03466f2f7db2d54a0f53607da4f";
-
-  // Auto-save draft to localStorage whenever state changes
-  useEffect(() => {
-    if (existing) return;
-    const draft = { name, theme, description, singleCat, items };
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-  }, [name, theme, description, singleCat, items, existing]);
 
   useEffect(() => {
     if (!q.trim()) { setResults([]); return; }
@@ -1254,11 +1248,10 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
   const removeItem = (idx) => setItems(prev => prev.filter((_, i) => i !== idx));
 
   const handlePublish = () => {
-    if (!theme) { alert("Pick a title for your Vouch."); return; }
-    if (theme === "Other" && !name.trim()) { alert("Give your custom Vouch a name — like 'Summer of 2009' or 'Scorsese’s Best'"); return; }
+    if (!theme) { alert("Pick a category for your Vouch."); return; }
+    if (theme === "Other" && !name.trim()) { alert("Give your custom Vouch a name — like 'Summer of 2009' or 'Scorsese\'s Best'"); return; }
     if (items.length === 0) { alert("Add at least one title to your Vouch."); return; }
     const finalName = theme === "Other" ? name : theme;
-    localStorage.removeItem(DRAFT_KEY);
     onPublish({ name: finalName, theme, description, singleCategory: singleCat, items });
   };
 
@@ -1268,14 +1261,14 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()} style={{ maxHeight: "88vh" }}>
         <div className="modal-head">
-          <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}><div className="modal-title">Create Your Vouch</div><div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: T.inkFaint }}>up to 5 tiles</div></div>
+          <div className="modal-title">Create Your Vouch 5</div>
           <button className="modal-x" onClick={onClose}>×</button>
         </div>
         <div className="modal-body">
 
           {/* Category */}
           <div style={{ marginBottom: 16 }}>
-            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>Theme</div>
+            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>Category</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {themes.map(t => (
                 <button key={t} onClick={() => setTheme(t)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "4px 10px", border: `1px solid ${theme === t ? T.ink : T.paperDark}`, background: theme === t ? T.ink : "transparent", color: theme === t ? T.bg : T.inkMid, cursor: "pointer" }}>{t === "Other" ? "Other — Create Your Own" : t}</button>
@@ -1286,7 +1279,24 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
             )}
           </div>
 
-          {/* Current items + Add */}
+          {/* Single category toggle */}
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>Single Category (optional)</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              <button onClick={() => setSingleCat("")} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "4px 10px", border: `1px solid ${!singleCat ? T.ink : T.paperDark}`, background: !singleCat ? T.ink : "transparent", color: !singleCat ? T.bg : T.inkMid, cursor: "pointer" }}>All</button>
+              {categories.map(c => (
+                <button key={c.key} onClick={() => setSingleCat(c.key)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "4px 10px", border: `1px solid ${singleCat === c.key ? T.ink : T.paperDark}`, background: singleCat === c.key ? T.ink : "transparent", color: singleCat === c.key ? T.bg : T.inkMid, cursor: "pointer" }}>{c.label}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Description */}
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>One Line About This Vouch (optional)</div>
+            <input className="search-input" style={{ marginBottom: 0 }} placeholder="e.g. These artists remind me of the summer…" value={description} onChange={e => setDescription(e.target.value)} maxLength={120} />
+          </div>
+
+          {/* Current items */}
           <div style={{ marginBottom: 16 }}>
             <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 8 }}>Titles ({items.length}/5)</div>
             {items.length > 0 && (
@@ -1305,14 +1315,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
             {items.length < 5 && (
               addingItem ? (
                 <div>
-                  {/* Category filter inside search */}
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 10 }}>
-                    <button onClick={() => setSingleCat("")} style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.12em", padding: "3px 8px", border: `1px solid ${!singleCat ? "#c9a820" : T.paperDark}`, background: !singleCat ? T.ink : "transparent", color: !singleCat ? "#c9a820" : T.inkMid, cursor: "pointer" }}>All</button>
-                    {categories.map(c => (
-                      <button key={c.key} onClick={() => setSingleCat(c.key)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.12em", padding: "3px 8px", border: `1px solid ${singleCat === c.key ? "#c9a820" : T.paperDark}`, background: singleCat === c.key ? T.ink : "transparent", color: singleCat === c.key ? "#c9a820" : T.inkMid, cursor: "pointer" }}>{c.label}</button>
-                    ))}
-                  </div>
-                  <input className="search-input" placeholder={singleCat ? `Search ${catLabel(singleCat)}…` : "Search to add a title…"} value={q} onChange={e => setQ(e.target.value)} autoFocus />
+                  <input className="search-input" placeholder="Search to add a title…" value={q} onChange={e => setQ(e.target.value)} autoFocus />
                   {busy && <div className="loading">Searching…</div>}
                   {results.map((r, i) => (
                     <div key={i} className="result-item" onClick={() => addItem(r)}>
@@ -1327,18 +1330,12 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
                   <button className="btn btn-ghost" style={{ marginTop: 8, width: "100%" }} onClick={() => { setAddingItem(false); setQ(""); setResults([]); }}>Cancel</button>
                 </div>
               ) : (
-                <button onClick={() => setAddingItem(true)} style={{ width: "100%", padding: "12px", background: T.ink, border: `1px solid ${T.paperDark}`, color: T.bg, fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", cursor: "pointer" }}>+ Add Title</button>
+                <button className="btn btn-ghost" style={{ width: "100%" }} onClick={() => setAddingItem(true)}>+ Add Title</button>
               )
             )}
           </div>
 
-          {/* Description — below titles */}
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>One Line About This Vouch (optional)</div>
-            <input className="search-input" style={{ marginBottom: 0 }} placeholder="e.g. These artists remind me of the summer…" value={description} onChange={e => setDescription(e.target.value)} maxLength={120} />
-          </div>
-
-          <button onClick={handlePublish} disabled={items.length === 0} style={{ width: "100%", padding: "12px", background: items.length > 0 ? T.ink : "transparent", border: `2px solid ${items.length > 0 ? "#c9a820" : T.paperDark}`, color: items.length > 0 ? "#c9a820" : T.inkFaint, fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", cursor: items.length > 0 ? "pointer" : "not-allowed", transition: "all 0.2s" }}>Publish Vouch</button>
+          <button className="btn btn-solid" style={{ width: "100%", padding: "12px" }} onClick={handlePublish}>Publish Vouch 5</button>
           <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 8, textAlign: "center" }}>Once published, you can update again in 7 days.</div>
         </div>
       </div>
@@ -1552,7 +1549,6 @@ export default function Vouch() {
   const [showAgreements, setShowAgreements] = useState(false);
   const [viewerReactions,setViewerReactions]= useState([]);
   const [viewActiveBoard,setViewActiveBoard]= useState(null);
-  const [suggested,      setSuggested]      = useState([]);
 
   const loadMyReactions = async (uid) => {
     const { data } = await supabase.from("reactions").select("*").eq("user_id", uid).order("created_at", { ascending: false });
@@ -1624,6 +1620,48 @@ export default function Vouch() {
     }
   };
 
+  const loadVouchBoards = async (uid) => {
+    const { data } = await supabase
+      .from("vouch_boards")
+      .select("*, vouch_board_items(*)")
+      .eq("user_id", uid)
+      .order("created_at", { ascending: false });
+    if (data) {
+      const active = data.find(b => b.is_active) || null;
+      setActiveBoard(active);
+      setBoardArchive(data);
+    }
+  };
+
+  const publishBoard = async (boardData) => {
+    const { name, theme, description, singleCategory, items } = boardData;
+    await supabase.from("vouch_boards").update({ is_active: false }).eq("user_id", userId).eq("is_active", true);
+    const { data: newBoard } = await supabase.from("vouch_boards").insert({
+      user_id: userId, name, theme, description,
+      single_category: singleCategory || null,
+      published_at: new Date().toISOString(), is_active: true,
+    }).select().single();
+    if (!newBoard) return;
+    if (items.length > 0) {
+      await supabase.from("vouch_board_items").insert(
+        items.map((item, i) => ({
+          board_id: newBoard.id, item_id: String(item.id),
+          title: item.title, subtitle: item.sub || item.subtitle || "",
+          poster: item.poster || null,
+          source_url: item.sourceUrl || item.source_url || null,
+          category: item.catKey || item.category || "", position: i,
+        }))
+      );
+    }
+    await loadVouchBoards(userId);
+    setBoardEditor(false); setEditingBoard(null);
+  };
+
+  const republishBoard = async (archivedBoard) => {
+    await supabase.from("vouch_boards").update({ is_active: false }).eq("user_id", userId).eq("is_active", true);
+    await supabase.from("vouch_boards").update({ is_active: true, published_at: new Date().toISOString() }).eq("id", archivedBoard.id);
+    await loadVouchBoards(userId);
+  };
 
   const loadBoard = async (uid) => {
     setLoading(true);
@@ -2217,6 +2255,20 @@ export default function Vouch() {
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   })();
 
+  const canPublish = (() => {
+    if (!activeBoard?.published_at) return true;
+    const publishedAt = new Date(activeBoard.published_at);
+    const daysSince = (Date.now() - publishedAt.getTime()) / (1000 * 60 * 60 * 24);
+    return daysSince >= 7;
+  })();
+
+  const nextPublishDate = (() => {
+    if (!activeBoard?.published_at || canPublish) return null;
+    const d = new Date(activeBoard.published_at);
+    d.setDate(d.getDate() + 7);
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  })();
+
   // Build a map of item_id -> unique user count across all buddy boards (for badges)
   const buddyCounts = {};
   const seenBadge = new Set();
@@ -2504,8 +2556,8 @@ export default function Vouch() {
                   <div className="vouch-section" style={{ marginBottom: 52 }}>
                     <div className="vouch-section-header">
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div className="vouch-section-label">Vouch 5</div>
-                        {activeBoard?.name && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: "rgba(200,194,180,0.6)", marginTop: 2 }}>{activeBoard.name}{activeBoard.theme ? ` · ${activeBoard.theme}` : ""}</div>}
+                        <div className="vouch-section-label">{(activeBoard?.theme && activeBoard.theme !== "Other") ? activeBoard.theme : (activeBoard?.name || "Vouch")}</div>
+                        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginTop: 3 }}>Vouch</div>
                         {activeBoard?.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: "rgba(200,194,180,0.4)", marginTop: 2 }}>{activeBoard.description}</div>}
                         {activeBoard?.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.3)", marginTop: 4 }}>Published {new Date(activeBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} · Current Vouch</div>}
                       </div>
@@ -2525,7 +2577,7 @@ export default function Vouch() {
                     ) : (
                       <div style={{ height: 220, border: "1px dashed rgba(200,194,180,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 10, cursor: "pointer" }} onClick={() => { setEditingBoard(null); setBoardEditor(true); }}>
                         <span style={{ fontSize: 28, color: "rgba(200,194,180,0.4)" }}>+</span>
-                        <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)" }}>Create Your Vouch</span>
+                        <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)" }}>Create Your Vouch 5</span>
                       </div>
                     )}
                   </div>
@@ -2533,8 +2585,10 @@ export default function Vouch() {
                   <div className="vouch-section" style={{ marginBottom: 52 }}>
                     <div className="vouch-section-header">
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginBottom: 6 }}>Vouch 5</div>
-                        {viewActiveBoard.name && <div style={{ fontFamily: "'Times New Roman', Times, serif", fontWeight: 900, fontSize: 34, color: "rgba(200,194,180,0.95)", lineHeight: 1, marginBottom: 4 }}>{viewActiveBoard.name}{viewActiveBoard?.theme && viewActiveBoard.theme !== "Other" ? <span style={{ fontFamily: "'Spectral SC',serif", fontSize: 14, fontWeight: 400, letterSpacing: "0.12em", color: "rgba(200,194,180,0.45)", marginLeft: 10 }}>{viewActiveBoard.theme}</span> : ""}</div>}
+                        <div style={{ fontFamily: "'Times New Roman', Times, serif", fontWeight: 900, fontSize: 34, color: "rgba(200,194,180,0.95)", lineHeight: 1, marginBottom: 4 }}>
+                          {(viewActiveBoard?.theme && viewActiveBoard.theme !== "Other") ? viewActiveBoard.theme : (viewActiveBoard?.name || "Vouch")}
+                        </div>
+                        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginBottom: 4 }}>Vouch</div>
                         {viewActiveBoard.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 5 }}>{viewActiveBoard.description}</div>}
                         {viewActiveBoard.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.3)", marginTop: 4 }}>Published {new Date(viewActiveBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>}
                       </div>
