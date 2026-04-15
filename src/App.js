@@ -1852,7 +1852,10 @@ export default function Vouch() {
     const shareName = viewing ? viewing.displayName : user.displayName;
     const shareUrl = `${window.location.origin}/@${shareUsername}`;
     const vouchedCount = Object.values(currBoard).flat().filter(i => i.vouched).length;
-    const topItem = Object.values(currBoard).flat().find(i => i.vouched) || Object.values(currBoard).flat()[0];
+    const activeBoardItems = (activeBoard?.vouch_board_items || []).sort((a,b) => a.position - b.position);
+    const topItem = activeBoardItems.length > 0
+      ? { ...activeBoardItems[0], title: activeBoardItems[0].title, sub: activeBoardItems[0].subtitle || "", poster: activeBoardItems[0].poster, _cat: activeBoardItems[0].category }
+      : Object.values(currBoard).flat().find(i => i.vouched) || Object.values(currBoard).flat()[0];
 
     const canvas = document.createElement("canvas");
     canvas.width = 1080;
