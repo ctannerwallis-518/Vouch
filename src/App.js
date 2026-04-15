@@ -2510,7 +2510,7 @@ export default function Vouch() {
                   </div>
                 )}
               </>
-            : <>
+            : (tab === "board" || viewing) ? <>
                 <div style={{ marginBottom: 8, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, paddingTop: 16 }}>
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
@@ -2671,6 +2671,7 @@ export default function Vouch() {
                   );
                 })()}
               </>
+            : null
           }
         </main>
 
