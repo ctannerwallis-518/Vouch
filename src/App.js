@@ -407,7 +407,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
 function HowItWorks() {
   return (
     <div style={{ fontFamily: "'Spectral',serif", color: T.inkMid, maxWidth: 380, margin: "0 auto", textAlign: "center" }}>
-      <v style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.2em", color: T.ink, marginBottom: 20 }}>How It Works</div>
+      <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.2em", color: T.ink, marginBottom: 20 }}>How It Works</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <div>
           <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>Your Vouch</div>
@@ -416,7 +416,7 @@ function HowItWorks() {
         <div style={{ borderTop: `1px solid ${T.paperDark}` }} />
         <div>
           <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>My Shelf</div>
-          <div style={{ fontSize: 13, neHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Your permanent record. Up to 5 picks per category across Film, Albums, Artists, Songs, Books, and Television. Change it whenever you like. You choose which categories appear on your shelf.</div>
+          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Your permanent record. Up to 5 picks per category across Film, Albums, Artists, Songs, Books, and Television. Change it whenever you like. You choose which categories appear on your shelf.</div>
         </div>
         <div style={{ borderTop: `1px solid ${T.paperDark}` }} />
         <div>
