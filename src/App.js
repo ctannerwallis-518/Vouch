@@ -407,21 +407,21 @@ function PublicBoard({ inviteUserId, onSignUp }) {
 function HowItWorks() {
   return (
     <div style={{ fontFamily: "'Spectral',serif", color: T.inkMid, maxWidth: 380, margin: "0 auto", textAlign: "center" }}>
-      <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.2em", color: T.ink, marginBottom: 20 }}>How It Works</div>
+      <v style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.2em", color: T.ink, marginBottom: 20 }}>How It Works</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <div>
-          <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>Vouch 5</div>
-          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Pick the five things you'd put your name behind today. A movie, an album, a book, whatever. These are your top-of-the-fold picks.</div>
+          <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>Your Vouch</div>
+          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Publish up to 5 tiles — a movie, album, book, show, artist, whatever you would put your name behind right now. You can only have one Vouch published at a time, and you can update it once a week.</div>
         </div>
         <div style={{ borderTop: `1px solid ${T.paperDark}` }} />
         <div>
           <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>My Shelf</div>
-          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>The stuff on your shelf — films, albums, books, shows worth putting your name behind.</div>
+          <div style={{ fontSize: 13, neHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Your permanent record. Up to 5 picks per category across Film, Albums, Artists, Songs, Books, and Television. Change it whenever you like. You choose which categories appear on your shelf.</div>
         </div>
         <div style={{ borderTop: `1px solid ${T.paperDark}` }} />
         <div>
           <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>Buddies</div>
-          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Connect with friends and see what they're vouching for. Hit "Agree" on anything that resonates.</div>
+          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Connect with friends and see what they are vouching for. Hit Agree on anything that resonates.</div>
         </div>
       </div>
     </div>
