@@ -349,8 +349,29 @@ function PublicBoard({ inviteUserId, onSignUp }) {
             ))}
           </div>
           <div className="ornament"><span>—</span><span>✦</span><span>—</span></div>
-          {[...CATEGORIES].sort((a, b) => (board[b.key] || []).length - (board[a.key] || []).length).map(cat => {
-            const items = board[cat.key] || [];
+          {board?.activeVouchBoard && (() => {
+            const avb = board.activeVouchBoard;
+            const vbBoard = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
+            (avb.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0,5).forEach(item => {
+              if (vbBoard[item.category]) vbBoard[item.category].push({ id: item.item_id, title: item.title, sub: item.subtitle || "", poster: item.poster, comment: "", vouched: true, sourceUrl: item.source_url, _cat: item.category, _catLabel: CATEGORIES.find(c=>c.key===item.category)?.label || item.category });
+            });
+            const theme = (avb.theme && avb.theme !== "Other") ? avb.theme : (avb.name || "Vouch");
+            return (
+              <div className="vouch-section" style={{ marginBottom: 52 }}>
+                <div className="vouch-section-header">
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="vouch-section-label">{theme}</div>
+                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginTop: 3 }}>Vouch</div>
+                    {avb.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 4 }}>{avb.description}</div>}
+                    {avb.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.3)", marginTop: 4 }}>Published {new Date(avb.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>}
+                  </div>
+                </div>
+                <VouchSection board={vbBoard} isOwn={false} onCard={()=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} hideHeader={true} />
+              </div>
+            );
+          })()}
+          {[...CATEGORIES].sort((a, b) => ((board?.shelf?.[b.key] || []).length - (board?.shelf?.[a.key] || []).length)).map(cat => {
+            const items = board?.shelf?.[cat.key] || [];
             if (items.length === 0) return null;
             return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} />;
           })}
