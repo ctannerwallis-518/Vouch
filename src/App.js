@@ -282,23 +282,25 @@ function PublicBoard({ inviteUserId, onSignUp }) {
             .from("profiles").select("id, display_name, avatar_url").in("id", buddyIds);
           if (profiles) setPublicBuddies(profiles);
         }
+        const { data: activeVouchBoard } = await supabase
+          .from("vouch_boards")
+          .select("*, vouch_board_items(*)")
+          .eq("user_id", inviteUserId)
+          .eq("is_active", true)
+          .maybeSingle();
         const { data: rows } = await supabase
           .from("endorsements").select("*").eq("user_id", inviteUserId).order("created_at", { ascending: true });
-        if (rows && rows.length > 0) {
-          const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
-          rows.forEach(row => {
-            if (b[row.category] && b[row.category].length < 5) {
-              b[row.category].push({
-                id: row.item_id, title: row.title, sub: row.subtitle || "",
-                poster: row.poster || null, comment: row.comment || "",
-                vouched: row.vouched || false, sourceUrl: row.source_url || null,
-              });
-            }
-          });
-          setBoard(b);
-        } else {
-          setBoard({ movies: [], albums: [], artists: [], songs: [], books: [], shows: [] });
-        }
+        const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
+        (rows || []).forEach(row => {
+          if (b[row.category] && b[row.category].length < 5) {
+            b[row.category].push({
+              id: row.item_id, title: row.title, sub: row.subtitle || "",
+              poster: row.poster || null, comment: row.comment || "",
+              vouched: row.vouched || false, sourceUrl: row.source_url || null,
+            });
+          }
+        });
+        setBoard({ shelf: b, activeVouchBoard: activeVouchBoard || null });
       } catch(e) { console.error(e); }
       setLoading(false);
     };
