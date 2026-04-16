@@ -99,7 +99,7 @@ const Styles = () => (
     .nav { display: flex; overflow-x: auto; scrollbar-width: none; border-top: 1px solid ${T.ink}; }
     .nav::-webkit-scrollbar { display: none; }
     .nav-btn {
-      flex-shrink: 0; padding: 9px 22px; font-family: 'Spectral SC', serif; font-size: 10px;
+      flex-shrink: 0; flex: 1; padding: 9px 10px; font-family: 'Spectral SC', serif; font-size: 10px;
       font-weight: 600; letter-spacing: 0.22em; color: ${T.inkMid}; background: transparent;
       border: none; border-right: 1px solid ${T.paperDark}; cursor: pointer;
       transition: background 0.14s, color 0.14s; white-space: nowrap;
@@ -1618,10 +1618,10 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy }) {
                 </div>
               </div>
               {r.poster && (
-                <div style={{ width: "calc((100vw - 80px) / 3)", maxWidth: 180, minWidth: 100 }}>
+                <div style={{ maxWidth: 240 }}>
                   <img src={r.poster} alt={r.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: "1px solid #b3ada0", display: "block" }} onError={e => e.target.style.display = "none"} />
-                  <div style={{ fontFamily: "'Spectral',serif", fontSize: "11px", fontWeight: 600, color: "#111008", marginTop: 5, lineHeight: 1.3 }}>{r.title}</div>
-                  {r.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", color: "#a09890", marginTop: 2 }}>{r.subtitle}</div>}
+                  <div style={{ fontFamily: "'Spectral',serif", fontSize: "13px", fontWeight: 600, color: "#111008", marginTop: 7, lineHeight: 1.3 }}>{r.title}</div>
+                  {r.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{r.subtitle}</div>}
                 </div>
               )}
             </div>
@@ -2410,7 +2410,7 @@ export default function Vouch() {
           </div>
           <div className="masthead-rule-ornament"><span>—</span><span>✦</span><span>—</span></div>
           <div className="masthead-tagline">Love it? Vouch for it.</div>
-          <nav className="nav" style={{ flexWrap: "wrap" }}>
+          <nav className="nav">
             <button className={`nav-btn${tab === "home" ? " active" : ""}`} onClick={() => { setTab("home"); setViewing(null); scrollToTop(); }}>Home</button>
             <button className={`nav-btn${tab === "board" && !viewing ? " active" : ""}`} onClick={() => { setTab("board"); setViewing(null); window.history.replaceState({}, "", "/"); scrollToTop(); }}>My Board</button>
             <button className={`nav-btn${tab === "friends" ? " active" : ""}`} onClick={() => { setTab("friends"); setViewing(null); window.history.replaceState({}, "", "/"); scrollToTop(); }}>
@@ -2418,7 +2418,7 @@ export default function Vouch() {
             </button>
             <button className={`nav-btn${tab === "archive" ? " active" : ""}`} onClick={() => { setTab("archive"); setViewing(null); scrollToTop(); }}>Archive</button>
             <button className={`nav-btn${tab === "settings" ? " active" : ""}`} onClick={() => { setTab("settings"); setViewing(null); scrollToTop(); }}>Settings</button>
-            {viewing && <button className="nav-btn active">{currName}</button>}
+
           </nav>
         </header>
 
