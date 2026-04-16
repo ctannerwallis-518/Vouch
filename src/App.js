@@ -860,7 +860,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
         </button>
       )}
       {buddyCounts?.[String(it.id)] > 0 && (
-        <div title="Total Buddy Vouches" style={{ position: "absolute", bottom: 8, left: 8, zIndex: 2, background: "rgba(17,16,8,0.82)", color: "rgba(200,194,180,0.95)", fontFamily: "'Spectral SC',serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "default" }}>{buddyCounts[String(it.id)]} {buddyCounts[String(it.id)] === 1 ? "Vouch" : "Vouches"}</div>
+        <div title="Total Buddy Vouches" style={{ position: "absolute", top: 8, left: 8, zIndex: 2, background: "rgba(17,16,8,0.82)", color: "rgba(200,194,180,0.95)", fontFamily: "'Spectral SC',serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "default" }}>{buddyCounts[String(it.id)]} {buddyCounts[String(it.id)] === 1 ? "Vouch" : "Vouches"}</div>
       )}
     </div>
   );
@@ -946,7 +946,7 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
                   {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx, false); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 30, height: 30, cursor: "pointer", fontSize: 16, lineHeight: "30px", textAlign: "center", borderRadius: 2 }}>×</button>}
                   {!isOwn && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: myReactions?.includes(String(item.id)) ? "#C8C2B4" : "rgba(17,16,8,0.7)", border: "none", color: myReactions?.includes(String(item.id)) ? T.ink : "#C8C2B4", cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 5px", whiteSpace: "nowrap", fontWeight: myReactions?.includes(String(item.id)) ? 700 : 400 }}>{myReactions?.includes(String(item.id)) ? "✓ Agreed" : "Agree"}</button>}
                 {buddyCounts?.[String(item.id)] > 0 && (
-                  <div title="Total Buddy Vouches" style={{ position: "absolute", bottom: 4, left: 0, right: 0, zIndex: 2, background: "rgba(17,16,8,0.82)", color: "rgba(200,194,180,0.95)", fontFamily: "'Spectral SC',serif", fontSize: "8px", fontWeight: 700, letterSpacing: "0.08em", padding: "3px 6px", cursor: "default", textAlign: "center" }}>{buddyCounts[String(item.id)]} {buddyCounts[String(item.id)] === 1 ? "Vouch" : "Vouches"}</div>
+                  <div title="Total Buddy Vouches" style={{ position: "absolute", top: 4, left: 4, zIndex: 2, background: "rgba(17,16,8,0.82)", color: "rgba(200,194,180,0.95)", fontFamily: "'Spectral SC',serif", fontSize: "8px", fontWeight: 700, letterSpacing: "0.08em", padding: "2px 6px", cursor: "default" }}>{buddyCounts[String(item.id)]} {buddyCounts[String(item.id)] === 1 ? "Vouch" : "Vouches"}</div>
                 )}
                   {item.poster ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} /> : null}
                   <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
