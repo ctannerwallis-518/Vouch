@@ -2488,11 +2488,10 @@ export default function Vouch() {
                           </div>
                           {b.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkMid, marginTop: 4 }}>{b.description}</div>}
                         </div>
-                        {!b.is_active && canPublish && (
-                          <button className="btn btn-solid" style={{ padding: "6px 14px", flexShrink: 0 }} onClick={() => republishBoard(b)}>Republish</button>
-                        )}
-                        {!b.is_active && !canPublish && (
-                          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", color: T.inkFaint, textAlign: "right" }}>Locked until<br />{nextPublishDate}</div>
+                        {!b.is_active && (
+                          <button className="btn btn-solid" style={{ padding: "6px 14px", flexShrink: 0, opacity: canPublish ? 1 : 0.35, cursor: canPublish ? "pointer" : "not-allowed" }} onClick={() => canPublish && republishBoard(b)}>
+                            {canPublish ? "Publish Again" : "Locked until " + nextPublishDate}
+                          </button>
                         )}
                       </div>
                       {b.vouch_board_items && b.vouch_board_items.length > 0 && (
@@ -2986,8 +2985,10 @@ export default function Vouch() {
                               </div>
                               {b.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fntSize: 11, color: T.inkMid, marginTop: 3 }}>{b.description}</div>}
                             </div>
-                            {!b.is_active && canPublish && (
-                              <button className="btn btn-solid" style={{ padding: "4px 12px", fontSize: 10, flexShrink: 0 }} onClick={() => { republishBoard(b); setArchivePage(false); }}>Republish</button>
+                            {!b.is_active && (
+                              <button className="btn btn-solid" style={{ padding: "4px 12px", fontSize: 10, flexShrink: 0, opacity: canPublish ? 1 : 0.35, cursor: canPublish ? "pointer" : "not-allowed" }} onClick={() => { if (canPublish) { republishBoard(b); setArchivePage(false); } }}>
+                                {canPublish ? "Publish Again" : "Locked"}
+                              </button>
                             )}
                           </div>
                           {b.vouch_board_items?.length > 0 && (
