@@ -221,11 +221,11 @@ const Styles = () => (
       .slot-empty-large { width: 100%; aspect-ratio: 2/3; height: auto; margin-bottom: 0; }
       .cards-row { flex-direction: row; flex-wrap: nowrap; overflow-x: auto; gap: 10px; padding-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
       .cards-row::-webkit-scrollbar { display: none; }
-      .card { width: 110px; flex-shrink: 0; }
-      .card-poster { width: 110px; height: 152px; flex-shrink: 0; }
-      .card-poster-placeholder { width: 110px; height: 152px; flex-shrink: 0; font-size: 9px; }
+      .card { width: 90px; flex-shrink: 0; }
+      .card-poster { width: 90px; height: 124px; flex-shrink: 0; }
+      .card-poster-placeholder { width: 90px; height: 124px; flex-shrink: 0; font-size: 9px; }
       .card:hover .card-poster { transform: none; box-shadow: none; }
-      .slot-empty-sm { width: 110px; height: 152px; flex-shrink: 0; }
+      .slot-empty-sm { width: 90px; height: 124px; flex-shrink: 0; }
       .page { padding: 0 16px 60px; }
       .masthead-meta { padding: 7px 16px; }
       .vouch-section { padding: 16px 14px 20px; }
