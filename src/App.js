@@ -1529,14 +1529,14 @@ function BuddyFeed({ buddies, onViewBuddy }) {
         // Load buddy vouch boards
         const { data: boards } = await supabase
           .from("vouch_boards")
-          .select("*, vouch_board_items(*), profiles(display_name, avatar_url, username)")
+          .select("*, vouch_board_items(*)")
           .in("user_id", buddyIds)
           .order("published_at", { ascending: false })
           .limit(30);
         // Load buddy reactions
         const { data: reactions } = await supabase
           .from("reactions")
-          .select("*, profiles!reactions_user_id_fkey(display_name, avatar_url, username)")
+          .select("*")
           .in("user_id", buddyIds)
           .order("created_at", { ascending: false })
           .limit(30);
