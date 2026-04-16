@@ -925,9 +925,54 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
 
 function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, buddyCounts, onAddToQueue, queue }) {
   const [open, setOpen] = useState(true);
+  const [slideIdx, setSlideIdx] = useState(0);
+  const touchStartX = useRef(null);
+  const currentOffsetX = useRef(0);
+  const slideRef = useRef(null);
   const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
   const slots = Array(5).fill(null).map((_, i) => items[i] || null);
   const collapsed = isMobile && !open;
+  const filledItems = items.filter(Boolean);
+
+  useEffect(() => {
+    const el = slideRef.current;
+    if (!el || !isMobile) return;
+    const handleStart = e => { touchStartX.current = e.touches[0].clientX; currentOffsetX.current = 0; };
+    const handleMove = e => {
+      if (touchStartX.current === null) return;
+      const dx = e.touches[0].clientX - touchStartX.current;
+      currentOffsetX.current = dx;
+      const track = el.querySelector(".cat-track");
+      if (track) track.style.transform = `translateX(${-(slideIdx * el.offsetWidth) + dx}px)`;
+    };
+    const handleEnd = () => {
+      const w = el.offsetWidth;
+      const dx = currentOffsetX.current;
+      let newIdx = slideIdx;
+      if (dx < -(w * 0.2) && slideIdx < filledItems.length - 1) newIdx = slideIdx + 1;
+      else if (dx > (w * 0.2) && slideIdx > 0) newIdx = slideIdx - 1;
+      const track = el.querySelector(".cat-track");
+      if (track) { track.style.transition = "transform 0.3s ease"; track.style.transform = `translateX(${-(newIdx * w)}px)`; setTimeout(() => { if (track) track.style.transition = ""; }, 320); }
+      setSlideIdx(newIdx); touchStartX.current = null;
+    };
+    el.addEventListener("touchstart", handleStart, { passive: true });
+    el.addEventListener("touchmove", handleMove, { passive: true });
+    el.addEventListener("touchend", handleEnd, { passive: true });
+    return () => { el.removeEventListener("touchstart", handleStart); el.removeEventListener("touchmove", handleMove); el.removeEventListener("touchend", handleEnd); };
+  }, [slideIdx, filledItems.length, isMobile]);
+
+  const ActionButtons = ({ item, idx }) => (
+    <>
+      {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx, false); }} style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 30, height: 30, cursor: "pointer", fontSize: 16, lineHeight: "30px", textAlign: "center", borderRadius: 2 }}>×</button>}
+      {!isOwn && (
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 2, display: "flex" }}>
+          <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ flex: 1, background: myReactions?.includes(String(item.id)) ? "rgba(200,194,180,0.95)" : "rgba(17,16,8,0.82)", border: "none", color: myReactions?.includes(String(item.id)) ? "#111008" : "rgba(200,194,180,0.95)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "5px 4px", fontWeight: 700 }}>{myReactions?.includes(String(item.id)) ? "✓ Agreed" : "Agree"}</button>
+          {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue({ ...item, _cat: catKey }); }} style={{ flex: 1, background: queue?.find(q => String(q.id) === String(item.id)) ? "rgba(200,194,180,0.95)" : "rgba(17,16,8,0.82)", border: "none", borderLeft: "1px solid rgba(200,194,180,0.2)", color: queue?.find(q => String(q.id) === String(item.id)) ? "#111008" : "rgba(200,194,180,0.95)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "5px 4px", fontWeight: 700 }}>{queue?.find(q => String(q.id) === String(item.id)) ? "✓ Queued" : "+ Queue"}</button>}
+        </div>
+      )}
+    </>
+  );
+
   return (
     <div className="cat-section">
       <div className="cat-header" style={{ cursor: isMobile ? "pointer" : "default" }} onClick={() => isMobile && setOpen(o => !o)}>
@@ -939,29 +984,62 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
         {isOwn && isMobile && open && <button className="cat-add" style={{ marginLeft: 8 }} onClick={e => { e.stopPropagation(); onAdd(catKey); }}>+ Vouch</button>}
       </div>
       {!collapsed && (
-        <div className="cards-row">
-          {slots.map((item, idx) =>
-            item
-              ? <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => item.sourceUrl ? window.open(item.sourceUrl, "_blank") : onCard(catKey, idx)}>
-                  {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx, false); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 30, height: 30, cursor: "pointer", fontSize: 16, lineHeight: "30px", textAlign: "center", borderRadius: 2 }}>×</button>}
-                  {!isOwn && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: myReactions?.includes(String(item.id)) ? "#C8C2B4" : "rgba(17,16,8,0.82)", border: "none", color: myReactions?.includes(String(item.id)) ? T.ink : "rgba(200,194,180,0.95)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "2px 6px", whiteSpace: "nowrap", fontWeight: 700 }}>{myReactions?.includes(String(item.id)) ? "✓" : "Agree"}</button>}
-                  {!isOwn && onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue({ ...item, _cat: catKey }); }} style={{ position: "absolute", top: 30, right: 4, zIndex: 2, background: queue?.find(q => String(q.id) === String(item.id)) ? "#C8C2B4" : "rgba(17,16,8,0.82)", border: "none", color: queue?.find(q => String(q.id) === String(item.id)) ? T.ink : "rgba(200,194,180,0.95)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "2px 6px", whiteSpace: "nowrap", fontWeight: 700 }}>{queue?.find(q => String(q.id) === String(item.id)) ? "✓ Queued" : "+ Queue"}</button>}
-
-                  {item.poster ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} /> : null}
-                  <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
-                  <div style={{ flex: 1 }}>
-                    <div className="card-title">{item.title}</div>
-                    <div className="card-sub">{item.artist || item.author || item.year || item.sub || ""}</div>
-                    {item.comment && <div className="card-comment">"{item.comment}"</div>}
-                  </div>
+        isMobile ? (
+          <div ref={slideRef} style={{ overflow: "hidden", userSelect: "none" }}>
+            {filledItems.length === 0 && isOwn ? (
+              <div style={{ height: 280, border: `1px dashed ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 8, cursor: "pointer" }} onClick={() => onAdd(catKey)}>
+                <span style={{ fontSize: 28, color: T.inkFaint }}>+</span>
+                <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: T.inkFaint }}>Add to Shelf</span>
+              </div>
+            ) : (
+              <>
+                <div className="cat-track" style={{ display: "flex", willChange: "transform" }}>
+                  {filledItems.map((item, idx) => (
+                    <div key={item.id} style={{ flex: "0 0 100%", width: "100%", position: "relative" }} onClick={() => item.sourceUrl && window.open(item.sourceUrl, "_blank")}>
+                      {item.poster
+                        ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: 340, objectFit: "cover", display: "block", border: `1px solid ${T.paperDark}` }} onError={e => e.target.style.display = "none"} />
+                        : <div style={{ width: "100%", height: 340, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 18, color: T.inkLight, padding: 24, textAlign: "center" }}>{item.title}</div>}
+                      <ActionButtons item={item} idx={idx} />
+                      <div style={{ padding: "12px 4px 4px" }}>
+                        <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 15, lineHeight: 1.3 }}>{item.title}</div>
+                        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9.5px", color: T.inkLight, marginTop: 2 }}>{item.artist || item.author || item.year || item.sub || ""}</div>
+                        {item.comment && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkMid, marginTop: 4 }}>"{item.comment}"</div>}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              : isOwn
-                ? <div key={`e${idx}`} className="slot-empty-sm" onClick={() => onAdd(catKey)}>
-                    <div className="slot-empty-inner"><span className="slot-empty-plus">+</span>Vouch</div>
+                {filledItems.length > 1 && (
+                  <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 12 }}>
+                    {filledItems.map((_, i) => (
+                      <div key={i} onClick={() => setSlideIdx(i)} style={{ width: 6, height: 6, borderRadius: "50%", background: i === slideIdx ? T.ink : T.paperDark, cursor: "pointer", transition: "background 0.2s" }} />
+                    ))}
                   </div>
-                : null
-          )}
-        </div>
+                )}
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="cards-row">
+            {slots.map((item, idx) =>
+              item
+                ? <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => item.sourceUrl ? window.open(item.sourceUrl, "_blank") : onCard(catKey, idx)}>
+                    <ActionButtons item={item} idx={idx} />
+                    {item.poster ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} /> : null}
+                    <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
+                    <div style={{ flex: 1 }}>
+                      <div className="card-title">{item.title}</div>
+                      <div className="card-sub">{item.artist || item.author || item.year || item.sub || ""}</div>
+                      {item.comment && <div className="card-comment">"{item.comment}"</div>}
+                    </div>
+                  </div>
+                : isOwn
+                  ? <div key={`e${idx}`} className="slot-empty-sm" onClick={() => onAdd(catKey)}>
+                      <div className="slot-empty-inner"><span className="slot-empty-plus">+</span>Vouch</div>
+                    </div>
+                  : null
+            )}
+          </div>
+        )
       )}
     </div>
   );
