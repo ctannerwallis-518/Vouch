@@ -1735,7 +1735,7 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy }) {
                 </div>
               </div>
               {r.poster && (
-                <div style={{ width: "100%", maxWidth: 300, margin: "0 auto" }}>
+                <div style={{ width: "100%", maxWidth: 300, margin: "0 auto", cursor: r.source_url ? "pointer" : "default" }} onClick={() => r.source_url && window.open(r.source_url, "_blank")}>
                   <img src={r.poster} alt={r.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: "1px solid #b3ada0", display: "block" }} onError={e => e.target.style.display = "none"} />
                   <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{r.title}</div>
                   {r.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{r.subtitle}</div>}
