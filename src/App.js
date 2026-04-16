@@ -850,9 +850,9 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
           style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 36, height: 36, cursor: "pointer", fontSize: 20, lineHeight: "36px", textAlign: "center", borderRadius: 2 }}>×</button>
       )}
       {!isOwn && (
-        <div style={{ position: "absolute", top: 340, left: 0, right: 0, zIndex: 2, display: "flex", transform: "translateY(-100%)" }}>
-          <button onClick={e => { e.stopPropagation(); onDudeSame(it); }} style={{ flex: 1, background: myReactions?.includes(String(it.id)) ? "rgba(200,194,180,0.95)" : "rgba(17,16,8,0.82)", border: "none", color: myReactions?.includes(String(it.id)) ? "#111008" : "rgba(200,194,180,0.95)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700 }}>{myReactions?.includes(String(it.id)) ? "✓ Agreed" : "Agree"}</button>
-          {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue(it); }} style={{ flex: 1, background: queue?.find(q => String(q.id) === String(it.id)) ? "rgba(200,194,180,0.95)" : "rgba(17,16,8,0.82)", border: "none", borderLeft: "1px solid rgba(200,194,180,0.2)", color: queue?.find(q => String(q.id) === String(it.id)) ? "#111008" : "rgba(200,194,180,0.95)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700 }}>{queue?.find(q => String(q.id) === String(it.id)) ? "✓ Queue" : "+ Queue"}</button>}
+        <div style={{ position: "absolute", top: 340, left: 0, right: 0, zIndex: 2, display: "flex", transform: "translateY(-100%)", pointerEvents: "none" }}>
+          <button onClick={e => { e.stopPropagation(); onDudeSame(it); }} style={{ flex: 1, background: myReactions?.includes(String(it.id)) ? "rgba(200,194,180,0.95)" : "rgba(17,16,8,0.82)", border: "none", color: myReactions?.includes(String(it.id)) ? "#111008" : "rgba(200,194,180,0.95)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700, pointerEvents: "auto" }}>{myReactions?.includes(String(it.id)) ? "✓ Agreed" : "Agree"}</button>
+          {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue(it); }} style={{ flex: 1, background: queue?.find(q => String(q.id) === String(it.id)) ? "rgba(200,194,180,0.95)" : "rgba(17,16,8,0.82)", border: "none", borderLeft: "1px solid rgba(200,194,180,0.2)", color: queue?.find(q => String(q.id) === String(it.id)) ? "#111008" : "rgba(200,194,180,0.95)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700, pointerEvents: "auto" }}>{queue?.find(q => String(q.id) === String(it.id)) ? "✓ Queue" : "+ Queue"}</button>}
         </div>
       )}
       {buddyCounts?.[String(it.id)] > 0 && (
@@ -931,8 +931,8 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
         <div className="cat-sublabel">My Shelf</div>
         <div className="cat-count">{items.length > 0 ? items.length : ""}</div>
         {isMobile && <span style={{ marginLeft: "auto", fontFamily: "'Spectral SC',serif", fontSize: "11px", color: T.inkFaint, paddingLeft: 8 }}>{open ? "▴" : "▾"}</span>}
-        {isOwn && !isMobile && <button className="cat-add" onClick={() => onAdd(catKey)}>+ Vouch</button>}
-        {isOwn && isMobile && open && <button className="cat-add" style={{ marginLeft: 8 }} onClick={e => { e.stopPropagation(); onAdd(catKey); }}>+ Vouch</button>}
+        {isOwn && !isMobile && <button className="cat-add" onClick={() => onAdd(catKey)}>+ Add</button>}
+        {isOwn && isMobile && open && <button className="cat-add" style={{ marginLeft: 8 }} onClick={e => { e.stopPropagation(); onAdd(catKey); }}>+ Add</button>}
       </div>
       {!collapsed && (
         <div className="cards-row">
@@ -1525,6 +1525,7 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue 
 
   const seen = new Set();
   allBuddyBoards.forEach(row => {
+    if (!row.user_id || buddies.every(b => b.userId !== row.user_id)) return; // exclude self
     const key = row.category + ":" + row.item_id;
     if (seen.has(key)) {
       // Add owner to existing
