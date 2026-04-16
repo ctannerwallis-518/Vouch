@@ -1516,7 +1516,7 @@ function GroupVouchSlideshow({ items, isMobile }) {
 }
 
 function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy }) {
-  const [modalCat, setModalCat] = React.useState(null);
+  const [modalCat, setModalCat] = useState(null);
   const isMobile = window.innerWidth <= 640;
 
   // Build per-category tile lists from all buddy shelf items (non-vouched shelf items)
