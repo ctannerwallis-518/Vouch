@@ -2062,10 +2062,11 @@ export default function Vouch() {
   const currBoard = isOwn ? board : viewBoard;
   const currName  = isOwn ? user?.displayName : viewing?.displayName || viewing?.username;
 
-  const dudeSame = async (item) => {
-    if (!userId || !viewing) return;
-    if (viewing.userId === userId) return;
-    const ownerId = viewing.userId;
+  const dudeSame = async (item, overrideOwnerId) => {
+    if (!userId) return;
+    const ownerId = overrideOwnerId || viewing?.userId;
+    if (!ownerId) return;
+    if (ownerId === userId) return;
     const already = myReactions.find(r => r.item_id === String(item.id) && r.item_owner_id === ownerId);
     if (already) {
       await supabase.from("reactions").delete().eq("id", already.id);
