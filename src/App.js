@@ -1480,10 +1480,13 @@ function GroupVouchSlideshow({ items, isMobile }) {
   );
 
   return (
-    <div style={{ marginBottom: 40, border: "3px double #888", boxShadow: "0 0 0 1px #666", background: "#111008", padding: "24px 24px 28px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid rgba(200,194,180,0.25)", paddingBottom: 12, marginBottom: 22 }}>
-        <div style={{ fontFamily: "'Times New Roman',Times,serif", fontWeight: 900, fontSize: 22, color: "#C8C2B4", letterSpacing: "0.04em" }}>Group Vouch</div>
-        <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.55)" }}>Most vouched across your circle</div>
+    <div className="vouch-section" style={{ marginBottom: 40, border: "3px double #999", boxShadow: "0 0 0 1px #666" }}>
+      <div className="vouch-section-header">
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="vouch-section-label">Group Vouch</div>
+          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginTop: 3 }}>Vouch</div>
+          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 4 }}>Most vouched across your circle</div>
+        </div>
       </div>
       {isMobile ? (
         <div ref={containerRef} style={{ overflow: "hidden", userSelect: "none" }}>
@@ -1571,13 +1574,22 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue 
         : <div style={{ width: "100%", aspectRatio: "2/3", background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 6 }}>{item.title}</div>}
       <div style={{ fontFamily: "'Spectral',serif", fontSize: 11, fontWeight: 600, color: T.ink, marginTop: 5, lineHeight: 1.3 }}>{item.title}</div>
       {item.owners.length > 0 && (
-        <div style={{ display: "flex", gap: 3, marginTop: 4, flexWrap: "wrap", alignItems: "center" }}>
-          {item.owners.slice(0,3).map((o, i) => (
-            <div key={i} onClick={e => { e.stopPropagation(); onViewBuddy(o); }} style={{ cursor: "pointer" }} title={o.displayName}>
-              <Avatar name={o.displayName} size={18} avatarUrl={o.avatarUrl} />
-            </div>
-          ))}
-          {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue(item); }} style={{ marginLeft: "auto", fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", padding: "2px 5px", background: queue?.find(q => String(q.id) === String(item.item_id)) ? T.ink : "transparent", color: queue?.find(q => String(q.id) === String(item.item_id)) ? T.bg : T.inkMid, border: `1px solid ${T.paperDark}`, cursor: "pointer" }}>{queue?.find(q => String(q.id) === String(item.item_id)) ? "✓" : "+ Queue"}</button>}
+        <div style={{ marginTop: 4 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: onAddToQueue ? 6 : 0 }}>
+            {item.owners.slice(0,3).map((o, i) => {
+              const parts = (o.displayName || "").trim().split(" ");
+              const shortName = parts[0] + (parts[1] ? " " + parts[1][0] + "." : "");
+              return (
+                <div key={i} onClick={e => { e.stopPropagation(); onViewBuddy(o); }} style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}>
+                  <Avatar name={o.displayName} size={18} avatarUrl={o.avatarUrl} />
+                  <span style={{ fontFamily: "'Spectral',serif", fontSize: 10, color: T.inkMid }}>{shortName}</span>
+                </div>
+              );
+            })}
+          </div>
+          {onAddToQueue && (
+            <button onClick={e => { e.stopPropagation(); onAddToQueue(item); }} style={{ width: "100%", fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", padding: "4px 0", background: queue?.find(q => String(q.id) === String(item.item_id)) ? T.ink : T.paperDark, color: queue?.find(q => String(q.id) === String(item.item_id)) ? T.bg : T.inkMid, border: "none", cursor: "pointer" }}>{queue?.find(q => String(q.id) === String(item.item_id)) ? "✓ Queued" : "+ Queue"}</button>
+          )}
         </div>
       )}
     </div>
@@ -2736,34 +2748,14 @@ export default function Vouch() {
                 {buddies.length === 0 && pendingIn.length === 0 && (
                   <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkLight, padding: "24px 0" }}>No buddies yet — add one or share your invite link.</div>
                 )}
-                {buddies.map(b => {
-                  const bPreviews = allBuddyBoards.filter(r => r.user_id === b.userId && r.vouched).slice(0, 5);
-                  return (
-                    <div key={b.buddyRowId} style={{ borderBottom: `1px solid ${T.paperDark}`, padding: "16px 0", cursor: "pointer" }} onClick={() => viewBuddy(b)}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: bPreviews.length > 0 ? 12 : 0 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                          <Avatar name={b.displayName} size={52} avatarUrl={b.avatarUrl} />
-                          <div>
-                            <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 20 }}>{b.displayName}</div>
-                            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.1em", color: T.inkLight, marginTop: 2 }}>@{b.username}</div>
-                          </div>
-                        </div>
-                        <span style={{ fontSize: 13, color: T.inkFaint }}>→</span>
-                      </div>
-                      {bPreviews.length > 0 && (
-                        <div style={{ display: "flex", gap: 8 }}>
-                          {bPreviews.map((item, i) => (
-                            <div key={i} style={{ width: 52, flexShrink: 0 }}>
-                              {item.poster
-                                ? <img src={item.poster} alt={item.title} style={{ width: 52, height: 72, objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block" }} onError={e => e.target.style.display = "none"} />
-                                : <div style={{ width: 52, height: 72, background: T.paperDark, border: `1px solid ${T.paperDark}` }} />}
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 20, marginBottom: 32 }}>
+                  {buddies.map(b => (
+                    <div key={b.buddyRowId} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer", width: 80 }} onClick={() => viewBuddy(b)}>
+                      <Avatar name={b.displayName} size={72} avatarUrl={b.avatarUrl} />
+                      <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 12, textAlign: "center", lineHeight: 1.3, color: T.ink }}>{b.displayName}</div>
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
 
                 {/* SUGGESTED BUDDIES */}
                 {suggested.length > 0 && (
