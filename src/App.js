@@ -1516,7 +1516,7 @@ function GroupVouchSlideshow({ items, isMobile }) {
   );
 }
 
-function BuddyFeed({ buddies, selfId, onViewBuddy }) {
+function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy }) {
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -1541,7 +1541,7 @@ function BuddyFeed({ buddies, selfId, onViewBuddy }) {
           .order("created_at", { ascending: false })
           .limit(30);
         const items = [];
-        const allPeople = [...buddies, { userId: selfId, displayName: "You", avatarUrl: null }];
+        const allPeople = [...buddies, { userId: selfId, displayName: selfName || "You", avatarUrl: selfAvatar || null }];
         (boards || []).forEach(b => {
           if (!b.published_at) return;
           const buddy = allPeople.find(x => x.userId === b.user_id);
@@ -1571,33 +1571,28 @@ function BuddyFeed({ buddies, selfId, onViewBuddy }) {
           const theme = (b.theme && b.theme !== "Other") ? b.theme : (b.name || "Vouch");
           const items = (b.vouch_board_items || []).sort((a,x) => a.position - x.position).slice(0,5);
           return (
-            <div key={i} style={{ borderBottom: "1px solid #b3ada0", paddingBottom: 24, marginBottom: 24 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                <div onClick={() => buddy && onViewBuddy(buddy)} style={{ cursor: "pointer" }}>
-                  <Avatar name={buddy?.displayName || "?"} size={36} avatarUrl={buddy?.avatarUrl} />
+            <div key={i} style={{ borderBottom: "1px solid #b3ada0", paddingBottom: 32, marginBottom: 32 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                <div onClick={() => buddy && onViewBuddy(buddy)} style={{ cursor: "pointer", flexShrink: 0 }}>
+                  <Avatar name={buddy?.displayName || "?"} size={28} avatarUrl={buddy?.avatarUrl} />
                 </div>
-                <div style={{ flex: 1 }}>
-                  <span onClick={() => buddy && onViewBuddy(buddy)} style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 14, cursor: "pointer", borderBottom: "1px solid transparent" }}
-                    onMouseEnter={e => e.currentTarget.style.borderBottomColor = "#7a7568"}
-                    onMouseLeave={e => e.currentTarget.style.borderBottomColor = "transparent"}>
-                    {buddy?.displayName}
-                  </span>
-                  <span style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: "#7a7568" }}> published a new Vouch</span>
-                  <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: "#a09890", marginTop: 2 }}>
-                    {item.date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                  </div>
+                <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "#3a3830" }}>
+                  <span onClick={() => buddy && onViewBuddy(buddy)} style={{ fontWeight: 600, cursor: "pointer" }}>{buddy?.displayName}</span>
+                  <span style={{ fontStyle: "italic", color: "#7a7568" }}> vouched for </span>
+                  <span style={{ fontWeight: 600 }}>{theme}</span>
+                  <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: "#a09890", marginLeft: 8 }}>{item.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
                 </div>
               </div>
-              <div style={{ fontFamily: "'Times New Roman',Times,serif", fontWeight: 900, fontSize: 18, color: "#111008", marginBottom: 4 }}>{theme}</div>
-              {b.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: "#7a7568", marginBottom: 8 }}>{b.description}</div>}
+              {b.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "#7a7568", marginBottom: 10, paddingLeft: 36 }}>{b.description}</div>}
               {items.length > 0 && (
-                <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
-                  {items.map((item, j) => (
-                    <div key={j} style={{ flexShrink: 0, width: 70 }}>
-                      {item.poster
-                        ? <img src={item.poster} alt={item.title} style={{ width: 70, height: 96, objectFit: "cover", border: "1px solid #b3ada0", display: "block" }} onError={e => e.target.style.display = "none"} />
-                        : <div style={{ width: 70, height: 96, background: "#b3ada0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: "#7a7568", textAlign: "center", padding: 4 }}>{item.title}</div>}
-                      <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: "#a09890", marginTop: 3, textAlign: "center", lineHeight: 1.3 }}>{item.title}</div>
+                <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4 }}>
+                  {items.map((it, j) => (
+                    <div key={j} style={{ flexShrink: 0, width: "calc((100vw - 80px) / " + Math.min(items.length, 3) + ")", maxWidth: 180, minWidth: 100 }}>
+                      {it.poster
+                        ? <img src={it.poster} alt={it.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: "1px solid #b3ada0", display: "block" }} onError={e => e.target.style.display = "none"} />
+                        : <div style={{ width: "100%", aspectRatio: "2/3", background: "#b3ada0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontFamily: "'Spectral',serif", color: "#7a7568", textAlign: "center", padding: 8 }}>{it.title}</div>}
+                      <div style={{ fontFamily: "'Spectral',serif", fontSize: "11px", fontWeight: 600, color: "#111008", marginTop: 5, lineHeight: 1.3 }}>{it.title}</div>
+                      {it.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", color: "#a09890", marginTop: 2 }}>{it.subtitle}</div>}
                     </div>
                   ))}
                 </div>
@@ -1609,23 +1604,24 @@ function BuddyFeed({ buddies, selfId, onViewBuddy }) {
           const r = item.reaction;
           const buddy = item.buddy;
           return (
-            <div key={i} style={{ borderBottom: "1px solid #b3ada0", paddingBottom: 16, marginBottom: 16, display: "flex", alignItems: "flex-start", gap: 10 }}>
-              <div onClick={() => buddy && onViewBuddy(buddy)} style={{ cursor: "pointer", flexShrink: 0 }}>
-                <Avatar name={buddy?.displayName || "?"} size={36} avatarUrl={buddy?.avatarUrl} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <span onClick={() => buddy && onViewBuddy(buddy)} style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 14, cursor: "pointer", borderBottom: "1px solid transparent" }}
-                  onMouseEnter={e => e.currentTarget.style.borderBottomColor = "#7a7568"}
-                  onMouseLeave={e => e.currentTarget.style.borderBottomColor = "transparent"}>
-                  {buddy?.displayName}
-                </span>
-                <span style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: "#7a7568" }}> agreed with </span>
-                <span style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 13 }}>{r.title}</span>
-                <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: "#a09890", marginTop: 2 }}>
-                  {item.date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+            <div key={i} style={{ borderBottom: "1px solid #b3ada0", paddingBottom: 24, marginBottom: 24 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                <div onClick={() => buddy && onViewBuddy(buddy)} style={{ cursor: "pointer", flexShrink: 0 }}>
+                  <Avatar name={buddy?.displayName || "?"} size={28} avatarUrl={buddy?.avatarUrl} />
+                </div>
+                <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "#3a3830" }}>
+                  <span onClick={() => buddy && onViewBuddy(buddy)} style={{ fontWeight: 600, cursor: "pointer" }}>{buddy?.displayName}</span>
+                  <span style={{ fontStyle: "italic", color: "#7a7568" }}> agreed with</span>
+                  <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: "#a09890", marginLeft: 8 }}>{item.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
                 </div>
               </div>
-              {r.poster && <img src={r.poster} alt={r.title} style={{ width: 36, height: 50, objectFit: "cover", border: "1px solid #b3ada0", flexShrink: 0 }} onError={e => e.target.style.display = "none"} />}
+              {r.poster && (
+                <div style={{ width: "calc((100vw - 80px) / 3)", maxWidth: 180, minWidth: 100 }}>
+                  <img src={r.poster} alt={r.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: "1px solid #b3ada0", display: "block" }} onError={e => e.target.style.display = "none"} />
+                  <div style={{ fontFamily: "'Spectral',serif", fontSize: "11px", fontWeight: 600, color: "#111008", marginTop: 5, lineHeight: 1.3 }}>{r.title}</div>
+                  {r.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", color: "#a09890", marginTop: 2 }}>{r.subtitle}</div>}
+                </div>
+              )}
             </div>
           );
         }
@@ -2443,7 +2439,7 @@ export default function Vouch() {
               <div className="board-sub" style={{ marginBottom: 28 }}>Recent activity from your circle</div>
               {buddies.length === 0
                 ? <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: "#7a7568", padding: "24px 0" }}>Add some buddies to see their activity here.</div>
-                : <BuddyFeed buddies={buddies} selfId={userId} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId); window.scrollTo(0,0); }} />
+                : <BuddyFeed buddies={buddies} selfId={userId} selfName={user?.displayName} selfAvatar={user?.avatarUrl} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId); window.scrollTo(0,0); }} />
               }
             </div>
           )}
