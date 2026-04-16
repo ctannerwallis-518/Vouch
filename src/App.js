@@ -1516,7 +1516,7 @@ function GroupVouchSlideshow({ items, isMobile }) {
   );
 }
 
-function BuddyFeed({ buddies, onViewBuddy }) {
+function BuddyFeed({ buddies, selfId, onViewBuddy }) {
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -1525,7 +1525,7 @@ function BuddyFeed({ buddies, onViewBuddy }) {
     const load = async () => {
       setLoading(true);
       try {
-        const buddyIds = buddies.map(b => b.userId);
+        const buddyIds = [...buddies.map(b => b.userId), selfId].filter(Boolean);
         // Load buddy vouch boards
         const { data: boards } = await supabase
           .from("vouch_boards")
@@ -2442,7 +2442,7 @@ export default function Vouch() {
               <div className="board-sub" style={{ marginBottom: 28 }}>Recent activity from your circle</div>
               {buddies.length === 0
                 ? <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: "#7a7568", padding: "24px 0" }}>Add some buddies to see their activity here.</div>
-                : <BuddyFeed buddies={buddies} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId); window.scrollTo(0,0); }} />
+                : <BuddyFeed buddies={buddies} selfId={userId} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId); window.scrollTo(0,0); }} />
               }
             </div>
           )}
