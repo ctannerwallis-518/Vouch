@@ -1860,7 +1860,6 @@ export default function Vouch() {
         const storedAvatar = existingProfile?.avatar_url;
         const isGoogleUrl = storedAvatar && (storedAvatar.includes("googleusercontent") || storedAvatar.includes("google"));
         const avatarUrl = (storedAvatar && !isGoogleUrl) ? storedAvatar : googleAvatar;
-        // Only upsert without overwriting avatar if profile exists
         if (!existingProfile) {
           await supabase.from("profiles").upsert({
             id: uid,
@@ -1868,6 +1867,12 @@ export default function Vouch() {
             display_name: session.user.user_metadata?.full_name || session.user.email.split("@")[0],
             avatar_url: googleAvatar,
           }, { onConflict: "id" });
+        } else if (storedAvatar && !isGoogleUrl && existingProfile.avatar_url !== storedAvatar) {
+          // Restore custom avatar if something overwrote it
+          await supabase.from("profiles").update({ avatar_url: storedAvatar }).eq("id", uid);
+        } else if (existingProfile && isGoogleUrl && googleAvatar && existingProfile.avatar_url !== googleAvatar) {
+          // Keep Google avatar in sync if no custom one set
+          await supabase.from("profiles").update({ avatar_url: googleAvatar }).eq("id", uid);
         }
         setUser({ username: existingProfile?.username || session.user.email.split("@")[0], displayName: existingProfile?.display_name || session.user.user_metadata?.full_name || session.user.email.split("@")[0], avatarUrl });
         setUserId(uid);
