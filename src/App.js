@@ -1541,13 +1541,14 @@ function BuddyFeed({ buddies, selfId, onViewBuddy }) {
           .order("created_at", { ascending: false })
           .limit(30);
         const items = [];
+        const allPeople = [...buddies, { userId: selfId, displayName: "You", avatarUrl: null }];
         (boards || []).forEach(b => {
           if (!b.published_at) return;
-          const buddy = buddies.find(x => x.userId === b.user_id);
+          const buddy = allPeople.find(x => x.userId === b.user_id);
           items.push({ type: "vouch", date: new Date(b.published_at), board: b, buddy });
         });
         (reactions || []).forEach(r => {
-          const buddy = buddies.find(x => x.userId === r.user_id);
+          const buddy = allPeople.find(x => x.userId === r.user_id);
           items.push({ type: "agree", date: new Date(r.created_at), reaction: r, buddy });
         });
         items.sort((a, b) => b.date - a.date);
