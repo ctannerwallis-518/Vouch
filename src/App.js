@@ -945,9 +945,7 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
               ? <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => item.sourceUrl ? window.open(item.sourceUrl, "_blank") : onCard(catKey, idx)}>
                   {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx, false); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 30, height: 30, cursor: "pointer", fontSize: 16, lineHeight: "30px", textAlign: "center", borderRadius: 2 }}>×</button>}
                   {!isOwn && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: myReactions?.includes(String(item.id)) ? "#C8C2B4" : "rgba(17,16,8,0.82)", border: "none", color: myReactions?.includes(String(item.id)) ? T.ink : "rgba(200,194,180,0.95)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "2px 6px", whiteSpace: "nowrap", fontWeight: 700 }}>{myReactions?.includes(String(item.id)) ? "✓" : "Agree"}</button>}
-                {buddyCounts?.[String(item.id)] > 0 && (
-                  <div title="Total Buddy Vouches" style={{ position: "absolute", bottom: 4, left: 4, zIndex: 2, background: "rgba(17,16,8,0.82)", color: "rgba(200,194,180,0.95)", fontFamily: "'Spectral SC',serif", fontSize: "8px", fontWeight: 700, letterSpacing: "0.08em", padding: "2px 6px", cursor: "default" }}>{buddyCounts[String(item.id)]} {buddyCounts[String(item.id)] === 1 ? "Vouch" : "Vouches"}</div>
-                )}
+
                   {item.poster ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} /> : null}
                   <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
                   <div style={{ flex: 1 }}>
@@ -1482,7 +1480,7 @@ function GroupVouchSlideshow({ items, isMobile }) {
   );
 
   return (
-    <div style={{ marginBottom: 40, border: "3px double #111008", background: "#111008", padding: "24px 24px 28px" }}>
+    <div style={{ marginBottom: 40, border: "3px double #888", boxShadow: "0 0 0 1px #666", background: "#111008", padding: "24px 24px 28px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid rgba(200,194,180,0.25)", paddingBottom: 12, marginBottom: 22 }}>
         <div style={{ fontFamily: "'Times New Roman',Times,serif", fontWeight: 900, fontSize: 22, color: "#C8C2B4", letterSpacing: "0.04em" }}>Group Vouch</div>
         <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.55)" }}>Most vouched across your circle</div>
@@ -1511,6 +1509,109 @@ function GroupVouchSlideshow({ items, isMobile }) {
               <CardFace item={item} />
             </div>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy }) {
+  const [modalCat, setModalCat] = React.useState(null);
+  const isMobile = window.innerWidth <= 640;
+
+  // Build per-category tile lists from all buddy shelf items (non-vouched shelf items)
+  const catItems = {};
+  CATEGORIES.forEach(cat => { catItems[cat.key] = []; });
+
+  const seen = new Set();
+  allBuddyBoards.forEach(row => {
+    const key = row.category + ":" + row.item_id;
+    if (seen.has(key)) {
+      // Add owner to existing
+      const existing = catItems[row.category]?.find(i => i.item_id === row.item_id);
+      if (existing) {
+        const buddy = buddies.find(b => b.userId === row.user_id);
+        if (buddy && !existing.owners.find(o => o.userId === buddy.userId)) {
+          existing.owners.push(buddy);
+        }
+      }
+      return;
+    }
+    seen.add(key);
+    if (!catItems[row.category]) return;
+    const buddy = buddies.find(b => b.userId === row.user_id);
+    catItems[row.category].push({
+      item_id: row.item_id,
+      title: row.title,
+      poster: row.poster,
+      subtitle: row.subtitle || "",
+      source_url: row.source_url,
+      owners: buddy ? [buddy] : [],
+    });
+  });
+
+  // Shuffle each category
+  Object.keys(catItems).forEach(key => {
+    const arr = catItems[key];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+  });
+
+  const visibleCats = CATEGORIES.filter(cat => catItems[cat.key]?.length > 0);
+  if (visibleCats.length === 0) return null;
+
+  const TileCard = ({ item }) => (
+    <div style={{ flexShrink: 0, width: isMobile ? 90 : 120, cursor: item.source_url ? "pointer" : "default" }}
+      onClick={() => item.source_url && window.open(item.source_url, "_blank")}>
+      {item.poster
+        ? <img src={item.poster} alt={item.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: "1px solid " + T.paperDark, display: "block" }} onError={e => e.target.style.display = "none"} />
+        : <div style={{ width: "100%", aspectRatio: "2/3", background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 6 }}>{item.title}</div>}
+      <div style={{ fontFamily: "'Spectral',serif", fontSize: 11, fontWeight: 600, color: T.ink, marginTop: 5, lineHeight: 1.3 }}>{item.title}</div>
+      {item.owners.length > 0 && (
+        <div style={{ display: "flex", gap: 3, marginTop: 4, flexWrap: "wrap" }}>
+          {item.owners.slice(0,3).map((o, i) => (
+            <div key={i} onClick={e => { e.stopPropagation(); onViewBuddy(o); }} style={{ cursor: "pointer" }} title={o.displayName}>
+              <Avatar name={o.displayName} size={18} avatarUrl={o.avatarUrl} />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div style={{ marginBottom: 48 }}>
+      <div style={{ fontFamily: "'Times New Roman',Times,serif", fontWeight: 900, fontSize: 22, color: T.ink, letterSpacing: "0.04em", marginBottom: 4 }}>Buddies' Bin</div>
+      <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkLight, marginBottom: 28 }}>Discover what your circle is into</div>
+      {visibleCats.map(cat => (
+        <div key={cat.key} style={{ marginBottom: 32 }}>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", borderBottom: "2px solid " + T.ink, paddingBottom: 8, marginBottom: 14 }}>
+            <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 15, letterSpacing: "0.08em" }}>{cat.label}</div>
+            {catItems[cat.key].length > 5 && (
+              <button onClick={() => setModalCat(cat.key)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", background: "transparent", border: "none", color: T.inkLight, cursor: "pointer", padding: 0 }}>See All →</button>
+            )}
+          </div>
+          <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 4, scrollbarWidth: "none" }}>
+            {catItems[cat.key].slice(0, 5).map((item, i) => <TileCard key={i} item={item} />)}
+          </div>
+        </div>
+      ))}
+
+      {modalCat && (
+        <div className="modal-overlay" onClick={() => setModalCat(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxHeight: "88vh", display: "flex", flexDirection: "column" }}>
+            <div className="modal-head">
+              <div className="modal-title">{CATEGORIES.find(c => c.key === modalCat)?.label} — Your Circle</div>
+              <button className="modal-x" onClick={() => setModalCat(null)}>×</button>
+            </div>
+            <div className="modal-body" style={{ overflowY: "auto", flex: 1 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
+                {catItems[modalCat].map((item, i) => <TileCard key={i} item={item} />)}
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -2584,6 +2685,7 @@ export default function Vouch() {
                   );
                 })()}
 
+                <BuddiesBin allBuddyBoards={allBuddyBoards} buddies={buddies} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId); window.scrollTo(0,0); }} />
                 {/* PENDING REQUESTS */}
                 {pendingIn.length > 0 && <>
                   <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 12 }}>Pending Requests</div>
