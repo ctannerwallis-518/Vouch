@@ -769,7 +769,7 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
   );
 }
 
-function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, buddyCounts, hideHeader }) {
+function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, buddyCounts, hideHeader, hideEmptySlots }) {
   const [idx, setIdx]      = useState(0);
   const touchStartX        = useRef(null);
   const touchStartY        = useRef(null);
@@ -902,6 +902,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
         <div className="cards-row-large">
           {Array(5).fill(null).map((_, i) => {
             const it = allItems[i] || null;
+            if (!it && !isOwn && hideEmptySlots) return null;
             return it ? (
               <div key={it.id + it._cat} className="card-large" style={{ position: "relative" }}>
                 <CardFace it={it} />
@@ -1595,7 +1596,7 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy }) {
                   items.forEach(it => {
                     if (vbBoard[it.category]) vbBoard[it.category].push({ id: it.item_id, title: it.title, sub: it.subtitle || "", poster: it.poster, comment: "", vouched: true, sourceUrl: it.source_url, _cat: it.category, _catLabel: it.category });
                   });
-                  return <VouchSection board={vbBoard} isOwn={false} onCard={()=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={()=>{}} myReactions={[]} hideHeader={true} />;
+                  return <VouchSection board={vbBoard} isOwn={false} onCard={()=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={()=>{}} myReactions={[]} hideHeader={true} hideEmptySlots={true} />;
                 })()}
               </div>
             </div>
