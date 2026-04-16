@@ -923,7 +923,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
   );
 }
 
-function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, buddyCounts }) {
+function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, buddyCounts, onAddToQueue, queue }) {
   const [open, setOpen] = useState(true);
   const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
   const slots = Array(5).fill(null).map((_, i) => items[i] || null);
@@ -945,6 +945,7 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
               ? <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => item.sourceUrl ? window.open(item.sourceUrl, "_blank") : onCard(catKey, idx)}>
                   {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx, false); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 30, height: 30, cursor: "pointer", fontSize: 16, lineHeight: "30px", textAlign: "center", borderRadius: 2 }}>×</button>}
                   {!isOwn && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: myReactions?.includes(String(item.id)) ? "#C8C2B4" : "rgba(17,16,8,0.82)", border: "none", color: myReactions?.includes(String(item.id)) ? T.ink : "rgba(200,194,180,0.95)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "2px 6px", whiteSpace: "nowrap", fontWeight: 700 }}>{myReactions?.includes(String(item.id)) ? "✓" : "Agree"}</button>}
+                  {!isOwn && onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue({ ...item, _cat: catKey }); }} style={{ position: "absolute", top: 30, right: 4, zIndex: 2, background: queue?.find(q => String(q.id) === String(item.id)) ? "#C8C2B4" : "rgba(17,16,8,0.82)", border: "none", color: queue?.find(q => String(q.id) === String(item.id)) ? T.ink : "rgba(200,194,180,0.95)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "2px 6px", whiteSpace: "nowrap", fontWeight: 700 }}>{queue?.find(q => String(q.id) === String(item.id)) ? "✓ Queued" : "+ Queue"}</button>}
 
                   {item.poster ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} /> : null}
                   <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
@@ -1515,7 +1516,7 @@ function GroupVouchSlideshow({ items, isMobile }) {
   );
 }
 
-function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy }) {
+function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue }) {
   const [modalCat, setModalCat] = useState(null);
   const isMobile = window.innerWidth <= 640;
 
@@ -1570,12 +1571,13 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy }) {
         : <div style={{ width: "100%", aspectRatio: "2/3", background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 6 }}>{item.title}</div>}
       <div style={{ fontFamily: "'Spectral',serif", fontSize: 11, fontWeight: 600, color: T.ink, marginTop: 5, lineHeight: 1.3 }}>{item.title}</div>
       {item.owners.length > 0 && (
-        <div style={{ display: "flex", gap: 3, marginTop: 4, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 3, marginTop: 4, flexWrap: "wrap", alignItems: "center" }}>
           {item.owners.slice(0,3).map((o, i) => (
             <div key={i} onClick={e => { e.stopPropagation(); onViewBuddy(o); }} style={{ cursor: "pointer" }} title={o.displayName}>
               <Avatar name={o.displayName} size={18} avatarUrl={o.avatarUrl} />
             </div>
           ))}
+          {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue(item); }} style={{ marginLeft: "auto", fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", padding: "2px 5px", background: queue?.find(q => String(q.id) === String(item.item_id)) ? T.ink : "transparent", color: queue?.find(q => String(q.id) === String(item.item_id)) ? T.bg : T.inkMid, border: `1px solid ${T.paperDark}`, cursor: "pointer" }}>{queue?.find(q => String(q.id) === String(item.item_id)) ? "✓" : "+ Queue"}</button>}
         </div>
       )}
     </div>
@@ -1786,6 +1788,8 @@ export default function Vouch() {
   const [viewerReactions,setViewerReactions]= useState([]);
   const [viewActiveBoard,setViewActiveBoard]= useState(null);
   const [suggested,      setSuggested]      = useState([]);
+  const [queue,          setQueue]          = useState([]);
+  const [shelfView,      setShelfView]      = useState("shelf"); // "shelf" | "queue"
 
   const loadMyReactions = async (uid) => {
     const { data } = await supabase.from("reactions").select("*").eq("user_id", uid).order("created_at", { ascending: false });
@@ -2007,6 +2011,11 @@ export default function Vouch() {
           setUserCategories(CATEGORIES.map(c => c.key));
         }
         loadVouchBoards(uid);
+        // Load queue from localStorage
+        try {
+          const saved = JSON.parse(localStorage.getItem("vouch-queue-" + uid) || "[]");
+          setQueue(saved);
+        } catch(e) {}
         const params = new URLSearchParams(window.location.search);
         const inviteFrom = params.get("invite");
         if (inviteFrom && inviteFrom !== uid) {
@@ -2443,6 +2452,24 @@ export default function Vouch() {
     } catch(e) { console.error("removeItem error:", e); await loadBoard(userId); }
   };
 
+  const addToQueue = (item) => {
+    if (!userId) return;
+    setQueue(prev => {
+      if (prev.find(q => String(q.id) === String(item.id || item.item_id))) return prev;
+      const newQ = [...prev, { id: item.id || item.item_id, title: item.title, poster: item.poster || null, sub: item.sub || item.subtitle || "", sourceUrl: item.sourceUrl || item.source_url || null, category: item._cat || item.category || item.catKey || "" }];
+      localStorage.setItem("vouch-queue-" + userId, JSON.stringify(newQ));
+      return newQ;
+    });
+  };
+
+  const removeFromQueue = (id) => {
+    setQueue(prev => {
+      const newQ = prev.filter(q => String(q.id) !== String(id));
+      localStorage.setItem("vouch-queue-" + userId, JSON.stringify(newQ));
+      return newQ;
+    });
+  };
+
   const vouchedCount = Object.values(board).flat().filter(item => item.vouched).length;
 
   const canPublish = (() => {
@@ -2685,7 +2712,7 @@ export default function Vouch() {
                   );
                 })()}
 
-                <BuddiesBin allBuddyBoards={allBuddyBoards} buddies={buddies} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId); window.scrollTo(0,0); }} />
+                <BuddiesBin allBuddyBoards={allBuddyBoards} buddies={buddies} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId); window.scrollTo(0,0); }} onAddToQueue={addToQueue} queue={queue} />
                 {/* PENDING REQUESTS */}
                 {pendingIn.length > 0 && <>
                   <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 12 }}>Pending Requests</div>
@@ -2866,17 +2893,47 @@ export default function Vouch() {
                   if (visibleCats.length === 0) return null;
                   return <>
                     <div style={{ marginBottom: 28, borderBottom: `2px solid ${T.ink}`, paddingBottom: 12 }}>
-                      <div style={{ fontFamily: "'Spectral SC', serif", fontWeight: 700, fontSize: 32, color: T.ink, letterSpacing: "0.08em" }}>
-                        {isOwn ? "My Shelf" : `${(currName || "").split(" ")[0]}'s Shelf`}
+                      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
+                        <div style={{ fontFamily: "'Spectral SC', serif", fontWeight: 700, fontSize: 32, color: T.ink, letterSpacing: "0.08em" }}>
+                          {isOwn ? (shelfView === "queue" ? "Your Queue" : "My Shelf") : `${(currName || "").split(" ")[0]}'s Shelf`}
+                        </div>
+                        {isOwn && (
+                          <div style={{ display: "flex", gap: 0, border: `1px solid ${T.ink}`, flexShrink: 0 }}>
+                            <button onClick={() => setShelfView("shelf")} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "5px 12px", background: shelfView === "shelf" ? T.ink : "transparent", color: shelfView === "shelf" ? T.bg : T.inkMid, border: "none", cursor: "pointer" }}>Shelf</button>
+                            <button onClick={() => setShelfView("queue")} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "5px 12px", background: shelfView === "queue" ? T.ink : "transparent", color: shelfView === "queue" ? T.bg : T.inkMid, border: "none", cursor: "pointer" }}>Queue {queue.length > 0 ? `(${queue.length})` : ""}</button>
+                          </div>
+                        )}
                       </div>
                       <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkLight, marginTop: 3 }}>
-                        {isOwn ? "The stuff on your shelf — films, albums, books, shows worth putting your name behind." : `What ${(currName || "").split(" ")[0]} has on their shelf.`}
+                        {isOwn
+                          ? shelfView === "queue"
+                            ? "Things you want to get to — add from buddy shelves and Group Shelf."
+                            : "The stuff on your shelf — films, albums, books, shows worth putting your name behind."
+                          : `What ${(currName || "").split(" ")[0]} has on their shelf.`}
                       </div>
                     </div>
-                    {visibleCats.map(cat => {
-                      const items = currBoard[cat.key] || [];
-                      return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={(key) => { if (!activeBoard) { alert("Publish your first Vouch 5 before adding to your shelf."); return; } setAddModal(key); }} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} />;
-                    })}
+                    {isOwn && shelfView === "queue" ? (
+                      queue.length === 0
+                        ? <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkLight, padding: "24px 0" }}>Nothing in your queue yet — hit "Add to Queue" on any buddy's shelf or Group Shelf tile.</div>
+                        : <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+                            {queue.map(item => (
+                              <div key={item.id} style={{ width: 150, flexShrink: 0, position: "relative" }}>
+                                {item.poster
+                                  ? <img src={item.poster} alt={item.title} style={{ width: 150, height: 206, objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block", cursor: item.sourceUrl ? "pointer" : "default" }} onClick={() => item.sourceUrl && window.open(item.sourceUrl, "_blank")} onError={e => e.target.style.display = "none"} />
+                                  : <div style={{ width: 150, height: 206, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 10 }}>{item.title}</div>}
+                                <button onClick={() => removeFromQueue(item.id)} style={{ position: "absolute", top: 4, right: 4, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 26, height: 26, cursor: "pointer", fontSize: 16, lineHeight: "26px", textAlign: "center", borderRadius: 2 }}>×</button>
+                                <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: T.inkFaint, marginTop: 4 }}>{item.category}</div>
+                                <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 12.5, lineHeight: 1.35, marginTop: 2 }}>{item.title}</div>
+                                {item.sub && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: 9.5, color: T.inkLight, marginTop: 2 }}>{item.sub}</div>}
+                              </div>
+                            ))}
+                          </div>
+                    ) : (
+                      visibleCats.map(cat => {
+                        const items = currBoard[cat.key] || [];
+                        return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={(key) => { if (!activeBoard) { alert("Publish your first Vouch 5 before adding to your shelf."); return; } setAddModal(key); }} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} onAddToQueue={addToQueue} queue={queue} />;
+                      })
+                    )}
                   </>;
                 })()}
 
