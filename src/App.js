@@ -1583,8 +1583,8 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy }) {
 
   return (
     <div style={{ marginBottom: 48 }}>
-      <div style={{ fontFamily: "'Times New Roman',Times,serif", fontWeight: 900, fontSize: 22, color: T.ink, letterSpacing: "0.04em", marginBottom: 4 }}>Buddies' Bin</div>
-      <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkLight, marginBottom: 28 }}>Discover what your circle is into</div>
+      <div style={{ fontFamily: "'Times New Roman',Times,serif", fontWeight: 900, fontSize: 22, color: T.ink, letterSpacing: "0.04em", marginBottom: 4 }}>Group Shelf</div>
+      <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkLight, marginBottom: 28 }}>Everything your circle is vouching for</div>
       {visibleCats.map(cat => (
         <div key={cat.key} style={{ marginBottom: 32 }}>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", borderBottom: "2px solid " + T.ink, paddingBottom: 8, marginBottom: 14 }}>
