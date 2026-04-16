@@ -2866,8 +2866,8 @@ export default function Vouch() {
                   <div className="vouch-section" style={{ marginBottom: 52 }}>
                     <div className="vouch-section-header">
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginBottom: 6 }}>Vouch 5</div>
-                        {viewActiveBoard.name && <div style={{ fontFamily: "'Times New Roman', Times, serif", fontWeight: 900, fontSize: 34, color: "rgba(200,194,180,0.95)", lineHeight: 1, marginBottom: 4 }}>{viewActiveBoard.name}{viewActiveBoard?.theme && viewActiveBoard.theme !== "Other" ? <span style={{ fontFamily: "'Spectral SC',serif", fontSize: 14, fontWeight: 400, letterSpacing: "0.12em", color: "rgba(200,194,180,0.45)", marginLeft: 10 }}>{viewActiveBoard.theme}</span> : ""}</div>}
+                        <div className="vouch-section-label">{(viewActiveBoard?.theme && viewActiveBoard.theme !== "Other") ? viewActiveBoard.theme : (viewActiveBoard?.name || "Vouch")}</div>
+                        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginTop: 3 }}>Vouch</div>
                         {viewActiveBoard.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 5 }}>{viewActiveBoard.description}</div>}
                         {viewActiveBoard.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.3)", marginTop: 4 }}>Published {new Date(viewActiveBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>}
                       </div>
