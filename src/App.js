@@ -769,7 +769,7 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
   );
 }
 
-function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, buddyCounts, hideHeader, hideEmptySlots, onAddToQueue, queue }) {
+function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, buddyCounts, hideHeader, hideEmptySlots, onAddToQueue, queue, ownerId }) {
   const [idx, setIdx]      = useState(0);
   const touchStartX        = useRef(null);
   const touchStartY        = useRef(null);
@@ -846,7 +846,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
         {it.comment && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: "rgba(200,194,180,0.55)", marginTop: 6 }}>"{it.comment}"</div>}
         {!isOwn && (
           <div style={{ display: "flex", marginTop: 8 }}>
-            <button onClick={e => { e.stopPropagation(); onDudeSame(it); }} style={{ flex: 1, background: myReactions?.includes(String(it.id)) ? "rgba(200,194,180,0.25)" : "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", color: "rgba(200,194,180,0.7)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "5px 4px", fontWeight: 700 }}>{myReactions?.includes(String(it.id)) ? "✓ Agreed" : "Agree"}</button>
+            <button onClick={e => { e.stopPropagation(); onDudeSame(it, ownerId); }} style={{ flex: 1, background: myReactions?.includes(String(it.id)) ? "rgba(200,194,180,0.25)" : "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", color: "rgba(200,194,180,0.7)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "5px 4px", fontWeight: 700 }}>{myReactions?.includes(String(it.id)) ? "✓ Agreed" : "Agree"}</button>
             {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue(it); }} style={{ flex: 1, background: queue?.find(q => String(q.id) === String(it.id)) ? "rgba(200,194,180,0.25)" : "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", borderLeft: "none", color: "rgba(2,194,180,0.7)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "5px 4px", fontWeight: 700 }}>{queue?.find(q => String(q.id) === String(it.id)) ? "✓ Queue" : "+ Queue"}</button>}
           </div>
         )}
@@ -1707,7 +1707,7 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy }) {
                   items.forEach(it => {
                     if (vbBoard[it.category]) vbBoard[it.category].push({ id: it.item_id, title: it.title, sub: it.subtitle || "", poster: it.poster, comment: "", vouched: true, sourceUrl: it.source_url, _cat: it.category, _catLabel: it.category });
                   });
-                  return <VouchSection board={vbBoard} isOwn={false} onCard={()=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={()=>{}} myReactions={[]} hideHeader={true} hideEmptySlots={true} />;
+                  return <VouchSection board={vbBoard} isOwn={false} onCard={()=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={onDudeSame || (()=>{})} myReactions={feedMyReactions || []} hideHeader={true} hideEmptySlots={true} onAddToQueue={onAddToQueue} queue={queue} ownerId={b.user_id} />;
                 })()}
               </div>
             </div>
@@ -2878,7 +2878,7 @@ export default function Vouch() {
                         if (brd[item.category]) brd[item.category].push({ id: item.item_id, title: item.title, sub: item.subtitle || "", poster: item.poster, comment: "", vouched: true, sourceUrl: item.source_url, _cat: item.category, _catLabel: CATEGORIES.find(c=>c.key===item.category)?.label || item.category });
                       });
                       return brd;
-                    })()} isOwn={false} onCard={(k,i)=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} hideHeader={true} onAddToQueue={addToQueue} queue={queue} />
+                    })()} isOwn={false} onCard={(k,i)=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} hideHeader={true} onAddToQueue={addToQueue} queue={queue} ownerId={viewing?.userId} />
                   </div>
                 ) : null}
 
