@@ -1556,7 +1556,7 @@ function BuddyFeed({ buddies, selfId, onViewBuddy }) {
       setLoading(false);
     };
     load();
-  }, [buddies]);
+  }, [buddies, selfId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) return <div className="loading">Loading…</div>;
   if (!feed.length && buddies.length > 0) return <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: "#7a7568", padding: "24px 0" }}>No activity yet — check back soon.</div>;
