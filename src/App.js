@@ -860,7 +860,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
         </button>
       )}
       {buddyCounts?.[String(it.id)] > 0 && (
-        <div title="Total Buddy Vouches" style={{ position: "absolute", top: 8, left: 8, zIndex: 2, background: "rgba(200,194,180,0.9)", color: "#111008", fontFamily: "'Spectral SC',serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "default" }}>{buddyCounts[String(it.id)]} {buddyCounts[String(it.id)] === 1 ? "Vouch" : "Vouches"}</div>
+        <div title="Total Buddy Vouches" style={{ position: "absolute", bottom: 8, left: 8, zIndex: 2, background: "rgba(200,194,180,0.9)", color: "#111008", fontFamily: "'Spectral SC',serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "default" }}>{buddyCounts[String(it.id)]} {buddyCounts[String(it.id)] === 1 ? "Vouch" : "Vouches"}</div>
       )}
     </div>
   );
@@ -1537,7 +1537,7 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy }) {
         // Load buddy reactions
         const { data: reactions } = await supabase
           .from("reactions")
-          .select("*")
+          .select("*, owner:item_owner_id(id, display_name, username, avatar_url)")
           .in("user_id", buddyIds)
           .order("created_at", { ascending: false })
           .limit(30);
@@ -1611,16 +1611,19 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy }) {
                 <div onClick={() => buddy && onViewBuddy(buddy)} style={{ cursor: "pointer", flexShrink: 0 }}>
                   <Avatar name={buddy?.displayName || "?"} size={28} avatarUrl={buddy?.avatarUrl} />
                 </div>
-                <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "#3a3830" }}>
+                <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "#3a3830", flex: 1 }}>
                   <span onClick={() => buddy && onViewBuddy(buddy)} style={{ fontWeight: 600, cursor: "pointer" }}>{buddy?.displayName}</span>
-                  <span style={{ fontStyle: "italic", color: "#7a7568" }}> agreed with</span>
+                  <span style={{ fontStyle: "italic", color: "#7a7568" }}> agreed with </span>
+                  {r.owner
+                    ? <span onClick={() => r.owner && onViewBuddy({ userId: r.owner.id, displayName: r.owner.display_name, username: r.owner.username, avatarUrl: r.owner.avatar_url })} style={{ fontWeight: 600, cursor: "pointer" }}>{r.owner.display_name}</span>
+                    : null}
                   <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: "#a09890", marginLeft: 8 }}>{item.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
                 </div>
               </div>
               {r.poster && (
-                <div style={{ maxWidth: 240 }}>
+                <div style={{ width: "100%", maxWidth: 300, margin: "0 auto" }}>
                   <img src={r.poster} alt={r.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: "1px solid #b3ada0", display: "block" }} onError={e => e.target.style.display = "none"} />
-                  <div style={{ fontFamily: "'Spectral',serif", fontSize: "13px", fontWeight: 600, color: "#111008", marginTop: 7, lineHeight: 1.3 }}>{r.title}</div>
+                  <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{r.title}</div>
                   {r.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{r.subtitle}</div>}
                 </div>
               )}
@@ -1938,6 +1941,7 @@ export default function Vouch() {
 
   const dudeSame = async (item) => {
     if (!userId || !viewing) return;
+    if (viewing.userId === userId) return;
     const ownerId = viewing.userId;
     const already = myReactions.find(r => r.item_id === String(item.id) && r.item_owner_id === ownerId);
     if (already) {
