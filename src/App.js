@@ -1537,10 +1537,18 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy }) {
         // Load buddy reactions
         const { data: reactions } = await supabase
           .from("reactions")
-          .select("*, owner:item_owner_id(id, display_name, username, avatar_url)")
+          .select("*")
           .in("user_id", buddyIds)
           .order("created_at", { ascending: false })
           .limit(30);
+        // Fetch owner profiles separately
+        const ownerIds = [...new Set((reactions || []).map(r => r.item_owner_id).filter(Boolean))];
+        const ownerProfiles = {};
+        if (ownerIds.length > 0) {
+          const { data: owners } = await supabase.from("profiles").select("id, display_name, username, avatar_url").in("id", ownerIds);
+          (owners || []).forEach(p => { ownerProfiles[p.id] = p; });
+        }
+        (reactions || []).forEach(r => { r.owner = ownerProfiles[r.item_owner_id] || null; });
         const items = [];
         const allPeople = [...buddies, { userId: selfId, displayName: selfName || "You", avatarUrl: selfAvatar || null }];
         (boards || []).forEach(b => {
