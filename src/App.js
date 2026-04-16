@@ -1707,7 +1707,7 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy }) {
                   items.forEach(it => {
                     if (vbBoard[it.category]) vbBoard[it.category].push({ id: it.item_id, title: it.title, sub: it.subtitle || "", poster: it.poster, comment: "", vouched: true, sourceUrl: it.source_url, _cat: it.category, _catLabel: it.category });
                   });
-                  return <VouchSection board={vbBoard} isOwn={false} onCard={()=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={onDudeSame || (()=>{})} myReactions={feedMyReactions || []} hideHeader={true} hideEmptySlots={true} onAddToQueue={onAddToQueue} queue={queue} ownerId={b.user_id} />;
+                  return <VouchSection board={vbBoard} isOwn={false} onCard={()=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={()=>{}} myReactions={[]} hideHeader={true} hideEmptySlots={true} ownerId={b.user_id} />;
                 })()}
               </div>
             </div>
