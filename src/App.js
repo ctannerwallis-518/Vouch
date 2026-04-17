@@ -1923,6 +1923,50 @@ export default function Vouch() {
     }
   };
 
+  const [groupVouchItems, setGroupVouchItems] = useState([]);
+
+  const loadGroupVouch = async (buddyIds, excludeId) => {
+    if (!buddyIds.length) return;
+    try {
+      // Vouch board items from all buddy boards (active + archived)
+      const { data: vbItems } = await supabase
+        .from("vouch_board_items")
+        .select("item_id, title, category, poster, source_url, vouch_boards!inner(user_id)")
+        .in("vouch_boards.user_id", buddyIds);
+
+      // Shelf items from buddies
+      const { data: shelfItems } = await supabase
+        .from("endorsements")
+        .select("item_id, title, category, poster, source_url")
+        .in("user_id", buddyIds);
+
+      // Agrees from buddies (not self)
+      const { data: agreeItems } = await supabase
+        .from("reactions")
+        .select("item_id, title, category, poster, source_url")
+        .in("user_id", buddyIds);
+
+      const counts = {};
+      const addRow = (row, source) => {
+        if (!row.item_id || !row.title) return;
+        const key = (row.category || "") + ":" + row.item_id;
+        if (!counts[key]) counts[key] = { item_id: row.item_id, title: row.title, category: row.category || "", poster: row.poster || null, source_url: row.source_url || null, count: 0 };
+        counts[key].count++;
+      };
+      (vbItems || []).forEach(r => addRow({ ...r, ...r.vouch_boards }, "vouch"));
+      (shelfItems || []).forEach(r => addRow(r, "shelf"));
+      (agreeItems || []).forEach(r => addRow(r, "agree"));
+
+      const top5 = Object.values(counts)
+        .filter(i => i.category)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5)
+        .map(i => ({ ...i, vouchers: [], source_url: i.source_url }));
+
+      setGroupVouchItems(top5);
+    } catch(e) { console.error("loadGroupVouch error:", e); }
+  };
+
   const loadAllBuddyBoards = async (buddyList, uid) => {
     const allBoards = await Promise.all(buddyList.map(async b => {
       const { data } = await supabase.from("endorsements").select("*").eq("user_id", b.userId);
@@ -1950,7 +1994,10 @@ export default function Vouch() {
       }));
       setBuddies(accepted);
       setPendingIn(incoming);
-      if (accepted.length > 0) loadAllBuddyBoards(accepted, uid);
+      if (accepted.length > 0) {
+        loadAllBuddyBoards(accepted, uid);
+        loadGroupVouch(accepted.map(b => b.userId), uid);
+      }
       // Load suggested users (not already buddies or pending)
       const allIds = [...accepted.map(b => b.userId), ...incoming.map(b => b.userId), uid];
       const { data: suggestedData } = await supabase.from("profiles")
@@ -2690,39 +2737,9 @@ export default function Vouch() {
                 </div>
 
                 {/* GROUP VOUCH - top of page */}
-                {allBuddyBoards.length > 0 && (() => {
-                  // Dedupe by user+item first, then count unique users per item
-                  const seenUserItem = new Set();
-                  const itemCount = {};
-                  allBuddyBoards.forEach(row => {
-                    const userItemKey = row.user_id + ":" + row.item_id;
-                    if (seenUserItem.has(userItemKey)) return; // skip dupes from same user
-                    seenUserItem.add(userItemKey);
-                    const key = row.category + ":" + row.item_id;
-                    if (!itemCount[key]) itemCount[key] = { ...row, count: 0, vouchers: [] };
-                    itemCount[key].count++;
-                    const voucher = [...buddies, { userId, displayName: user?.displayName }].find(b => b.userId === row.user_id);
-                    if (voucher && !itemCount[key].vouchers.includes(voucher.displayName)) {
-                      itemCount[key].vouchers.push(voucher.displayName);
-                    }
-                  });
-                  // Add reactions as bonus votes (max 1 per reacter)
-                  myReactions.forEach(r => {
-                    const matchKey = Object.keys(itemCount).find(k => k.endsWith(":" + r.item_id));
-                    if (matchKey) {
-                      itemCount[matchKey].count += 1;
-                      if (!itemCount[matchKey].vouchers.includes("You agreed")) {
-                        itemCount[matchKey].vouchers.push("You agreed");
-                      }
-                    }
-                  });
-                  const top5 = Object.values(itemCount).sort((a, b) => b.count - a.count).slice(0, 5);
-                  if (top5.length === 0) return null;
-                  const isMobile = window.innerWidth <= 640;
-                  return (
-                    <GroupVouchSlideshow items={top5} isMobile={isMobile} onAddToQueue={addToQueue} queue={queue} onDudeSame={dudeSame} />
-                  );
-                })()}
+                {groupVouchItems.length > 0 && (
+                  <GroupVouchSlideshow items={groupVouchItems} isMobile={window.innerWidth <= 640} onAddToQueue={addToQueue} queue={queue} onDudeSame={dudeSame} />
+                )}
 
                 <BuddiesBin allBuddyBoards={allBuddyBoards} buddies={buddies} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId); window.scrollTo(0,0); }} onAddToQueue={addToQueue} queue={queue} />
                 {/* PENDING REQUESTS */}
