@@ -940,18 +940,18 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
             item
               ? <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => item.sourceUrl ? window.open(item.sourceUrl, "_blank") : onCard(catKey, idx)}>
                   {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx, false); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 26, height: 26, cursor: "pointer", fontSize: 15, lineHeight: "26px", textAlign: "center", borderRadius: 2 }}>×</button>}
-                  {!isOwn && (
-                    <div style={{ display: "flex", marginBottom: 0 }}>
-                      <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ flex: 1, background: myReactions?.includes(String(item.id)) ? T.ink : T.paperDark, border: "none", color: myReactions?.includes(String(item.id)) ? T.bg : T.inkMid, cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "4px 2px", fontWeight: 700 }}>{myReactions?.includes(String(item.id)) ? "✓ Agreed" : "Agree"}</button>
-                      {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue({ ...item, _cat: catKey }); }} style={{ flex: 1, background: queue?.find(q => String(q.id) === String(item.id)) ? T.ink : T.paperDark, border: "none", borderLeft: "1px solid " + T.paperDark, color: queue?.find(q => String(q.id) === String(item.id)) ? T.bg : T.inkMid, cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "4px 2px", fontWeight: 700 }}>{queue?.find(q => String(q.id) === String(item.id)) ? "✓ Queue" : "+ Queue"}</button>}
-                    </div>
-                  )}
                   {item.poster ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} /> : null}
                   <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
                   <div style={{ flex: 1 }}>
                     <div className="card-title">{item.title}</div>
                     <div className="card-sub">{item.artist || item.author || item.year || item.sub || ""}</div>
                     {item.comment && <div className="card-comment">"{item.comment}"</div>}
+                    {!isOwn && (
+                      <div style={{ display: "flex", marginTop: 6, gap: 0 }}>
+                        <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ flex: 1, background: myReactions?.includes(String(item.id)) ? T.ink : "transparent", border: `1px solid ${T.paperDark}`, color: myReactions?.includes(String(item.id)) ? T.bg : T.inkMid, cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 2px", fontWeight: 700 }}>{myReactions?.includes(String(item.id)) ? "✓ Agreed" : "Agree"}</button>
+                        {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue({ ...item, _cat: catKey }); }} style={{ flex: 1, background: queue?.find(q => String(q.id) === String(item.id)) ? T.ink : "transparent", border: `1px solid ${T.paperDark}`, borderLeft: "none", color: queue?.find(q => String(q.id) === String(item.id)) ? T.bg : T.inkMid, cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 2px", fontWeight: 700 }}>{queue?.find(q => String(q.id) === String(item.id)) ? "✓ Queue" : "+ Queue"}</button>}
+                      </div>
+                    )}
                   </div>
                 </div>
               : isOwn
@@ -2161,10 +2161,10 @@ export default function Vouch() {
     const resolvedItemId = String(item.id || item.item_id);
     const already = myReactions.find(r => r.item_id === resolvedItemId && r.item_owner_id === ownerId);
     if (already) {
-      const { error } = await supabase.from("reactions").delete().eq("id", already.id);
-      if (error) { alert("Delete error: " + error.message); return; }
+      await supabase.from("reactions").delete().eq("id", already.id);
+
     } else {
-      const { error } = await supabase.from("reactions").upsert({
+      await supabase.from("reactions").upsert({
         user_id: userId,
         item_owner_id: ownerId,
         item_id: resolvedItemId,
@@ -2174,7 +2174,7 @@ export default function Vouch() {
         poster: item.poster || null,
         source_url: item.sourceUrl || item.source_url || null,
       }, { onConflict: "user_id,item_owner_id,item_id" });
-      if (error) { alert("Upsert error: " + error.message); return; }
+
     }
     await loadMyReactions(userId);
     await loadBoardReactions(ownerId);
@@ -2436,7 +2436,7 @@ export default function Vouch() {
     setViewing(buddy);
     setTab("board");
     await loadViewBoard(buddy.userId);
-    await loadBoardReactions(buddy.userId);
+    await loadBoardReactions(buddy.userId, true);
     // Load this buddy's own buddies for display at bottom of their board
     const { data } = await supabase.from("buddies")
       .select("requester_id, receiver_id")
@@ -2616,7 +2616,7 @@ export default function Vouch() {
             setViewing({ userId: data.id, username: data.username, displayName: data.display_name, avatarUrl: data.avatar_url });
             setTab("board");
             loadViewBoard(data.id);
-            loadBoardReactions(data.id);
+            loadBoardReactions(data.id, true);
             scrollToTop();
           }
         });
@@ -2684,7 +2684,7 @@ export default function Vouch() {
               <div className="board-sub" style={{ marginBottom: 28 }}>Recent activity from your circle</div>
               {buddies.length === 0
                 ? <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: "#7a7568", padding: "24px 0" }}>Add some buddies to see their activity here.</div>
-                : <BuddyFeed buddies={buddies} selfId={userId} selfName={user?.displayName} selfAvatar={user?.avatarUrl} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId); window.scrollTo(0,0); }} onDudeSame={dudeSame} onAddToQueue={addToQueue} queue={queue} myReactions={myReactions} />
+                : <BuddyFeed buddies={buddies} selfId={userId} selfName={user?.displayName} selfAvatar={user?.avatarUrl} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId, true); window.scrollTo(0,0); }} onDudeSame={dudeSame} onAddToQueue={addToQueue} queue={queue} myReactions={myReactions} />
               }
             </div>
           )}
@@ -2780,7 +2780,7 @@ export default function Vouch() {
                   <GroupVouchSlideshow items={groupVouchItems} isMobile={window.innerWidth <= 640} onAddToQueue={addToQueue} queue={queue} onDudeSame={dudeSame} />
                 )}
 
-                <BuddiesBin allBuddyBoards={allBuddyBoards} buddies={buddies} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId); window.scrollTo(0,0); }} onAddToQueue={addToQueue} queue={queue} />
+                <BuddiesBin allBuddyBoards={allBuddyBoards} buddies={buddies} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId, true); window.scrollTo(0,0); }} onAddToQueue={addToQueue} queue={queue} />
                 {/* PENDING REQUESTS */}
                 {pendingIn.length > 0 && <>
                   <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 12 }}>Pending Requests</div>
@@ -2818,7 +2818,7 @@ export default function Vouch() {
                     <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.18em", color: T.inkMid, marginBottom: 16 }}>People on Vouch</div>
                     {suggested.map(s => (
                       <div key={s.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={() => { setViewing({ userId: s.id, username: s.username, displayName: s.display_name, avatarUrl: s.avatar_url }); setTab("board"); loadViewBoard(s.id); loadBoardReactions(s.id); window.scrollTo(0, 0); }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={() => { setViewing({ userId: s.id, username: s.username, displayName: s.display_name, avatarUrl: s.avatar_url }); setTab("board"); loadViewBoard(s.id); loadBoardReactions(s.id, true); window.scrollTo(0, 0); }}>
                           <Avatar name={s.display_name} size={56} avatarUrl={s.avatar_url} />
                           <div>
                             <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 16, borderBottom: `1px solid ${T.paperDark}` }}>{s.display_name}</div>
@@ -3007,7 +3007,7 @@ export default function Vouch() {
                             setViewing(buddyObj);
                             setTab("board");
                             await loadViewBoard(bid);
-                            await loadBoardReactions(bid);
+                            await loadBoardReactions(bid, true);
                             window.scrollTo(0, 0);
                           };
                           return (
@@ -3073,7 +3073,7 @@ export default function Vouch() {
                   const isSent = sentRequests.includes(bid);
                   return (
                     <div key={bid || i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => { setShowBuddyList(false); setViewing({ userId: bid, username: buser, displayName: bname, avatarUrl: bavatar }); setTab("board"); loadViewBoard(bid); loadBoardReactions(bid); window.scrollTo(0, 0); }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => { setShowBuddyList(false); setViewing({ userId: bid, username: buser, displayName: bname, avatarUrl: bavatar }); setTab("board"); loadViewBoard(bid); loadBoardReactions(bid, true); window.scrollTo(0, 0); }}>
                         <Avatar name={bname} size={56} avatarUrl={bavatar} />
                         <div>
                           <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 15, borderBottom: `1px solid ${T.paperDark}` }}>{bname}</div>
