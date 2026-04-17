@@ -1836,7 +1836,7 @@ export default function Vouch() {
       await supabase.from("vouch_board_items").insert(
         items.map((item, i) => ({
           board_id: newBoard.id,
-          item_id: String(item.id),
+          item_id: resolvedItemId,
           title: item.title,
           subtitle: item.sub || item.subtitle || "",
           poster: item.poster || null,
@@ -2074,14 +2074,15 @@ export default function Vouch() {
     const ownerId = overrideOwnerId || viewing?.userId;
     if (!ownerId) return;
     if (ownerId === userId) return;
-    const already = myReactions.find(r => r.item_id === String(item.id) && r.item_owner_id === ownerId);
+    const resolvedItemId = String(item.id || item.item_id);
+    const already = myReactions.find(r => r.item_id === resolvedItemId && r.item_owner_id === ownerId);
     if (already) {
       await supabase.from("reactions").delete().eq("id", already.id);
     } else {
       await supabase.from("reactions").upsert({
         user_id: userId,
         item_owner_id: ownerId,
-        item_id: String(item.id),
+        item_id: resolvedItemId,
         category: item._cat || item.catKey || "",
         title: item.title,
         subtitle: item.sub || item.artist || item.author || "",
