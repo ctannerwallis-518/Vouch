@@ -2119,6 +2119,7 @@ export default function Vouch() {
   const dudeSame = async (item, overrideOwnerId) => {
     if (!userId) return;
     const ownerId = overrideOwnerId || viewing?.userId;
+    console.log("dudeSame called:", { item, overrideOwnerId, ownerId, userId });
     if (!ownerId) return;
     if (ownerId === userId) return;
     const resolvedItemId = String(item.id || item.item_id);
