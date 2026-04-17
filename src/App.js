@@ -1424,7 +1424,7 @@ function EditMetaForm({ board, themes, onSave, onClose }) {
   );
 }
 
-function GroupVouchSlideshow({ items, isMobile }) {
+function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue }) {
   const [idx, setIdx] = useState(0);
   const touchStartX = useRef(null);
   const currentOffsetX = useRef(0);
@@ -1460,24 +1460,30 @@ function GroupVouchSlideshow({ items, isMobile }) {
     return () => { el.removeEventListener("touchstart", handleStart); el.removeEventListener("touchmove", handleMove); el.removeEventListener("touchend", handleEnd); };
   }, [idx, items.length, isMobile]);
 
-  const CardFace = ({ item }) => (
-    <div style={{ cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")}>
-      <div style={{ position: "relative" }}>
-        {item.poster
-          ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: isMobile ? 340 : "auto", aspectRatio: isMobile ? "unset" : "2/3", objectFit: "cover", display: "block", border: "1px solid rgba(200,194,180,0.2)" }} onError={e => e.target.style.display = "none"} />
-          : <div style={{ width: "100%", aspectRatio: "2/3", background: "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center" }}>{item.title}</div>}
-        <div title="Total Buddy Vouches" style={{ position: "absolute", top: 8, left: 8, background: "rgba(200,194,180,0.9)", color: "#111008", fontFamily: "'Spectral SC',serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "default" }}>{item.count} {item.count === 1 ? "Vouch" : "Vouches"}</div>
-      </div>
-      <div style={{ padding: "12px 4px 4px" }}>
-        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 3 }}>{item.category}</div>
-        <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: "#C8C2B4" }}>{item.title}</div>
-        <div style={{ fontFamily: "'Spectral',serif", fontSize: 11, color: "rgba(200,194,180,0.6)", marginBottom: 2 }}>{item.subtitle || ""}</div>
-        <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: "rgba(200,194,180,0.45)", marginTop: 4 }}>
-          {item.count === 1 ? "Vouched by" : `Vouched by ${item.count}`}{item.vouchers?.length > 0 ? " · " + item.vouchers.join(", ") : ""}
+  const CardFace = ({ item }) => {
+    const isQueued = queue?.find(q => String(q.id) === String(item.item_id));
+    return (
+      <div>
+        <div style={{ position: "relative", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")}>
+          {item.poster
+            ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: isMobile ? 340 : "auto", aspectRatio: isMobile ? "unset" : "2/3", objectFit: "cover", display: "block", border: "1px solid rgba(200,194,180,0.2)" }} onError={e => e.target.style.display = "none"} />
+            : <div style={{ width: "100%", aspectRatio: "2/3", background: "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center" }}>{item.title}</div>}
+          <div title="Total Buddy Vouches" style={{ position: "absolute", top: 8, left: 8, background: "rgba(17,16,8,0.82)", color: "rgba(200,194,180,0.95)", fontFamily: "'Spectral SC',serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "default" }}>{item.count} {item.count === 1 ? "Vouch" : "Vouches"}</div>
+        </div>
+        <div style={{ padding: "10px 4px 4px" }}>
+          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 3 }}>{item.category}</div>
+          <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: "#C8C2B4" }}>{item.title}</div>
+          <div style={{ fontFamily: "'Spectral',serif", fontSize: 11, color: "rgba(200,194,180,0.6)", marginBottom: 2 }}>{item.subtitle || ""}</div>
+          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: "rgba(200,194,180,0.45)", marginTop: 4 }}>
+            {item.count === 1 ? "Vouched by" : `Vouched by ${item.count}`}{item.vouchers?.length > 0 ? " · " + item.vouchers.join(", ") : ""}
+          </div>
+          {onAddToQueue && (
+            <button onClick={e => { e.stopPropagation(); onAddToQueue(item); }} style={{ width: "100%", marginTop: 10, background: isQueued ? "rgba(200,194,180,0.3)" : "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.25)", color: isQueued ? "rgba(200,194,180,0.95)" : "rgba(200,194,180,0.6)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700 }}>{isQueued ? "✓ Queued" : "+ Queue"}</button>
+          )}
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="vouch-section" style={{ marginBottom: 40, border: "3px double #999", boxShadow: "0 0 0 1px #666" }}>
@@ -1554,14 +1560,18 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue 
     });
   });
 
-  // Shuffle each category
-  Object.keys(catItems).forEach(key => {
-    const arr = catItems[key];
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-  });
+  // Shuffle each category only once on mount using a stable ref
+  const shuffledRef = useRef(false);
+  if (!shuffledRef.current) {
+    Object.keys(catItems).forEach(key => {
+      const arr = catItems[key];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+    });
+    shuffledRef.current = true;
+  }
 
   const visibleCats = CATEGORIES.filter(cat => catItems[cat.key]?.length > 0);
   if (visibleCats.length === 0) return null;
@@ -2467,9 +2477,10 @@ export default function Vouch() {
 
   const addToQueue = (item) => {
     if (!userId) return;
+    const itemId = item.id || item.item_id;
     setQueue(prev => {
-      if (prev.find(q => String(q.id) === String(item.id || item.item_id))) return prev;
-      const newQ = [...prev, { id: item.id || item.item_id, title: item.title, poster: item.poster || null, sub: item.sub || item.subtitle || "", sourceUrl: item.sourceUrl || item.source_url || null, category: item._cat || item.category || item.catKey || "" }];
+      if (prev.find(q => String(q.id) === String(itemId))) return prev;
+      const newQ = [...prev, { id: itemId, title: item.title, poster: item.poster || null, sub: item.sub || item.subtitle || "", sourceUrl: item.sourceUrl || item.source_url || null, category: item._cat || item.category || item.catKey || "" }];
       localStorage.setItem("vouch-queue-" + userId, JSON.stringify(newQ));
       return newQ;
     });
@@ -2721,7 +2732,7 @@ export default function Vouch() {
                   if (top5.length === 0) return null;
                   const isMobile = window.innerWidth <= 640;
                   return (
-                    <GroupVouchSlideshow items={top5} isMobile={isMobile} />
+                    <GroupVouchSlideshow items={top5} isMobile={isMobile} onAddToQueue={addToQueue} queue={queue} />
                   );
                 })()}
 
