@@ -1460,6 +1460,21 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame 
     return () => { el.removeEventListener("touchstart", handleStart); el.removeEventListener("touchmove", handleMove); el.removeEventListener("touchend", handleEnd); };
   }, [idx, items.length, isMobile]);
 
+  const CardFaceNoButtons = ({ item }) => (
+    <div style={{ position: "relative" }}>
+      {item.poster
+        ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: 340, objectFit: "cover", display: "block", border: "1px solid rgba(200,194,180,0.2)", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")} onError={e => e.target.style.display = "none"} />
+        : <div style={{ width: "100%", height: 340, background: "rgba(200,194,180,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")}>{item.title}</div>}
+      <div title="Total Buddy Vouches" style={{ position: "absolute", top: 8, left: 8, background: "rgba(17,16,8,0.82)", color: "rgba(200,194,180,0.95)", fontFamily: "'Spectral SC',serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px" }}>{item.count} {item.count === 1 ? "Vouch" : "Vouches"}</div>
+      <div style={{ padding: "10px 4px 4px" }}>
+        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 4 }}>{item.category}</div>
+        <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: "#C8C2B4" }}>{item.title}</div>
+        <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "rgba(200,194,180,0.7)" }}>{item.subtitle || ""}</div>
+        <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: "rgba(200,194,180,0.4)", marginTop: 4 }}>{item.vouchers?.length > 0 ? item.vouchers.join(", ") : ""}</div>
+      </div>
+    </div>
+  );
+
   const CardFace = ({ item }) => {
     const isQueued = queue?.find(q => String(q.id) === String(item.item_id || item.id));
     return (
@@ -1493,21 +1508,33 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame 
         </div>
       </div>
       {isMobile ? (
-        <div ref={containerRef} style={{ overflow: "hidden", userSelect: "none" }}>
-          <div className="gv-track" style={{ display: "flex", willChange: "transform" }}>
-            {items.map((item, i) => (
-              <div key={i} style={{ flex: "0 0 100%", width: "100%" }}>
-                <CardFace item={item} />
-              </div>
-            ))}
+        <div>
+          <div ref={containerRef} style={{ overflow: "hidden", userSelect: "none" }}>
+            <div className="gv-track" style={{ display: "flex", willChange: "transform" }}>
+              {items.map((item, i) => (
+                <div key={i} style={{ flex: "0 0 100%", width: "100%" }}>
+                  <CardFaceNoButtons item={item} />
+                </div>
+              ))}
+            </div>
           </div>
           {items.length > 1 && (
-            <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 14 }}>
+            <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 14, marginBottom: 10 }}>
               {items.map((_, i) => (
                 <div key={i} onClick={() => setIdx(i)} style={{ width: 6, height: 6, borderRadius: "50%", background: i === idx ? "#C8C2B4" : "rgba(200,194,180,0.25)", cursor: "pointer", transition: "background 0.2s" }} />
               ))}
             </div>
           )}
+          {items[idx] && (() => {
+            const item = items[idx];
+            const isQueued = queue?.find(q => String(q.id) === String(item.item_id || item.id));
+            return (
+              <div style={{ display: "flex", marginTop: 8 }}>
+                {onDudeSame && <button onClick={() => onDudeSame(item, item.user_id)} style={{ flex: 1, background: "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", color: "rgba(200,194,180,0.7)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "8px 4px", fontWeight: 700 }}>Agree</button>}
+                {onAddToQueue && <button onClick={() => onAddToQueue(item)} style={{ flex: 1, background: isQueued ? "rgba(200,194,180,0.25)" : "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", borderLeft: "none", color: isQueued ? "rgba(200,194,180,0.95)" : "rgba(200,194,180,0.6)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "8px 4px", fontWeight: 700, transition: "all 0.15s" }}>{isQueued ? "✓ Queued" : "+ Queue"}</button>}
+              </div>
+            );
+          })()}
         </div>
       ) : (
         <div style={{ display: "flex", gap: 12, flexWrap: "nowrap" }}>
