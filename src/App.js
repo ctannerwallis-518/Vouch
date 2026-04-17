@@ -2129,8 +2129,8 @@ export default function Vouch() {
   const dudeSame = async (item, overrideOwnerId) => {
     if (!userId) return;
     const ownerId = overrideOwnerId || viewing?.userId;
-    if (!ownerId) return;
-    if (ownerId === userId) return;
+    if (!ownerId) { alert("No owner: " + JSON.stringify({item_user_id: item?.user_id, override: overrideOwnerId})); return; }
+    if (ownerId === userId) { alert("Same user"); return; }
     const resolvedItemId = String(item.id || item.item_id);
     const already = myReactions.find(r => r.item_id === resolvedItemId && r.item_owner_id === ownerId);
     if (already) {
