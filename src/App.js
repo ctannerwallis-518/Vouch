@@ -341,7 +341,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
             <button onClick={onSignUp} className="btn btn-solid" style={{ width: "100%", padding: "12px", fontSize: 13 }}>Create Your Own Vouch Board →</button>
           </div>
           <div style={{ marginBottom: 24, borderTop: `1px solid ${T.paperDark}`, borderBottom: `1px solid ${T.paperDark}`, padding: "14px 0", display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 8 }}>
-            {[{label: "Your Vouch", desc: "Up to 5 tiles, one board at a time, updated once a week"},{label: "My Shelf", desc: "Up to 5 per category — change it whenever you like"},{label: "Buddies", desc: "See what your friends are vouching for"}].map(item => (
+            {[{label: "Your Vouch", desc: "Up to 5 tiles, one board at a time, updated once a week"},{label: "Your Shelf", desc: "Up to 5 per category — change it whenever you like"},{label: "Buddies", desc: "See what your friends are vouching for. Agree with anything that resonates, or add it to your Queue."}].map(item => (
               <div key={item.label} style={{ textAlign: "center", flex: "1 1 100px" }}>
                 <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 10, letterSpacing: "0.15em", color: T.ink }}>{item.label}</div>
                 <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkMid, marginTop: 3 }}>{item.desc}</div>
@@ -438,13 +438,13 @@ function HowItWorks() {
         </div>
         <div style={{ borderTop: `1px solid ${T.paperDark}` }} />
         <div>
-          <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>My Shelf</div>
+          <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>Your Shelf</div>
           <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Up to 5 picks per category across Film, Albums, Artists, Songs, Books, and Television. Change it whenever you like — and choose which categories appear on your shelf.</div>
         </div>
         <div style={{ borderTop: `1px solid ${T.paperDark}` }} />
         <div>
           <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>Buddies</div>
-          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Connect with friends and see what they are vouching for. Hit Agree on anything that resonates.</div>
+          <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Connect with friends and see what they are vouching for. Agree with anything that resonates, or add it to your Queue to revisit later.</div>
         </div>
       </div>
     </div>
