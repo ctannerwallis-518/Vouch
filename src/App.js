@@ -1957,15 +1957,15 @@ export default function Vouch() {
         .in("user_id", buddyIds);
 
       const counts = {};
-      const addRow = (row, source) => {
+      const addRow = (row) => {
         if (!row.item_id || !row.title) return;
         const key = (row.category || "") + ":" + row.item_id;
-        if (!counts[key]) counts[key] = { item_id: row.item_id, title: row.title, category: row.category || "", poster: row.poster || null, source_url: row.source_url || null, count: 0 };
+        if (!counts[key]) counts[key] = { item_id: row.item_id, title: row.title, category: row.category || "", poster: row.poster || null, source_url: row.source_url || null, count: 0, user_id: row.user_id || null };
         counts[key].count++;
       };
-      (vbItems || []).forEach(r => addRow({ ...r, ...r.vouch_boards }, "vouch"));
-      (shelfItems || []).forEach(r => addRow(r, "shelf"));
-      (agreeItems || []).forEach(r => addRow(r, "agree"));
+      (vbItems || []).forEach(r => addRow(r));
+      (shelfItems || []).forEach(r => addRow(r));
+      (agreeItems || []).forEach(r => addRow({ ...r, user_id: r.item_owner_id }));
 
       const top5 = Object.values(counts)
         .filter(i => i.category)
