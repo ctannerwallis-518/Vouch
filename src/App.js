@@ -1937,13 +1937,13 @@ export default function Vouch() {
       // Shelf items from buddies
       const { data: shelfItems } = await supabase
         .from("endorsements")
-        .select("item_id, title, category, poster, source_url")
+        .select("item_id, title, category, poster, source_url, user_id")
         .in("user_id", buddyIds);
 
       // Agrees from buddies (not self)
       const { data: agreeItems } = await supabase
         .from("reactions")
-        .select("item_id, title, category, poster, source_url")
+        .select("item_id, title, category, poster, source_url, item_owner_id")
         .in("user_id", buddyIds);
 
       const counts = {};
