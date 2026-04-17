@@ -1424,7 +1424,7 @@ function EditMetaForm({ board, themes, onSave, onClose }) {
   );
 }
 
-function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue }) {
+function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame }) {
   const [idx, setIdx] = useState(0);
   const touchStartX = useRef(null);
   const currentOffsetX = useRef(0);
@@ -1475,11 +1475,10 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue }) {
           <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: "rgba(200,194,180,0.4)", marginTop: 4 }}>
             {item.vouchers?.length > 0 ? item.vouchers.join(", ") : ""}
           </div>
-          {onAddToQueue && (
-            <div style={{ display: "flex", marginTop: 10 }}>
-              <button onClick={e => { e.stopPropagation(); onAddToQueue(item); }} style={{ flex: 1, background: isQueued ? "rgba(200,194,180,0.25)" : "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", color: isQueued ? "rgba(200,194,180,0.95)" : "rgba(200,194,180,0.6)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700, transition: "all 0.15s" }}>{isQueued ? "✓ Queued — tap to remove" : "+ Queue"}</button>
-            </div>
-          )}
+          <div style={{ display: "flex", marginTop: 10 }}>
+            {onDudeSame && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ flex: 1, background: "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", color: "rgba(200,194,180,0.7)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700 }}>Agree</button>}
+            {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue(item); }} style={{ flex: 1, background: isQueued ? "rgba(200,194,180,0.25)" : "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", borderLeft: "none", color: isQueued ? "rgba(200,194,180,0.95)" : "rgba(200,194,180,0.6)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700, transition: "all 0.15s" }}>{isQueued ? "✓ Queued" : "+ Queue"}</button>}
+          </div>
         </div>
       </div>
     );
@@ -1490,8 +1489,7 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue }) {
       <div className="vouch-section-header">
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="vouch-section-label">Group Vouch</div>
-          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginTop: 3 }}>Vouch</div>
-          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 4 }}>Most vouched across your circle</div>
+          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginTop: 3 }}>Most vouched across your circle</div>
         </div>
       </div>
       {isMobile ? (
@@ -2721,7 +2719,7 @@ export default function Vouch() {
                   if (top5.length === 0) return null;
                   const isMobile = window.innerWidth <= 640;
                   return (
-                    <GroupVouchSlideshow items={top5} isMobile={isMobile} onAddToQueue={addToQueue} queue={queue} />
+                    <GroupVouchSlideshow items={top5} isMobile={isMobile} onAddToQueue={addToQueue} queue={queue} onDudeSame={dudeSame} />
                   );
                 })()}
 
