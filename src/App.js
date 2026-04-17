@@ -2156,23 +2156,25 @@ export default function Vouch() {
   const dudeSame = async (item, overrideOwnerId) => {
     if (!userId) return;
     const ownerId = overrideOwnerId || viewing?.userId;
-    if (!ownerId) { alert("No owner: " + JSON.stringify({item_user_id: item?.user_id, override: overrideOwnerId})); return; }
-    if (ownerId === userId) { alert("Same user"); return; }
+    if (!ownerId) return;
+    if (ownerId === userId) return;
     const resolvedItemId = String(item.id || item.item_id);
     const already = myReactions.find(r => r.item_id === resolvedItemId && r.item_owner_id === ownerId);
     if (already) {
-      await supabase.from("reactions").delete().eq("id", already.id);
+      const { error } = await supabase.from("reactions").delete().eq("id", already.id);
+      if (error) { alert("Delete error: " + error.message); return; }
     } else {
-      await supabase.from("reactions").upsert({
+      const { error } = await supabase.from("reactions").upsert({
         user_id: userId,
         item_owner_id: ownerId,
         item_id: resolvedItemId,
-        category: item._cat || item.catKey || "",
+        category: item._cat || item.catKey || item.category || "",
         title: item.title,
-        subtitle: item.sub || item.artist || item.author || "",
+        subtitle: item.sub || item.subtitle || item.artist || item.author || "",
         poster: item.poster || null,
-        source_url: item.sourceUrl || null,
+        source_url: item.sourceUrl || item.source_url || null,
       }, { onConflict: "user_id,item_owner_id,item_id" });
+      if (error) { alert("Upsert error: " + error.message); return; }
     }
     await loadMyReactions(userId);
     await loadBoardReactions(ownerId);
