@@ -1929,10 +1929,20 @@ export default function Vouch() {
     if (!buddyIds.length) return;
     try {
       // Vouch board items from all buddy boards (active + archived)
-      const { data: vbItems } = await supabase
+      // Get vouch board ids for buddies first
+      const { data: buddyBoards } = await supabase
+        .from("vouch_boards")
+        .select("id, user_id")
+        .in("user_id", buddyIds);
+      const boardMap = {};
+      (buddyBoards || []).forEach(b => { boardMap[b.id] = b.user_id; });
+      const boardIds = Object.keys(boardMap);
+      const { data: vbItems } = boardIds.length > 0 ? await supabase
         .from("vouch_board_items")
-        .select("item_id, title, category, poster, source_url, vouch_boards!inner(user_id)")
-        .in("vouch_boards.user_id", buddyIds);
+        .select("item_id, title, category, poster, source_url, board_id")
+        .in("board_id", boardIds) : { data: [] };
+      // Attach user_id from boardMap
+      (vbItems || []).forEach(r => { r.user_id = boardMap[r.board_id] || null; });
 
       // Shelf items from buddies
       const { data: shelfItems } = await supabase
