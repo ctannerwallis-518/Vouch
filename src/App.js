@@ -1461,24 +1461,24 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue }) {
   }, [idx, items.length, isMobile]);
 
   const CardFace = ({ item }) => {
-    const isQueued = queue?.find(q => String(q.id) === String(item.item_id));
+    const isQueued = queue?.find(q => String(q.id) === String(item.item_id || item.id));
     return (
-      <div>
-        <div style={{ position: "relative", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")}>
-          {item.poster
-            ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: isMobile ? 340 : "auto", aspectRatio: isMobile ? "unset" : "2/3", objectFit: "cover", display: "block", border: "1px solid rgba(200,194,180,0.2)" }} onError={e => e.target.style.display = "none"} />
-            : <div style={{ width: "100%", aspectRatio: "2/3", background: "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center" }}>{item.title}</div>}
-          <div title="Total Buddy Vouches" style={{ position: "absolute", top: 8, left: 8, background: "rgba(17,16,8,0.82)", color: "rgba(200,194,180,0.95)", fontFamily: "'Spectral SC',serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "default" }}>{item.count} {item.count === 1 ? "Vouch" : "Vouches"}</div>
-        </div>
+      <div style={{ position: "relative" }}>
+        {item.poster
+          ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: 340, objectFit: "cover", display: "block", border: "1px solid rgba(200,194,180,0.2)", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")} onError={e => e.target.style.display = "none"} />
+          : <div style={{ width: "100%", height: 340, background: "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")}>{item.title}</div>}
+        <div title="Total Buddy Vouches" style={{ position: "absolute", top: 8, left: 8, background: "rgba(17,16,8,0.82)", color: "rgba(200,194,180,0.95)", fontFamily: "'Spectral SC',serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px" }}>{item.count} {item.count === 1 ? "Vouch" : "Vouches"}</div>
         <div style={{ padding: "10px 4px 4px" }}>
-          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 3 }}>{item.category}</div>
+          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 4 }}>{item.category}</div>
           <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: "#C8C2B4" }}>{item.title}</div>
-          <div style={{ fontFamily: "'Spectral',serif", fontSize: 11, color: "rgba(200,194,180,0.6)", marginBottom: 2 }}>{item.subtitle || ""}</div>
-          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: "rgba(200,194,180,0.45)", marginTop: 4 }}>
-            {item.count === 1 ? "Vouched by" : `Vouched by ${item.count}`}{item.vouchers?.length > 0 ? " · " + item.vouchers.join(", ") : ""}
+          <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "rgba(200,194,180,0.7)" }}>{item.subtitle || ""}</div>
+          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: "rgba(200,194,180,0.4)", marginTop: 4 }}>
+            {item.vouchers?.length > 0 ? item.vouchers.join(", ") : ""}
           </div>
           {onAddToQueue && (
-            <button onClick={e => { e.stopPropagation(); onAddToQueue(item); }} style={{ width: "100%", marginTop: 10, background: isQueued ? "rgba(200,194,180,0.3)" : "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.25)", color: isQueued ? "rgba(200,194,180,0.95)" : "rgba(200,194,180,0.6)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700 }}>{isQueued ? "✓ Queued" : "+ Queue"}</button>
+            <div style={{ display: "flex", marginTop: 10 }}>
+              <button onClick={e => { e.stopPropagation(); onAddToQueue(item); }} style={{ flex: 1, background: isQueued ? "rgba(200,194,180,0.25)" : "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", color: isQueued ? "rgba(200,194,180,0.95)" : "rgba(200,194,180,0.6)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700, transition: "all 0.15s" }}>{isQueued ? "✓ Queued — tap to remove" : "+ Queue"}</button>
+            </div>
           )}
         </div>
       </div>
@@ -1528,50 +1528,37 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue 
   const [modalCat, setModalCat] = useState(null);
   const isMobile = window.innerWidth <= 640;
 
-  // Build per-category tile lists from all buddy shelf items (non-vouched shelf items)
-  const catItems = {};
-  CATEGORIES.forEach(cat => { catItems[cat.key] = []; });
-
-  const seen = new Set();
-  allBuddyBoards.forEach(row => {
-    if (!row.user_id || buddies.every(b => b.userId !== row.user_id)) return; // exclude self
-    const key = row.category + ":" + row.item_id;
-    if (seen.has(key)) {
-      // Add owner to existing
-      const existing = catItems[row.category]?.find(i => i.item_id === row.item_id);
-      if (existing) {
-        const buddy = buddies.find(b => b.userId === row.user_id);
-        if (buddy && !existing.owners.find(o => o.userId === buddy.userId)) {
-          existing.owners.push(buddy);
+  // Build per-category tile lists - stable, shuffled once
+  const catItemsRef = useRef(null);
+  const prevBoardsLen = useRef(0);
+  if (!catItemsRef.current || prevBoardsLen.current !== allBuddyBoards.length) {
+    prevBoardsLen.current = allBuddyBoards.length;
+    const built = {};
+    CATEGORIES.forEach(cat => { built[cat.key] = []; });
+    const seen = new Set();
+    allBuddyBoards.forEach(row => {
+      if (!row.user_id || buddies.every(b => b.userId !== row.user_id)) return;
+      const key = row.category + ":" + row.item_id;
+      if (seen.has(key)) {
+        const existing = built[row.category]?.find(i => i.item_id === row.item_id);
+        if (existing) {
+          const buddy = buddies.find(b => b.userId === row.user_id);
+          if (buddy && !existing.owners.find(o => o.userId === buddy.userId)) existing.owners.push(buddy);
         }
+        return;
       }
-      return;
-    }
-    seen.add(key);
-    if (!catItems[row.category]) return;
-    const buddy = buddies.find(b => b.userId === row.user_id);
-    catItems[row.category].push({
-      item_id: row.item_id,
-      title: row.title,
-      poster: row.poster,
-      subtitle: row.subtitle || "",
-      source_url: row.source_url,
-      owners: buddy ? [buddy] : [],
+      seen.add(key);
+      if (!built[row.category]) return;
+      const buddy = buddies.find(b => b.userId === row.user_id);
+      built[row.category].push({ item_id: row.item_id, title: row.title, poster: row.poster, subtitle: row.subtitle || "", source_url: row.source_url, owners: buddy ? [buddy] : [] });
     });
-  });
-
-  // Shuffle each category only once on mount using a stable ref
-  const shuffledRef = useRef(false);
-  if (!shuffledRef.current) {
-    Object.keys(catItems).forEach(key => {
-      const arr = catItems[key];
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
+    Object.keys(built).forEach(key => {
+      const arr = built[key];
+      for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
     });
-    shuffledRef.current = true;
+    catItemsRef.current = built;
   }
+  const catItems = catItemsRef.current || {};
 
   const visibleCats = CATEGORIES.filter(cat => catItems[cat.key]?.length > 0);
   if (visibleCats.length === 0) return null;
@@ -2477,10 +2464,12 @@ export default function Vouch() {
 
   const addToQueue = (item) => {
     if (!userId) return;
-    const itemId = item.id || item.item_id;
+    const itemId = String(item.id || item.item_id);
     setQueue(prev => {
-      if (prev.find(q => String(q.id) === String(itemId))) return prev;
-      const newQ = [...prev, { id: itemId, title: item.title, poster: item.poster || null, sub: item.sub || item.subtitle || "", sourceUrl: item.sourceUrl || item.source_url || null, category: item._cat || item.category || item.catKey || "" }];
+      const exists = prev.find(q => String(q.id) === itemId);
+      const newQ = exists
+        ? prev.filter(q => String(q.id) !== itemId)
+        : [...prev, { id: itemId, title: item.title, poster: item.poster || null, sub: item.sub || item.subtitle || "", sourceUrl: item.sourceUrl || item.source_url || null, category: item._cat || item.category || item.catKey || "" }];
       localStorage.setItem("vouch-queue-" + userId, JSON.stringify(newQ));
       return newQ;
     });
