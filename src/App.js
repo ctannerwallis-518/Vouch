@@ -2879,6 +2879,11 @@ export default function Vouch() {
                 )}
                 <div className="ornament"><span>—</span><span>✦</span><span>—</span></div>
 
+                {isOwn && (canPublish
+                  ? <button onClick={() => { setEditingBoard(null); setBoardEditor(true); }} style={{ width: "100%", fontFamily: "'Spectral SC',serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.2em", padding: "14px", background: T.ink, color: T.bg, border: "none", cursor: "pointer", marginBottom: 16 }}>Publish a New Vouch Board</button>
+                  : <div style={{ width: "100%", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", padding: "14px", background: "rgba(17,16,8,0.08)", color: T.inkFaint, textAlign: "center", marginBottom: 16, border: `1px solid ${T.paperDark}` }}>Next Vouch available {nextPublishDate}</div>
+                )}
+
                 {isOwn ? (
                   <div className="vouch-section" style={{ marginBottom: 52 }}>
                     <div className="vouch-section-header">
@@ -2888,10 +2893,7 @@ export default function Vouch() {
                         {activeBoard?.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: "rgba(200,194,180,0.4)", marginTop: 2 }}>{activeBoard.description}</div>}
                         {activeBoard?.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.3)", marginTop: 4 }}>Published {new Date(activeBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} · Current Vouch</div>}
                       </div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end", flexShrink: 0 }}>
-                        {canPublish ? <button className="vouch-section-add" onClick={() => { setEditingBoard(null); setBoardEditor(true); }}>+ New Vouch</button> : <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.35)", textAlign: "right" }}>Locked until<br />{nextPublishDate}</div>}
-                        {boardArchive.length > 1 && <button className="vouch-section-add" style={{ fontSize: "8px" }} onClick={() => setArchivePage(true)}>Archive</button>}
-                      </div>
+
                     </div>
                     {activeBoard?.vouch_board_items?.length > 0 ? (
                       <VouchSection board={(() => {
