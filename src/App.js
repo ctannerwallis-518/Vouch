@@ -1836,7 +1836,7 @@ export default function Vouch() {
       await supabase.from("vouch_board_items").insert(
         items.map((item, i) => ({
           board_id: newBoard.id,
-          item_id: resolvedItemId,
+          item_id: String(item.id || item.item_id),
           title: item.title,
           subtitle: item.sub || item.subtitle || "",
           poster: item.poster || null,
