@@ -145,14 +145,14 @@ const Styles = () => (
     .cat-add:hover { border-color: ${T.ink}; color: ${T.ink}; }
 
     .cards-row { display: flex; gap: 14px; flex-wrap: wrap; }
-    .card { width: 150px; flex-shrink: 0; cursor: pointer; }
+    .card { width: 180px; flex-shrink: 0; cursor: pointer; }
     .card:hover .card-poster { transform: translateY(-3px); box-shadow: 0 7px 20px rgba(17,16,8,0.16); }
-    .card-poster { width: 150px; height: 206px; object-fit: cover; display: block; border: 1px solid ${T.paperDark}; transition: transform 0.2s, box-shadow 0.2s; }
-    .card-poster-placeholder { width: 150px; height: 206px; background: ${T.paperDark}; border: 1px solid ${T.paperDark}; display: flex; align-items: center; justify-content: center; font-family: 'Spectral', serif; font-style: italic; font-size: 11px; color: ${T.inkLight}; text-align: center; padding: 10px; }
+    .card-poster { width: 180px; height: 248px; object-fit: cover; display: block; border: 1px solid ${T.paperDark}; transition: transform 0.2s, box-shadow 0.2s; }
+    .card-poster-placeholder { width: 180px; height: 248px; background: ${T.paperDark}; border: 1px solid ${T.paperDark}; display: flex; align-items: center; justify-content: center; font-family: 'Spectral', serif; font-style: italic; font-size: 11px; color: ${T.inkLight}; text-align: center; padding: 10px; }
     .card-title   { font-family: 'Spectral', serif; font-weight: 600; font-size: 12.5px; line-height: 1.35; margin-top: 7px; }
     .card-sub     { font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.06em; color: ${T.inkLight}; margin-top: 2px; }
     .card-comment { font-family: 'Spectral', serif; font-style: italic; font-size: 10.5px; line-height: 1.5; color: ${T.inkMid}; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .slot-empty-sm { width: 150px; height: 206px; border: 1px dashed ${T.paperDark}; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.14s, background 0.14s; flex-shrink: 0; }
+    .slot-empty-sm { width: 180px; height: 248px; border: 1px dashed ${T.paperDark}; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.14s, background 0.14s; flex-shrink: 0; }
     .slot-empty-sm:hover { border-color: ${T.ink}; background: rgba(17,16,8,0.03); }
 
     .lb-overlay { position: fixed; inset: 0; background: rgba(17,16,8,0.96); z-index: 1000; display: flex; align-items: center; justify-content: center; }
@@ -221,11 +221,11 @@ const Styles = () => (
       .slot-empty-large { width: 100%; aspect-ratio: 2/3; height: auto; margin-bottom: 0; }
       .cards-row { flex-direction: row; flex-wrap: nowrap; overflow-x: auto; gap: 10px; padding-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
       .cards-row::-webkit-scrollbar { display: none; }
-      .card { width: 90px; flex-shrink: 0; }
-      .card-poster { width: 90px; height: 124px; flex-shrink: 0; }
-      .card-poster-placeholder { width: 90px; height: 124px; flex-shrink: 0; font-size: 9px; }
+      .card { width: 110px; flex-shrink: 0; }
+      .card-poster { width: 110px; height: 152px; flex-shrink: 0; }
+      .card-poster-placeholder { width: 110px; height: 152px; flex-shrink: 0; font-size: 9px; }
       .card:hover .card-poster { transform: none; box-shadow: none; }
-      .slot-empty-sm { width: 90px; height: 124px; flex-shrink: 0; }
+      .slot-empty-sm { width: 110px; height: 152px; flex-shrink: 0; }
       .page { padding: 0 16px 60px; }
       .masthead-meta { padding: 7px 16px; }
       .vouch-section { padding: 16px 14px 20px; }
@@ -1607,9 +1607,10 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue 
               );
             })}
           </div>
-          {onAddToQueue && (
-            <button onClick={e => { e.stopPropagation(); onAddToQueue(item); }} style={{ width: "100%", fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", padding: "4px 0", background: queue?.find(q => String(q.id) === String(item.item_id)) ? T.ink : T.paperDark, color: queue?.find(q => String(q.id) === String(item.item_id)) ? T.bg : T.inkMid, border: "none", cursor: "pointer" }}>{queue?.find(q => String(q.id) === String(item.item_id)) ? "✓ Queued" : "+ Queue"}</button>
-          )}
+          <div style={{ display: "flex", marginTop: 4, gap: 0 }}>
+            {onDudeSame && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ flex: 1, background: "transparent", border: `1px solid ${T.paperDark}`, color: T.inkMid, cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 2px", fontWeight: 700 }}>Agree</button>}
+            {onAddToQueue && <button onClick={e => { stopPropagation(); onAddToQueue(item); }} style={{ flex: 1, background: queue?.find(q => String(q.id) === String(item.item_id)) ? T.ink : "transparent", border: `1px solid ${T.paperDark}`, borderLeft: "none", color: queue?.find(q => String(q.id) === String(item.item_id)) ? T.bg : T.inkMid, cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 2px", fontWeight: 700 }}>{queue?.find(q => String(q.id) === String(item.item_id)) ? "✓ Queue" : "+ Queue"}</button>}
+          </div>
         </div>
       )}
     </div>
@@ -2963,10 +2964,10 @@ export default function Vouch() {
                         ? <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkLight, padding: "24px 0" }}>Nothing in your queue yet — hit "Add to Queue" on any buddy's shelf or Group Shelf tile.</div>
                         : <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
                             {queue.map(item => (
-                              <div key={item.id} style={{ width: 150, flexShrink: 0, position: "relative" }}>
+                              <div key={item.id} style={{ width: 180, flexShrink: 0, position: "relative" }}>
                                 {item.poster
-                                  ? <img src={item.poster} alt={item.title} style={{ width: 150, height: 206, objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block", cursor: item.sourceUrl ? "pointer" : "default" }} onClick={() => item.sourceUrl && window.open(item.sourceUrl, "_blank")} onError={e => e.target.style.display = "none"} />
-                                  : <div style={{ width: 150, height: 206, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 10 }}>{item.title}</div>}
+                                  ? <img src={item.poster} alt={item.title} style={{ width: 180, height: 248, objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block", cursor: item.sourceUrl ? "pointer" : "default" }} onClick={() => item.sourceUrl && window.open(item.sourceUrl, "_blank")} onError={e => e.target.style.display = "none"} />
+                                  : <div style={{ width: 180, height: 248, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 10 }}>{item.title}</div>}
                                 <button onClick={() => removeFromQueue(item.id)} style={{ position: "absolute", top: 4, right: 4, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 26, height: 26, cursor: "pointer", fontSize: 16, lineHeight: "26px", textAlign: "center", borderRadius: 2 }}>×</button>
                                 <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: T.inkFaint, marginTop: 4 }}>{item.category}</div>
                                 <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 12.5, lineHeight: 1.35, marginTop: 2 }}>{item.title}</div>
