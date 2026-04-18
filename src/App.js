@@ -1587,7 +1587,7 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue,
   if (visibleCats.length === 0) return null;
 
   const TileCard = ({ item }) => (
-    <div style={{ flexShrink: 0, width: isMobile ? 90 : 120, cursor: item.source_url ? "pointer" : "default" }}
+    <div style={{ flexShrink: 0, width: isMobile ? 110 : 180, cursor: item.source_url ? "pointer" : "default" }}
       onClick={() => item.source_url && window.open(item.source_url, "_blank")}>
       {item.poster
         ? <img src={item.poster} alt={item.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: "1px solid " + T.paperDark, display: "block" }} onError={e => e.target.style.display = "none"} />
@@ -1807,6 +1807,32 @@ export default function Vouch() {
   const [avatarLightbox, setAvatarLightbox] = useState(null);
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "instant" });
+
+  useEffect(() => {
+    const handlePop = (e) => {
+      const path = window.location.pathname;
+      if (path === "/" || path === "") {
+        setViewing(null);
+        const state = e.state;
+        if (state?.tab) setTab(state.tab);
+        else setTab("board");
+        scrollToTop();
+      } else if (path.startsWith("/@")) {
+        const username = path.slice(2);
+        supabase.from("profiles").select("id, display_name, avatar_url, username").eq("username", username).maybeSingle()
+          .then(({ data }) => {
+            if (data) {
+              setViewing({ userId: data.id, username: data.username, displayName: data.display_name, avatarUrl: data.avatar_url });
+              setTab("board");
+              loadViewBoard(data.id);
+              loadBoardReactions(data.id, true);
+            }
+          });
+      }
+    };
+    window.addEventListener("popstate", handlePop);
+    return () => window.removeEventListener("popstate", handlePop);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [sentRequests,   setSentRequests]   = useState([]);
   const [userCategories, setUserCategories] = useState(null);
   const [onboarding,     setOnboarding]     = useState(false);
@@ -2653,13 +2679,13 @@ export default function Vouch() {
           <div className="masthead-rule-ornament"><span>—</span><span>✦</span><span>—</span></div>
           <div className="masthead-tagline">Love it? Vouch for it.</div>
           <nav className="nav">
-            <button className={`nav-btn${tab === "home" ? " active" : ""}`} onClick={() => { setTab("home"); setViewing(null); scrollToTop(); }}>Home</button>
-            <button className={`nav-btn${tab === "board" && !viewing ? " active" : ""}`} onClick={() => { setTab("board"); setViewing(null); window.history.replaceState({}, "", "/"); scrollToTop(); }}>My Board</button>
-            <button className={`nav-btn${tab === "friends" ? " active" : ""}`} onClick={() => { setTab("friends"); setViewing(null); window.history.replaceState({}, "", "/"); scrollToTop(); }}>
+            <button className={`nav-btn${tab === "home" ? " active" : ""}`} onClick={() => { setTab("home"); setViewing(null); window.history.pushState({tab:"home"}, "", "/"); scrollToTop(); }}>Home</button>
+            <button className={`nav-btn${tab === "board" && !viewing ? " active" : ""}`} onClick={() => { setTab("board"); setViewing(null); window.history.pushState({tab:"board"}, "", "/"); scrollToTop(); }}>My Board</button>
+            <button className={`nav-btn${tab === "friends" ? " active" : ""}`} onClick={() => { setTab("friends"); setViewing(null); window.history.pushState({tab:"friends"}, "", "/"); scrollToTop(); }}>
               Buddies {pendingIn.length > 0 && <span style={{ background: T.ink, color: T.bg, borderRadius: "50%", fontSize: 9, padding: "1px 5px", marginLeft: 4 }}>{pendingIn.length}</span>}
             </button>
-            <button className={`nav-btn${tab === "archive" ? " active" : ""}`} onClick={() => { setTab("archive"); setViewing(null); scrollToTop(); }}>Archive</button>
-            <button className={`nav-btn${tab === "settings" ? " active" : ""}`} onClick={() => { setTab("settings"); setViewing(null); scrollToTop(); }}>Settings</button>
+            <button className={`nav-btn${tab === "archive" ? " active" : ""}`} onClick={() => { setTab("archive"); setViewing(null); window.history.pushState({tab:"archive"}, "", "/"); scrollToTop(); }}>Archive</button>
+            <button className={`nav-btn${tab === "settings" ? " active" : ""}`} onClick={() => { setTab("settings"); setViewing(null); window.history.pushState({tab:"settings"}, "", "/"); scrollToTop(); }}>Settings</button>
 
           </nav>
         </header>
