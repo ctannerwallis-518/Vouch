@@ -1587,7 +1587,7 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue,
   if (visibleCats.length === 0) return null;
 
   const TileCard = ({ item }) => (
-    <div style={{ flexShrink: 0, width: isMobile ? 110 : 180, cursor: item.source_url ? "pointer" : "default" }}
+    <div style={{ flexShrink: 0, width: isMobile ? 95 : 150, cursor: item.source_url ? "pointer" : "default" }}
       onClick={() => item.source_url && window.open(item.source_url, "_blank")}>
       {item.poster
         ? <img src={item.poster} alt={item.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: "1px solid " + T.paperDark, display: "block" }} onError={e => e.target.style.display = "none"} />
