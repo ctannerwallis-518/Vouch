@@ -219,13 +219,13 @@ const Styles = () => (
       .card-poster-large { width: 100%; height: auto; aspect-ratio: 2/3; }
       .card-poster-placeholder-large { width: 100%; aspect-ratio: 2/3; height: auto; }
       .slot-empty-large { width: 100%; aspect-ratio: 2/3; height: auto; margin-bottom: 0; }
-      .cards-row { flex-direction: row; flex-wrap: nowrap; overflow-x: auto; gap: 10px; padding-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+      .cards-row { flex-direction: row; flex-wrap: nowrap; overflow-x: auto; gap: 10px; padding-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none; -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%); mask-image: linear-gradient(to right, black 85%, transparent 100%); }
       .cards-row::-webkit-scrollbar { display: none; }
-      .card { width: 110px; flex-shrink: 0; }
-      .card-poster { width: 110px; height: 152px; flex-shrink: 0; }
-      .card-poster-placeholder { width: 110px; height: 152px; flex-shrink: 0; font-size: 9px; }
+      .card { width: 95px; flex-shrink: 0; }
+      .card-poster { width: 95px; height: 130px; flex-shrink: 0; }
+      .card-poster-placeholder { width: 95px; height: 130px; flex-shrink: 0; font-size: 9px; }
       .card:hover .card-poster { transform: none; box-shadow: none; }
-      .slot-empty-sm { width: 110px; height: 152px; flex-shrink: 0; }
+      .slot-empty-sm { width: 95px; height: 130px; flex-shrink: 0; }
       .page { padding: 0 16px 60px; }
       .masthead-meta { padding: 7px 16px; }
       .vouch-section { padding: 16px 14px 20px; }
