@@ -1628,7 +1628,7 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue,
               <button onClick={() => setModalCat(cat.key)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", background: "transparent", border: "none", color: T.inkLight, cursor: "pointer", padding: 0 }}>See All →</button>
             )}
           </div>
-          <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 4, scrollbarWidth: "none" }}>
+          <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 4, scrollbarWidth: "none", WebkitMaskImage: "linear-gradient(to right, black 85%, transparent 100%)", maskImage: "linear-gradient(to right, black 85%, transparent 100%)" }}>
             {catItems[cat.key].slice(0, 5).map((item, i) => <TileCard key={i} item={item} />)}
           </div>
         </div>
