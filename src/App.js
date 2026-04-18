@@ -895,12 +895,12 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
           )}
         </div>
       ) : (
-        <div className="cards-row-large" style={{ justifyContent: hideEmptySlots && allItems.length < 3 ? "flex-start" : undefined }}>
+        <div className="cards-row-large">
           {Array(5).fill(null).map((_, i) => {
             const it = allItems[i] || null;
             if (!it && !isOwn && hideEmptySlots) return null;
             return it ? (
-              <div key={it.id + it._cat} className="card-large" style={{ position: "relative", flex: hideEmptySlots ? "0 0 260px" : "1", maxWidth: hideEmptySlots ? 260 : undefined }}>
+              <div key={it.id + it._cat} className="card-large" style={{ position: "relative" }}>
                 <CardFace it={it} />
               </div>
             ) : isOwn ? (
@@ -2967,7 +2967,7 @@ export default function Vouch() {
                         if (brd[item.category]) brd[item.category].push({ id: item.item_id, title: item.title, sub: item.subtitle || "", poster: item.poster, comment: "", vouched: true, sourceUrl: item.source_url, _cat: item.category, _catLabel: CATEGORIES.find(c=>c.key===item.category)?.label || item.category });
                       });
                       return brd;
-                    })()} isOwn={false} onCard={(k,i)=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} hideHeader={true} hideEmptySlots={true} onAddToQueue={addToQueue} queue={queue} ownerId={viewing?.userId} />
+                    })()} isOwn={false} onCard={(k,i)=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} hideHeader={true} onAddToQueue={addToQueue} queue={queue} ownerId={viewing?.userId} />
                   </div>
                 ) : null}
 
