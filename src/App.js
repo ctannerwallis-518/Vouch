@@ -2967,7 +2967,7 @@ export default function Vouch() {
                         if (brd[item.category]) brd[item.category].push({ id: item.item_id, title: item.title, sub: item.subtitle || "", poster: item.poster, comment: "", vouched: true, sourceUrl: item.source_url, _cat: item.category, _catLabel: CATEGORIES.find(c=>c.key===item.category)?.label || item.category });
                       });
                       return brd;
-                    })()} isOwn={false} onCard={(k,i)=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} hideHeader={true} onAddToQueue={addToQueue} queue={queue} ownerId={viewing?.userId} />
+                    })()} isOwn={false} onCard={(k,i)=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} hideHeader={true} hideEmptySlots={true} onAddToQueue={addToQueue} queue={queue} ownerId={viewing?.userId} />
                   </div>
                 ) : null}
 
