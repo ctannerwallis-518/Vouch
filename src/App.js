@@ -1805,6 +1805,30 @@ export default function Vouch() {
   const [avatarLightbox, setAvatarLightbox] = useState(null);
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "instant" });
+
+  // Save and restore scroll position when leaving/returning to page
+  useEffect(() => {
+    const saveState = () => {
+      sessionStorage.setItem("vouch-scroll", window.scrollY);
+    };
+    const restoreState = () => {
+      if (document.visibilityState === "visible") {
+        const saved = sessionStorage.getItem("vouch-scroll");
+        if (saved) {
+          setTimeout(() => window.scrollTo(0, parseInt(saved)), 50);
+          sessionStorage.removeItem("vouch-scroll");
+        }
+      } else {
+        saveState();
+      }
+    };
+    document.addEventListener("visibilitychange", restoreState);
+    window.addEventListener("pagehide", saveState);
+    return () => {
+      document.removeEventListener("visibilitychange", restoreState);
+      window.removeEventListener("pagehide", saveState);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const profileCache = useRef({});
 
   useEffect(() => {
