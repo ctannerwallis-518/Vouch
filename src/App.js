@@ -895,12 +895,12 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
           )}
         </div>
       ) : (
-        <div className="cards-row-large" style={{ justifyContent: hideEmptySlots && allItems.length < 3 ? "flex-start" : undefined }}>
+        <div className="cards-row-large">
           {Array(5).fill(null).map((_, i) => {
             const it = allItems[i] || null;
             if (!it && !isOwn && hideEmptySlots) return null;
             return it ? (
-              <div key={it.id + it._cat} className="card-large" style={{ position: "relative", flex: hideEmptySlots ? "0 0 260px" : "1", maxWidth: hideEmptySlots ? 260 : undefined }}>
+              <div key={it.id + it._cat} className="card-large" style={{ position: "relative" }}>
                 <CardFace it={it} />
               </div>
             ) : isOwn ? (
