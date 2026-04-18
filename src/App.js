@@ -2814,13 +2814,13 @@ export default function Vouch() {
                     <div className="board-name" style={{ fontSize: 32 }}>Buddies</div>
                     <div className="board-sub">{buddies.length} connection{buddies.length !== 1 ? "s" : ""}</div>
                   </div>
-                  <button className="btn btn-solid" onClick={() => setBuddyModal(true)}>+ Add Buddy</button>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button className="btn btn-ghost" onClick={() => setShowBuddyList(true)}>View ({buddies.length})</button>
+                    <button className="btn btn-solid" onClick={() => setBuddyModal(true)}>+ Add</button>
+                  </div>
                 </div>
 
-                <div style={{ display: "flex", gap: 10, marginBottom: 24 }}>
-                  <button className="btn btn-ghost" style={{ flex: 1, padding: "10px" }} onClick={() => setShowBuddyList(true)}>View Buddies ({buddies.length})</button>
-                  <button className="btn btn-solid" style={{ flex: 1, padding: "10px" }} onClick={() => setBuddyModal(true)}>+ Find Buddies</button>
-                </div>
+
                 {/* GROUP VOUCH - top of page */}
                 {groupVouchItems.length > 0 && (
                   <GroupVouchSlideshow items={groupVouchItems} isMobile={window.innerWidth <= 640} onAddToQueue={addToQueue} queue={queue} onDudeSame={dudeSame} />
@@ -2845,37 +2845,9 @@ export default function Vouch() {
                   <div style={{ borderBottom: `1px solid ${T.paperDark}`, margin: "20px 0" }} />
                 </>}
 
-                {/* BUDDY LIST */}
-                {buddies.length === 0 && pendingIn.length === 0 && (
-                  <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkLight, padding: "24px 0" }}>No buddies yet — add one or share your invite link.</div>
-                )}
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 20, marginBottom: 32 }}>
-                  {buddies.map(b => (
-                    <div key={b.buddyRowId} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer", width: 80 }} onClick={() => viewBuddy(b)}>
-                      <Avatar name={b.displayName} size={72} avatarUrl={b.avatarUrl} />
-                      <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 12, textAlign: "center", lineHeight: 1.3, color: T.ink }}>{b.displayName}</div>
-                    </div>
-                  ))}
-                </div>
 
-                {/* SUGGESTED BUDDIES */}
-                {suggested.length > 0 && (
-                  <div style={{ marginTop: 36, borderTop: `1px solid ${T.paperDark}`, paddingTop: 24 }}>
-                    <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.18em", color: T.inkMid, marginBottom: 16 }}>People on Vouch</div>
-                    {suggested.map(s => (
-                      <div key={s.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={() => { setViewing({ userId: s.id, username: s.username, displayName: s.display_name, avatarUrl: s.avatar_url }); setTab("board"); loadViewBoard(s.id); loadBoardReactions(s.id, true); window.scrollTo(0, 0); }}>
-                          <Avatar name={s.display_name} size={56} avatarUrl={s.avatar_url} />
-                          <div>
-                            <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 16, borderBottom: `1px solid ${T.paperDark}` }}>{s.display_name}</div>
-                            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.1em", color: T.inkLight }}>@{s.username}</div>
-                          </div>
-                        </div>
-                        <button className="btn btn-solid" style={{ padding: "4px 14px" }} onClick={() => sendBuddyRequest(s.id).then(() => setSuggested(prev => prev.filter(x => x.id !== s.id)))}>Add</button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+
+
               </>
             : (tab === "board" || viewing) ? <>
                 <div style={{ marginBottom: 8, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, paddingTop: 16 }}>
