@@ -1807,6 +1807,7 @@ export default function Vouch() {
   const [avatarLightbox, setAvatarLightbox] = useState(null);
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "instant" });
+  const profileCache = useRef({});
 
   useEffect(() => {
     const handlePop = (e) => {
@@ -1939,6 +1940,15 @@ export default function Vouch() {
   };
 
   const loadViewBoard = async (uid) => {
+    // Use cache if available - refresh reactions but skip board/shelf refetch
+    if (profileCache.current[uid]) {
+      const cached = profileCache.current[uid];
+      setViewBoard(cached.board);
+      setViewActiveBoard(cached.activeBoard);
+      setViewing(prev => ({ ...(prev || {}), ...cached.profile }));
+      setViewBuddies(cached.buddies || []);
+      return;
+    }
     const { data, error } = await supabase
       .from("endorsements").select("*").eq("user_id", uid).order("created_at", { ascending: true });
     if (error) { console.error("loadViewBoard error:", error); return; }
