@@ -2809,14 +2809,14 @@ export default function Vouch() {
 
           {tab === "friends" && !viewing
             ? <>
-                <div className="board-header">
+                <div className="board-header" style={{ flexDirection: "column", alignItems: "flex-start", gap: 12 }}>
                   <div>
                     <div className="board-name" style={{ fontSize: 32 }}>Buddies</div>
                     <div className="board-sub">{buddies.length} connection{buddies.length !== 1 ? "s" : ""}</div>
                   </div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button className="btn btn-ghost" onClick={() => setShowBuddyList(true)}>View ({buddies.length})</button>
-                    <button className="btn btn-solid" onClick={() => setBuddyModal(true)}>+ Add</button>
+                  <div style={{ display: "flex", gap: 10, width: "100%" }}>
+                    <button className="btn btn-ghost" style={{ flex: 1, padding: "10px" }} onClick={() => setShowBuddyList(true)}>View Buddies ({buddies.length})</button>
+                    <button className="btn btn-solid" style={{ flex: 1, padding: "10px" }} onClick={() => setBuddyModal(true)}>+ Find Buddies</button>
                   </div>
                 </div>
 
