@@ -851,10 +851,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
           </div>
         )}
       </div>
-      {isOwn && (
-        <button onClick={e => { e.stopPropagation(); onRemove(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id), true); }}
-          style={{ position: "absolute", top: 8, right: 8, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 36, height: 36, cursor: "pointer", fontSize: 20, lineHeight: "36px", textAlign: "center", borderRadius: 2 }}>×</button>
-      )}
+
       {buddyCounts?.[String(it.id)] > 0 && (
         <div title="Total Buddy Vouches" style={{ position: "absolute", top: 8, left: 8, zIndex: 2, background: "rgba(17,16,8,0.82)", color: "rgba(200,194,180,0.95)", fontFamily: "'Spectral SC',serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "default" }}>{buddyCounts[String(it.id)]} {buddyCounts[String(it.id)] === 1 ? "Vouch" : "Vouches"}</div>
       )}
@@ -1668,6 +1665,7 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeS
           .from("vouch_boards")
           .select("*, vouch_board_items(*)")
           .in("user_id", buddyIds)
+          .eq("is_active", true)
           .order("published_at", { ascending: false })
           .limit(30);
         // Load buddy reactions
@@ -1904,6 +1902,13 @@ export default function Vouch() {
     setEditingBoard(null);
   };
 
+  const unpublishBoard = async () => { // eslint-disable-line no-unused-vars
+    if (!activeBoard) return;
+    if (!window.confirm("Unpublish your current Vouch? It will be removed from public view. You can republish or create a new one immediately.")) return;
+    await supabase.from("vouch_boards").update({ is_active: false, published_at: null }).eq("id", activeBoard.id);
+    await loadVouchBoards(userId);
+  };
+
   const republishBoard = async (archivedBoard) => {
     // Deactivate current
     await supabase.from("vouch_boards").update({ is_active: false }).eq("user_id", userId).eq("is_active", true);
@@ -1995,7 +2000,8 @@ export default function Vouch() {
       const { data: buddyBoards } = await supabase
         .from("vouch_boards")
         .select("id, user_id")
-        .in("user_id", buddyIds);
+        .in("user_id", buddyIds)
+        .eq("is_active", true);
       const boardMap = {};
       (buddyBoards || []).forEach(b => { boardMap[b.id] = b.user_id; });
       const boardIds = Object.keys(boardMap);
@@ -2607,7 +2613,7 @@ export default function Vouch() {
   const vouchedCount = Object.values(board).flat().filter(item => item.vouched).length;
 
   const canPublish = (() => {
-    if (!activeBoard?.published_at) return true;
+    if (!activeBoard || !activeBoard.published_at) return true;
     const publishedAt = new Date(activeBoard.published_at);
     const daysSince = (Date.now() - publishedAt.getTime()) / (1000 * 60 * 60 * 24);
     return daysSince >= 7;
@@ -2752,7 +2758,7 @@ export default function Vouch() {
                         </div>
                         {!b.is_active && (
                           <button className="btn btn-solid" style={{ padding: "6px 14px", flexShrink: 0, opacity: canPublish ? 1 : 0.35, cursor: canPublish ? "pointer" : "not-allowed" }} onClick={() => canPublish && republishBoard(b)}>
-                            {canPublish ? "Publish Again" : "Locked until " + nextPublishDate}
+                            {canPublish ? "Republish" : "Locked · " + nextPublishDate}
                           </button>
                         )}
                       </div>
@@ -3236,7 +3242,7 @@ export default function Vouch() {
                             </div>
                             {!b.is_active && (
                               <button className="btn btn-solid" style={{ padding: "4px 12px", fontSize: 10, flexShrink: 0, opacity: canPublish ? 1 : 0.35, cursor: canPublish ? "pointer" : "not-allowed" }} onClick={() => { if (canPublish) { republishBoard(b); setArchivePage(false); } }}>
-                                {canPublish ? "Publish Again" : "Locked"}
+                                {canPublish ? "Republish" : "Locked"}
                               </button>
                             )}
                           </div>
