@@ -2107,6 +2107,7 @@ export default function Vouch() {
         }
         setUser({ username: existingProfile?.username || session.user.email.split("@")[0], displayName: existingProfile?.display_name || session.user.user_metadata?.full_name || session.user.email.split("@")[0], avatarUrl });
         setUserId(uid);
+        setTab("home");
         loadBoard(uid);
         loadBuddies(uid);
         loadMyReactions(uid);
@@ -2810,6 +2811,10 @@ export default function Vouch() {
                   <button className="btn btn-solid" onClick={() => setBuddyModal(true)}>+ Add Buddy</button>
                 </div>
 
+                <div style={{ display: "flex", gap: 10, marginBottom: 24 }}>
+                  <button className="btn btn-ghost" style={{ flex: 1, padding: "10px" }} onClick={() => setShowBuddyList(true)}>View Buddies ({buddies.length})</button>
+                  <button className="btn btn-solid" style={{ flex: 1, padding: "10px" }} onClick={() => setBuddyModal(true)}>+ Find Buddies</button>
+                </div>
                 {/* GROUP VOUCH - top of page */}
                 {groupVouchItems.length > 0 && (
                   <GroupVouchSlideshow items={groupVouchItems} isMobile={window.innerWidth <= 640} onAddToQueue={addToQueue} queue={queue} onDudeSame={dudeSame} />
