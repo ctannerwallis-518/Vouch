@@ -219,7 +219,7 @@ const Styles = () => (
       .card-poster-large { width: 100%; height: auto; aspect-ratio: 2/3; }
       .card-poster-placeholder-large { width: 100%; aspect-ratio: 2/3; height: auto; }
       .slot-empty-large { width: 100%; aspect-ratio: 2/3; height: auto; margin-bottom: 0; }
-      .cards-row { flex-direction: row; flex-wrap: nowrap; overflow-x: auto; gap: 10px; padding-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none; -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%); mask-image: linear-gradient(to right, black 85%, transparent 100%); }
+      .cards-row { flex-direction: row; flex-wrap: nowrap; overflow-x: auto; gap: 10px; padding-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
       .cards-row::-webkit-scrollbar { display: none; }
       .card { width: 95px; flex-shrink: 0; }
       .card-poster { width: 95px; height: 130px; flex-shrink: 0; }
@@ -1807,6 +1807,7 @@ export default function Vouch() {
   const [avatarLightbox, setAvatarLightbox] = useState(null);
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "instant" });
+  const profileCache = useRef({});
 
   useEffect(() => {
     const handlePop = (e) => {
@@ -1939,6 +1940,15 @@ export default function Vouch() {
   };
 
   const loadViewBoard = async (uid) => {
+    // Use cache if available - refresh reactions but skip board/shelf refetch
+    if (profileCache.current[uid]) {
+      const cached = profileCache.current[uid];
+      setViewBoard(cached.board);
+      setViewActiveBoard(cached.activeBoard);
+      setViewing(prev => ({ ...(prev || {}), ...cached.profile }));
+      setViewBuddies(cached.buddies || []);
+      return;
+    }
     const { data, error } = await supabase
       .from("endorsements").select("*").eq("user_id", uid).order("created_at", { ascending: true });
     if (error) { console.error("loadViewBoard error:", error); return; }
