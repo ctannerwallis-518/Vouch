@@ -1902,7 +1902,7 @@ export default function Vouch() {
     setEditingBoard(null);
   };
 
-  const unpublishBoard = async () => {
+  const unpublishBoard = async () => { // eslint-disable-line no-unused-vars
     if (!activeBoard) return;
     if (!window.confirm("Unpublish your current Vouch? It will be removed from public view. You can republish or create a new one immediately.")) return;
     await supabase.from("vouch_boards").update({ is_active: false, published_at: null }).eq("id", activeBoard.id);
