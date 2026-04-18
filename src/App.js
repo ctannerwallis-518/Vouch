@@ -2473,7 +2473,7 @@ export default function Vouch() {
     loadBuddies(userId);
   };
 
-  const viewBuddy = async (buddy) => {
+  const viewBuddy = async (buddy) => { // eslint-disable-line no-unused-vars
     window.scrollTo(0, 0);
     setViewing(buddy);
     setTab("board");
