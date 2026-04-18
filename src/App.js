@@ -1845,7 +1845,7 @@ export default function Vouch() {
   const [showAgreements, setShowAgreements] = useState(false);
   const [viewerReactions,setViewerReactions]= useState([]);
   const [viewActiveBoard,setViewActiveBoard]= useState(null);
-  const [suggested,      setSuggested]      = useState([]);
+  // const [suggested, setSuggested] = useState([]); // eslint-disable-line no-unused-vars
   const [queue,          setQueue]          = useState([]);
   const [shelfView,      setShelfView]      = useState("shelf"); // "shelf" | "queue"
 
@@ -2473,7 +2473,7 @@ export default function Vouch() {
     loadBuddies(userId);
   };
 
-  const viewBuddy = async (buddy) => {
+  const viewBuddy = async (buddy) => { // eslint-disable-line no-unused-vars
     window.scrollTo(0, 0);
     setViewing(buddy);
     setTab("board");
