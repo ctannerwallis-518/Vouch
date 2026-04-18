@@ -3035,40 +3035,7 @@ export default function Vouch() {
 
                 <MutualMentions reactions={isOwn ? boardReactions : viewerReactions} myReactions={myReactions} isOwn={isOwn} boardOwnerName={currName} buddies={buddies} onViewBuddy={(b) => { setViewing(b); setTab("board"); loadViewBoard(b.userId); loadBoardReactions(b.userId, true); window.scrollTo(0, 0); }} />
 
-                {/* BUDDIES LIST at bottom of every board */}
-                {(() => {
-                  const displayBuddies = isOwn
-                    ? buddies.map(b => ({ id: b.userId, display_name: b.displayName, avatar_url: b.avatarUrl, buddyRowId: b.buddyRowId, ...b }))
-                    : viewBuddies;
-                  if (!displayBuddies.length) return null;
-                  return (
-                    <div style={{ marginTop: 52, borderTop: `1px solid ${T.paperDark}`, paddingTop: 28 }}>
-                      <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", color: T.inkMid, marginBottom: 16 }}>Buddies</div>
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "12px" }}>
-                        {displayBuddies.map((b, i) => {
-                          const name = b.displayName || b.display_name;
-                          const avatarUrl = b.avatarUrl || b.avatar_url;
-                          const bid = b.id || b.userId;
-                          const buser = b.username;
-                          const handleClick = async () => {
-                            const buddyObj = isOwn ? b : { userId: bid, username: buser, displayName: name, avatarUrl };
-                            setViewing(buddyObj);
-                            setTab("board");
-                            await loadViewBoard(bid);
-                            await loadBoardReactions(bid, true);
-                            window.scrollTo(0, 0);
-                          };
-                          return (
-                            <div key={b.buddyRowId || bid || i} onClick={handleClick} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "6px 0" }}>
-                              <Avatar name={name} size={56} avatarUrl={avatarUrl} />
-                              <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.ink, borderBottom: `1px solid ${T.paperDark}`, lineHeight: 1.3 }}>{name}</div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })()}
+
               </>
             : null
           }
