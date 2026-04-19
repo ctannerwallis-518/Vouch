@@ -128,8 +128,8 @@ const Styles = () => (
     .vouch-section-add:hover { background: rgba(200,194,180,0.15); }
 
     .cards-row-large { display: flex; gap: 12px; flex-wrap: nowrap; }
-    .card-large { flex: 1; min-width: 0; cursor: pointer; }
-    .card-poster-large { width: 100%; aspect-ratio: 2/3; object-fit: cover; display: block; border: 1px solid ${T.paperDark}; transition: transform 0.2s, box-shadow 0.2s; }
+    .card-large { flex: 1; min-width: 0; max-width: 320px; cursor: pointer; }
+    .card-poster-large { width: 100%; aspect-ratio: 2/3; object-fit: cover; display: block; border: 1px solid ${T.paperDark}; transition: transform 0.2s, box-shadow 0.2s; max-height: 400px; }
     .card-poster-placeholder-large { width: 100%; aspect-ratio: 2/3; background: ${T.paperDark}; border: 1px solid ${T.paperDark}; display: flex; align-items: center; justify-content: center; font-family: 'Spectral', serif; font-style: italic; font-size: 12px; color: ${T.inkLight}; text-align: center; padding: 14px; }
     .slot-empty-large { flex: 1; min-width: 0; aspect-ratio: 2/3; border: 1px dashed rgba(200,194,180,0.3); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.14s, background 0.14s; }
     .slot-empty-large:hover { background: rgba(200,194,180,0.06); }
@@ -892,7 +892,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
           )}
         </div>
       ) : (
-        <div style={{ display: "flex", gap: 12, maxWidth: hideEmptySlots ? allItems.length * 312 : undefined }}>
+        <div style={{ display: "flex", gap: 12, maxWidth: hideEmptySlots ? allItems.length * 332 : 5 * 332 }}>
           {allItems.map((it, i) => (
             <div key={it.id + it._cat} className="card-large" style={{ position: "relative", flex: "1" }}>
               <CardFace it={it} />
