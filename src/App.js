@@ -957,21 +957,26 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
 }
 
 function MutualMentions({ reactions, myReactions, isOwn, boardOwnerName, buddies, onViewBuddy }) {
+  const [showAll, setShowAll] = useState(false);
   if (!reactions.length && !myReactions.length) return null;
   const items = isOwn ? myReactions : reactions;
   if (!items.length) return null;
+  const preview = showAll ? items : items.slice(0, 9);
   return (
     <div style={{ marginTop: 52, borderTop: `1px solid ${T.paperDark}`, paddingTop: 28 }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 18 }}>
-        <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 15, letterSpacing: "0.08em", color: T.inkMid }}>
-          {isOwn ? "Agreed With" : `${(boardOwnerName || "").split(" ")[0]} Agrees With`}
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, marginBottom: 18 }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
+          <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 15, letterSpacing: "0.08em", color: T.inkMid }}>
+            {isOwn ? "Agreed With" : `${(boardOwnerName || "").split(" ")[0]} Agrees With`}
+          </div>
+          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkFaint }}>
+            {isOwn ? "Things you've agreed with on buddy boards" : `Things ${(boardOwnerName || "").split(" ")[0]} has agreed with`}
+          </div>
         </div>
-        <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkFaint }}>
-          {isOwn ? "Things you've agreed with on buddy boards" : `Things ${(boardOwnerName || "").split(" ")[0]} has agreed with`}
-        </div>
+        {items.length > 9 && <button onClick={() => setShowAll(s => !s)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", background: "transparent", border: "none", color: T.inkLight, cursor: "pointer", padding: 0, flexShrink: 0 }}>{showAll ? "Show Less" : `See All (${items.length})`}</button>}
       </div>
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-        {items.map((item, i) => {
+        {preview.map((item, i) => {
           const url = item.source_url || item.sourceUrl;
           const sourceBuddy = isOwn && buddies ? buddies.find(b => b.userId === item.item_owner_id) : null;
           return (
