@@ -3039,7 +3039,7 @@ export default function Vouch() {
                     ) : (
                       visibleCats.map(cat => {
                         const items = currBoard[cat.key] || [];
-                        return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={(key) => { if (!activeBoard) { alert("Publish your first Vouch 5 before adding to your shelf."); return; } setAddModal(key); }} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} onAddToQueue={addToQueue} queue={queue} />;
+                        return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={(key) => {  setAddModal(key); }} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} onAddToQueue={addToQueue} queue={queue} />;
                       })
                     )}
                   </>;
