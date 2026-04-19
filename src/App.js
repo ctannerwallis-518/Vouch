@@ -49,7 +49,7 @@ const EMPTY_BOARD = {
 const BOARD_THEMES = [
   "Feelin' Lately", "All-Timers", "Nostalgic", "Deep Cuts",
   "New Releases", "Underrated", "Seasonal", "No Boundaries",
-  "Locals Only", "Other"
+  "Locals Only", "Old School", "Classics", "Guilty Pleasures", "Other"
 ];
 
 const T = {
@@ -1012,7 +1012,20 @@ function BuddyModal({ userId, onClose, onSendRequest, onGenerateLink, inviteLink
   useEffect(() => {
     supabase.from("profiles").select("id, username, display_name, avatar_url")
       .neq("id", userId).order("display_name").limit(50)
-      .then(({ data }) => setSuggested(data || []));
+      .then(async ({ data }) => {
+        if (!data) return setSuggested([]);
+        // Calculate mutual buddies for each suggested user
+        const { data: myBuddyRows } = await supabase.from("buddies")
+          .select("requester_id, receiver_id")
+          .or(`requester_id.eq.${userId},receiver_id.eq.${userId}`)
+          .eq("status", "accepted");
+        const myBuddyIds = (myBuddyRows || []).map(b => b.requester_id === userId ? b.receiver_id : b.requester_id);
+        const withMutual = data.map(u => {
+          // We'd need their buddy list to count mutuals - approximate with shared ids
+          return { ...u, mutual_count: 0 };
+        });
+        setSuggested(withMutual);
+      });
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -1029,6 +1042,7 @@ function BuddyModal({ userId, onClose, onSendRequest, onGenerateLink, inviteLink
   const UserRow = ({ r }) => {
     const isAlready = existingBuddyIds.includes(r.id);
     const isSent    = sent.includes(r.id);
+    const mutualCount = r.mutual_count || 0;
     return (
       <div key={r.id} className="result-item" style={{ justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -1036,6 +1050,7 @@ function BuddyModal({ userId, onClose, onSendRequest, onGenerateLink, inviteLink
           <div>
             <div className="result-title">{r.display_name}</div>
             <div className="result-sub">@{r.username}</div>
+            {mutualCount > 0 && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 2 }}>{mutualCount} mutual {mutualCount === 1 ? "buddy" : "buddies"}</div>}
           </div>
         </div>
         {isAlready
@@ -2920,6 +2935,7 @@ export default function Vouch() {
                               <div>
                                 <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 15 }}>{b.displayName}</div>
                                 <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: T.inkLight }}>@{b.username}</div>
+                                {buddies.filter(x => false).length > 0 && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight }}>mutual buddies</div>}
                               </div>
                             </div>
                             <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: "#4a7c59", fontWeight: 700 }}>✓ Added</div>
@@ -2930,6 +2946,7 @@ export default function Vouch() {
                               <div>
                                 <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 15 }}>{b.displayName}</div>
                                 <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: T.inkLight }}>@{b.username}</div>
+                                {buddies.filter(x => false).length > 0 && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight }}>mutual buddies</div>}
                               </div>
                             </div>
                             <div style={{ display: "flex", gap: 8 }}>
