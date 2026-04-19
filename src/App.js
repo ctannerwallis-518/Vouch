@@ -1603,7 +1603,7 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue,
           <div style={{ display: "flex", marginTop: 4, gap: 0 }}>
             {(() => {
               const isAgreed = myReactions?.find(r => String(r.item_id) === String(item.item_id) && r.item_owner_id === item.user_id);
-              return onDudeSame && item.user_id && item.user_id !== userId && <button onClick={e => { e.stopPropagation(); DudeSame({ ...item, id: item.item_id, _cat: item.category }, item.user_id); }} style={{ flex: 1, background: isAgreed ? T.ink : "transparent", border: `1px solid ${T.paperDark}`, color: isAgreed ? T.bg : T.inkMid, cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 2px", fontWeight: 700 }}>{isAgreed ? "✓ Agreed" : "Agree"}</button>;
+              return onDudeSame && item.user_id && item.user_id !== userId && <button onClick={e => { e.stopPropagation(); onDudeSame({ ...item, id: item.item_id, _cat: item.category }, item.user_id); }} style={{ flex: 1, background: isAgreed ? T.ink : "transparent", border: `1px solid ${T.paperDark}`, color: isAgreed ? T.bg : T.inkMid, cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 2px", fontWeight: 700 }}>{isAgreed ? "✓ Agreed" : "Agree"}</button>;
             })()}
             {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue(item); }} style={{ flex: 1, background: queue?.find(q => String(q.id) === String(item.item_id)) ? T.ink : "transparent", border: `1px solid ${T.paperDark}`, borderLeft: "none", color: queue?.find(q => String(q.id) === String(item.item_id)) ? T.bg : T.inkMid, cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 2px", fontWeight: 700 }}>{queue?.find(q => String(q.id) === String(item.item_id)) ? "✓ Queue" : "+ Queue"}</button>}
           </div>
@@ -2862,7 +2862,7 @@ export default function Vouch() {
                   <GroupVouchSlideshow items={groupVouchItems} isMobile={window.innerWidth <= 640} onAddToQueue={addToQueue} queue={queue} onDudeSame={dudeSame} />
                 )}
 
-                <BuddiesBin allBuddyBoards={allBuddyBoards} buddies={buddies} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId, true); window.scrollTo(0,0); }} onAddToQueue={addToQueue} queue={queue} onDudeSame={dudeSame} />
+                <BuddiesBin allBuddyBoards={allBuddyBoards} buddies={buddies} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId, true); window.scrollTo(0,0); }} onAddToQueue={addToQueue} queue={queue} onDudeSame={dudeSame} myReactions={myReactions} userId={userId} />
                 {/* PENDING REQUESTS */}
                 {pendingIn.length > 0 && <>
                   <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 12 }}>Pending Requests</div>
