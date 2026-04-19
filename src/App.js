@@ -622,7 +622,7 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
                   <span className="comment-label">Why are you vouching for this? <span style={{ fontStyle: "italic", fontFamily: "'Spectral',serif", textTransform: "none", letterSpacing: 0, fontWeight: 300 }}>(optional)</span></span>
                   <textarea className="comment-area" placeholder="Say something about it…" value={note} onChange={e => setNote(e.target.value)} maxLength={200} />
                   <div className="char-count">{note.length} / 200</div>
-                  <button className="btn btn-solid" style={{ width: "100%" }} onClick={confirm}>Vouch for This</button>
+                  <button className="btn btn-solid" style={{ width: "100%" }} onClick={confirm}>Add to Shelf</button>
                 </>
               : <>
                   <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9.5px", letterSpacing: "0.16em", color: T.inkFaint, marginBottom: 12 }}>
@@ -737,7 +737,7 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
                   <span className="comment-label">Why are you vouching for this? <span style={{ fontStyle: "italic", fontFamily: "'Spectral',serif", textTransform: "none", letterSpacing: 0, fontWeight: 300 }}>(optional)</span></span>
                   <textarea className="comment-area" placeholder="Say something about it…" value={note} onChange={e => setNote(e.target.value)} maxLength={200} />
                   <div className="char-count">{note.length} / 200</div>
-                  <button className="btn btn-solid" style={{ width: "100%" }} onClick={confirm}>Vouch for This</button>
+                  <button className="btn btn-solid" style={{ width: "100%" }} onClick={confirm}>Add to Shelf</button>
                 </>
               : <>
                   <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9.5px", letterSpacing: "0.16em", color: T.inkFaint, marginBottom: 12 }}>
@@ -1275,7 +1275,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
 
           {/* Category */}
           <div style={{ marginBottom: 16 }}>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 6 }}><div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid }}>Title</div><div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: T.inkFaint }}>— up to 5 tiles</div></div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 6 }}><div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid }}>Tile</div><div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: T.inkFaint }}>— up to 5 tiles</div></div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {themes.map(t => (
                 <button key={t} onClick={() => setTheme(t)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "4px 10px", border: `1px solid ${theme === t ? T.ink : T.paperDark}`, background: theme === t ? T.ink : "transparent", color: theme === t ? T.bg : T.inkMid, cursor: "pointer" }}>{t === "Other" ? "Other — Create Your Own" : t}</button>
@@ -1288,7 +1288,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
 
           {/* Current items + Add */}
           <div style={{ marginBottom: 16 }}>
-            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 8 }}>Titles ({items.length}/5)</div>
+            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 8 }}>Tiles ({items.length}/5)</div>
             {items.length > 0 && (
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
                 {items.map((item, i) => (
@@ -1327,7 +1327,8 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
                   <button className="btn btn-ghost" style={{ marginTop: 8, width: "100%" }} onClick={() => { setAddingItem(false); setQ(""); setResults([]); }}>Cancel</button>
                 </div>
               ) : (
-                <button onClick={() => setAddingItem(true)} style={{ width: "100%", padding: "12px", background: T.ink, border: `1px solid ${T.paperDark}`, color: T.bg, fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", cursor: "pointer" }}>+ Add Title</button>
+                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginBottom: 8 }}>First tile is your cover — it shows when sharing.</div>
+                <button onClick={() => setAddingItem(true)} style={{ width: "100%", padding: "12px", background: T.ink, border: `1px solid ${T.paperDark}`, color: T.bg, fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", cursor: "pointer" }}>+ Add Tile</button>
               )
             )}
           </div>
@@ -1605,7 +1606,7 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue,
             })}
           </div>
           <div style={{ display: "flex", marginTop: 4, gap: 0 }}>
-            {onDudeSame && <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ flex: 1, background: "transparent", border: `1px solid ${T.paperDark}`, color: T.inkMid, cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 2px", fontWeight: 700 }}>Agree</button>}
+            {onDudeSame && item.owners?.length > 0 && <button onClick={e => { e.stopPropagation(); onDudeSame({ ...item, id: item.item_id }, item.owners[0].userId); }} style={{ flex: 1, background: "transparent", border: `1px solid ${T.paperDark}`, color: T.inkMid, cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 2px", fontWeight: 700 }}>Agree</button>}
             {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue(item); }} style={{ flex: 1, background: queue?.find(q => String(q.id) === String(item.item_id)) ? T.ink : "transparent", border: `1px solid ${T.paperDark}`, borderLeft: "none", color: queue?.find(q => String(q.id) === String(item.item_id)) ? T.bg : T.inkMid, cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 2px", fontWeight: 700 }}>{queue?.find(q => String(q.id) === String(item.item_id)) ? "✓ Queue" : "+ Queue"}</button>}
           </div>
         </div>
@@ -2618,6 +2619,19 @@ export default function Vouch() {
     const itemId = String(item.item_id || item.id);
     setQueue(prev => {
       const exists = prev.find(q => String(q.id) === itemId);
+      if (!exists) {
+        // Notify item owner if it belongs to someone else
+        const ownerId = item.user_id || item.item_owner_id || null;
+        if (ownerId && ownerId !== userId) {
+          supabase.from("queue_notifications").upsert({
+            from_user_id: userId,
+            to_user_id: ownerId,
+            item_id: itemId,
+            item_title: item.title,
+            created_at: new Date().toISOString(),
+          }, { onConflict: "from_user_id,to_user_id,item_id" }).catch(() => {});
+        }
+      }
       const newQ = exists
         ? prev.filter(q => String(q.id) !== itemId)
         : [...prev, { id: itemId, title: item.title, poster: item.poster || null, sub: item.sub || item.subtitle || "", sourceUrl: item.sourceUrl || item.source_url || null, category: item._cat || item.category || item.catKey || "" }];
@@ -2811,7 +2825,7 @@ export default function Vouch() {
               <div style={{ marginBottom: 40 }}>
                 <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 8 }}>My Shelf Categories</div>
                 <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 20, lineHeight: 1.6 }}>
-                  Choose which categories appear on your shelf. Drag to reorder.
+                  Choose which categories appear on your shelf.
                 </div>
                 <CategoryPicker selected={userCategories || CATEGORIES.map(c => c.key)} all={CATEGORIES} onSave={saveCategories} />
               </div>
