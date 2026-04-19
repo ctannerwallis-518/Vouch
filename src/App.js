@@ -1897,6 +1897,7 @@ export default function Vouch() {
     return () => window.removeEventListener("popstate", handlePop);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [sentRequests,   setSentRequests]   = useState([]);
+  const [acceptedBuddies, setAcceptedBuddies] = useState([]);
   const [userCategories, setUserCategories] = useState(null);
   const [onboarding,     setOnboarding]     = useState(false);
   const [activeBoard,    setActiveBoard]    = useState(null);
@@ -2905,6 +2906,40 @@ export default function Vouch() {
                     <button className="btn btn-solid" style={{ flex: 1, padding: "10px" }} onClick={() => setBuddyModal(true)}>+ Find Buddies</button>
                   </div>
                 </div>
+                {/* PENDING REQUESTS - top of page */}
+                {pendingIn.length > 0 && (
+                  <div style={{ marginBottom: 24, border: `2px solid ${T.ink}`, padding: "16px 18px" }}>
+                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: T.ink, marginBottom: 14, fontWeight: 700 }}>
+                      {pendingIn.length} Buddy Request{pendingIn.length !== 1 ? "s" : ""}
+                    </div>
+                    {pendingIn.map(b => (
+                      acceptedBuddies.includes(b.buddyRowId)
+                        ? <div key={b.buddyRowId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                              <Avatar name={b.displayName} size={40} avatarUrl={b.avatarUrl} />
+                              <div>
+                                <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 15 }}>{b.displayName}</div>
+                                <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: T.inkLight }}>@{b.username}</div>
+                              </div>
+                            </div>
+                            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: "#4a7c59", fontWeight: 700 }}>✓ Added</div>
+                          </div>
+                        : <div key={b.buddyRowId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                              <Avatar name={b.displayName} size={40} avatarUrl={b.avatarUrl} />
+                              <div>
+                                <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 15 }}>{b.displayName}</div>
+                                <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: T.inkLight }}>@{b.username}</div>
+                              </div>
+                            </div>
+                            <div style={{ display: "flex", gap: 8 }}>
+                              <button className="btn btn-solid" style={{ padding: "5px 14px" }} onClick={() => { acceptBuddy(b.buddyRowId); setAcceptedBuddies(prev => [...prev, b.buddyRowId]); }}>Accept</button>
+                              <button className="btn btn-ghost" style={{ padding: "5px 14px" }} onClick={() => removeBuddy(b.buddyRowId)}>Decline</button>
+                            </div>
+                          </div>
+                    ))}
+                  </div>
+                )}
 
 
                 {/* GROUP VOUCH - top of page */}
@@ -2913,23 +2948,7 @@ export default function Vouch() {
                 )}
 
                 <BuddiesBin allBuddyBoards={allBuddyBoards} buddies={buddies} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId, true); window.scrollTo(0,0); }} onAddToQueue={addToQueue} queue={queue} onDudeSame={dudeSame} myReactions={myReactions} userId={userId} />
-                {/* PENDING REQUESTS */}
-                {pendingIn.length > 0 && <>
-                  <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 12 }}>Pending Requests</div>
-                  {pendingIn.map(b => (
-                    <div key={b.buddyRowId} className="friend-row">
-                      <div>
-                        <div className="friend-name" style={{ fontSize: 18 }}>{b.displayName}</div>
-                        <div className="friend-handle">@{b.username}</div>
-                      </div>
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <button className="btn btn-solid" style={{ padding: "5px 14px" }} onClick={() => acceptBuddy(b.buddyRowId)}>Accept</button>
-                        <button className="btn btn-ghost" style={{ padding: "5px 14px" }} onClick={() => removeBuddy(b.buddyRowId)}>Decline</button>
-                      </div>
-                    </div>
-                  ))}
-                  <div style={{ borderBottom: `1px solid ${T.paperDark}`, margin: "20px 0" }} />
-                </>}
+
 
 
 
