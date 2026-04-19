@@ -1566,7 +1566,7 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue,
       seen.add(key);
       if (!built[row.category]) return;
       const buddy = buddies.find(b => b.userId === row.user_id);
-      built[row.category].push({ item_id: row.item_id, title: row.title, poster: row.poster, subtitle: row.subtitle || "", source_url: row.source_url, owners: buddy ? [buddy] : [] });
+      built[row.category].push({ item_id: row.item_id, title: row.title, poster: row.poster, subtitle: row.subtitle || "", source_url: row.source_url, user_id: row.user_id, owners: buddy ? [buddy] : [] });
     });
     Object.keys(built).forEach(key => {
       const arr = built[key];
@@ -1601,7 +1601,7 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue,
             })}
           </div>
           <div style={{ display: "flex", marginTop: 4, gap: 0 }}>
-            {onDudeSame && item.owners?.length > 0 && <button onClick={e => { e.stopPropagation(); onDudeSame({ ...item, id: item.item_id }, item.owners[0].userId); }} style={{ flex: 1, background: "transparent", border: `1px solid ${T.paperDark}`, color: T.inkMid, cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 2px", fontWeight: 700 }}>Agree</button>}
+            {onDudeSame && item.user_id && <button onClick={e => { e.stopPropagation(); onDudeSame({ ...item, id: item.item_id }, item.user_id); }} style={{ flex: 1, background: "transparent", border: `1px solid ${T.paperDark}`, color: T.inkMid, cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 2px", fontWeight: 700 }}>Agree</button>}
             {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue(item); }} style={{ flex: 1, background: queue?.find(q => String(q.id) === String(item.item_id)) ? T.ink : "transparent", border: `1px solid ${T.paperDark}`, borderLeft: "none", color: queue?.find(q => String(q.id) === String(item.item_id)) ? T.bg : T.inkMid, cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 2px", fontWeight: 700 }}>{queue?.find(q => String(q.id) === String(item.item_id)) ? "✓ Queue" : "+ Queue"}</button>}
           </div>
         </div>
