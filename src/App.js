@@ -1674,6 +1674,13 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeS
           .in("user_id", buddyIds)
           .order("created_at", { ascending: false })
           .limit(30);
+        // Shelf additions from buddies
+        const { data: shelfAdds } = await supabase
+          .from("endorsements")
+          .select("*")
+          .in("user_id", buddyIds)
+          .order("created_at", { ascending: false })
+          .limit(30);
         // Fetch owner profiles separately
         const ownerIds = [...new Set((reactions || []).map(r => r.item_owner_id).filter(Boolean))];
         const ownerProfiles = {};
@@ -1692,6 +1699,11 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeS
         (reactions || []).forEach(r => {
           const buddy = allPeople.find(x => x.userId === r.user_id);
           items.push({ type: "agree", date: new Date(r.created_at), reaction: r, buddy });
+        });
+        (shelfAdds || []).forEach(s => {
+          if (!s.created_at) return;
+          const buddy = allPeople.find(x => x.userId === s.user_id);
+          items.push({ type: "shelf", date: new Date(s.created_at), shelf: s, buddy });
         });
         items.sort((a, b) => b.date - a.date);
         setFeed(items.slice(0, 40));
@@ -1739,6 +1751,30 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeS
                   });
                   const isSelfBoard = b.user_id === selfId; return <VouchSection board={vbBoard} isOwn={isSelfBoard} onCard={()=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={onDudeSame || (()=>{})} myReactions={(myReactions || []).filter(r => r.item_owner_id === b.user_id).map(r => r.item_id)} hideHeader={true} hideEmptySlots={true} onAddToQueue={isSelfBoard ? null : (onAddToQueue || null)} queue={queue} ownerId={b.user_id} />;
                 })()}
+              </div>
+            </div>
+          );
+        }
+        if (item.type === "shelf") {
+          const s = item.shelf;
+          const buddy = item.buddy;
+          if (!s.poster && !s.title) return null;
+          return (
+            <div key={i} style={{ borderBottom: "1px solid #b3ada0", paddingBottom: 16, marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                <div onClick={() => buddy && onViewBuddy(buddy)} style={{ cursor: "pointer", flexShrink: 0 }}>
+                  <Avatar name={buddy?.displayName || "?"} size={28} avatarUrl={buddy?.avatarUrl} />
+                </div>
+                <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "#3a3830" }}>
+                  <span onClick={() => buddy && onViewBuddy(buddy)} style={{ fontWeight: 600, cursor: "pointer" }}>{buddy?.displayName}</span>
+                  <span style={{ fontStyle: "italic", color: "#7a7568" }}> added to their shelf</span>
+                  <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: "#a09890", marginLeft: 8 }}>{item.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                </div>
+              </div>
+              <div style={{ width: "100%", maxWidth: 200, cursor: s.source_url ? "pointer" : "default" }} onClick={() => s.source_url && window.open(s.source_url, "_blank")}>
+                {s.poster && <img src={s.poster} alt={s.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: "1px solid #b3ada0", display: "block" }} onError={e => e.target.style.display = "none"} />}
+                <div style={{ fontFamily: "'Spectral',serif", fontSize: "13px", fontWeight: 600, color: "#111008", marginTop: 6 }}>{s.title}</div>
+                {s.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{s.subtitle}</div>}
               </div>
             </div>
           );
@@ -2793,8 +2829,8 @@ export default function Vouch() {
                           {b.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkMid, marginTop: 4 }}>{b.description}</div>}
                         </div>
                         {!b.is_active && (
-                          <button className="btn btn-solid" style={{ padding: "6px 14px", flexShrink: 0, opacity: canPublish ? 1 : 0.35, cursor: canPublish ? "pointer" : "not-allowed" }} onClick={() => canPublish && republishBoard(b)}>
-                            {canPublish ? "Republish" : "Locked · " + nextPublishDate}
+                          <button className="btn btn-solid" style={{ padding: "6px 14px", flexShrink: 0, opacity: canPublish ? 1 : 0.4, cursor: canPublish ? "pointer" : "not-allowed", background: canPublish ? undefined : "transparent", color: canPublish ? undefined : T.inkFaint, border: canPublish ? undefined : `1px solid ${T.paperDark}` }} onClick={() => canPublish && republishBoard(b)}>
+                            Republish
                           </button>
                         )}
                       </div>
@@ -2936,7 +2972,10 @@ export default function Vouch() {
 
                 {isOwn && (canPublish
                   ? <button onClick={() => { setEditingBoard(null); setBoardEditor(true); }} style={{ width: "100%", fontFamily: "'Spectral SC',serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.2em", padding: "14px", background: T.ink, color: T.bg, border: "none", cursor: "pointer", marginBottom: 16 }}>Publish a New Vouch Board</button>
-                  : <div style={{ width: "100%", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", padding: "14px", background: "rgba(17,16,8,0.08)", color: T.inkFaint, textAlign: "center", marginBottom: 16, border: `1px solid ${T.paperDark}` }}>Next Vouch available {nextPublishDate}</div>
+                  : <div style={{ width: "100%", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", padding: "14px", background: "rgba(17,16,8,0.15)", color: T.inkMid, textAlign: "center", marginBottom: 16, border: `2px solid ${T.ink}`, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+                      <span style={{ fontSize: 16 }}>🔒</span>
+                      <span>Next Vouch available {nextPublishDate}</span>
+                    </div>
                 )}
 
                 {isOwn ? (
