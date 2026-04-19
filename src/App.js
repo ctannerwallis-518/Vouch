@@ -1019,7 +1019,7 @@ function BuddyModal({ userId, onClose, onSendRequest, onGenerateLink, inviteLink
           .select("requester_id, receiver_id")
           .or(`requester_id.eq.${userId},receiver_id.eq.${userId}`)
           .eq("status", "accepted");
-        const myBuddyIds = (myBuddyRows || []).map(b => b.requester_id === userId ? b.receiver_id : b.requester_id);
+        const myBuddyIds = (myBuddyRows || []).map(b => b.requester_id === userId ? b.receiver_id : b.requester_id); // eslint-disable-line no-unused-vars
         const withMutual = data.map(u => {
           // We'd need their buddy list to count mutuals - approximate with shared ids
           return { ...u, mutual_count: 0 };
