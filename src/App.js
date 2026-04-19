@@ -892,9 +892,9 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
           )}
         </div>
       ) : (
-        <div style={{ display: "flex", gap: 12 }}>
+        <div style={{ display: "flex", gap: 12, maxWidth: hideEmptySlots ? allItems.length * 312 : undefined }}>
           {allItems.map((it, i) => (
-            <div key={it.id + it._cat} className="card-large" style={{ position: "relative", flex: hideEmptySlots ? "0 0 auto" : "1", width: hideEmptySlots ? Math.floor(100/Math.max(allItems.length,1)) + "%" : undefined, maxWidth: hideEmptySlots ? 300 : undefined }}>
+            <div key={it.id + it._cat} className="card-large" style={{ position: "relative", flex: "1" }}>
               <CardFace it={it} />
             </div>
           ))}
