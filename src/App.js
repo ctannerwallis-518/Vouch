@@ -1846,13 +1846,6 @@ export default function Vouch() {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "instant" });
 
-  useEffect(() => {
-    const count = newAgreements.length + pendingIn.length;
-    if (navigator.setAppBadge) {
-      if (count > 0) navigator.setAppBadge(count);
-      else navigator.clearAppBadge();
-    }
-  }, [newAgreements.length, pendingIn.length]);
 
   // Save and restore scroll position when leaving/returning to page
   useEffect(() => {
@@ -2696,6 +2689,15 @@ export default function Vouch() {
   };
 
   const vouchedCount = Object.values(board).flat().filter(item => item.vouched).length;
+
+  // PWA badge
+  useEffect(() => {
+    const count = (newAgreements || []).length + (pendingIn || []).length;
+    if (navigator.setAppBadge) {
+      if (count > 0) navigator.setAppBadge(count);
+      else navigator.clearAppBadge();
+    }
+  }, [newAgreements.length, pendingIn.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const canPublish = (() => {
     if (!activeBoard || !activeBoard.published_at) return true;
