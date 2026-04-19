@@ -1846,6 +1846,14 @@ export default function Vouch() {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "instant" });
 
+  useEffect(() => {
+    const count = newAgreements.length + pendingIn.length;
+    if (navigator.setAppBadge) {
+      if (count > 0) navigator.setAppBadge(count);
+      else navigator.clearAppBadge();
+    }
+  }, [newAgreements.length, pendingIn.length]);
+
   // Save and restore scroll position when leaving/returning to page
   useEffect(() => {
     const saveState = () => {
