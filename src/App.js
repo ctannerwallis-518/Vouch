@@ -1540,7 +1540,7 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame 
   );
 }
 
-function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue, onDudeSame, myReactions }) {
+function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue, onDudeSame, myReactions, userId }) {
   const [modalCat, setModalCat] = useState(null);
   const isMobile = window.innerWidth <= 640;
 
@@ -1602,8 +1602,8 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue,
           </div>
           <div style={{ display: "flex", marginTop: 4, gap: 0 }}>
             {(() => {
-              const isAgreed = myReactions?.find(r => r.item_id === String(item.item_id) && r.item_owner_id === item.user_id);
-              return onDudeSame && item.user_id && <button onClick={e => { e.stopPropagation(); onDudeSame({ ...item, id: item.item_id }, item.user_id); }} style={{ flex: 1, background: isAgreed ? T.ink : "transparent", border: `1px solid ${T.paperDark}`, color: isAgreed ? T.bg : T.inkMid, cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 2px", fontWeight: 700 }}>{isAgreed ? "✓ Agreed" : "Agree"}</button>;
+              const isAgreed = myReactions?.find(r => String(r.item_id) === String(item.item_id) && r.item_owner_id === item.user_id);
+              return onDudeSame && item.user_id && item.user_id !== userId && <button onClick={e => { e.stopPropagation(); DudeSame({ ...item, id: item.item_id, _cat: item.category }, item.user_id); }} style={{ flex: 1, background: isAgreed ? T.ink : "transparent", border: `1px solid ${T.paperDark}`, color: isAgreed ? T.bg : T.inkMid, cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 2px", fontWeight: 700 }}>{isAgreed ? "✓ Agreed" : "Agree"}</button>;
             })()}
             {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue(item); }} style={{ flex: 1, background: queue?.find(q => String(q.id) === String(item.item_id)) ? T.ink : "transparent", border: `1px solid ${T.paperDark}`, borderLeft: "none", color: queue?.find(q => String(q.id) === String(item.item_id)) ? T.bg : T.inkMid, cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 2px", fontWeight: 700 }}>{queue?.find(q => String(q.id) === String(item.item_id)) ? "✓ Queue" : "+ Queue"}</button>}
           </div>
