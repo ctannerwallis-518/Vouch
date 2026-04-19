@@ -1327,8 +1327,10 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
                   <button className="btn btn-ghost" style={{ marginTop: 8, width: "100%" }} onClick={() => { setAddingItem(false); setQ(""); setResults([]); }}>Cancel</button>
                 </div>
               ) : (
-                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginBottom: 8 }}>First tile is your cover — it shows when sharing.</div>
-                <button onClick={() => setAddingItem(true)} style={{ width: "100%", padding: "12px", background: T.ink, border: `1px solid ${T.paperDark}`, color: T.bg, fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", cursor: "pointer" }}>+ Add Tile</button>
+                <div>
+                  <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginBottom: 8 }}>First tile is your cover — it shows when sharing.</div>
+                  <button onClick={() => setAddingItem(true)} style={{ width: "100%", padding: "12px", background: T.ink, border: `1px solid ${T.paperDark}`, color: T.bg, fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpa: "0.18em", cursor: "pointer" }}>+ Add Tile</button>
+                </div>
               )
             )}
           </div>
