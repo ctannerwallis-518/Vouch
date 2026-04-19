@@ -152,8 +152,8 @@ const Styles = () => (
     .card-title   { font-family: 'Spectral', serif; font-weight: 600; font-size: 12.5px; line-height: 1.35; margin-top: 7px; }
     .card-sub     { font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.06em; color: ${T.inkLight}; margin-top: 2px; }
     .card-comment { font-family: 'Spectral', serif; font-style: italic; font-size: 10.5px; line-height: 1.5; color: ${T.inkMid}; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .slot-empty-sm { width: 180px; height: 248px; border: 1px dashed ${T.paperDark}; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.14s, background 0.14s; flex-shrink: 0; }
-    .slot-empty-sm:hover { border-color: ${T.ink}; background: rgba(17,16,8,0.03); }
+    .slot-empty-sm { width: 180px; height: 248px; border: 2px dashed ${T.inkLight}; background: rgba(17,16,8,0.06); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.14s, background 0.14s; flex-shrink: 0; }
+    .slot-empty-sm:hover { border-color: ${T.ink}; background: rgba(17,16,8,0.12); }
 
     .lb-overlay { position: fixed; inset: 0; background: rgba(17,16,8,0.96); z-index: 1000; display: flex; align-items: center; justify-content: center; }
     .lb-close { position: fixed; top: 22px; right: 26px; background: transparent; border: none; color: ${T.bg}; font-family: 'Spectral', serif; font-size: 30px; line-height: 1; cursor: pointer; opacity: 0.6; transition: opacity 0.14s; }
@@ -225,7 +225,7 @@ const Styles = () => (
       .card-poster { width: 95px; height: 130px; flex-shrink: 0; }
       .card-poster-placeholder { width: 95px; height: 130px; flex-shrink: 0; font-size: 9px; }
       .card:hover .card-poster { transform: none; box-shadow: none; }
-      .slot-empty-sm { width: 95px; height: 130px; flex-shrink: 0; }
+      .slot-empty-sm { width: 95px; height: 130px; flex-shrink: 0; border: 2px dashed rgba(17,16,8,0.3); background: rgba(17,16,8,0.06); }
       .page { padding: 0 16px 60px; }
       .masthead-meta { padding: 7px 16px; }
       .vouch-section { padding: 16px 14px 20px; }
@@ -921,8 +921,7 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
         <div className="cat-sublabel">My Shelf</div>
         <div className="cat-count">{items.length > 0 ? items.length : ""}</div>
         {isMobile && <span style={{ marginLeft: "auto", fontFamily: "'Spectral SC',serif", fontSize: "11px", color: T.inkFaint, paddingLeft: 8 }}>{open ? "▴" : "▾"}</span>}
-        {isOwn && !isMobile && <button className="cat-add" onClick={() => onAdd(catKey)}>+ Add</button>}
-        {isOwn && isMobile && open && <button className="cat-add" style={{ marginLeft: 8 }} onClick={e => { e.stopPropagation(); onAdd(catKey); }}>+ Add</button>}
+
       </div>
       {!collapsed && (
         <div className="cards-row">
@@ -945,7 +944,7 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
                   </div>
                 </div>
               : isOwn
-                ? <div key={`e${idx}`} className="slot-empty-sm" onClick={() => onAdd(catKey)}>
+                ? <div key={`e${idx}`} className="slot-empty-sm" onClick={() => items.length < 5 && onAdd(catKey)} style={{ cursor: items.length >= 5 ? 'not-allowed' : 'pointer', opacity: items.length >= 5 ? 0.4 : 1 }}>
                     <div className="slot-empty-inner"><span className="slot-empty-plus">+</span>Vouch</div>
                   </div>
                 : null
@@ -2630,7 +2629,7 @@ export default function Vouch() {
     const item = board[catKey]?.[idx];
     if (!item) return;
 
-    // Optimistically update UI immediately
+    // Optimistically update UI immediately - always fully remove from display
     if (fromVouch5) {
       setBoard(prev => ({
         ...prev,
