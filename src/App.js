@@ -1540,7 +1540,7 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame 
   );
 }
 
-function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue, onDudeSame }) {
+function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue, onDudeSame, myReactions }) {
   const [modalCat, setModalCat] = useState(null);
   const isMobile = window.innerWidth <= 640;
 
