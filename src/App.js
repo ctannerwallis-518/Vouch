@@ -892,24 +892,17 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
           )}
         </div>
       ) : (
-        <div className="cards-row-large">
-          {Array(5).fill(null).map((_, i) => {
-            const it = allItems[i] || null;
-            if (!it && !isOwn && hideEmptySlots) return null;
-            return it ? (
-              <div key={it.id + it._cat} className="card-large" style={{ position: "relative" }}>
-                <CardFace it={it} />
-              </div>
-            ) : isOwn ? (
-              <div key={`ve${i}`} className="slot-empty-large" onClick={onAdd}>
-                <div className="slot-empty-inner"><span className="slot-empty-plus">+</span>Vouch</div>
-              </div>
-            ) : (
-              <div key={`ve${i}`} className="slot-empty-large" style={{ cursor: "default", opacity: 0.35 }}>
-                <div className="slot-empty-inner"><span className="slot-empty-plus">—</span></div>
-              </div>
-            );
-          })}
+        <div style={{ display: "flex", gap: 12 }}>
+          {allItems.map((it, i) => (
+            <div key={it.id + it._cat} className="card-large" style={{ position: "relative", flex: allItems.length === 1 ? "0 0 320px" : "1", maxWidth: allItems.length === 1 ? 320 : undefined }}>
+              <CardFace it={it} />
+            </div>
+          ))}
+          {isOwn && Array(Math.max(0, 5 - allItems.length)).fill(null).map((_, i) => (
+            <div key={`ve${i}`} className="slot-empty-large" onClick={onAdd}>
+              <div className="slot-empty-inner"><span className="slot-empty-plus">+</span>Vouch</div>
+            </div>
+          ))}
         </div>
       )}
     </div>
