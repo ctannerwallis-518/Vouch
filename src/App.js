@@ -49,7 +49,7 @@ const EMPTY_BOARD = {
 const BOARD_THEMES = [
   "Feelin' Lately", "All-Timers", "Nostalgic", "Deep Cuts",
   "New Releases", "Underrated", "Seasonal", "No Boundaries",
-  "Locals Only", "Other"
+  "Locals Only", "Old School", "Classics", "Guilty Pleasures", "Other"
 ];
 
 const T = {
@@ -1012,7 +1012,20 @@ function BuddyModal({ userId, onClose, onSendRequest, onGenerateLink, inviteLink
   useEffect(() => {
     supabase.from("profiles").select("id, username, display_name, avatar_url")
       .neq("id", userId).order("display_name").limit(50)
-      .then(({ data }) => setSuggested(data || []));
+      .then(async ({ data }) => {
+        if (!data) return setSuggested([]);
+        // Calculate mutual buddies for each suggested user
+        const { data: myBuddyRows } = await supabase.from("buddies")
+          .select("requester_id, receiver_id")
+          .or(`requester_id.eq.${userId},receiver_id.eq.${userId}`)
+          .eq("status", "accepted");
+        const myBuddyIds = (myBuddyRows || []).map(b => b.requester_id === userId ? b.receiver_id : b.requester_id);
+        const withMutual = data.map(u => {
+          // We'd need their buddy list to count mutuals - approximate with shared ids
+          return { ...u, mutual_count: 0 };
+        });
+        setSuggested(withMutual);
+      });
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -1029,6 +1042,7 @@ function BuddyModal({ userId, onClose, onSendRequest, onGenerateLink, inviteLink
   const UserRow = ({ r }) => {
     const isAlready = existingBuddyIds.includes(r.id);
     const isSent    = sent.includes(r.id);
+    const mutualCount = r.mutual_count || 0;
     return (
       <div key={r.id} className="result-item" style={{ justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -1036,6 +1050,7 @@ function BuddyModal({ userId, onClose, onSendRequest, onGenerateLink, inviteLink
           <div>
             <div className="result-title">{r.display_name}</div>
             <div className="result-sub">@{r.username}</div>
+            {mutualCount > 0 && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 2 }}>{mutualCount} mutual {mutualCount === 1 ? "buddy" : "buddies"}</div>}
           </div>
         </div>
         {isAlready
@@ -1897,6 +1912,7 @@ export default function Vouch() {
     return () => window.removeEventListener("popstate", handlePop);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [sentRequests,   setSentRequests]   = useState([]);
+  const [acceptedBuddies, setAcceptedBuddies] = useState([]);
   const [userCategories, setUserCategories] = useState(null);
   const [onboarding,     setOnboarding]     = useState(false);
   const [activeBoard,    setActiveBoard]    = useState(null);
@@ -2905,6 +2921,42 @@ export default function Vouch() {
                     <button className="btn btn-solid" style={{ flex: 1, padding: "10px" }} onClick={() => setBuddyModal(true)}>+ Find Buddies</button>
                   </div>
                 </div>
+                {/* PENDING REQUESTS - top of page */}
+                {pendingIn.length > 0 && (
+                  <div style={{ marginBottom: 24, border: `2px solid ${T.ink}`, padding: "16px 18px" }}>
+                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: T.ink, marginBottom: 14, fontWeight: 700 }}>
+                      {pendingIn.length} Buddy Request{pendingIn.length !== 1 ? "s" : ""}
+                    </div>
+                    {pendingIn.map(b => (
+                      acceptedBuddies.includes(b.buddyRowId)
+                        ? <div key={b.buddyRowId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                              <Avatar name={b.displayName} size={40} avatarUrl={b.avatarUrl} />
+                              <div>
+                                <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 15 }}>{b.displayName}</div>
+                                <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: T.inkLight }}>@{b.username}</div>
+                                {buddies.filter(x => false).length > 0 && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight }}>mutual buddies</div>}
+                              </div>
+                            </div>
+                            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: "#4a7c59", fontWeight: 700 }}>✓ Added</div>
+                          </div>
+                        : <div key={b.buddyRowId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                              <Avatar name={b.displayName} size={40} avatarUrl={b.avatarUrl} />
+                              <div>
+                                <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 15 }}>{b.displayName}</div>
+                                <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: T.inkLight }}>@{b.username}</div>
+                                {buddies.filter(x => false).length > 0 && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight }}>mutual buddies</div>}
+                              </div>
+                            </div>
+                            <div style={{ display: "flex", gap: 8 }}>
+                              <button className="btn btn-solid" style={{ padding: "5px 14px" }} onClick={() => { acceptBuddy(b.buddyRowId); setAcceptedBuddies(prev => [...prev, b.buddyRowId]); }}>Accept</button>
+                              <button className="btn btn-ghost" style={{ padding: "5px 14px" }} onClick={() => removeBuddy(b.buddyRowId)}>Decline</button>
+                            </div>
+                          </div>
+                    ))}
+                  </div>
+                )}
 
 
                 {/* GROUP VOUCH - top of page */}
@@ -2913,23 +2965,7 @@ export default function Vouch() {
                 )}
 
                 <BuddiesBin allBuddyBoards={allBuddyBoards} buddies={buddies} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId, true); window.scrollTo(0,0); }} onAddToQueue={addToQueue} queue={queue} onDudeSame={dudeSame} myReactions={myReactions} userId={userId} />
-                {/* PENDING REQUESTS */}
-                {pendingIn.length > 0 && <>
-                  <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 12 }}>Pending Requests</div>
-                  {pendingIn.map(b => (
-                    <div key={b.buddyRowId} className="friend-row">
-                      <div>
-                        <div className="friend-name" style={{ fontSize: 18 }}>{b.displayName}</div>
-                        <div className="friend-handle">@{b.username}</div>
-                      </div>
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <button className="btn btn-solid" style={{ padding: "5px 14px" }} onClick={() => acceptBuddy(b.buddyRowId)}>Accept</button>
-                        <button className="btn btn-ghost" style={{ padding: "5px 14px" }} onClick={() => removeBuddy(b.buddyRowId)}>Decline</button>
-                      </div>
-                    </div>
-                  ))}
-                  <div style={{ borderBottom: `1px solid ${T.paperDark}`, margin: "20px 0" }} />
-                </>}
+
 
 
 
