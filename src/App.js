@@ -2829,7 +2829,7 @@ export default function Vouch() {
                           {b.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkMid, marginTop: 4 }}>{b.description}</div>}
                         </div>
                         {!b.is_active && (
-                          <button className="btn btn-solid" style={{ padding: "6px 14px", flexShrink: 0, opacity: canPublish ? 1 : 0.4, cursor: canPublish ? "pointer" : "not-allowed", background: canPublish ? undefined : "transparent", color: canPublish ? undefined : T.inkFaint, border: canPublish ? undefined : `1px solid ${T.paperDark}` }} onClick={() => canPublish && republishBoard(b)}>
+                          <button className="btn btn-solid" style={{ padding: "6px 14px", flexShrink: 0, opacity: canPublish ? 1 : 0.6, cursor: canPublish ? "pointer" : "not-allowed", background: canPublish ? undefined : "transparent", color: canPublish ? undefined : T.inkMid, border: canPublish ? undefined : `1px solid ${T.paperDark}` }} onClick={() => canPublish && republishBoard(b)}>
                             Republish
                           </button>
                         )}
