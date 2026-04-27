@@ -1973,6 +1973,7 @@ export default function Vouch() {
   const [newAgreements,  setNewAgreements]  = useState([]);
   const [showAgreements, setShowAgreements] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [pastNotifications, setPastNotifications] = useState([]);
   const [viewerReactions,setViewerReactions]= useState([]);
   const [viewActiveBoard,setViewActiveBoard]= useState(null);
   const [suggested, setSuggested] = useState([]); // eslint-disable-line no-unused-vars
@@ -2298,6 +2299,10 @@ export default function Vouch() {
         try {
           const saved = JSON.parse(localStorage.getItem("vouch-queue-" + uid) || "[]");
           setQueue(saved);
+        } catch(e) {}
+        try {
+          const savedNotifs = JSON.parse(localStorage.getItem("vouch-past-notifs-" + uid) || "[]");
+          setPastNotifications(savedNotifs);
         } catch(e) {}
         const params = new URLSearchParams(window.location.search);
         const inviteFrom = params.get("invite");
@@ -3027,7 +3032,9 @@ export default function Vouch() {
                               </div>
                             </div>
                             <div style={{ display: "flex", gap: 8 }}>
-                              <button className="btn btn-solid" style={{ padding: "5px 14px" }} onClick={() => { acceptBuddy(b.buddyRowId); setAcceptedBuddies(prev => [...prev, b.buddyRowId]); }}>Accept</button>
+                              <button className="btn btn-solid" style={{ padding: "5px 14px" }} onClick={() => { acceptBuddy(b.buddyRowId); setAcceptedBuddies(prev => [...prev, b.buddyRowId]);
+                          const buddyNotif = { type: "buddy", display_name: b.displayName, date: new Date().toISOString() };
+                          setPastNotifications(prev => { const updated = [buddyNotif, ...prev].slice(0,50); localStorage.setItem("vouch-past-notifs-" + userId, JSON.stringify(updated)); return updated; }); }}>Accept</button>
                               <button className="btn btn-ghost" style={{ padding: "5px 14px" }} onClick={() => removeBuddy(b.buddyRowId)}>Decline</button>
                             </div>
                           </div>
@@ -3433,7 +3440,9 @@ export default function Vouch() {
                           </div>
                         </div>
                         <div style={{ display: "flex", gap: 6 }}>
-                          <button className="btn btn-solid" style={{ padding: "4px 10px" }} onClick={() => { acceptBuddy(b.buddyRowId); setAcceptedBuddies(prev => [...prev, b.buddyRowId]); }}>Accept</button>
+                          <button className="btn btn-solid" style={{ padding: "4px 10px" }} onClick={() => { acceptBuddy(b.buddyRowId); setAcceptedBuddies(prev => [...prev, b.buddyRowId]);
+                          const buddyNotif = { type: "buddy", display_name: b.displayName, date: new Date().toISOString() };
+                          setPastNotifications(prev => { const updated = [buddyNotif, ...prev].slice(0,50); localStorage.setItem("vouch-past-notifs-" + userId, JSON.stringify(updated)); return updated; }); }}>Accept</button>
                           <button className="btn btn-ghost" style={{ padding: "4px 10px" }} onClick={() => removeBuddy(b.buddyRowId)}>Decline</button>
                         </div>
                       </div>
@@ -3454,7 +3463,29 @@ export default function Vouch() {
                         </div>
                       </div>
                     ))}
-                    <button className="btn btn-ghost" style={{ width: "100%", marginTop: 12 }} onClick={() => { setShowNotifications(false); setNewAgreements([]); }}>Dismiss All</button>
+                    <button className="btn btn-ghost" style={{ width: "100%", marginTop: 12 }} onClick={() => {
+                      const toSave = newAgreements.map(r => ({ type: "agree", display_name: r.display_name, title: r.title, date: new Date().toISOString() }));
+                      const updated = [...toSave, ...pastNotifications].slice(0, 50);
+                      setPastNotifications(updated);
+                      localStorage.setItem("vouch-past-notifs-" + userId, JSON.stringify(updated));
+                      setShowNotifications(false);
+                      setNewAgreements([]);
+                    }}>Dismiss All</button>
+                  </div>
+                )}
+                {pastNotifications.length > 0 && (
+                  <div style={{ marginTop: 24 }}>
+                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkFaint, marginBottom: 10, borderTop: `1px solid ${T.paperDark}`, paddingTop: 16 }}>Previous</div>
+                    {pastNotifications.slice(0, 20).map((n, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: `1px solid ${T.paperDark}` }}>
+                        <div style={{ fontFamily: "'Spectral',serif", fontSize: 12, color: T.inkMid }}>
+                          <strong style={{ color: T.ink }}>{n.display_name}</strong>
+                          {n.type === "agree" && <span style={{ fontStyle: "italic" }}> agreed with <strong style={{ fontStyle: "normal" }}>{n.title}</strong></span>}
+                          {n.type === "buddy" && <span style={{ fontStyle: "italic" }}> added you as a buddy</span>}
+                        </div>
+                      </div>
+                    ))}
+                    <button onClick={() => { setPastNotifications([]); localStorage.removeItem("vouch-past-notifs-" + userId); }} style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.15em", background: "transparent", border: "none", color: T.inkFaint, cursor: "pointer", marginTop: 8, padding: 0 }}>Clear History</button>
                   </div>
                 )}
               </div>
