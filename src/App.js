@@ -852,9 +852,24 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
         )}
       </div>
 
-      {buddyCounts?.[String(it.id)] > 0 && (
-        <div title="Total Buddy Vouches" style={{ position: "absolute", top: 8, left: 8, zIndex: 2, background: "rgba(17,16,8,0.82)", color: "rgba(200,194,180,0.95)", fontFamily: "'Spectral SC',serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "default" }}>{buddyCounts[String(it.id)]} {buddyCounts[String(it.id)] === 1 ? "Vouch" : "Vouches"}</div>
-      )}
+      {buddyCounts?.[String(it.id)] > 0 && (() => {
+        const count = buddyCounts[String(it.id)];
+        const vouchers = allBuddyBoards?.filter(r => String(r.item_id) === String(it.id)).map(r => {
+          const b = buddies?.find(x => x.userId === r.user_id);
+          return b?.displayName || null;
+        }).filter(Boolean);
+        const [showVouchers, setShowVouchers] = React.useState(false);
+        return (
+          <div style={{ position: "absolute", top: 8, left: 8, zIndex: 2 }}>
+            <div onClick={e => { e.stopPropagation(); setShowVouchers(s => !s); }} style={{ background: "rgba(17,16,8,0.82)", color: "rgba(200,194,180,0.95)", fontFamily: "'Spectral SC',serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "pointer" }}>{count} {count === 1 ? "Vouch" : "Vouches"}</div>
+            {showVouchers && vouchers && vouchers.length > 0 && (
+              <div onClick={e => e.stopPropagation()} style={{ position: "absolute", top: "100%", left: 0, marginTop: 4, background: "rgba(17,16,8,0.95)", color: "rgba(200,194,180,0.9)", fontFamily: "'Spectral',serif", fontSize: 12, padding: "8px 12px", minWidth: 140, zIndex: 10 }}>
+                {vouchers.map((n, i) => <div key={i} style={{ padding: "2px 0" }}>{n}</div>)}
+              </div>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 
@@ -1725,7 +1740,26 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeS
           items.push({ type: "shelf", date: new Date(s.created_at), shelf: s, buddy });
         });
         items.sort((a, b) => b.date - a.date);
-        setFeed(items.slice(0, 40));
+        // Group agrees by item_id + item_owner_id
+        const grouped = [];
+        const agreeGroups = {};
+        items.forEach(item => {
+          if (item.type === "agree") {
+            const key = item.reaction.item_id + ":" + item.reaction.item_owner_id;
+            if (!agreeGroups[key]) {
+              agreeGroups[key] = { ...item, buddies: [item.buddy] };
+              grouped.push(agreeGroups[key]);
+            } else {
+              agreeGroups[key].buddies.push(item.buddy);
+              // Keep most recent date
+              if (item.date > agreeGroups[key].date) agreeGroups[key].date = item.date;
+            }
+          } else {
+            grouped.push(item);
+          }
+        });
+        grouped.sort((a, b) => b.date - a.date);
+        setFeed(grouped.slice(0, 40));
       } catch(e) { console.error(e); }
       setLoading(false);
     };
@@ -1800,15 +1834,38 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeS
         }
         if (item.type === "agree") {
           const r = item.reaction;
-          const buddy = item.buddy;
+          const buddies = item.buddies || [item.buddy];
+          const shown = buddies.slice(0, 2).filter(Boolean);
+          const rest = buddies.slice(2).filter(Boolean);
+          const [showOthers, setShowOthers] = React.useState(false);
           return (
             <div key={i} style={{ borderBottom: "1px solid #b3ada0", paddingBottom: 24, marginBottom: 24 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <div onClick={() => buddy && onViewBuddy(buddy)} style={{ cursor: "pointer", flexShrink: 0 }}>
-                  <Avatar name={buddy?.displayName || "?"} size={28} avatarUrl={buddy?.avatarUrl} />
+                <div style={{ display: "flex", gap: -6, flexShrink: 0 }}>
+                  {shown.map((b, j) => (
+                    <div key={j} onClick={() => b && onViewBuddy(b)} style={{ cursor: "pointer", marginLeft: j > 0 ? -8 : 0 }}>
+                      <Avatar name={b?.displayName || "?"} size={28} avatarUrl={b?.avatarUrl} />
+                    </div>
+                  ))}
                 </div>
                 <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "#3a3830", flex: 1 }}>
-                  <span onClick={() => buddy && onViewBuddy(buddy)} style={{ fontWeight: 600, cursor: "pointer" }}>{buddy?.displayName}</span>
+                  {shown.map((b, j) => (
+                    <span key={j}>
+                      {j > 0 && <span style={{ fontStyle: "italic", color: "#7a7568" }}> and </span>}
+                      <span onClick={() => b && onViewBuddy(b)} style={{ fontWeight: 600, cursor: "pointer" }}>{b?.displayName}</span>
+                    </span>
+                  ))}
+                  {rest.length > 0 && (
+                    <span>
+                      <span style={{ fontStyle: "italic", color: "#7a7568" }}> and </span>
+                      <span onClick={() => setShowOthers(s => !s)} style={{ fontWeight: 600, cursor: "pointer", borderBottom: "1px dashed #7a7568" }}>{rest.length} other{rest.length > 1 ? "s" : ""}</span>
+                      {showOthers && (
+                        <span style={{ display: "block", marginTop: 4, background: "#f5f3ef", padding: "6px 10px", fontSize: 12 }}>
+                          {rest.map((b, j) => <span key={j} onClick={() => b && onViewBuddy(b)} style={{ cursor: "pointer", fontWeight: 600, display: "block" }}>{b?.displayName}</span>)}
+                        </span>
+                      )}
+                    </span>
+                  )}
                   <span style={{ fontStyle: "italic", color: "#7a7568" }}> agreed with </span>
                   {r.owner
                     ? <span onClick={() => r.owner && onViewBuddy({ userId: r.owner.id, displayName: r.owner.display_name, username: r.owner.username, avatarUrl: r.owner.avatar_url })} style={{ fontWeight: 600, cursor: "pointer" }}>{r.owner.display_name}</span>
