@@ -2184,6 +2184,16 @@ export default function Vouch() {
             display_name: session.user.user_metadata?.full_name || session.user.email.split("@")[0],
             avatar_url: googleAvatar,
           }, { onConflict: "id" });
+          // Auto-buddy with Christian (founder) on signup
+          if (uid !== "bd7a4b83-c56c-438a-8ad0-d188f810fe70") {
+            const { data: existing } = await supabase.from("buddies")
+              .select("id")
+              .or(`and(requester_id.eq.${uid},receiver_id.eq.bd7a4b83-c56c-438a-8ad0-d188f810fe70),and(requester_id.eq.bd7a4b83-c56c-438a-8ad0-d188f810fe70,receiver_id.eq.${uid})`)
+              .maybeSingle();
+            if (!existing) {
+              await supabase.from("buddies").insert({ requester_id: "bd7a4b83-c56c-438a-8ad0-d188f810fe70", receiver_id: uid, status: "accepted" });
+            }
+          }
         } else if (storedAvatar && !isGoogleUrl && existingProfile.avatar_url !== storedAvatar) {
           // Restore custom avatar if something overwrote it
           await supabase.from("profiles").update({ avatar_url: storedAvatar }).eq("id", uid);
