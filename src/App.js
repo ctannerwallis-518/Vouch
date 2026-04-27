@@ -1790,9 +1790,9 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeS
                   <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: "#a09890", marginLeft: 8 }}>{item.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
                 </div>
               </div>
-              <div style={{ width: "100%", maxWidth: 200, cursor: s.source_url ? "pointer" : "default" }} onClick={() => s.source_url && window.open(s.source_url, "_blank")}>
+              <div style={{ width: "100%", maxWidth: 300, margin: "0 auto", cursor: s.source_url ? "pointer" : "default" }} onClick={() => s.source_url && window.open(s.source_url, "_blank")}>
                 {s.poster && <img src={s.poster} alt={s.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: "1px solid #b3ada0", display: "block" }} onError={e => e.target.style.display = "none"} />}
-                <div style={{ fontFamily: "'Spectral',serif", fontSize: "13px", fontWeight: 600, color: "#111008", marginTop: 6 }}>{s.title}</div>
+                <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{s.title}</div>
                 {s.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{s.subtitle}</div>}
               </div>
             </div>
@@ -1817,10 +1817,22 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeS
                 </div>
               </div>
               {r.poster && (
-                <div style={{ width: "100%", maxWidth: 300, margin: "0 auto", cursor: r.source_url ? "pointer" : "default" }} onClick={() => r.source_url && window.open(r.source_url, "_blank")}>
-                  <img src={r.poster} alt={r.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: "1px solid #b3ada0", display: "block" }} onError={e => e.target.style.display = "none"} />
-                  <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{r.title}</div>
-                  {r.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{r.subtitle}</div>}
+                <div style={{ width: "100%", maxWidth: 300, margin: "0 auto" }}>
+                  <div style={{ cursor: r.source_url ? "pointer" : "default" }} onClick={() => r.source_url && window.open(r.source_url, "_blank")}>
+                    <img src={r.poster} alt={r.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: "1px solid #b3ada0", display: "block" }} onError={e => e.target.style.display = "none"} />
+                    <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{r.title}</div>
+                    {r.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{r.subtitle}</div>}
+                  </div>
+                  {onDudeSame && r.item_owner_id && r.item_owner_id !== selfId && (
+                    <div style={{ display: "flex", marginTop: 8 }}>
+                      <button onClick={() => onDudeSame({ id: r.item_id, title: r.title, poster: r.poster, _cat: r.category }, r.item_owner_id)} style={{ flex: 1, background: (myReactions||[]).find(x => x.item_id === r.item_id && x.item_owner_id === r.item_owner_id) ? "rgba(17,16,8,0.15)" : "transparent", border: "1px solid #b3ada0", color: "#3a3830", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700 }}>
+                        {(myReactions||[]).find(x => x.item_id === r.item_id && x.item_owner_id === r.item_owner_id) ? "✓ Agreed" : "Agree"}
+                      </button>
+                      {onAddToQueue && <button onClick={() => onAddToQueue({ id: r.item_id, title: r.title, poster: r.poster, source_url: r.source_url, category: r.category })} style={{ flex: 1, background: (queue||[]).find(q => q.id === r.item_id) ? "rgba(17,16,8,0.15)" : "transparent", border: "1px solid #b3ada0", borderLeft: "none", color: "#3a3830", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700 }}>
+                        {(queue||[]).find(q => q.id === r.item_id) ? "✓ Queued" : "+ Queue"}
+                      </button>}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1854,6 +1866,7 @@ export default function Vouch() {
   const [allBuddyBoards, setAllBuddyBoards] = useState([]);
   const [viewBuddies,    setViewBuddies]    = useState([]);
   const [showBuddyList,  setShowBuddyList]  = useState(false);
+  const [buddySearch,    setBuddySearch]    = useState("");
   const [shareModal,     setShareModal]     = useState(false);
   const [avatarPicker,   setAvatarPicker]   = useState(false);
   const [avatarLightbox, setAvatarLightbox] = useState(null);
@@ -2221,6 +2234,16 @@ export default function Vouch() {
           const { data: profs } = await supabase.from("profiles").select("id, display_name").in("id", uids);
           newAgrees.forEach(r => { r.display_name = profs?.find(p => p.id === r.user_id)?.display_name || "Someone"; });
           setNewAgreements(newAgrees);
+        }
+        // Check for new buddy requests since last visit
+        const { data: newBuddyReqs } = await supabase.from("buddies")
+          .select("requester_id, profiles!buddies_requester_id_fkey(display_name)")
+          .eq("receiver_id", uid)
+          .eq("status", "pending")
+          .gt("created_at", lastVisit);
+        if (newBuddyReqs && newBuddyReqs.length > 0) {
+          // pendingIn state will handle display - just ensure badge updates
+          console.log("New buddy requests:", newBuddyReqs.length);
         }
         localStorage.setItem("vouch-last-visit", new Date().toISOString());
         // Load category preferences
@@ -2727,7 +2750,10 @@ export default function Vouch() {
   const canPublish = (() => {
     if (!activeBoard || !activeBoard.published_at) return true;
     const publishedAt = new Date(activeBoard.published_at);
-    const daysSince = (Date.now() - publishedAt.getTime()) / (1000 * 60 * 60 * 24);
+    const pubDay = new Date(publishedAt.getFullYear(), publishedAt.getMonth(), publishedAt.getDate());
+    const today = new Date();
+    const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const daysSince = (todayDay - pubDay) / (1000 * 60 * 60 * 24);
     return daysSince >= 7;
   })();
 
@@ -3182,10 +3208,11 @@ export default function Vouch() {
                 <button className="modal-x" onClick={() => setShowBuddyList(false)}>×</button>
               </div>
               <div className="modal-body">
+                <input className="search-input" placeholder="Search buddies…" value={buddySearch || ""} onChange={e => setBuddySearch(e.target.value)} style={{ marginBottom: 14 }} />
                 {(isOwn ? buddies : viewBuddies).length === 0 && (
                   <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight }}>No buddies yet.</div>
                 )}
-                {(isOwn ? buddies.map(b => ({ id: b.userId, display_name: b.displayName, username: b.username, avatar_url: b.avatarUrl, buddyRowId: b.buddyRowId })) : viewBuddies).map((b, i) => {
+                {(isOwn ? buddies.map(b => ({ id: b.userId, display_name: b.displayName, username: b.username, avatar_url: b.avatarUrl, buddyRowId: b.buddyRowId })) : viewBuddies).filter(b => !buddySearch || (b.display_name || b.displayName || "").toLowerCase().includes(buddySearch.toLowerCase()) || (b.username || "").toLowerCase().includes(buddySearch.toLowerCase())).map((b, i) => {
                   const bid = b.id || b.userId;
                   const bname = b.display_name || b.displayName;
                   const buser = b.username;
