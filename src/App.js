@@ -1972,6 +1972,7 @@ export default function Vouch() {
   const [editingMeta,    setEditingMeta]    = useState(false);
   const [newAgreements,  setNewAgreements]  = useState([]);
   const [showAgreements, setShowAgreements] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [viewerReactions,setViewerReactions]= useState([]);
   const [viewActiveBoard,setViewActiveBoard]= useState(null);
   const [suggested, setSuggested] = useState([]); // eslint-disable-line no-unused-vars
@@ -2991,6 +2992,10 @@ export default function Vouch() {
                   <div style={{ display: "flex", gap: 10, width: "100%" }}>
                     <button className="btn btn-ghost" style={{ flex: 1, padding: "10px" }} onClick={() => setShowBuddyList(true)}>View Buddies ({buddies.length})</button>
                     <button className="btn btn-solid" style={{ flex: 1, padding: "10px" }} onClick={() => setBuddyModal(true)}>+ Find Buddies</button>
+                    <button className="btn btn-ghost" style={{ position: "relative", padding: "10px 14px", flexShrink: 0 }} onClick={() => setShowNotifications(true)}>
+                      🔔
+                      {(newAgreements.length + pendingIn.length) > 0 && <span style={{ position: "absolute", top: 4, right: 4, background: T.ink, color: T.bg, borderRadius: "50%", fontSize: 8, width: 14, height: 14, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral SC',serif" }}>{newAgreements.length + pendingIn.length}</span>}
+                    </button>
                   </div>
                 </div>
                 {/* PENDING REQUESTS - top of page */}
@@ -3400,6 +3405,58 @@ export default function Vouch() {
                     </div>
                   ));
                 })()}
+              </div>
+            </div>
+          </div>
+        )}
+        {showNotifications && (
+          <div className="modal-overlay" onClick={() => setShowNotifications(false)}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <div className="modal-head">
+                <div className="modal-title">Notifications</div>
+                <button className="modal-x" onClick={() => setShowNotifications(false)}>×</button>
+              </div>
+              <div className="modal-body">
+                {newAgreements.length === 0 && pendingIn.length === 0 && (
+                  <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight }}>No new notifications.</div>
+                )}
+                {pendingIn.length > 0 && (
+                  <div style={{ marginBottom: 20 }}>
+                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 10 }}>Buddy Requests</div>
+                    {pendingIn.map(b => (
+                      <div key={b.buddyRowId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <Avatar name={b.displayName} size={40} avatarUrl={b.avatarUrl} />
+                          <div>
+                            <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 14 }}>{b.displayName}</div>
+                            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: T.inkLight }}>wants to connect</div>
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", gap: 6 }}>
+                          <button className="btn btn-solid" style={{ padding: "4px 10px" }} onClick={() => { acceptBuddy(b.buddyRowId); setAcceptedBuddies(prev => [...prev, b.buddyRowId]); }}>Accept</button>
+                          <button className="btn btn-ghost" style={{ padding: "4px 10px" }} onClick={() => removeBuddy(b.buddyRowId)}>Decline</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {newAgreements.length > 0 && (
+                  <div>
+                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 10 }}>New Agrees</div>
+                    {newAgreements.map((r, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
+                        <div style={{ width: 36, height: 36, background: T.ink, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <span style={{ fontFamily: "'Times New Roman',serif", fontWeight: 900, fontSize: 13, color: T.bg }}>{(r.display_name || "?").split(" ").map(w => w[0]).join("").slice(0,2).toUpperCase()}</span>
+                        </div>
+                        <div>
+                          <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 14 }}>{r.display_name}</div>
+                          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkMid }}>agreed with <strong style={{ fontStyle: "normal" }}>{r.title}</strong></div>
+                        </div>
+                      </div>
+                    ))}
+                    <button className="btn btn-ghost" style={{ width: "100%", marginTop: 12 }} onClick={() => { setShowNotifications(false); setNewAgreements([]); }}>Dismiss All</button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
