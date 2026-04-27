@@ -1011,7 +1011,7 @@ function BuddyModal({ userId, onClose, onSendRequest, onGenerateLink, inviteLink
   // Load all users as suggestions on mount
   useEffect(() => {
     supabase.from("profiles").select("id, username, display_name, avatar_url")
-      .neq("id", userId).order("display_name").limit(50)
+      .neq("id", userId).not("id", "in", `(${existingBuddyIds.length > 0 ? existingBuddyIds.join(",") : userId})`).order("display_name").limit(50)
       .then(async ({ data }) => {
         if (!data) return setSuggested([]);
         // Calculate mutual buddies for each suggested user
