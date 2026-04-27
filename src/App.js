@@ -852,24 +852,9 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
         )}
       </div>
 
-      {buddyCounts?.[String(it.id)] > 0 && (() => {
-        const count = buddyCounts[String(it.id)];
-        const vouchers = allBuddyBoards?.filter(r => String(r.item_id) === String(it.id)).map(r => {
-          const b = buddies?.find(x => x.userId === r.user_id);
-          return b?.displayName || null;
-        }).filter(Boolean);
-        const [showVouchers, setShowVouchers] = React.useState(false);
-        return (
-          <div style={{ position: "absolute", top: 8, left: 8, zIndex: 2 }}>
-            <div onClick={e => { e.stopPropagation(); setShowVouchers(s => !s); }} style={{ background: "rgba(17,16,8,0.82)", color: "rgba(200,194,180,0.95)", fontFamily: "'Spectral SC',serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "pointer" }}>{count} {count === 1 ? "Vouch" : "Vouches"}</div>
-            {showVouchers && vouchers && vouchers.length > 0 && (
-              <div onClick={e => e.stopPropagation()} style={{ position: "absolute", top: "100%", left: 0, marginTop: 4, background: "rgba(17,16,8,0.95)", color: "rgba(200,194,180,0.9)", fontFamily: "'Spectral',serif", fontSize: 12, padding: "8px 12px", minWidth: 140, zIndex: 10 }}>
-                {vouchers.map((n, i) => <div key={i} style={{ padding: "2px 0" }}>{n}</div>)}
-              </div>
-            )}
-          </div>
-        );
-      })()}
+      {buddyCounts?.[String(it.id)] > 0 && (
+        <div title="Total Buddy Vouches" style={{ position: "absolute", top: 8, left: 8, zIndex: 2, background: "rgba(17,16,8,0.82)", color: "rgba(200,194,180,0.95)", fontFamily: "'Spectral SC',serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "default" }}>{buddyCounts[String(it.id)]} {buddyCounts[String(it.id)] === 1 ? "Vouch" : "Vouches"}</div>
+      )}
     </div>
   );
 
@@ -1837,7 +1822,6 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeS
           const buddies = item.buddies || [item.buddy];
           const shown = buddies.slice(0, 2).filter(Boolean);
           const rest = buddies.slice(2).filter(Boolean);
-          const [showOthers, setShowOthers] = React.useState(false);
           return (
             <div key={i} style={{ borderBottom: "1px solid #b3ada0", paddingBottom: 24, marginBottom: 24 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
@@ -1858,12 +1842,7 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeS
                   {rest.length > 0 && (
                     <span>
                       <span style={{ fontStyle: "italic", color: "#7a7568" }}> and </span>
-                      <span onClick={() => setShowOthers(s => !s)} style={{ fontWeight: 600, cursor: "pointer", borderBottom: "1px dashed #7a7568" }}>{rest.length} other{rest.length > 1 ? "s" : ""}</span>
-                      {showOthers && (
-                        <span style={{ display: "block", marginTop: 4, background: "#f5f3ef", padding: "6px 10px", fontSize: 12 }}>
-                          {rest.map((b, j) => <span key={j} onClick={() => b && onViewBuddy(b)} style={{ cursor: "pointer", fontWeight: 600, display: "block" }}>{b?.displayName}</span>)}
-                        </span>
-                      )}
+                      <span style={{ fontWeight: 600, color: "#7a7568" }}>{rest.map(b => b?.displayName).filter(Boolean).join(", ")}</span>
                     </span>
                   )}
                   <span style={{ fontStyle: "italic", color: "#7a7568" }}> agreed with </span>
