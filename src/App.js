@@ -3004,7 +3004,7 @@ export default function Vouch() {
                     </button>
                   </div>
                   <div style={{ display: "flex", gap: 10, width: "100%" }}>
-                    <button className="btn btn-ghost" style={{ flex: 1, padding: "10px" }} onClick={() => setShowBuddyList(true)}>View Buddies ({buddies.length})</button>
+                    <button className="btn btn-ghost" style={{ flex: "0 0 50%", padding: "10px", textAlign: "center" }} onClick={() => setShowBuddyList(true)}>View Buddies ({buddies.length})</button>
                     <button className="btn btn-solid" style={{ fl: 1, padding: "10px" }} onClick={() => setBuddyModal(true)}>+ Find Buddies</button>
                   </div>
                 </div>
