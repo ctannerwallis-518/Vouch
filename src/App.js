@@ -1725,7 +1725,26 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeS
           items.push({ type: "shelf", date: new Date(s.created_at), shelf: s, buddy });
         });
         items.sort((a, b) => b.date - a.date);
-        setFeed(items.slice(0, 40));
+        // Group agrees by item_id + item_owner_id
+        const grouped = [];
+        const agreeGroups = {};
+        items.forEach(item => {
+          if (item.type === "agree") {
+            const key = item.reaction.item_id + ":" + item.reaction.item_owner_id;
+            if (!agreeGroups[key]) {
+              agreeGroups[key] = { ...item, buddies: [item.buddy] };
+              grouped.push(agreeGroups[key]);
+            } else {
+              agreeGroups[key].buddies.push(item.buddy);
+              // Keep most recent date
+              if (item.date > agreeGroups[key].date) agreeGroups[key].date = item.date;
+            }
+          } else {
+            grouped.push(item);
+          }
+        });
+        grouped.sort((a, b) => b.date - a.date);
+        setFeed(grouped.slice(0, 40));
       } catch(e) { console.error(e); }
       setLoading(false);
     };
@@ -1800,15 +1819,32 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeS
         }
         if (item.type === "agree") {
           const r = item.reaction;
-          const buddy = item.buddy;
+          const buddies = item.buddies || [item.buddy];
+          const shown = buddies.slice(0, 2).filter(Boolean);
+          const rest = buddies.slice(2).filter(Boolean);
           return (
             <div key={i} style={{ borderBottom: "1px solid #b3ada0", paddingBottom: 24, marginBottom: 24 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <div onClick={() => buddy && onViewBuddy(buddy)} style={{ cursor: "pointer", flexShrink: 0 }}>
-                  <Avatar name={buddy?.displayName || "?"} size={28} avatarUrl={buddy?.avatarUrl} />
+                <div style={{ display: "flex", gap: -6, flexShrink: 0 }}>
+                  {shown.map((b, j) => (
+                    <div key={j} onClick={() => b && onViewBuddy(b)} style={{ cursor: "pointer", marginLeft: j > 0 ? -8 : 0 }}>
+                      <Avatar name={b?.displayName || "?"} size={28} avatarUrl={b?.avatarUrl} />
+                    </div>
+                  ))}
                 </div>
                 <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "#3a3830", flex: 1 }}>
-                  <span onClick={() => buddy && onViewBuddy(buddy)} style={{ fontWeight: 600, cursor: "pointer" }}>{buddy?.displayName}</span>
+                  {shown.map((b, j) => (
+                    <span key={j}>
+                      {j > 0 && <span style={{ fontStyle: "italic", color: "#7a7568" }}> and </span>}
+                      <span onClick={() => b && onViewBuddy(b)} style={{ fontWeight: 600, cursor: "pointer" }}>{b?.displayName}</span>
+                    </span>
+                  ))}
+                  {rest.length > 0 && (
+                    <span>
+                      <span style={{ fontStyle: "italic", color: "#7a7568" }}> and </span>
+                      <span style={{ fontWeight: 600, color: "#7a7568" }}>{rest.map(b => b?.displayName).filter(Boolean).join(", ")}</span>
+                    </span>
+                  )}
                   <span style={{ fontStyle: "italic", color: "#7a7568" }}> agreed with </span>
                   {r.owner
                     ? <span onClick={() => r.owner && onViewBuddy({ userId: r.owner.id, displayName: r.owner.display_name, username: r.owner.username, avatarUrl: r.owner.avatar_url })} style={{ fontWeight: 600, cursor: "pointer" }}>{r.owner.display_name}</span>
