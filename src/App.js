@@ -1010,6 +1010,9 @@ function BuddyModal({ userId, onClose, onSendRequest, onGenerateLink, inviteLink
 
   // Load all users as suggestions on mount
   useEffect(() => {
+    // Load already-sent requests
+    supabase.from("buddies").select("receiver_id").eq("requester_id", userId).eq("status", "pending")
+      .then(({ data }) => { if (data) setSent(data.map(r => r.receiver_id)); });
     supabase.from("profiles").select("id, username, display_name, avatar_url")
       .neq("id", userId).not("id", "in", `(${existingBuddyIds.length > 0 ? existingBuddyIds.join(",") : userId})`).order("display_name").limit(50)
       .then(async ({ data }) => {
@@ -2997,8 +3000,8 @@ export default function Vouch() {
                   <div style={{ display: "flex", gap: 10, width: "100%" }}>
                     <button className="btn btn-ghost" style={{ flex: 1, padding: "10px" }} onClick={() => setShowBuddyList(true)}>View Buddies ({buddies.length})</button>
                     <button className="btn btn-solid" style={{ flex: 1, padding: "10px" }} onClick={() => setBuddyModal(true)}>+ Find Buddies</button>
-                    <button className="btn btn-ghost" style={{ position: "relative", padding: "10px 14px", flexShrink: 0 }} onClick={() => setShowNotifications(true)}>
-                      🔔
+                    <button className="btn btn-ghost" style={{ position: "relative", padding: "10px 14px", flexShrink: 0, fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em" }} onClick={() => setShowNotifications(true)}>
+                    Notifs
                       {(newAgreements.length + pendingIn.length) > 0 && <span style={{ position: "absolute", top: 4, right: 4, background: T.ink, color: T.bg, borderRadius: "50%", fontSize: 8, width: 14, height: 14, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral SC',serif" }}>{newAgreements.length + pendingIn.length}</span>}
                     </button>
                   </div>
