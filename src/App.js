@@ -2248,13 +2248,11 @@ export default function Vouch() {
               await supabase.from("buddies").insert({ requester_id: "bd7a4b83-c56c-438a-8ad0-d188f810fe70", receiver_id: uid, status: "accepted" });
             }
           }
-        } else if (storedAvatar && !isGoogleUrl && existingProfile.avatar_url !== storedAvatar) {
-          // Restore custom avatar if something overwrote it
-          await supabase.from("profiles").update({ avatar_url: storedAvatar }).eq("id", uid);
-        } else if (existingProfile && isGoogleUrl && googleAvatar && existingProfile.avatar_url !== googleAvatar) {
-          // Keep Google avatar in sync if no custom one set
+        } else if (existingProfile && !storedAvatar && googleAvatar) {
+          // Only set Google avatar if user has no avatar at all
           await supabase.from("profiles").update({ avatar_url: googleAvatar }).eq("id", uid);
         }
+        // Never overwrite a custom (non-Google) avatar on login
         setUser({ username: existingProfile?.username || session.user.email.split("@")[0], displayName: existingProfile?.display_name || session.user.user_metadata?.full_name || session.user.email.split("@")[0], avatarUrl });
         setUserId(uid);
         setTab("home");
