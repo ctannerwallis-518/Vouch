@@ -2997,7 +2997,10 @@ export default function Vouch() {
                     <div className="board-name" style={{ fontSize: 32 }}>Buddies</div>
                     <div className="board-sub">{buddies.length} connection{buddies.length !== 1 ? "s" : ""}</div>
                   </div>
-                  <button className="btn btn-solid" onClick={() => setBuddyModal(true)}>+ Add Buddy</button>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button className="btn btn-ghost" onClick={() => setShowBuddyList(true)}>View Buddies</button>
+                    <button className="btn btn-solid" onClick={() => setBuddyModal(true)}>+ Add Buddy</button>
+                  </div>
                 </div>
                 {/* PENDING REQUESTS - top of page */}
                 {pendingIn.length > 0 && (
