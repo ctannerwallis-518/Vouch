@@ -2992,21 +2992,12 @@ export default function Vouch() {
 
           {tab === "friends" && !viewing
             ? <>
-                <div className="board-header" style={{ flexDirection: "column", alignItems: "flex-start", gap: 12 }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
-                    <div>
-                      <div className="board-name" style={{ fontSize: 32 }}>Buddies</div>
-                      <div className="board-sub">{buddies.length} connection{buddies.length !== 1 ? "s" : ""}</div>
-                    </div>
-                    <button style={{ position: "relative", background: "transparent", border: "none", fontSize: 22, cursor: "pointer", padding: "4px 8px", filter: "grayscale(100%)" }} onClick={() => setShowNotifications(true)}>
-                      🔔
-                      {(newAgreements.length + pendingIn.length) > 0 && <span style={{ position: "absolute", top: 0, right: 0, background: T.ink, color: T.bg, borderRadius: "50%", fontSize: 8, width: 14, height: 14, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral SC',serif" }}>{newAgreements.length + pendingIn.length}</span>}
-                    </button>
+                <div className="board-header">
+                  <div>
+                    <div className="board-name" style={{ fontSize: 32 }}>Buddies</div>
+                    <div className="board-sub">{buddies.length} connection{buddies.length !== 1 ? "s" : ""}</div>
                   </div>
-                  <div style={{ display: "flex", gap: 10, width: "100%" }}>
-                    <button className="btn btn-ghost" style={{ flex: "0 0 50%", padding: "10px", textAlign: "center" }} onClick={() => setShowBuddyList(true)}>View Buddies ({buddies.length})</button>
-                    <button className="btn btn-solid" style={{ fl: 1, padding: "10px" }} onClick={() => setBuddyModal(true)}>+ Find Buddies</button>
-                  </div>
+                  <button className="btn btn-solid" onClick={() => setBuddyModal(true)}>+ Add Buddy</button>
                 </div>
                 {/* PENDING REQUESTS - top of page */}
                 {pendingIn.length > 0 && (
