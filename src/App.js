@@ -1084,7 +1084,7 @@ function BuddyModal({ userId, onClose, onSendRequest, onGenerateLink, inviteLink
             {inviteLink && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 6, wordBreak: "break-all" }}>{inviteLink}</div>}
           </div>
           <div style={{ borderBottom: `1px solid ${T.paperDark}`, marginBottom: 16 }} />
-          <input className="search-input" placeholder="Search name or username…" value={q} onChange={e => setQ(e.target.value)} autoFocus />
+          <input className="search-input" placeholder="Search name or username…" value={q} onChange={e => setQ(e.target.value)} />
           {!q.trim() && suggested.length > 0 && (
             <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkFaint, margin: "12px 0 8px" }}>On Vouch</div>
           )}
@@ -2996,7 +2996,7 @@ export default function Vouch() {
                   <div className="board-name" style={{ fontSize: 32, marginBottom: 4 }}>Buddies</div>
                   <div className="board-sub" style={{ marginBottom: 16 }}>{buddies.length} connection{buddies.length !== 1 ? "s" : ""}</div>
                   <div style={{ display: "flex", gap: 8 }}>
-                    <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setShowBuddyList(true)}>View Buddies</button>
+                    <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setShowBuddyList(true)}>View Buddies ({buddies.length})</button>
                     <button className="btn btn-solid" style={{ flex: 1 }} onClick={() => setBuddyModal(true)}>+ Add Buddy</button>
                   </div>
                 </div>
