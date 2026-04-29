@@ -55,7 +55,6 @@ module.exports = async (req, res) => {
   <meta name="twitter:title" content="${title}" />
   <meta name="twitter:description" content="${description}" />
   <meta name="twitter:image" content="${posterUrl}" />
-  <meta http-equiv="refresh" content="0;url=https://vouch5.com/@${username}" />
 </head>
 <body>
   <p>Redirecting to <a href="https://vouch5.com/@${username}">vouch5.com/@${username}</a>...</p>
