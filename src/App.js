@@ -2512,16 +2512,15 @@ export default function Vouch() {
       }
 
       // More vouches
-      const totalShelfItems = Object.values(currBoard).flat().length;
-      const moreCount = totalShelfItems > 1 ? totalShelfItems - 1 : 4;
+      const boardTheme = activeBoard?.theme && activeBoard.theme !== "Other" ? activeBoard.theme : (activeBoard?.name || "");
       ctx.strokeStyle = "rgba(17,16,8,0.25)";
       ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(72, 1592); ctx.lineTo(380, 1592); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(700, 1592); ctx.lineTo(1008, 1592); ctx.stroke();
-      ctx.fillStyle = "#666";
-      ctx.font = "italic 400 36px Georgia";
+      ctx.fillStyle = "#555";
+      ctx.font = "italic 400 40px 'Times New Roman', serif";
       ctx.textAlign = "center";
-      ctx.fillText(`+ ${moreCount} more tile${moreCount !== 1 ? "s" : ""} on my shelf`, 540, 1604);
+      ctx.fillText(boardTheme, 540, 1604);
       ctx.textAlign = "left";
 
       // CTA question
@@ -2549,7 +2548,7 @@ export default function Vouch() {
       ctx.fillStyle = "#111008";
       ctx.font = "400 30px Georgia";
       ctx.textAlign = "center";
-      ctx.fillText("See " + (shareName || shareUsername).split(" ")[0] + "'s Vouch Board - Link in Bio", 540, 1832);
+      ctx.fillText("See what else " + (shareName || shareUsername).split(" ")[0] + " is vouching for — Link in Bio", 540, 1832);
       ctx.textAlign = "left";
 
       // Bottom rule
