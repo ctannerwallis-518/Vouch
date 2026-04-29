@@ -1671,7 +1671,7 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue,
   );
 }
 
-function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeSame, onAddToQueue, queue, myReactions }) {
+function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeSame, onAddToQueue, queue, myReactions, onShelfExtras }) {
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -1822,7 +1822,7 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeS
                   <span onClick={() => buddy && onViewBuddy(buddy)} style={{ fontWeight: 600, cursor: "pointer" }}>{buddy?.displayName}</span>
                   <span style={{ fontStyle: "italic", color: "#7a7568" }}> added </span>
                   {extras.length > 0
-                    ? <span><strong style={{ fontStyle: "normal" }}>{primary.title}</strong><span style={{ fontStyle: "italic", color: "#7a7568" }}> and </span><span style={{ fontWeight: 600, color: "#7a7568", cursor: "pointer", borderBottom: "1px dashed #7a7568" }} onClick={e => { e.stopPropagation(); setShelfExtras(extras); }}>{extras.length} other tile{extras.length > 1 ? "s" : ""}</span><span style={{ fontStyle: "italic", color: "#7a7568" }}> to their shelf</span></span>
+                    ? <span><strong style={{ fontStyle: "normal" }}>{primary.title}</strong><span style={{ fontStyle: "italic", color: "#7a7568" }}> and </span><span style={{ fontWeight: 600, color: "#7a7568", cursor: "pointer", borderBottom: "1px dashed #7a7568" }} onClick={e => { e.stopPropagation(); onShelfExtras && onShelfExtras(extras); }}>{extras.length} other tile{extras.length > 1 ? "s" : ""}</span><span style={{ fontStyle: "italic", color: "#7a7568" }}> to their shelf</span></span>
                     : <span><span style={{ fontStyle: "italic", color: "#7a7568" }}></span><strong style={{ fontStyle: "normal" }}>{primary.title}</strong><span style={{ fontStyle: "italic", color: "#7a7568" }}> to their shelf</span></span>
                   }
                   <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: "#a09890", marginLeft: 8 }}>{item.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
@@ -2951,7 +2951,7 @@ export default function Vouch() {
               <div className="board-sub" style={{ marginBottom: 28 }}>Recent activity from your circle</div>
               {buddies.length === 0
                 ? <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: "#7a7568", padding: "24px 0" }}>Add some buddies to see their activity here.</div>
-                : <BuddyFeed buddies={buddies} selfId={userId} selfName={user?.displayName} selfAvatar={user?.avatarUrl} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId, true); window.scrollTo(0,0); }} onDudeSame={dudeSame} onAddToQueue={addToQueue} queue={queue} myReactions={myReactions} />
+                : <BuddyFeed buddies={buddies} selfId={userId} selfName={user?.displayName} selfAvatar={user?.avatarUrl} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId, true); window.scrollTo(0,0); }} onDudeSame={dudeSame} onAddToQueue={addToQueue} queue={queue} myReactions={myReactions} onShelfExtras={setShelfExtras} />
               }
             </div>
           )}
