@@ -1,1 +1,19 @@
-{}
+{
+  "rewrites": [
+    {
+      "source": "/@:username",
+      "destination": "/api/og?username=:username",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Twitterbot|WhatsApp|Slackbot|LinkedInBot|TelegramBot|Discordbot|iMessage|apple|curl|python|bot|crawler|spider).*"
+        }
+      ]
+    },
+    {
+      "source": "/@:username",
+      "destination": "/index.html"
+    }
+  ]
+}
