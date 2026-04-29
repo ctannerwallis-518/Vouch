@@ -1722,10 +1722,20 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeS
           const buddy = allPeople.find(x => x.userId === r.user_id);
           items.push({ type: "agree", date: new Date(r.created_at), reaction: r, buddy });
         });
+        // Group shelf adds by user within 20 minutes
+        const shelfGroups = {};
         (shelfAdds || []).forEach(s => {
           if (!s.created_at) return;
           const buddy = allPeople.find(x => x.userId === s.user_id);
-          items.push({ type: "shelf", date: new Date(s.created_at), shelf: s, buddy });
+          const date = new Date(s.created_at);
+          const key = s.user_id + ":" + Math.floor(date.getTime() / (20 * 60 * 1000));
+          if (!shelfGroups[key]) {
+            shelfGroups[key] = { type: "shelf", date, shelves: [s], buddy };
+            items.push(shelfGroups[key]);
+          } else {
+            shelfGroups[key].shelves.push(s);
+            if (date > shelfGroups[key].date) shelfGroups[key].date = date;
+          }
         });
         items.sort((a, b) => b.date - a.date);
         // Group agrees by item_id + item_owner_id
@@ -1797,9 +1807,11 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeS
           );
         }
         if (item.type === "shelf") {
-          const s = item.shelf;
+          const shelves = item.shelves || [item.shelf];
+          const primary = shelves[0];
+          const extras = shelves.slice(1);
           const buddy = item.buddy;
-          if (!s.poster && !s.title) return null;
+          if (!primary) return null;
           return (
             <div key={i} style={{ borderBottom: "1px solid #b3ada0", paddingBottom: 16, marginBottom: 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
@@ -1808,14 +1820,18 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeS
                 </div>
                 <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "#3a3830" }}>
                   <span onClick={() => buddy && onViewBuddy(buddy)} style={{ fontWeight: 600, cursor: "pointer" }}>{buddy?.displayName}</span>
-                  <span style={{ fontStyle: "italic", color: "#7a7568" }}> added to their shelf</span>
+                  <span style={{ fontStyle: "italic", color: "#7a7568" }}> added </span>
+                  {extras.length > 0
+                    ? <span><strong style={{ fontStyle: "normal" }}>{primary.title}</strong><span style={{ fontStyle: "italic", color: "#7a7568" }}> and </span><span style={{ fontWeight: 600, color: "#7a7568", cursor: "pointer", borderBottom: "1px dashed #7a7568" }} onClick={() => { const names = extras.map(x => x.title).join(", "); alert(names); }}>{extras.length} other tile{extras.length > 1 ? "s" : ""}</span><span style={{ fontStyle: "italic", color: "#7a7568" }}> to their shelf</span></span>
+                    : <span><span style={{ fontStyle: "italic", color: "#7a7568" }}></span><strong style={{ fontStyle: "normal" }}>{primary.title}</strong><span style={{ fontStyle: "italic", color: "#7a7568" }}> to their shelf</span></span>
+                  }
                   <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: "#a09890", marginLeft: 8 }}>{item.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
                 </div>
               </div>
-              <div style={{ width: "100%", maxWidth: 300, margin: "0 auto", cursor: s.source_url ? "pointer" : "default" }} onClick={() => s.source_url && window.open(s.source_url, "_blank")}>
-                {s.poster && <img src={s.poster} alt={s.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: "1px solid #b3ada0", display: "block" }} onError={e => e.target.style.display = "none"} />}
-                <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{s.title}</div>
-                {s.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{s.subtitle}</div>}
+              <div style={{ width: "100%", maxWidth: 300, margin: "0 auto", cursor: primary.source_url ? "pointer" : "default" }} onClick={() => primary.source_url && window.open(primary.source_url, "_blank")}>
+                {primary.poster && <img src={primary.poster} alt={primary.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: "1px solid #b3ada0", display: "block" }} onError={e => e.target.style.display = "none"} />}
+                <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{primary.title}</div>
+                {primary.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{primary.subtitle}</div>}
               </div>
             </div>
           );
@@ -1977,6 +1993,7 @@ export default function Vouch() {
   const [newBuddies,     setNewBuddies]     = useState([]);
   const [showAgreements, setShowAgreements] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showShareNudge,   setShowShareNudge]   = useState(false);
   const [pastNotifications, setPastNotifications] = useState([]);
   const [viewerReactions,setViewerReactions]= useState([]);
   const [viewActiveBoard,setViewActiveBoard]= useState(null);
@@ -2898,7 +2915,7 @@ export default function Vouch() {
             <button className={`nav-btn${tab === "board" && !viewing ? " active" : ""}`} onClick={() => { setTab("board"); setViewing(null); window.history.pushState({tab:"board"}, "", "/"); scrollToTop(); }}>My Board</button>
             <button className={`nav-btn${tab === "friends" ? " active" : ""}`} onClick={() => { setTab("friends"); setViewing(null); window.history.pushState({tab:"friends"}, "", "/"); scrollToTop(); }} style={{ position: "relative" }}>
               Buddies
-              {pendingIn.length > 0 && <span style={{ position: "absolute", top: 4, right: 4, background: tab === "friends" ? T.bg : T.ink, color: tab === "friends" ? T.ink : T.bg, borderRadius: "50%", fontSize: 8, width: 14, height: 14, display: "inline-flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral SC',serif", fontWeight: 700 }}>{pendingIn.length}</span>}
+              {pendingIn.length > 0 && <span style={{ position: "absolute", top: 5, right: 5, background: tab === "friends" ? T.bg : T.ink, borderRadius: "50%", width: 6, height: 6, display: "inline-block" }} />}
             </button>
             <button className={`nav-btn${tab === "archive" ? " active" : ""}`} onClick={() => { setTab("archive"); setViewing(null); window.history.pushState({tab:"archive"}, "", "/"); scrollToTop(); }}>Archive</button>
             <button className={`nav-btn${tab === "settings" ? " active" : ""}`} onClick={() => { setTab("settings"); setViewing(null); window.history.pushState({tab:"settings"}, "", "/"); scrollToTop(); }}>Settings</button>
@@ -3525,6 +3542,34 @@ export default function Vouch() {
                     <button onClick={() => { setPastNotifications([]); localStorage.removeItem("vouch-past-notifs-" + userId); }} style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.15em", background: "transparent", border: "none", color: T.inkFaint, cursor: "pointer", marginTop: 8, padding: 0 }}>Clear History</button>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+        {showShareNudge && (
+          <div className="modal-overlay" onClick={() => setShowShareNudge(false)}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <div className="modal-head">
+                <div className="modal-title">Share Your Vouch 🎉</div>
+                <button className="modal-x" onClick={() => setShowShareNudge(false)}>×</button>
+              </div>
+              <div className="modal-body" style={{ textAlign: "center" }}>
+                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkMid, marginBottom: 20 }}>Your Vouch is live — share it with your friends!</div>
+                <div style={{ background: T.ink, color: T.bg, padding: 20, marginBottom: 20, borderRadius: 2 }}>
+                  <div style={{ fontFamily: "'Spectral SC',serif", fontSize: 10, letterSpacing: "0.2em", color: "rgba(200,194,180,0.5)", marginBottom: 6 }}>Vouch</div>
+                  <div style={{ fontFamily: "'Times New Roman',serif", fontWeight: 900, fontSize: 22, color: T.bg }}>{activeBoard?.name || activeBoard?.theme || "My Vouch"}</div>
+                  <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.6)", marginTop: 4 }}>by {user?.displayName}</div>
+                </div>
+                <button className="btn btn-solid" style={{ width: "100%", padding: "14px", fontSize: "11px", letterSpacing: "0.2em" }} onClick={() => {
+                  const link = `${window.location.origin}/@${user?.username}`;
+                  navigator.clipboard?.writeText(link);
+                  alert("Link copied! " + link);
+                  setShowShareNudge(false);
+                }}>Copy Share Link</button>
+                {navigator.share && <button className="btn btn-ghost" style={{ width: "100%", padding: "14px", fontSize: "11px", letterSpacing: "0.2em", marginTop: 8 }} onClick={() => {
+                  navigator.share({ title: "Check out my Vouch", url: `${window.location.origin}/@${user?.username}` });
+                  setShowShareNudge(false);
+                }}>Share via...</button>}
               </div>
             </div>
           </div>
