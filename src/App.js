@@ -2925,7 +2925,7 @@ export default function Vouch() {
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
                 <div className="board-name" style={{ fontSize: 28 }}>Home</div>
                 {(newAgreements.length + pendingIn.length + newBuddies.length) > 0 && (
-                  <button onClick={() => setShowNotificationtrue)} style={{ background: tab === "home" ? T.bg : T.ink, border: "none", borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontFamily: "'Spectral SC',serif", fontSize: 9, fontWeight: 700, color: tab === "home" ? T.ink : T.bg, flexShrink: 0 }}>
+                  <button onClick={() => setShowNotifications(true)} style={{ background: tab === "home" ? T.bg : T.ink, border: "none", borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontFamily: "'Spectral SC',serif", fontSize: 9, fontWeight: 700, color: tab === "home" ? T.ink : T.bg, flexShrink: 0 }}>
                     {newAgreements.length + pendingIn.length + newBuddies.length}
                   </button>
                 )}
