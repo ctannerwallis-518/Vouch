@@ -2421,7 +2421,6 @@ export default function Vouch() {
     const shareUsername = viewing ? viewing.username : user.username;
     const shareName = viewing ? viewing.displayName : user.displayName;
     const shareUrl = `${window.location.origin}/@${shareUsername}`;
-    const vouchedCount = Object.values(currBoard).flat().filter(i => i.vouched).length;
     const activeBoardItems = (activeBoard?.vouch_board_items || []).sort((a,b) => a.position - b.position);
     const topItem = activeBoardItems.length > 0
       ? { ...activeBoardItems[0], title: activeBoardItems[0].title, sub: activeBoardItems[0].subtitle || "", poster: activeBoardItems[0].poster, _cat: activeBoardItems[0].category }
