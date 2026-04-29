@@ -1822,7 +1822,7 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeS
                   <span onClick={() => buddy && onViewBuddy(buddy)} style={{ fontWeight: 600, cursor: "pointer" }}>{buddy?.displayName}</span>
                   <span style={{ fontStyle: "italic", color: "#7a7568" }}> added </span>
                   {extras.length > 0
-                    ? <span><strong style={{ fontStyle: "normal" }}>{primary.title}</strong><span style={{ fontStyle: "italic", color: "#7a7568" }}> and </span><span style={{ fontWeight: 600, color: "#7a7568", cursor: "pointer", borderBottom: "1px dashed #7a7568" }} onClick={() => { const names = extras.map(x => x.title).join(", "); alert(names); }}>{extras.length} other tile{extras.length > 1 ? "s" : ""}</span><span style={{ fontStyle: "italic", color: "#7a7568" }}> to their shelf</span></span>
+                    ? <span><strong style={{ fontStyle: "normal" }}>{primary.title}</strong><span style={{ fontStyle: "italic", color: "#7a7568" }}> and </span><span style={{ fontWeight: 600, color: "#7a7568", cursor: "pointer", borderBottom: "1px dashed #7a7568" }} onClick={e => { e.stopPropagation(); setShelfExtras(extras); }}>{extras.length} other tile{extras.length > 1 ? "s" : ""}</span><span style={{ fontStyle: "italic", color: "#7a7568" }}> to their shelf</span></span>
                     : <span><span style={{ fontStyle: "italic", color: "#7a7568" }}></span><strong style={{ fontStyle: "normal" }}>{primary.title}</strong><span style={{ fontStyle: "italic", color: "#7a7568" }}> to their shelf</span></span>
                   }
                   <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: "#a09890", marginLeft: 8 }}>{item.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
@@ -1994,6 +1994,7 @@ export default function Vouch() {
   const [showAgreements, setShowAgreements] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showShareNudge,   setShowShareNudge]   = useState(false);
+  const [shelfExtras,     setShelfExtras]     = useState(null);
   const [pastNotifications, setPastNotifications] = useState([]);
   const [viewerReactions,setViewerReactions]= useState([]);
   const [viewActiveBoard,setViewActiveBoard]= useState(null);
@@ -3570,6 +3571,30 @@ export default function Vouch() {
                   navigator.share({ title: "Check out my Vouch", url: `${window.location.origin}/@${user?.username}` });
                   setShowShareNudge(false);
                 }}>Share via...</button>}
+              </div>
+            </div>
+          </div>
+        )}
+        {shelfExtras && (
+          <div className="modal-overlay" onClick={() => setShelfExtras(null)}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <div className="modal-head">
+                <div className="modal-title">Also Added to Shelf</div>
+                <button className="modal-x" onClick={() => setShelfExtras(null)}>×</button>
+              </div>
+              <div className="modal-body">
+                {shelfExtras.map((s, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: `1px solid ${T.paperDark}`, cursor: s.source_url ? "pointer" : "default" }} onClick={() => s.source_url && window.open(s.source_url, "_blank")}>
+                    {s.poster
+                      ? <img src={s.poster} alt={s.title} style={{ width: 48, height: 66, objectFit: "cover", border: `1px solid ${T.paperDark}`, flexShrink: 0 }} onError={e => e.target.style.display="none"} />
+                      : <div style={{ width: 48, height: 66, background: T.paperDark, flexShrink: 0 }} />
+                    }
+                    <div>
+                      <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 14 }}{s.title}</div>
+                      {s.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: T.inkLight, marginTop: 2 }}>{s.subtitle}</div>}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
