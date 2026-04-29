@@ -2891,10 +2891,14 @@ export default function Vouch() {
           <div className="masthead-rule-ornament"><span>—</span><span>✦</span><span>—</span></div>
           <div className="masthead-tagline">Love it? Vouch for it.</div>
           <nav className="nav">
-            <button className={`nav-btn${tab === "home" ? " active" : ""}`} onClick={() => { setTab("home"); setViewing(null); window.history.pushState({tab:"home"}, "", "/"); scrollToTop(); }}>Home</button>
+            <button className={`nav-btn${tab === "home" ? " active" : ""}`} onClick={() => { setTab("home"); setViewing(null); window.history.pushState({tab:"home"}, "", "/"); scrollToTop(); }} style={{ position: "relative" }}>
+              Home
+              {newAgreements.length > 0 && tab !== "home" && <span style={{ position: "absolute", top: 4, right: 4, width: 6, height: 6, borderRadius: "50%", background: T.ink }} />}
+            </button>
             <button className={`nav-btn${tab === "board" && !viewing ? " active" : ""}`} onClick={() => { setTab("board"); setViewing(null); window.history.pushState({tab:"board"}, "", "/"); scrollToTop(); }}>My Board</button>
-            <button className={`nav-btn${tab === "friends" ? " active" : ""}`} onClick={() => { setTab("friends"); setViewing(null); window.history.pushState({tab:"friends"}, "", "/"); scrollToTop(); }}>
-              Buddies {pendingIn.length > 0 && <span style={{ background: T.ink, color: T.bg, borderRadius: "50%", fontSize: 9, padding: "1px 5px", marginLeft: 4 }}>{pendingIn.length}</span>}
+            <button className={`nav-btn${tab === "friends" ? " active" : ""}`} onClick={() => { setTab("friends"); setViewing(null); window.history.pushState({tab:"friends"}, "", "/"); scrollToTop(); }} style={{ position: "relative" }}>
+              Buddies
+              {pendingIn.length > 0 && <span style={{ position: "absolute", top: 4, right: 4, background: tab === "friends" ? T.bg : T.ink, color: tab === "friends" ? T.ink : T.bg, borderRadius: "50%", fontSize: 8, width: 14, height: 14, display: "inline-flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral SC',serif", fontWeight: 700 }}>{pendingIn.length}</span>}
             </button>
             <button className={`nav-btn${tab === "archive" ? " active" : ""}`} onClick={() => { setTab("archive"); setViewing(null); window.history.pushState({tab:"archive"}, "", "/"); scrollToTop(); }}>Archive</button>
             <button className={`nav-btn${tab === "settings" ? " active" : ""}`} onClick={() => { setTab("settings"); setViewing(null); window.history.pushState({tab:"settings"}, "", "/"); scrollToTop(); }}>Settings</button>
@@ -2903,24 +2907,25 @@ export default function Vouch() {
         </header>
 
         <main className="page">
-          {newAgreements.length > 0 && !viewing && tab === "board" && (
-            <div style={{ background: T.ink, color: T.bg, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }} onClick={() => setShowAgreements(true)}>
-              <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13 }}>
-                {newAgreements.length === 1
-                  ? <><strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11 }}>{newAgreements[0].display_name}</strong> agreed with <strong style={{ fontStyle: "normal" }}>{newAgreements[0].title}</strong> →</>
-                  : <><strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11 }}>{newAgreements.length} people</strong> agreed with your titles — tap to see →</>
-                }
-              </div>
-              <button onClick={e => { e.stopPropagation(); setNewAgreements([]); }} style={{ background: "transparent", border: "none", color: "rgba(200,194,180,0.5)", fontSize: 20, cursor: "pointer", padding: 0, flexShrink: 0 }}>×</button>
-            </div>
-          )}
+
 
           {tab === "home" && !viewing && (
             <div style={{ maxWidth: 680, margin: "0 auto", paddingTop: 24 }}>
+              {newAgreements.length > 0 && (
+                <div style={{ background: T.ink, color: T.bg, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }} onClick={() => setShowAgreements(true)}>
+                  <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13 }}>
+                    {newAgreements.length === 1
+                      ? <><strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11 }}>{newAgreements[0].display_name}</strong> agreed with <strong style={{ fontStyle: "normal" }}>{newAgreements[0].title}</strong> →</>
+                      : <><strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11 }}>{newAgreements.length} people</strong> agreed with your titles — tap to see →</>
+                    }
+                  </div>
+                  <button onClick={e => { e.stopPropagation(); setNewAgreements([]); }} style={{ background: "transparent", border: "none", color: "rgba(200,194,180,0.5)", fontSize: 20, cursor: "pointer", padding: 0, flexShrink: 0 }}>×</button>
+                </div>
+              )}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
                 <div className="board-name" style={{ fontSize: 28 }}>Home</div>
                 {(newAgreements.length + pendingIn.length + newBuddies.length) > 0 && (
-                  <button onClick={() => setShowNotificationtrue)} style={{ background: tab === "home" ? T.bg : T.ink, border: "none", borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontFamily: "'Spectral SC',serif", fontSize: 9, fontWeight: 700, color: tab === "home" ? T.ink : T.bg, flexShrink: 0 }}>
+                  <button onClick={() => setShowNotifications(true)} style={{ background: tab === "home" ? T.bg : T.ink, border: "none", borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontFamily: "'Spectral SC',serif", fontSize: 9, fontWeight: 700, color: tab === "home" ? T.ink : T.bg, flexShrink: 0 }}>
                     {newAgreements.length + pendingIn.length + newBuddies.length}
                   </button>
                 )}
