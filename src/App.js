@@ -2513,7 +2513,8 @@ export default function Vouch() {
       }
 
       // More vouches
-      const moreCount = vouchedCount > 1 ? vouchedCount - 1 : 4;
+      const totalShelfItems = Object.values(currBoard).flat().length;
+      const moreCount = totalShelfItems > 1 ? totalShelfItems - 1 : 4;
       ctx.strokeStyle = "rgba(17,16,8,0.25)";
       ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(72, 1592); ctx.lineTo(380, 1592); ctx.stroke();
@@ -2521,7 +2522,7 @@ export default function Vouch() {
       ctx.fillStyle = "#666";
       ctx.font = "italic 400 36px Georgia";
       ctx.textAlign = "center";
-      ctx.fillText(`+ ${moreCount} more vouch${moreCount !== 1 ? "es" : ""}`, 540, 1604);
+      ctx.fillText(`+ ${moreCount} more tile${moreCount !== 1 ? "s" : ""} on my shelf`, 540, 1604);
       ctx.textAlign = "left";
 
       // CTA question
@@ -3727,7 +3728,7 @@ export default function Vouch() {
             <div className="modal-overlay" onClick={() => setShareModal(false)}>
               <div className="modal" onClick={e => e.stopPropagation()}>
                 <div className="modal-head">
-                  <div className="modal-title">Share Your Board</div>
+                  <div className="modal-title">Your Vouch is Live! Share it.</div>
                   <button className="modal-x" onClick={() => setShareModal(false)}>×</button>
                 </div>
                 <div className="modal-body">
