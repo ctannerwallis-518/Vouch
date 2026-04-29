@@ -3552,21 +3552,17 @@ export default function Vouch() {
           <div className="modal-overlay" onClick={() => setShowShareNudge(false)}>
             <div className="modal" onClick={e => e.stopPropagation()}>
               <div className="modal-head">
-                <div className="modal-title">Share Your Vouch 🎉</div>
+                <div className="modal-title">Share Your Vouch</div>
                 <button className="modal-x" onClick={() => setShowShareNudge(false)}>×</button>
               </div>
               <div className="modal-body" style={{ textAlign: "center" }}>
-                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkMid, marginBottom: 20 }}>Your Vouch is live — share it with your friends!</div>
-                <div style={{ background: T.ink, color: T.bg, padding: 20, marginBottom: 20, borderRadius: 2 }}>
-                  <div style={{ fontFamily: "'Spectral SC',serif", fontSize: 10, letterSpacing: "0.2em", color: "rgba(200,194,180,0.5)", marginBottom: 6 }}>Vouch</div>
-                  <div style={{ fontFamily: "'Times New Roman',serif", fontWeight: 900, fontSize: 22, color: T.bg }}>{activeBoard?.name || activeBoard?.theme || "My Vouch"}</div>
-                  <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.6)", marginTop: 4 }}>by {user?.displayName}</div>
+                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkMid, marginBottom: 20 }}>Your Vouch is live — share it with your circle.</div>
+                <div style={{ background: T.ink, color: T.bg, padding: 20, marginBottom: 20, border: "3px double #C9A84C" }}>
+                  <div style={{ fontFamily: "'Spectral SC',serif", fontSize: 9, letterSpacing: "0.3em", color: "rgba(200,194,180,0.4)", marginBottom: 8 }}>EST. 2026 · VOUCH</div>
+                  <div style={{ fontFamily: "'Times New Roman',serif", fontWeight: 900, fontSize: 26, color: T.bg, marginBottom: 4 }}>{activeBoard?.name || activeBoard?.theme || "My Vouch"}</div>
+                  <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: "rgba(200,194,180,0.5)", marginBottom: 12 }}>vouched by {user?.displayName}</div>
+                  <div style={{ fontFamily: "'Spectral SC',serif", fontSize: 8, letterSpacing: "0.2em", color: "rgba(200,194,180,0.35)", marginTop: 12 }}>{window.location.origin}/@{user?.username}</div>
                 </div>
-                <button className="btn btn-solid" style={{ width: "100%", padding: "14px", fontSize: "11px", letterSpacing: "0.2em" }} onClick={() => {
-                  const link = `${window.location.origin}/@${user?.username}`;
-                  navigator.clipboard?.writeText(link);
-                  alert("Link copied! " + link);
-                  setShowShareNudge(false);
                 <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
                   <button className="btn btn-solid" style={{ flex: 1, padding: "12px", fontSize: "10px", letterSpacing: "0.15em" }} onClick={() => { navigator.clipboard?.writeText(window.location.origin + "/@" + user?.username); alert("Link copied!"); }}>Copy Link</button>
                   <button className="btn btn-ghost" style={{ flex: 1, padding: "12px", fontSize: "10px", letterSpacing: "0.15em" }} onClick={() => { shareBoard(); setShowShareNudge(false); }}>Download Card</button>
