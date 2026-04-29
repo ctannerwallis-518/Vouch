@@ -1974,6 +1974,7 @@ export default function Vouch() {
   const [editingBoard,   setEditingBoard]   = useState(null);
   const [editingMeta,    setEditingMeta]    = useState(false);
   const [newAgreements,  setNewAgreements]  = useState([]);
+  const [newBuddies,     setNewBuddies]     = useState([]);
   const [showAgreements, setShowAgreements] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [pastNotifications, setPastNotifications] = useState([]);
@@ -2268,6 +2269,19 @@ export default function Vouch() {
           .gt("created_at", lastVisit)
           .order("created_at", { ascending: false })
           .limit(5);
+        // Check for newly accepted buddy requests since last visit
+        const { data: newAccepted } = await supabase.from("buddies")
+          .select("requester_id, receiver_id, profiles!buddies_receiver_id_fkey(display_name), requester:profiles!buddies_requester_id_fkey(display_name)")
+          .or(`requester_id.eq.${uid},receiver_id.eq.${uid}`)
+          .eq("status", "accepted")
+          .gt("updated_at", lastVisit);
+        if (newAccepted && newAccepted.length > 0) {
+          const buddyNames = newAccepted.map(b => {
+            const otherName = b.requester_id === uid ? b.profiles?.display_name : b.requester?.display_name;
+            return otherName;
+          }).filter(Boolean);
+          setNewBuddies(buddyNames);
+        }
         if (newAgrees && newAgrees.length > 0) {
           const uids = [...new Set(newAgrees.map(r => r.user_id))];
           const { data: profs } = await supabase.from("profiles").select("id, display_name").in("id", uids);
@@ -2783,7 +2797,7 @@ export default function Vouch() {
 
   // PWA badge
   useEffect(() => {
-    const count = (newAgreements || []).length + (pendingIn || []).length;
+    const count = (newAgreements || []).length + (pendingIn || []).length + (newBuddies || []).length;
     if (navigator.setAppBadge) {
       if (count > 0) navigator.setAppBadge(count);
       else navigator.clearAppBadge();
@@ -2903,7 +2917,17 @@ export default function Vouch() {
 
           {tab === "home" && !viewing && (
             <div style={{ maxWidth: 680, margin: "0 auto", paddingTop: 24 }}>
-              <div className="board-name" style={{ fontSize: 28, marginBottom: 4 }}>Home</div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                <div className="board-name" style={{ fontSize: 28 }}>Home</div>
+                <button onClick={() => setShowNotifications(true)} style={{ position: "relative", background: "transparent", border: "none", fontSize: 22, cursor: "pointer", padding: "4px 8px", filter: "grayscale(100%)" }}>
+                  🔔
+                  {(newAgreements.length + pendingIn.length + newBuddies.length) > 0 && (
+                    <span style={{ position: "absolute", top: 0, right: 0, background: T.ink, color: T.bg, borderRadius: "50%", fontSize: 8, width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral SC',serif", fontWeight: 700 }}>
+                      {newAgreements.length + pendingIn.length + newBuddies.length}
+                    </span>
+                  )}
+                </button>
+              </div>
               <div className="board-sub" style={{ marginBottom: 28 }}>Recent activity from your circle</div>
               {buddies.length === 0
                 ? <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: "#7a7568", padding: "24px 0" }}>Add some buddies to see their activity here.</div>
@@ -3422,6 +3446,18 @@ export default function Vouch() {
                 {newAgreements.length === 0 && pendingIn.length === 0 && (
                   <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight }}>No new notifications.</div>
                 )}
+                {newBuddies.length > 0 && (
+                  <div style={{ marginBottom: 20 }}>
+                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 10 }}>New Connections</div>
+                    {newBuddies.map((name, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
+                        <div style={{ fontFamily: "'Spectral',serif", fontSize: 14 }}>
+                          🤝 <strong>{name}</strong> <span style={{ fontStyle: "italic", color: T.inkMid }}>and you are now buddies</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 {pendingIn.length > 0 && (
                   <div style={{ marginBottom: 20 }}>
                     <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 10 }}>Buddy Requests</div>
@@ -3459,12 +3495,16 @@ export default function Vouch() {
                       </div>
                     ))}
                     <button className="btn btn-ghost" style={{ width: "100%", marginTop: 12 }} onClick={() => {
-                      const toSave = newAgreements.map(r => ({ type: "agree", display_name: r.display_name, title: r.title, date: new Date().toISOString() }));
+                      const toSave = [
+                        ...newAgreements.map(r => ({ type: "agree", display_name: r.display_name, title: r.title, date: new Date().toISOString() })),
+                        ...newBuddies.map(name => ({ type: "buddy", display_name: name, date: new Date().toISOString() })),
+                      ];
                       const updated = [...toSave, ...pastNotifications].slice(0, 50);
                       setPastNotifications(updated);
                       localStorage.setItem("vouch-past-notifs-" + userId, JSON.stringify(updated));
                       setShowNotifications(false);
                       setNewAgreements([]);
+                      setNewBuddies([]);
                     }}>Dismiss All</button>
                   </div>
                 )}
