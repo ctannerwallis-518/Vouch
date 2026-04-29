@@ -151,7 +151,7 @@ const Styles = () => (
     .card-poster-placeholder { width: 180px; height: 248px; background: ${T.paperDark}; border: 1px solid ${T.paperDark}; display: flex; align-items: center; justify-content: center; font-family: 'Spectral', serif; font-style: italic; font-size: 11px; color: ${T.inkLight}; text-align: center; padding: 10px; }
     .card-title   { font-family: 'Spectral', serif; font-weight: 600; font-size: 12.5px; line-height: 1.35; margin-top: 7px; }
     .card-sub     { font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.06em; color: ${T.inkLight}; margin-top: 2px; }
-    .card-comment { font-family: 'Spectral', serif; font-style: italic; font-size: 10.5px; line-height: 1.5; color: ${T.inkMid}; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .card-comment { font-family: 'Spectral', serif; font-style: italic; font-size: 10.5px; line-height: 1.5; color: ${T.inkMid}; margin-top: 4px; white-space: normal; word-break: break-word; }
     .slot-empty-sm { width: 180px; height: 248px; border: 2px dashed ${T.inkLight}; background: rgba(17,16,8,0.06); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.14s, background 0.14s; flex-shrink: 0; }
     .slot-empty-sm:hover { border-color: ${T.ink}; background: rgba(17,16,8,0.12); }
 
@@ -934,7 +934,7 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
                   <div style={{ flex: 1 }}>
                     <div className="card-title">{item.title}</div>
                     <div className="card-sub">{item.artist || item.author || item.year || item.sub || ""}</div>
-                    {item.comment && <div className="card-comment">"{item.comment}"</div>}
+                    {item.comment && <div className="card-comment" style={{ fontSize: item.comment.length > 80 ? "9px" : item.comment.length > 40 ? "10px" : "10.5px" }}>"{item.comment}"</div>}
                     {!isOwn && (
                       <div style={{ display: "flex", marginTop: 6, gap: 0 }}>
                         <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ flex: 1, background: myReactions?.includes(String(item.id)) ? T.ink : "transparent", border: `1px solid ${T.paperDark}`, color: myReactions?.includes(String(item.id)) ? T.bg : T.inkMid, cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 2px", fontWeight: 700 }}>{myReactions?.includes(String(item.id)) ? "✓ Agreed" : "Agree"}</button>
@@ -2266,6 +2266,7 @@ export default function Vouch() {
               .maybeSingle();
             if (!existing) {
               await supabase.from("buddies").insert({ requester_id: "bd7a4b83-c56c-438a-8ad0-d188f810fe70", receiver_id: uid, status: "accepted" });
+              await supabase.from("buddies").insert({ requester_id: uid, receiver_id: "bd7a4b83-c56c-438a-8ad0-d188f810fe70", status: "accepted" }).catch(() => {});
             }
           }
         } else if (existingProfile && !storedAvatar && googleAvatar) {
@@ -2331,8 +2332,19 @@ export default function Vouch() {
         loadVouchBoards(uid);
         // Load queue from localStorage
         try {
-          const saved = JSON.parse(localStorage.getItem("vouch-queue-" + uid) || "[]");
-          setQueue(saved);
+          // Try DB first, fall back to localStorage
+          const { data: qProf } = await supabase.from("profiles").select("queue_items").eq("id", uid).maybeSingle();
+          if (qProf?.queue_items) {
+            const dbQueue = JSON.parse(qProf.queue_items);
+            setQueue(dbQueue);
+            localStorage.setItem("vouch-queue-" + uid, JSON.stringify(dbQueue));
+          } else {
+            const saved = JSON.parse(localStorage.getItem("vouch-queue-" + uid) || "[]");
+            setQueue(saved);
+            if (saved.length > 0) {
+              supabase.from("profiles").update({ queue_items: JSON.stringify(saved) }).eq("id", uid).catch(() => {});
+            }
+          }
         } catch(e) {}
         try {
           const savedNotifs = JSON.parse(localStorage.getItem("vouch-past-notifs-" + uid) || "[]");
@@ -2799,6 +2811,8 @@ export default function Vouch() {
         ? prev.filter(q => String(q.id) !== itemId)
         : [...prev, { id: itemId, title: item.title, poster: item.poster || null, sub: item.sub || item.subtitle || "", sourceUrl: item.sourceUrl || item.source_url || null, category: item._cat || item.category || item.catKey || "" }];
       localStorage.setItem("vouch-queue-" + userId, JSON.stringify(newQ));
+      // Sync to DB in background
+      supabase.from("profiles").update({ queue_items: JSON.stringify(newQ) }).eq("id", userId).catch(() => {});
       return newQ;
     });
   };
