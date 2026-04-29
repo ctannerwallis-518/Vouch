@@ -2919,14 +2919,11 @@ export default function Vouch() {
             <div style={{ maxWidth: 680, margin: "0 auto", paddingTop: 24 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
                 <div className="board-name" style={{ fontSize: 28 }}>Home</div>
-                <button onClick={() => setShowNotifications(true)} style={{ position: "relative", background: "transparent", border: "none", fontSize: 22, cursor: "pointer", padding: "4px 8px", filter: "grayscale(100%)" }}>
-                  🔔
-                  {(newAgreements.length + pendingIn.length + newBuddies.length) > 0 && (
-                    <span style={{ position: "absolute", top: 0, right: 0, background: T.ink, color: T.bg, borderRadius: "50%", fontSize: 8, width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral SC',serif", fontWeight: 700 }}>
-                      {newAgreements.length + pendingIn.length + newBuddies.length}
-                    </span>
-                  )}
-                </button>
+                {(newAgreements.length + pendingIn.length + newBuddies.length) > 0 && (
+                  <button onClick={() => setShowNotificationtrue)} style={{ background: tab === "home" ? T.bg : T.ink, border: "none", borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontFamily: "'Spectral SC',serif", fontSize: 9, fontWeight: 700, color: tab === "home" ? T.ink : T.bg, flexShrink: 0 }}>
+                    {newAgreements.length + pendingIn.length + newBuddies.length}
+                  </button>
+                )}
               </div>
               <div className="board-sub" style={{ marginBottom: 28 }}>Recent activity from your circle</div>
               {buddies.length === 0
