@@ -2811,16 +2811,24 @@ export default function Vouch() {
         ? prev.filter(q => String(q.id) !== itemId)
         : [...prev, { id: itemId, title: item.title, poster: item.poster || null, sub: item.sub || item.subtitle || "", sourceUrl: item.sourceUrl || item.source_url || null, category: item._cat || item.category || item.catKey || "" }];
       localStorage.setItem("vouch-queue-" + userId, JSON.stringify(newQ));
-      // Sync to DB in background
-      supabase.from("profiles").update({ queue_items: JSON.stringify(newQ) }).eq("id", userId).catch(() => {});
+      syncQueueToDB(newQ);
       return newQ;
     });
+  };
+
+  const queueSyncTimer = useRef(null);
+  const syncQueueToDB = (newQ) => {
+    clearTimeout(queueSyncTimer.current);
+    queueSyncTimer.current = setTimeout(() => {
+      supabase.from("profiles").update({ queue_items: JSON.stringify(newQ) }).eq("id", userId).catch(() => {});
+    }, 2000);
   };
 
   const removeFromQueue = (id) => {
     setQueue(prev => {
       const newQ = prev.filter(q => String(q.id) !== String(id));
       localStorage.setItem("vouch-queue-" + userId, JSON.stringify(newQ));
+      syncQueueToDB(newQ);
       return newQ;
     });
   };
