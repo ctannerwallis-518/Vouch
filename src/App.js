@@ -3567,11 +3567,11 @@ export default function Vouch() {
                   navigator.clipboard?.writeText(link);
                   alert("Link copied! " + link);
                   setShowShareNudge(false);
-                }}>Copy Share Link</button>
-                {navigator.share && <button className="btn btn-ghost" style={{ width: "100%", padding: "14px", fontSize: "11px", letterSpacing: "0.2em", marginTop: 8 }} onClick={() => {
-                  navigator.share({ title: "Check out my Vouch", url: `${window.location.origin}/@${user?.username}` });
-                  setShowShareNudge(false);
-                }}>Share via...</button>}
+                <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                  <button className="btn btn-solid" style={{ flex: 1, padding: "12px", fontSize: "10px", letterSpacing: "0.15em" }} onClick={() => { navigator.clipboard?.writeText(window.location.origin + "/@" + user?.username); alert("Link copied!"); }}>Copy Link</button>
+                  <button className="btn btn-ghost" style={{ flex: 1, padding: "12px", fontSize: "10px", letterSpacing: "0.15em" }} onClick={() => { shareBoard(); setShowShareNudge(false); }}>Download Card</button>
+                </div>
+                {navigator.share && <button className="btn btn-ghost" style={{ width: "100%", padding: "12px", fontSize: "10px", letterSpacing: "0.15em" }} onClick={() => { navigator.share({ title: "Check out my Vouch", url: window.location.origin + "/@" + user?.username }); setShowShareNudge(false); }}>Share via...</button>}
               </div>
             </div>
           </div>
