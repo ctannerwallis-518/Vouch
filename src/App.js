@@ -3584,14 +3584,16 @@ export default function Vouch() {
               </div>
               <div className="modal-body">
                 {shelfExtras.map((s, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: `1px solid ${T.paperDark}`, cursor: s.source_url ? "pointer" : "default" }} onClick={() => s.source_url && window.open(s.source_url, "_blank")}>
-                    {s.poster
-                      ? <img src={s.poster} alt={s.title} style={{ width: 48, height: 66, objectFit: "cover", border: `1px solid ${T.paperDark}`, flexShrink: 0 }} onError={e => e.target.style.display="none"} />
-                      : <div style={{ width: 48, height: 66, background: T.paperDark, flexShrink: 0 }} />
-                    }
-                    <div>
-                      <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 14 }}>{s.title}</div>
-                      {s.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: T.inkLight, marginTop: 2 }}>{s.subtitle}</div>}
+                  <div key={i} style={{ padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, cursor: s.source_url ? "pointer" : "default" }} onClick={() => s.source_url && window.open(s.source_url, "_blank")}>
+                      {s.poster
+                        ? <img src={s.poster} alt={s.title} style={{ width: 48, height: 66, objectFit: "cover", border: `1px solid ${T.paperDark}`, flexShrink: 0 }} onError={e => e.target.style.display="none"} />
+                        : <div style={{ width: 48, height: 66, background: T.paperDark, flexShrink: 0 }} />
+                      }
+                      <div>
+                        <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 14 }}>{s.title}</div>
+                        {s.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: T.inkLight, marginTop: 2 }}>{s.subtitle}</div>}
+                      </div>
                     </div>
                   </div>
                 ))}
