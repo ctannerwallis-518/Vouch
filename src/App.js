@@ -2053,7 +2053,7 @@ export default function Vouch() {
     await loadVouchBoards(userId);
     setBoardEditor(false);
     setEditingBoard(null);
-    setShareModal(true);
+    setTimeout(() => setShareModal(true), 300);
   };
 
   const unpublishBoard = async () => { // eslint-disable-line no-unused-vars
