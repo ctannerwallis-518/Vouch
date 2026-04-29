@@ -1828,21 +1828,12 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeS
                   <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: "#a09890", marginLeft: 8 }}>{item.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
                 </div>
               </div>
-              <div style={{ width: "100%", maxWidth: 300, margin: "0 auto" }}>
-                <div style={{ cursor: primary.source_url ? "pointer" : "default" }} onClick={() => primary.source_url && window.open(primary.source_url, "_blank")}>
-                  {primary.poster && <img src={primary.poster} alt={primary.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: "1px solid #b3ada0", display: "block" }} onError={e => e.target.style.display = "none"} />}
-                  <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{primary.title}</div>
-                  {primary.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{primary.subtitle}</div>}
-                </div>
-                {onDudeSame && buddy && buddy.userId !== selfId && (
-                  <div style={{ display: "flex", marginTop: 8 }}>
-                    <button onClick={() => onDudeSame({ id: primary.item_id || primary.id, title: primary.title, poster: primary.poster, _cat: primary.category }, buddy.userId)} style={{ flex: 1, background: (myReactions||[]).find(r => r.item_id === String(primary.item_id || primary.id) && r.item_owner_id === buddy.userId) ? "rgba(17,16,8,0.15)" : "transparent", border: "1px solid #b3ada0", color: "#3a3830", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700 }}>
-                      {(myReactions||[]).find(r => r.item_id === String(primary.item_id || primary.id) && r.item_owner_id === buddy.userId) ? "✓ Agreed" : "Agree"}
-                    </button>
-                    {onAddToQueue && <button onClick={() => onAddToQueue({ id: primary.item_id || primary.id, title: primary.title, poster: primary.postersource_url: primary.source_url, category: primary.category, user_id: buddy.userId })} style={{ flex: 1, background: (queue||[]).find(q => q.id === String(primary.item_id || primary.id)) ? "rgba(17,16,8,0.15)" : "transparent", border: "1px solid #b3ada0", borderLeft: "none", color: "#3a3830", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700 }}>{(queue||[]).find(q => q.id === String(primary.item_id || primary.id)) ? "✓ Queued" : "+ Queue"}</button>}
-                  </div>
-                )}
+              <div style={{ width: "100%", maxWidth: 300, margin: "0 auto", cursor: primary.source_url ? "pointer" : "default" }} onClick={() => primary.source_url && window.open(primary.source_url, "_blank")}>
+                {primary.poster && <img src={primary.poster} alt={primary.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: "1px solid #b3ada0", display: "block" }} onError={e => e.target.style.display = "none"} />}
+                <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{primary.title}</div>
+                {primary.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{primary.subtitle}</div>}
               </div>
+            </div>
           );
         }
         if (item.type === "agree") {
@@ -3593,16 +3584,14 @@ export default function Vouch() {
               </div>
               <div className="modal-body">
                 {shelfExtras.map((s, i) => (
-                  <div key={i} style={{ padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12, cursor: s.source_url ? "pointer" : "default" }} onClick={() => s.source_url && window.open(s.source_url, "_blank")}>
-                      {s.poster
-                        ? <img src={s.poster} alt={s.title} style={{ width: 48, height: 66, objectFit: "cover", border: `1px solid ${T.paperDark}`, flexShrink: 0 }} onError={e => e.target.style.display="none"} />
-                        : <div style={{ width: 48, height: 66, background: T.paperDark, flexShrink: 0 }} />
-                      }
-                      <div>
-                        <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 14 }}>{s.title}</div>
-                        {s.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: T.inkLight, marginTop: 2 }}>{s.subtitle}</div>}
-                      </div>
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: `1px solid ${T.paperDark}`, cursor: s.source_url ? "pointer" : "default" }} onClick={() => s.source_url && window.open(s.source_url, "_blank")}>
+                    {s.poster
+                      ? <img src={s.poster} alt={s.title} style={{ width: 48, height: 66, objectFit: "cover", border: `1px solid ${T.paperDark}`, flexShrink: 0 }} onError={e => e.target.style.display="none"} />
+                      : <div style={{ width: 48, height: 66, background: T.paperDark, flexShrink: 0 }} />
+                    }
+                    <div>
+                      <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 14 }}>{s.title}</div>
+                      {s.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: T.inkLight, marginTop: 2 }}>{s.subtitle}</div>}
                     </div>
                   </div>
                 ))}
