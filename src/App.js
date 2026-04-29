@@ -3590,7 +3590,7 @@ export default function Vouch() {
                       : <div style={{ width: 48, height: 66, background: T.paperDark, flexShrink: 0 }} />
                     }
                     <div>
-                      <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 14 }}{s.title}</div>
+                      <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 14 }}>{s.title}</div>
                       {s.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: T.inkLight, marginTop: 2 }}>{s.subtitle}</div>}
                     </div>
                   </div>
