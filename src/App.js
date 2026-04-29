@@ -3556,16 +3556,33 @@ export default function Vouch() {
                 <button className="modal-x" onClick={() => setShowShareNudge(false)}>×</button>
               </div>
               <div className="modal-body" style={{ textAlign: "center" }}>
-                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkMid, marginBottom: 20 }}>Your Vouch is live — share it with your circle.</div>
-                <div style={{ background: T.ink, color: T.bg, padding: 20, marginBottom: 20, border: "3px double #C9A84C" }}>
-                  <div style={{ fontFamily: "'Spectral SC',serif", fontSize: 9, letterSpacing: "0.3em", color: "rgba(200,194,180,0.4)", marginBottom: 8 }}>EST. 2026 · VOUCH</div>
-                  <div style={{ fontFamily: "'Times New Roman',serif", fontWeight: 900, fontSize: 26, color: T.bg, marginBottom: 4 }}>{activeBoard?.name || activeBoard?.theme || "My Vouch"}</div>
-                  <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: "rgba(200,194,180,0.5)", marginBottom: 12 }}>vouched by {user?.displayName}</div>
-                  <div style={{ fontFamily: "'Spectral SC',serif", fontSize: 8, letterSpacing: "0.2em", color: "rgba(200,194,180,0.35)", marginTop: 12 }}>{window.location.origin}/@{user?.username}</div>
+                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkMid, marginBottom: 16 }}>Your Vouch is live — share it with your circle.</div>
+                {/* Share card preview */}
+                <div style={{ background: T.ink, color: T.bg, marginBottom: 16, border: "3px double #C9A84C", position: "relative", overflow: "hidden" }}>
+                  {(() => {
+                    const coverItem = (activeBoard?.vouch_board_items || []).sort((a,b) => a.position - b.position)[0];
+                    return coverItem?.poster ? (
+                      <div style={{ position: "relative" }}>
+                        <img src={coverItem.poster} alt={coverItem.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", display: "block", maxHeight: 280 }} onError={e => e.target.style.display="none"} />
+                        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(to top, rgba(17,16,8,0.95) 0%, rgba(17,16,8,0) 100%)", padding: "40px 16px 16px" }}>
+                          <div style={{ fontFamily: "'Times New Roman',serif", fontWeight: 900, fontSize: 22, color: "#C8C2B4" }}>{activeBoard?.name || activeBoard?.theme || "My Vouch"}</div>
+                          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.6)" }}>vouched by {user?.displayName}</div>
+                        </div>
+                        <div style={{ position: "absolute", top: 8, left: 8, fontFamily: "'Spectral SC',serif", fontSize: 8, letterSpacing: "0.2em", color: "rgba(200,194,180,0.5)" }}>EST. 2026 · VOUCH</div>
+                      </div>
+                    ) : (
+                      <div style={{ padding: "24px 20px" }}>
+                        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: 9, letterSpacing: "0.3em", color: "rgba(200,194,180,0.4)", marginBottom: 8 }}>EST. 2026 · VOUCH</div>
+                        <div style={{ fontFamily: "'Times New Roman',serif", fontWeight: 900, fontSize: 26, color: "#C8C2B4", marginBottom: 4 }}>{activeBoard?.name || activeBoard?.theme || "My Vouch"}</div>
+                        <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: "rgba(200,194,180,0.5)" }}>vouched by {user?.displayName}</div>
+                      </div>
+                    );
+                  })()}
+                  <div style={{ padding: "8px 16px", fontFamily: "'Spectral SC',serif", fontSize: 8, letterSpacing: "0.2em", color: "rgba(200,194,180,0.35)" }}>{window.location.origin}/@{user?.username}</div>
                 </div>
                 <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
                   <button className="btn btn-solid" style={{ flex: 1, padding: "12px", fontSize: "10px", letterSpacing: "0.15em" }} onClick={() => { navigator.clipboard?.writeText(window.location.origin + "/@" + user?.username); alert("Link copied!"); }}>Copy Link</button>
-                  <button className="btn btn-ghost" style={{ flex: 1, padding: "12px", fontSize: "10px", letterSpacing: "0.15em" }} onClick={() => { shareBoard(); setShowShareNudge(false); }}>Download Card</button>
+                  <button className="btn btn-ghost" style={{ flex: 1, padding: "12px", fontSize: "10px", letterSpacing: "0.15em" }} onClick={() => { shareBoard(); }}>Download Card</button>
                 </div>
                 {navigator.share && <button className="btn btn-ghost" style={{ width: "100%", padding: "12px", fontSize: "10px", letterSpacing: "0.15em" }} onClick={() => { navigator.share({ title: "Check out my Vouch", url: window.location.origin + "/@" + user?.username }); setShowShareNudge(false); }}>Share via...</button>}
               </div>
