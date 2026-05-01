@@ -3129,7 +3129,7 @@ export default function Vouch() {
                   <div className="board-sub" style={{ marginBottom: 16 }}>{buddies.length} connection{buddies.length !== 1 ? "s" : ""}</div>
                   <div style={{ display: "flex", gap: 8 }}>
                     <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setShowBuddyList(true)}>View Buddies ({buddies.length})</button>
-                    <button className="btn btn-solid" style={{ flex: 1 }} onClick={() => setBuddyModal(true)}>+ Add Buddy</button>
+                    <button className="btn btn-solid" style={{ flex: 1 }} onClick={() => setBuddyModal(true)}>+ Add Buddies</button>
                   </div>
                 </div>
                 {/* WELCOME NOTIFICATION - first buddy */}
@@ -3238,7 +3238,7 @@ export default function Vouch() {
                       const isSentToViewing = sentRequests.includes(viewing.userId);
                       return isSentToViewing
                         ? <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkFaint }}>Sent</span>
-                        : <button onClick={() => { sendBuddyRequest(viewing.userId); setSentRequests(prev => [...prev, viewing.userId]); }} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "6px 14px", background: "transparent", color: T.ink, border: `1px solid ${T.ink}`, cursor: "pointer", whiteSpace: "nowrap" }}>+ Add Buddy</button>;
+                        : <button onClick={() => { sendBuddyRequest(viewing.userId); setSentRequests(prev => [...prev, viewing.userId]); }} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "6px 14px", background: "transparent", color: T.ink, border: `1px solid ${T.ink}`, cursor: "pointer", whiteSpace: "nowrap" }}>+ Add Buddies</button>;
                     })()}
                     {!viewing && (
                       <button onClick={() => setShareModal(true)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "6px 14px", background: T.ink, color: T.bg, border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>Share</button>
