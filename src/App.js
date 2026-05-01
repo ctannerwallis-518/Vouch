@@ -372,7 +372,6 @@ function PublicBoard({ inviteUserId, onSignUp }) {
               </div>
             </div>
           </div>
-          <div className="ornament"><span>—</span><span>✦</span><span>—</span></div>
           {board?.activeVouchBoard && (() => {
             const avb = board.activeVouchBoard;
             const vbBoard = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
