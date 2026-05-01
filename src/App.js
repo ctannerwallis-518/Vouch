@@ -2309,6 +2309,8 @@ export default function Vouch() {
             if (!existing) {
               await supabase.from("buddies").insert({ requester_id: "bd7a4b83-c56c-438a-8ad0-d188f810fe70", receiver_id: uid, status: "accepted" });
               await supabase.from("buddies").insert({ requester_id: uid, receiver_id: "bd7a4b83-c56c-438a-8ad0-d188f810fe70", status: "accepted" }).catch(() => {});
+              // Store flag so we can show the welcome notification on first login
+              localStorage.setItem("vouch-new-buddy-christian-" + uid, "1");
             }
           }
         } else if (existingProfile && !storedAvatar && googleAvatar) {
@@ -2392,6 +2394,11 @@ export default function Vouch() {
           const savedNotifs = JSON.parse(localStorage.getItem("vouch-past-notifs-" + uid) || "[]");
           setPastNotifications(savedNotifs);
         } catch(e) {}
+        // Show welcome buddy notification if this is their first login
+        if (localStorage.getItem("vouch-new-buddy-christian-" + uid)) {
+          setNewBuddies(["Christian Wallis"]);
+          localStorage.removeItem("vouch-new-buddy-christian-" + uid);
+        }
         const params = new URLSearchParams(window.location.search);
         const inviteFrom = params.get("invite");
         if (inviteFrom && inviteFrom !== uid) {
