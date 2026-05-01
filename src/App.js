@@ -354,11 +354,16 @@ function PublicBoard({ inviteUserId, onSignUp }) {
               </div>
               <div className="board-sub" style={{ marginBottom: 8 }}>@{profile?.username || ""}</div>
               <div style={{ display: "flex", gap: 16 }}>
-                {board?.activeVouchBoard && (
-                  <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.12em", color: T.inkLight }}>
-                    <span style={{ fontWeight: 700, color: T.ink, fontSize: "12px", fontFamily: "'Spectral',serif" }}>{(board.activeVouchBoard.vouch_board_items || []).length}</span> {" vouches"}
-                  </div>
-                )}
+                {(() => {
+                  const shelfCount = Object.values(board?.shelf || {}).flat().length;
+                  const vouchCount = (board?.activeVouchBoard?.vouch_board_items || []).length;
+                  const total = shelfCount + vouchCount;
+                  return total > 0 ? (
+                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.12em", color: T.inkLight }}>
+                      <span style={{ fontWeight: 700, color: T.ink, fontSize: "12px", fontFamily: "'Spectral',serif" }}>{total}</span>{" vouches"}
+                    </div>
+                  ) : null;
+                })()}
                 {publicBuddies.length > 0 && (
                   <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.12em", color: T.inkLight }}>
                     <span style={{ fontWeight: 700, color: T.ink, fontSize: "12px", fontFamily: "'Spectral',serif" }}>{publicBuddies.length}</span> {" buddies"}
@@ -366,7 +371,6 @@ function PublicBoard({ inviteUserId, onSignUp }) {
                 )}
               </div>
             </div>
-            <button onClick={onSignUp} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "6px 14px", background: T.ink, color: T.bg, border: "none", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>Join Vouch</button>
           </div>
           <div className="ornament"><span>—</span><span>✦</span><span>—</span></div>
           {board?.activeVouchBoard && (() => {
