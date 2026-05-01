@@ -818,7 +818,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
   const currentOffsetX     = useRef(0);
   const isHoriz            = useRef(false);
   const containerRef       = useRef(null);
-  const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
+  const isMobile = typeof window !== "undefined" && window.innerWidth <= 640; // eslint-disable-line
 
   const allItems = [];
   CATEGORIES.forEach(cat => {
@@ -953,7 +953,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
 
 function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, buddyCounts, onAddToQueue, queue }) {
   const [open, setOpen] = useState(true);
-  const isMobile = typeof window !== "undefined" && window.innerWidth <= 640;
+  const isMobile = typeof window !== "undefined" && window.innerWidth <= 640; // eslint-disable-line
   const slots = Array(5).fill(null).map((_, i) => items[i] || null);
   const collapsed = isMobile && !open;
   return (
@@ -1975,6 +1975,7 @@ export default function Vouch() {
   const [avatarLightbox, setAvatarLightbox] = useState(null);
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "instant" });
+  const isMobileGlobal = typeof window !== "undefined" && window.innerWidth <= 640;
 
 
   // Save and restore scroll position when leaving/returning to page
@@ -3190,7 +3191,7 @@ export default function Vouch() {
 
                 {/* GROUP VOUCH - top of page */}
                 {groupVouchItems.length > 0 && (
-                  <GroupVouchSlideshow items={groupVouchItems} isMobile={window.innerWidth <= 640} onAddToQueue={addToQueue} queue={queue} onDudeSame={dudeSame} />
+                  <GroupVouchSlideshow items={groupVouchItems} isMobile={isMobileGlobal} onAddToQueue={addToQueue} queue={queue} onDudeSame={dudeSame} />
                 )}
 
                 <BuddiesBin allBuddyBoards={allBuddyBoards} buddies={buddies} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId, true); window.scrollTo(0,0); }} onAddToQueue={addToQueue} queue={queue} onDudeSame={dudeSame} myReactions={myReactions} userId={userId} />
