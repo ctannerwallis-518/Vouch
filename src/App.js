@@ -1874,6 +1874,12 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeS
                 {primary.poster && <img src={primary.poster} alt={primary.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: "1px solid #b3ada0", display: "block" }} onError={e => e.target.style.display = "none"} />}
                 <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{primary.title}</div>
                 {primary.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{primary.subtitle}</div>}
+                {onDudeSame && buddy && buddy.userId !== selfId && (
+                  <div style={{ display: "flex", marginTop: 8 }}>
+                    <button onClick={() => onDudeSame({ id: primary.item_id, title: primary.title, poster: primary.poster, _cat: primary.category }, buddy.userId)} style={{ flex: 1, background: "transparent", border: "1px solid #b3ada0", color: "#3a3830", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700 }}>Agree</button>
+                    {onAddToQueue && <button onClick={() => onAddToQueue({ id: primary.item_id, title: primary.title, poster: primary.poster, source_url: primary.source_url, category: primary.category, user_id: buddy.userId })} style={{ flex: 1, background: "transparent", border: "1px solid #b3ada0", borderLeft: "none", color: "#3a3830", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700 }}>+ Queue</button>}
+                  </div>
+                )}
               </div>
             </div>
           );
