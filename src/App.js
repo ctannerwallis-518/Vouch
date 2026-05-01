@@ -3132,6 +3132,22 @@ export default function Vouch() {
                     <button className="btn btn-solid" style={{ flex: 1 }} onClick={() => setBuddyModal(true)}>+ Add Buddy</button>
                   </div>
                 </div>
+                {/* WELCOME NOTIFICATION - first buddy */}
+                {newBuddies.length > 0 && newBuddies.includes("Christian Wallis") && (
+                  <div style={{ marginBottom: 24, border: `2px solid ${T.ink}`, padding: "16px 18px" }}>
+                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: T.ink, marginBottom: 14, fontWeight: 700 }}>Your First Buddy</div>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => { setViewing({ userId: "bd7a4b83-c56c-438a-8ad0-d188f810fe70", username: "ctanner.wallis", displayName: "Christian Wallis", avatarUrl: null }); setTab("board"); loadViewBoard("bd7a4b83-c56c-438a-8ad0-d188f810fe70"); loadBoardReactions("bd7a4b83-c56c-438a-8ad0-d188f810fe70", true); window.scrollTo(0,0); }}>
+                        <Avatar name="Christian Wallis" size={40} avatarUrl={null} />
+                        <div>
+                          <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 15 }}>Christian Wallis</div>
+                          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: T.inkLight }}>@ctanner.wallis · Founder</div>
+                        </div>
+                      </div>
+                      <button onClick={() => setNewBuddies([])} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkFaint, background: "transparent", border: "none", cursor: "pointer" }}>Dismiss</button>
+                    </div>
+                  </div>
+                )}
                 {/* PENDING REQUESTS - top of page */}
                 {pendingIn.length > 0 && (
                   <div style={{ marginBottom: 24, border: `2px solid ${T.ink}`, padding: "16px 18px" }}>
@@ -3559,13 +3575,13 @@ export default function Vouch() {
                 {newAgreements.length === 0 && pendingIn.length === 0 && (
                   <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight }}>No new notifications.</div>
                 )}
-                {newBuddies.length > 0 && (
+                {newBuddies.filter(n => n !== "Christian Wallis").length > 0 && (
                   <div style={{ marginBottom: 20 }}>
                     <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 10 }}>New Connections</div>
-                    {newBuddies.map((name, i) => (
+                    {newBuddies.filter(n => n !== "Christian Wallis").map((name, i) => (
                       <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
                         <div style={{ fontFamily: "'Spectral',serif", fontSize: 14 }}>
-                          🤝 <strong>{name}</strong> <span style={{ fontStyle: "italic", color: T.inkMid }}>and you are now buddies</span>
+                          <strong>{name}</strong> <span style={{ fontStyle: "italic", color: T.inkMid }}>and you are now buddies</span>
                         </div>
                       </div>
                     ))}
