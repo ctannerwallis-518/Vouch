@@ -3238,7 +3238,7 @@ export default function Vouch() {
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 8, marginTop: 4, flexShrink: 0 }}>
-                    {viewing && !buddies.find(b => b.userId === viewing.userId) && (() => {
+                    {viewing && viewing.userId !== userId && !buddies.find(b => b.userId === viewing.userId) && (() => {
                       const isSentToViewing = sentRequests.includes(viewing.userId);
                       return isSentToViewing
                         ? <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkFaint }}>Sent</span>
