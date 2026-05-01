@@ -865,7 +865,10 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
     return () => { el.removeEventListener("touchstart", handleStart); el.removeEventListener("touchmove", handleMove); el.removeEventListener("touchend", handleEnd); };
   }, [idx, total, isMobile]);
 
+  const prevIdxRef = useRef(idx);
   useEffect(() => {
+    if (prevIdxRef.current === idx) return;
+    prevIdxRef.current = idx;
     const el = containerRef.current;
     if (!el || !isMobile) return;
     const track = el.querySelector(".swipe-track");
