@@ -2319,12 +2319,16 @@ export default function Vouch() {
         }
         // Always ensure auto-buddy with Christian regardless of new/existing user
         if (uid !== "bd7a4b83-c56c-438a-8ad0-d188f810fe70") {
+          let isNewBuddy = false;
           try {
-            await supabase.from("buddies").insert({ requester_id: "bd7a4b83-c56c-438a-8ad0-d188f810fe70", receiver_id: uid, status: "accepted" });
+            const res = await supabase.from("buddies").insert({ requester_id: "bd7a4b83-c56c-438a-8ad0-d188f810fe70", receiver_id: uid, status: "accepted" });
+            if (!res.error) isNewBuddy = true;
           } catch(e) {}
           try {
             await supabase.from("buddies").insert({ requester_id: uid, receiver_id: "bd7a4b83-c56c-438a-8ad0-d188f810fe70", status: "accepted" });
           } catch(e) {}
+          // Show welcome notification on buddies tab for new user
+          if (isNewBuddy) setNewBuddies(["Christian Wallis"]);
         }
         // Never overwrite a custom (non-Google) avatar on login
         setUser({ username: existingProfile?.username || session.user.email.split("@")[0], displayName: existingProfile?.display_name || session.user.user_metadata?.full_name || session.user.email.split("@")[0], avatarUrl });
