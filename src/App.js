@@ -376,11 +376,15 @@ function PublicBoard({ inviteUserId, onSignUp }) {
                 <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.18em", color: T.inkMid }}>Also on Vouch</div>
                 <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkFaint, cursor: "pointer" }} onClick={() => setShowSignupNudge(true)}>Sign up to see their boards →</div>
               </div>
-              <div style={{ display: "flex", gap: 14, overflowX: "auto", scrollbarWidth: "none", paddingBottom: 4 }}>
-                {publicBuddies.map((b, i) => (
-                  <div key={i} onClick={() => setShowSignupNudge(true)} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, cursor: "pointer", flexShrink: 0, width: 64 }}>
-                    <Avatar name={b.display_name} size={52} avatarUrl={b.avatar_url} />
-                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.08em", color: T.inkMid, textAlign: "center", lineHeight: 1.3, width: 64, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.display_name.split(" ")[0]}</div>
+              <div style={{ display: "flex", gap: 16, overflowX: "auto", scrollbarWidth: "none", paddingBottom: 4 }}>
+                {[...publicBuddies].sort((a, b) => {
+                  const aHasPhoto = a.avatar_url && !a.avatar_url.includes("/avatars/");
+                  const bHasPhoto = b.avatar_url && !b.avatar_url.includes("/avatars/");
+                  return bHasPhoto - aHasPhoto;
+                }).map((b, i) => (
+                  <div key={i} onClick={() => setShowSignupNudge(true)} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, cursor: "pointer", flexShrink: 0, width: 72 }}>
+                    <Avatar name={b.display_name} size={64} avatarUrl={b.avatar_url} />
+                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.06em", color: T.inkMid, textAlign: "center", lineHeight: 1.3, width: 72, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.display_name.split(" ")[0]}</div>
                   </div>
                 ))}
               </div>
