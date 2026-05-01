@@ -3141,7 +3141,7 @@ export default function Vouch() {
                         <Avatar name="Christian Wallis" size={40} avatarUrl={null} />
                         <div>
                           <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 15 }}>Christian Wallis</div>
-                          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: T.inkLight }}>@ctanner.wallis · Founder</div>
+                          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: T.inkLight }}>@ctanner.wallis · Creator</div>
                         </div>
                       </div>
                       <button onClick={() => setNewBuddies([])} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkFaint, background: "transparent", border: "none", cursor: "pointer" }}>Dismiss</button>
