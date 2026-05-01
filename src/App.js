@@ -2291,8 +2291,8 @@ export default function Vouch() {
         const { data: existingProfile } = await supabase.from("profiles").select("avatar_url, username, display_name").eq("id", uid).maybeSingle();
         // Prefer stored avatar unless it is a Google URL (googleusercontent = Google photo)
         const storedAvatar = existingProfile?.avatar_url;
-        const isGoogleUrl = storedAvatar && (storedAvatar.includes("googleusercontent") || storedAvatar.includes("google"));
-        const avatarUrl = (storedAvatar && !isGoogleUrl) ? storedAvatar : googleAvatar;
+        // Always use stored avatar if it exists - never override with Google
+        const avatarUrl = storedAvatar || googleAvatar;
         if (!existingProfile) {
           await supabase.from("profiles").upsert({
             id: uid,
