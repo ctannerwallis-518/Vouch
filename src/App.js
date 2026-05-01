@@ -260,13 +260,14 @@ function PublicBoard({ inviteUserId, onSignUp }) {
   const [loading, setLoading]       = useState(true);
   const [showSignupNudge, setShowSignupNudge] = useState(false);
   const [publicBuddies, setPublicBuddies] = useState([]);
+  const [showPublicBuddies, setShowPublicBuddies] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       try {
         const { data: prof } = await supabase
-          .from("profiles").select("id, username, display_name").eq("id", inviteUserId).maybeSingle();
+          .from("profiles").select("id, username, display_name, avatar_url").eq("id", inviteUserId).maybeSingle();
         if (prof) setProfile(prof);
         // Load buddies for public display
         const { data: buddyRows } = await supabase
@@ -365,7 +366,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
                   ) : null;
                 })()}
                 {publicBuddies.length > 0 && (
-                  <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.12em", color: T.inkLight }}>
+                  <div onClick={() => setShowPublicBuddies(true)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.12em", color: T.inkLight, cursor: "pointer" }}>
                     <span style={{ fontWeight: 700, color: T.ink, fontSize: "12px", fontFamily: "'Spectral',serif" }}>{publicBuddies.length}</span> {" buddies"}
                   </div>
                 )}
@@ -425,6 +426,27 @@ function PublicBoard({ inviteUserId, onSignUp }) {
           <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid }}>© {new Date().getFullYear()} Vouch. All Rights Reserved.</div>
         </footer>
 
+        {showPublicBuddies && (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(17,16,8,0.82)", zIndex: 900, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 72 }} onClick={() => setShowPublicBuddies(false)}>
+            <div style={{ background: T.bg, width: "100%", maxWidth: 540, maxHeight: "82vh", overflow: "hidden", border: `1px solid ${T.ink}`, display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 22px", borderBottom: `2px solid ${T.ink}` }}>
+                <div style={{ fontFamily: "'Spectral',serif", fontWeight: 700, fontSize: 17 }}>{name}'s Buddies</div>
+                <button onClick={() => setShowPublicBuddies(false)} style={{ fontFamily: "'Spectral',serif", fontSize: 22, background: "transparent", border: "none", cursor: "pointer", color: T.ink, opacity: 0.6 }}>×</button>
+              </div>
+              <div style={{ padding: "20px 22px", overflowY: "auto", flex: 1 }}>
+                {publicBuddies.map((b, i) => (
+                  <div key={i} onClick={() => setShowSignupNudge(true)} style={{ display: "flex", lignItems: "center", gap: 12, padding: "10px 0", borderBottom: `1px solid ${T.paperDark}`, cursor: "pointer" }}>
+                    <Avatar name={b.display_name} size={48} avatarUrl={b.avatar_url} />
+                    <div>
+                      <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 15 }}>{b.display_name}</div>
+                      <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: T.inkLight }}>Sign in to view →</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
         {showSignupNudge && (
           <div style={{ position: "fixed", inset: 0, background: "rgba(17,16,8,0.82)", zIndex: 900, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={() => setShowSignupNudge(false)}>
             <div style={{ background: T.bg, maxWidth: 420, width: "100%", border: `2px solid ${T.ink}`, padding: "32px 28px" }} onClick={e => e.stopPropagation()}>
@@ -2269,8 +2291,8 @@ export default function Vouch() {
         const { data: existingProfile } = await supabase.from("profiles").select("avatar_url, username, display_name").eq("id", uid).maybeSingle();
         // Prefer stored avatar unless it is a Google URL (googleusercontent = Google photo)
         const storedAvatar = existingProfile?.avatar_url;
-        const isGoogleUrl = storedAvatar && (storedAvatar.includes("googleusercontent") || storedAvatar.includes("google"));
-        const avatarUrl = (storedAvatar && !isGoogleUrl) ? storedAvatar : googleAvatar;
+        // Always use stored avatar if it exists - never override with Google
+        const avatarUrl = storedAvatar || googleAvatar;
         if (!existingProfile) {
           await supabase.from("profiles").upsert({
             id: uid,
