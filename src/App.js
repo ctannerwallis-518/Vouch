@@ -3192,9 +3192,12 @@ export default function Vouch() {
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 8, marginTop: 4, flexShrink: 0 }}>
-                    {viewing && !buddies.find(b => b.userId === viewing.userId) && (
-                      <button onClick={() => sendBuddyRequest(viewing.userId)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "6px 14px", background: "transparent", color: T.ink, border: `1px solid ${T.ink}`, cursor: "pointer", whiteSpace: "nowrap" }}>+ Add Buddy</button>
-                    )}
+                    {viewing && !buddies.find(b => b.userId === viewing.userId) && (() => {
+                      const isSentToViewing = sentRequests.includes(viewing.userId);
+                      return isSentToViewing
+                        ? <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkFaint }}>Sent</span>
+                        : <button onClick={() => { sendBuddyRequest(viewing.userId); setSentRequests(prev => [...prev, viewing.userId]); }} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "6px 14px", background: "transparent", color: T.ink, border: `1px solid ${T.ink}`, cursor: "pointer", whiteSpace: "nowrap" }}>+ Add Buddy</button>;
+                    })()}
                     {!viewing && (
                       <button onClick={() => setShareModal(true)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "6px 14px", background: T.ink, color: T.bg, border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>Share</button>
                     )}
