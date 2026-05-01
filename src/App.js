@@ -370,31 +370,28 @@ function PublicBoard({ inviteUserId, onSignUp }) {
               </div>
             );
           })()}
+          {publicBuddies.length > 0 && (
+            <div style={{ marginBottom: 32 }}>
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 14 }}>
+                <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.18em", color: T.inkMid }}>Also on Vouch</div>
+                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkFaint, cursor: "pointer" }} onClick={() => setShowSignupNudge(true)}>Sign up to see their boards →</div>
+              </div>
+              <div style={{ display: "flex", gap: 14, overflowX: "auto", scrollbarWidth: "none", paddingBottom: 4 }}>
+                {publicBuddies.map((b, i) => (
+                  <div key={i} onClick={() => setShowSignupNudge(true)} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, cursor: "pointer", flexShrink: 0, width: 64 }}>
+                    <Avatar name={b.display_name} size={52} avatarUrl={b.avatar_url} />
+                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.08em", color: T.inkMid, textAlign: "center", lineHeight: 1.3, width: 64, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.display_name.split(" ")[0]}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {[...CATEGORIES].sort((a, b) => ((board?.shelf?.[b.key] || []).length - (board?.shelf?.[a.key] || []).length)).map(cat => {
             const items = board?.shelf?.[cat.key] || [];
             if (items.length === 0) return null;
             return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} />;
           })}
-          {publicBuddies.length > 0 && (
-            <div style={{ margin: "32px 0", borderTop: `1px solid ${T.paperDark}`, paddingTop: 24 }}>
-              <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.18em", color: T.inkMid, marginBottom: 16 }}>Also on Vouch</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
-                {publicBuddies.map((b, i) => (
-                  <div key={i} onClick={() => setShowSignupNudge(true)} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
-                    <Avatar name={b.display_name} size={56} avatarUrl={b.avatar_url} />
-                    <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.inkMid, borderBottom: `1px solid transparent` }}
-                      onMouseEnter={e => e.currentTarget.style.borderBottomColor = T.inkLight}
-                      onMouseLeave={e => e.currentTarget.style.borderBottomColor = "transparent"}>
-                      {b.display_name}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkFaint, marginTop: 14 }}>
-                Sign up to see their boards →
-              </div>
-            </div>
-          )}
+
           <div style={{ marginTop: 48, padding: "32px 0", borderTop: `3px double ${T.ink}`, textAlign: "center" }}>
             <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 26, fontWeight: 900, marginBottom: 8 }}>Make your own board.</div>
             <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkMid, marginBottom: 24 }}>What would you put your name behind right now?</div>
@@ -1000,7 +997,7 @@ function MutualMentions({ reactions, myReactions, isOwn, boardOwnerName, buddies
   );
 }
 
-function BuddyModal({ userId, onClose, onSendRequest, onGenerateLink, inviteLink, existingBuddyIds }) {
+function BuddyModal({ userId, onClose, onSendRequest, onGenerateLink, inviteLink, existingBuddyIds, onViewProfile }) {
   const [q, setQ]               = useState("");
   const [results, setResults]   = useState([]);
   const [suggested, setSuggested] = useState([]);
@@ -1048,7 +1045,7 @@ function BuddyModal({ userId, onClose, onSendRequest, onGenerateLink, inviteLink
     const mutualCount = r.mutual_count || 0;
     return (
       <div key={r.id} className="result-item" style={{ justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, cursor: "pointer" }} onClick={() => onViewProfile && onViewProfile(r)}>
           <Avatar name={r.display_name} size={52} avatarUrl={r.avatar_url} />
           <div>
             <div className="result-title">{r.display_name}</div>
@@ -1060,7 +1057,7 @@ function BuddyModal({ userId, onClose, onSendRequest, onGenerateLink, inviteLink
           ? <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkFaint }}>Buddies</span>
           : isSent
           ? <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkFaint }}>Sent</span>
-          : <button className="btn btn-solid" style={{ padding: "4px 12px" }} onClick={() => { onSendRequest(r.id); setSent(s => [...s, r.id]); }}>Add</button>
+          : <button className="btn btn-solid" style={{ padding: "4px 12px" }} onClick={e => { e.stopPropagation(); onSendRequest(r.id); setSent(s => [...s, r.id]); }}>Add</button>
         }
       </div>
     );
@@ -3290,7 +3287,7 @@ export default function Vouch() {
         })()}
 
         {buddyModal && (
-          <BuddyModal userId={userId} onClose={() => { setBuddyModal(false); setInviteLink(null); }} onSendRequest={sendBuddyRequest} onGenerateLink={generateInviteLink} inviteLink={inviteLink} existingBuddyIds={buddies.map(b => b.userId)} />
+          <BuddyModal userId={userId} onClose={() => { setBuddyModal(false); setInviteLink(null); }} onSendRequest={sendBuddyRequest} onGenerateLink={generateInviteLink} inviteLink={inviteLink} existingBuddyIds={buddies.map(b => b.userId)} onViewProfile={(r) => { setBuddyModal(false); setViewing({ userId: r.id, username: r.username, displayName: r.display_name, avatarUrl: r.avatar_url }); setTab("board"); loadViewBoard(r.id); loadBoardReactions(r.id, true); window.scrollTo(0,0); }} />
         )}
 
         {vouchModal && (
