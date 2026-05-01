@@ -279,7 +279,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
             b.requester_id === inviteUserId ? b.receiver_id : b.requester_id
           ).filter(Boolean);
           const { data: profiles } = await supabase
-            .from("profiles").select("id, display_name, avatar_url").in("id", buddyIds);
+            .from("profiles").select("id, display_name, avatar_url, created_at").in("id", buddyIds).order("created_at", { ascending: false });
           if (profiles) setPublicBuddies(profiles);
         }
         const { data: activeVouchBoard } = await supabase
@@ -335,11 +335,6 @@ function PublicBoard({ inviteUserId, onSignUp }) {
           <div className="masthead-tagline">Love it? Vouch for it.</div>
         </header>
         <main className="page">
-          <div style={{ marginBottom: 20 }}>
-            <div className="board-name" style={{ fontSize: 28, marginBottom: 2 }}>{name}</div>
-            <div className="board-sub" style={{ marginBottom: 14 }}>@{profile?.username || ""}</div>
-            <button onClick={onSignUp} className="btn btn-solid" style={{ width: "100%", padding: "12px", fontSize: 13 }}>Create Your Own Vouch Board →</button>
-          </div>
           <div style={{ marginBottom: 24, borderTop: `1px solid ${T.paperDark}`, borderBottom: `1px solid ${T.paperDark}`, padding: "14px 0", display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 8 }}>
             {[{label: "Your Vouch", desc: "Up to 5 tiles, one board at a time, updated once a week"},{label: "Your Shelf", desc: "Up to 5 per category — change it whenever you like"},{label: "Buddies", desc: "See what your friends are vouching for. Agree with anything that resonates, or add it to your Queue."}].map(item => (
               <div key={item.label} style={{ textAlign: "center", flex: "1 1 100px" }}>
@@ -347,6 +342,31 @@ function PublicBoard({ inviteUserId, onSignUp }) {
                 <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkMid, marginTop: 3 }}>{item.desc}</div>
               </div>
             ))}
+          </div>
+          <button onClick={onSignUp} className="btn btn-solid" style={{ width: "100%", padding: "12px", fontSize: 13, marginBottom: 28 }}>Create Your Own Vouch Board →</button>
+          <div className="ornament"><span>—</span><span>✦</span><span>—</span></div>
+          {/* Profile header - looks like signed-in view */}
+          <div style={{ marginBottom: 28, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                <Avatar name={name} size={56} avatarUrl={profile?.avatar_url} />
+                <div className="board-name" style={{ fontSize: 28, marginBottom: 0 }}>{name}</div>
+              </div>
+              <div className="board-sub" style={{ marginBottom: 8 }}>@{profile?.username || ""}</div>
+              <div style={{ display: "flex", gap: 16 }}>
+                {board?.activeVouchBoard && (
+                  <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.12em", color: T.inkLight }}>
+                    <span style={{ fontWeight: 700, color: T.ink, fontSize: "12px", fontFamily: "'Spectral',serif" }}>{(board.activeVouchBoard.vouch_board_items || []).length}</span> {" vouches"}
+                  </div>
+                )}
+                {publicBuddies.length > 0 && (
+                  <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.12em", color: T.inkLight }}>
+                    <span style={{ fontWeight: 700, color: T.ink, fontSize: "12px", fontFamily: "'Spectral',serif" }}>{publicBuddies.length}</span> {" buddies"}
+                  </div>
+                )}
+              </div>
+            </div>
+            <button onClick={onSignUp} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "6px 14px", background: T.ink, color: T.bg, border: "none", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>Join Vouch</button>
           </div>
           <div className="ornament"><span>—</span><span>✦</span><span>—</span></div>
           {board?.activeVouchBoard && (() => {
@@ -377,11 +397,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
                 <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkFaint, cursor: "pointer" }} onClick={() => setShowSignupNudge(true)}>Sign up to see their boards →</div>
               </div>
               <div style={{ display: "flex", gap: 16, overflowX: "auto", scrollbarWidth: "none", paddingBottom: 4 }}>
-                {[...publicBuddies].sort((a, b) => {
-                  const aHasPhoto = a.avatar_url && !a.avatar_url.includes("/avatars/");
-                  const bHasPhoto = b.avatar_url && !b.avatar_url.includes("/avatars/");
-                  return bHasPhoto - aHasPhoto;
-                }).map((b, i) => (
+                {publicBuddies.map((b, i) => (
                   <div key={i} onClick={() => setShowSignupNudge(true)} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, cursor: "pointer", flexShrink: 0, width: 72 }}>
                     <Avatar name={b.display_name} size={64} avatarUrl={b.avatar_url} />
                     <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.06em", color: T.inkMid, textAlign: "center", lineHeight: 1.3, width: 72, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.display_name.split(" ")[0]}</div>
