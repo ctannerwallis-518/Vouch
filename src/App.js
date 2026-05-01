@@ -2319,14 +2319,12 @@ export default function Vouch() {
         }
         // Always ensure auto-buddy with Christian regardless of new/existing user
         if (uid !== "bd7a4b83-c56c-438a-8ad0-d188f810fe70") {
-          const { data: existingBuddy } = await supabase.from("buddies")
-            .select("id")
-            .or(`and(requester_id.eq.bd7a4b83-c56c-438a-8ad0-d188f810fe70,receiver_id.eq.${uid}),and(requester_id.eq.${uid},receiver_id.eq.bd7a4b83-c56c-438a-8ad0-d188f810fe70)`)
-            .maybeSingle();
-          if (!existingBuddy) {
-            await supabase.from("buddies").insert({ requester_id: "bd7a4b83-c56c-438a-8ad0-d188f810fe70", receiver_id: uid, status: "accepted" }).catch(() => {});
-            await supabase.from("buddies").insert({ requester_id: uid, receiver_id: "bd7a4b83-c56c-438a-8ad0-d188f810fe70", status: "accepted" }).catch(() => {});
-          }
+          try {
+            await supabase.from("buddies").insert({ requester_id: "bd7a4b83-c56c-438a-8ad0-d188f810fe70", receiver_id: uid, status: "accepted" });
+          } catch(e) {}
+          try {
+            await supabase.from("buddies").insert({ requester_id: uid, receiver_id: "bd7a4b83-c56c-438a-8ad0-d188f810fe70", status: "accepted" });
+          } catch(e) {}
         }
         // Never overwrite a custom (non-Google) avatar on login
         setUser({ username: existingProfile?.username || session.user.email.split("@")[0], displayName: existingProfile?.display_name || session.user.user_metadata?.full_name || session.user.email.split("@")[0], avatarUrl });
