@@ -2030,7 +2030,9 @@ export default function Vouch() {
   const [viewActiveBoard,setViewActiveBoard]= useState(null);
   const [suggested, setSuggested] = useState([]); // eslint-disable-line no-unused-vars
   const [queue,          setQueue]          = useState([]);
+  const queueRef = useRef([]);
   const [shelfView,      setShelfView]      = useState("shelf"); // "shelf" | "queue"
+  useEffect(() => { queueRef.current = queue; }, [queue]);
 
   const loadMyReactions = async (uid) => {
     const { data } = await supabase.from("reactions").select("*").eq("user_id", uid).order("created_at", { ascending: false });
@@ -2845,7 +2847,7 @@ export default function Vouch() {
   const addToQueue = async (item) => {
     if (!userId) return;
     const itemId = String(item.item_id || item.id);
-    const currentQueue = queue;
+    const currentQueue = queueRef.current;
     const exists = currentQueue.find(q => String(q.id) === itemId);
     const newQ = exists
       ? currentQueue.filter(q => String(q.id) !== itemId)
