@@ -1146,82 +1146,35 @@ const TERMS = `TERMS OF USE
 
 Effective Date: March 11, 2026
 
-Welcome to Vouch ("the Service"), operated by Vouch ("we," "us," or "our"). By accessing or using Vouch, you agree to be bound by these Terms of Use. If you do not agree, please do not use the Service.
+By using Vouch, you agree to these terms.
 
-1. USE OF THE SERVICE
-Vouch is a personal endorsement platform that allows users to share cultural recommendations with friends. You must be at least 13 years of age to use this Service. You agree not to use the Service for any unlawful purpose or in any way that could harm Vouch or other users.
+You must be 13 or older to use Vouch. You're responsible for your account and what you post. Don't use Vouch for anything unlawful or harmful to others.
 
-2. USER ACCOUNTS
-You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. We reserve the right to terminate accounts at our discretion.
+You own your content. By posting it, you allow us to display it on the platform. You can remove it at any time.
 
-3. CONTENT
-You retain ownership of any content you submit to Vouch. By submitting content, you grant Vouch a non-exclusive, royalty-free license to display that content within the Service. You are solely responsible for the content you post.
+Vouch uses Google, Spotify, TMDB, and Open Library to power certain features. Your use of those services is subject to their own terms.
 
-4. THIRD-PARTY SERVICES
-Vouch integrates with third-party services including Google, Spotify, and others. Your use of those services is governed by their respective terms and policies. Vouch is not responsible for the content, policies, or practices of third-party services.
+The Vouch name, design, and code are ours. Please don't reproduce or redistribute them without permission.
 
-5. INTELLECTUAL PROPERTY
-The Vouch name, logo, design, and all associated content are the intellectual property of Vouch. All rights reserved. You may not reproduce, distribute, or create derivative works without our express written permission.
+Vouch is provided as-is. We're not liable for issues that arise from your use of the service.
 
-6. DISCLAIMERS
-THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND. VOUCH DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
-
-7. LIMITATION OF LIABILITY
-TO THE FULLEST EXTENT PERMITTED BY LAW, VOUCH SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES ARISING FROM YOUR USE OF THE SERVICE.
-
-8. CHANGES TO TERMS
-We reserve the right to modify these Terms at any time. Continued use of the Service after changes constitutes acceptance of the new Terms.
-
-9. CONTACT
-For questions about these Terms, contact us at legal@vouch5.com.`;
+We may update these terms occasionally. Continued use means you accept any changes.`;
 
 const PRIVACY = `PRIVACY POLICY
 
 Effective Date: March 11, 2026
 
-Vouch ("we," "us," or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use the Vouch platform.
+We keep it simple.
 
-1. INFORMATION WE COLLECT
-We collect the following information when you use Vouch:
-- Account Information: Your name and email address, collected via Google Sign-In.
-- Preference Data: Movies, TV shows, books, and music (artists, albums, songs) that you choose to endorse on your board.
-- Social Data: Buddy connections and reactions you make on other users' boards.
-- Usage Data: Standard server logs including IP address, browser type, and pages visited.
+We collect your name and email via Google Sign-In, the titles you add to your shelf and boards, your buddy connections, and basic usage data.
 
-2. HOW WE USE YOUR INFORMATION
-We use your information to:
-- Provide and operate the Vouch Service
-- Display your board and endorsements to you and your approved Buddies
-- Enable social features including Buddy connections and reactions
-- Improve and develop the Service
+We use this only to run Vouch. We don't sell your data, show ads, or share anything with third parties. Your board is visible to your approved Buddies only.
 
-3. THIRD-PARTY SERVICES
-Vouch integrates with the following third-party services:
-- Google: Used for authentication. Governed by Google's Privacy Policy.
-- Spotify: Used to search and display music content. We do not store your Spotify credentials or access your private Spotify data.
-- The Movie Database (TMDB): Used to search and display film and television content.
-- Open Library: Used to search and display book content.
+We use Google for login, Spotify for music, TMDB for film and TV, and Open Library for books. We don't store credentials for any of these services.
 
-4. DATA SHARING
-We do not sell your personal information to third parties. Your board is visible to your approved Buddies. We do not share your data with advertisers.
+Your data is kept as long as your account is active. To delete your account and all associated data, use the contact form in Settings.
 
-5. DATA RETENTION
-We retain your data for as long as your account is active. You may delete your account and associated data at any time by contacting us.
-
-6. SECURITY
-We use industry-standard security measures including Supabase row-level security to protect your data. No method of transmission over the Internet is 100% secure.
-
-7. CHILDREN'S PRIVACY
-Vouch is not directed at children under 13. We do not knowingly collect personal information from children under 13.
-
-8. YOUR RIGHTS
-Depending on your jurisdiction, you may have rights to access, correct, or delete your personal data. Contact us at legal@vouch5.com to make a request.
-
-9. CHANGES TO THIS POLICY
-We may update this Privacy Policy from time to time. We will notify users of significant changes by updating the effective date above.
-
-10. CONTACT
-For privacy-related questions, contact us at legal@vouch5.com.`;
+We may update this policy occasionally. Continued use means you accept any changes.`;
 
 function LegalModal({ page, onClose }) {
   if (page === "how") {
@@ -1946,6 +1899,50 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeS
         }
         return null;
       })}
+    </div>
+  );
+}
+
+function ContactForm({ userId, userEmail }) {
+  const [msg, setMsg] = useState("");
+  const [sent, setSent] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const send = async () => {
+    if (!msg.trim()) return;
+    setBusy(true);
+    try {
+      await fetch("https://formsubmit.co/ajax/ctanner.wallis@gmail.com", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({
+          message: msg,
+          _subject: "Vouch Feedback",
+          userId: userId || "unknown",
+          username: userEmail || "unknown",
+        })
+      });
+      setSent(true);
+      setMsg("");
+    } catch(e) { console.error(e); }
+    setBusy(false);
+  };
+
+  if (sent) return <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight }}>Thanks — we got it.</div>;
+
+  return (
+    <div>
+      <textarea
+        className="comment-area"
+        style={{ height: 100, marginBottom: 10 }}
+        placeholder="Your message…"
+        value={msg}
+        onChange={e => setMsg(e.target.value)}
+        maxLength={1000}
+      />
+      <button className="btn btn-solid" onClick={send} disabled={busy || !msg.trim()} style={{ width: "100%" }}>
+        {busy ? "Sending…" : "Send Message"}
+      </button>
     </div>
   );
 }
@@ -3095,6 +3092,11 @@ export default function Vouch() {
               <div style={{ borderTop: `1px solid ${T.paperDark}`, paddingTop: 28 }}>
                 <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 16 }}>Avatar</div>
                 <button className="btn btn-ghost" onClick={() => setAvatarPicker(true)}>Change Avatar</button>
+              </div>
+              <div style={{ borderTop: `1px solid ${T.paperDark}`, paddingTop: 28, marginTop: 28 }}>
+                <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 8 }}>Contact & Feedback</div>
+                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 16, lineHeight: 1.6 }}>Got feedback, a bug to report, or need help? Send us a note.</div>
+                <ContactForm userId={userId} userEmail={user?.username} />
               </div>
             </div>
           )}
