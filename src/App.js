@@ -422,20 +422,6 @@ function PublicBoard({ inviteUserId, onSignUp }) {
             <button onClick={onSignUp} className="btn btn-solid" style={{ fontSize: 13, padding: "12px 32px" }}>Get Started — It's Free</button>
           </div>
         </main>
-        {showContactModal && (
-          <div className="modal-overlay" onClick={() => setShowContactModal(false)}>
-            <div className="modal" onClick={e => e.stopPropagation()}>
-              <div className="modal-head">
-                <div className="modal-title">Contact & Feedback</div>
-                <button className="modal-x" onClick={() => setShowContactModal(false)}>×</button>
-              </div>
-              <div className="modal-body">
-                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 16, lineHeight: 1.6 }}>Got feedback, a bug to report, or need help? Send a note.</div>
-                <ContactForm userId={userId} userEmail={user?.username} onSent={() => setShowContactModal(false)} />
-              </div>
-            </div>
-          </div>
-        )}
         <footer style={{ borderTop: `3px double ${T.ink}`, padding: "24px 28px", textAlign: "center" }}>
           <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid }}>© {new Date().getFullYear()} Vouch. All Rights Reserved.</div>
         </footer>
