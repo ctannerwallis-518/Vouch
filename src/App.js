@@ -2847,30 +2847,19 @@ export default function Vouch() {
     const itemId = String(item.item_id || item.id);
     setQueue(prev => {
       const exists = prev.find(q => String(q.id) === itemId);
-      if (!exists) {
-        // Notify item owner if it belongs to someone else
-        const ownerId = item.user_id || item.item_owner_id || null;
-        if (ownerId && ownerId !== userId) {
-          supabase.from("queue_notifications").upsert({
-            from_user_id: userId,
-            to_user_id: ownerId,
-            item_id: itemId,
-            item_title: item.title,
-            created_at: new Date().toISOString(),
-          }, { onConflict: "from_user_id,to_user_id,item_id" }).catch(() => {});
-        }
-      }
       const newQ = exists
         ? prev.filter(q => String(q.id) !== itemId)
         : [...prev, { id: itemId, title: item.title, poster: item.poster || null, sub: item.sub || item.subtitle || "", sourceUrl: item.sourceUrl || item.source_url || null, category: item._cat || item.category || item.catKey || "" }];
       localStorage.setItem("vouch-queue-" + userId, JSON.stringify(newQ));
-      syncQueueToDB(newQ);
+      setTimeout(() => {
+        supabase.from("profiles").update({ queue_items: JSON.stringify(newQ) }).eq("id", userId).catch(() => {});
+      }, 0);
       return newQ;
     });
   };
-
   const syncQueueToDB = (newQ) => {
     supabase.from("profiles").update({ queue_items: JSON.stringify(newQ) }).eq("id", userId).catch(() => {});
+  };
   };
 
   const removeFromQueue = (id) => {
