@@ -2349,7 +2349,8 @@ export default function Vouch() {
         loadMyReactions(uid);
         loadVouchBoards(uid);
         // Check for new agreements since last visit
-        const lastVisit = localStorage.getItem("vouch-last-visit") || new Date(0).toISOString();
+        const { data: visitProf } = await supabase.from("profiles").select("last_visit").eq("id", uid).maybeSingle();
+        const lastVisit = visitProf?.last_visit || localStorage.getItem("vouch-last-visit") || new Date(0).toISOString();
         const { data: newAgrees } = await supabase.from("reactions")
           .select("user_id, title")
           .eq("item_owner_id", uid)
@@ -2385,7 +2386,9 @@ export default function Vouch() {
           // pendingIn state will handle display - just ensure badge updates
           console.log("New buddy requests:", newBuddyReqs.length);
         }
-        localStorage.setItem("vouch-last-visit", new Date().toISOString());
+        const nowVisit = new Date().toISOString();
+        localStorage.setItem("vouch-last-visit", nowVisit);
+        supabase.from("profiles").update({ last_visit: nowVisit }).eq("id", uid).catch(() => {});
         // Load category preferences
         const { data: prof } = await supabase.from("profiles").select("categories").eq("id", uid).maybeSingle();
         if (prof?.categories && prof.categories.length > 0) {
