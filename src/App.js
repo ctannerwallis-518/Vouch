@@ -2867,12 +2867,8 @@ export default function Vouch() {
     });
   };
 
-  const queueSyncTimer = useRef(null);
   const syncQueueToDB = (newQ) => {
-    clearTimeout(queueSyncTimer.current);
-    queueSyncTimer.current = setTimeout(() => {
-      supabase.from("profiles").update({ queue_items: JSON.stringify(newQ) }).eq("id", userId).catch(() => {});
-    }, 2000);
+    supabase.from("profiles").update({ queue_items: JSON.stringify(newQ) }).eq("id", userId).catch(() => {});
   };
 
   const removeFromQueue = (id) => {
