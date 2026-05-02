@@ -2860,6 +2860,16 @@ export default function Vouch() {
   const syncQueueToDB = (newQ) => {
     supabase.from("profiles").update({ queue_items: JSON.stringify(newQ) }).eq("id", userId).catch(() => {});
   };
+  const removeFromQueue = (id) => {
+    setQueue(prev => {
+      const newQ = prev.filter(q => String(q.id) !== String(id));
+      localStorage.setItem("vouch-queue-" + userId, JSON.stringify(newQ));
+      setTimeout(() => {
+        supabase.from("profiles").update({ queue_items: JSON.stringify(newQ) }).eq("id", userId).catch(() => {});
+      }, 0);
+      return newQ;
+    });
+  };
   const vouchedCount = Object.values(board).flat().filter(item => item.vouched).length;
 
   // PWA badge
