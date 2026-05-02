@@ -2857,9 +2857,6 @@ export default function Vouch() {
       return newQ;
     });
   };
-  const syncQueueToDB = (newQ) => {
-    supabase.from("profiles").update({ queue_items: JSON.stringify(newQ) }).eq("id", userId).catch(() => {});
-  };
   const removeFromQueue = (id) => {
     setQueue(prev => {
       const newQ = prev.filter(q => String(q.id) !== String(id));
