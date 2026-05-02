@@ -2842,20 +2842,17 @@ export default function Vouch() {
     } catch(e) { console.error("removeItem error:", e); await loadBoard(userId); }
   };
 
-  const addToQueue = (item) => {
+  const addToQueue = async (item) => {
     if (!userId) return;
     const itemId = String(item.item_id || item.id);
-    setQueue(prev => {
-      const exists = prev.find(q => String(q.id) === itemId);
-      const newQ = exists
-        ? prev.filter(q => String(q.id) !== itemId)
-        : [...prev, { id: itemId, title: item.title, poster: item.poster || null, sub: item.sub || item.subtitle || "", sourceUrl: item.sourceUrl || item.source_url || null, category: item._cat || item.category || item.catKey || "" }];
-      localStorage.setItem("vouch-queue-" + userId, JSON.stringify(newQ));
-      setTimeout(() => {
-        supabase.from("profiles").update({ queue_items: JSON.stringify(newQ) }).eq("id", userId).catch(() => {});
-      }, 0);
-      return newQ;
-    });
+    const currentQueue = queue;
+    const exists = currentQueue.find(q => String(q.id) === itemId);
+    const newQ = exists
+      ? currentQueue.filter(q => String(q.id) !== itemId)
+      : [...currentQueue, { id: itemId, title: item.title, poster: item.poster || null, sub: item.sub || item.subtitle || "", sourceUrl: item.sourceUrl || item.source_url || null, category: item._cat || item.category || item.catKey || "" }];
+    setQueue(newQ);
+    localStorage.setItem("vouch-queue-" + userId, JSON.stringify(newQ));
+    await supabase.from("profiles").update({ queue_items: JSON.stringify(newQ) }).eq("id", userId);
   };
   const removeFromQueue = (id) => {
     setQueue(prev => {
