@@ -2968,10 +2968,11 @@ export default function Vouch() {
       <div className="app">
         <header className="masthead">
           <div className="masthead-meta">
-            <span style={{ flex: 1 }}>Est. 2026</span>
-            <span className="masthead-meta-stars" style={{ flex: "0 0 auto" }}>✦ · ✦ · ✦</span>
-            <span style={{ flex: 1, display: "flex", justifyContent: "flex-end", gap: 16 }}>
+            <span style={{ flex: 1, display: "flex", gap: 16 }}>
               <span className="clickable" onClick={() => setLegalPage("how")}>How it Works</span>
+              <span className="clickable" onClick={() => { setTab("settings"); setViewing(null); window.history.pushState({tab:"settings"}, "", "/"); scrollToTop(); setTimeout(() => document.getElementById("contact-form")?.scrollIntoView({ behavior: "smooth" }), 100); }}>Contact</span>
+            </span>
+            <span style={{ flex: 1, display: "flex", justifyContent: "flex-end", gap: 16 }}>
               <span className="clickable" onClick={() => { setTab("board"); setViewing(null); window.history.replaceState({}, "", "/"); scrollToTop(); }}>@{user.username}</span>
               <span className="clickable" onClick={signOut}>Sign out</span>
             </span>
@@ -3093,9 +3094,9 @@ export default function Vouch() {
                 <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 16 }}>Avatar</div>
                 <button className="btn btn-ghost" onClick={() => setAvatarPicker(true)}>Change Avatar</button>
               </div>
-              <div style={{ borderTop: `1px solid ${T.paperDark}`, paddingTop: 28, marginTop: 28 }}>
+              <div id="contact-form" style={{ borderTop: `1px solid ${T.paperDark}`, paddingTop: 28, marginTop: 28 }}>
                 <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 8 }}>Contact & Feedback</div>
-                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 16, lineHeight: 1.6 }}>Got feedback, a bug to report, or need help? Send us a note.</div>
+                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 16, lineHeight: 1.6 }}>Got feedback, a bug to report, or need help? Send a note.</div>
                 <ContactForm userId={userId} userEmail={user?.username} />
               </div>
             </div>
