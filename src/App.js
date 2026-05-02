@@ -1903,7 +1903,7 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeS
   );
 }
 
-function ContactForm({ userId, userEmail }) {
+function ContactForm({ userId, userEmail, onSent }) {
   const [msg, setMsg] = useState("");
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -1924,6 +1924,7 @@ function ContactForm({ userId, userEmail }) {
       });
       setSent(true);
       setMsg("");
+      if (onSent) setTimeout(onSent, 1500);
     } catch(e) { console.error(e); }
     setBusy(false);
   };
@@ -1973,6 +1974,7 @@ export default function Vouch() {
   const [shareModal,     setShareModal]     = useState(false);
   const [avatarPicker,   setAvatarPicker]   = useState(false);
   const [avatarLightbox, setAvatarLightbox] = useState(null);
+  const [showContactModal, setShowContactModal] = useState(false);
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "instant" });
   const isMobileGlobal = typeof window !== "undefined" && window.innerWidth <= 640;
@@ -2963,15 +2965,11 @@ export default function Vouch() {
       <Styles />
       <div className="app">
         <header className="masthead">
-          <div className="masthead-meta">
-            <span style={{ flex: 1, display: "flex", gap: 16 }}>
-              <span className="clickable" onClick={() => setLegalPage("how")}>How it Works</span>
-              <span className="clickable" onClick={() => { setTab("settings"); setViewing(null); window.history.pushState({tab:"settings"}, "", "/"); scrollToTop(); setTimeout(() => document.getElementById("contact-form")?.scrollIntoView({ behavior: "smooth" }), 100); }}>Contact</span>
-            </span>
-            <span style={{ flex: 1, display: "flex", justifyContent: "flex-end", gap: 16 }}>
+          <div className="masthead-meta" style={{ justifyContent: "space-between" }}>
+              <span className="clickable" style={{ fontWeight: 700 }} onClick={() => setLegalPage("how")}>How it Works</span>
+              <span className="clickable" onClick={() => setShowContactModal(true)}>Contact</span>
               <span className="clickable" onClick={() => { setTab("board"); setViewing(null); window.history.replaceState({}, "", "/"); scrollToTop(); }}>@{user.username}</span>
               <span className="clickable" onClick={signOut}>Sign out</span>
-            </span>
           </div>
           <div className="masthead-nameplate" onClick={() => { setTab("board"); setViewing(null); window.history.replaceState({}, "", "/"); scrollToTop(); }}>
             <span className="nameplate-word">Vouch.</span>
@@ -3854,6 +3852,20 @@ export default function Vouch() {
           );
         })()}
 
+        {showContactModal && (
+          <div className="modal-overlay" onClick={() => setShowContactModal(false)}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <div className="modal-head">
+                <div className="modal-title">Contact & Feedback</div>
+                <button className="modal-x" onClick={() => setShowContactModal(false)}>×</button>
+              </div>
+              <div className="modal-body">
+                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 16, lineHeight: 1.6 }}>Got feedback, a bug to report, or need help? Send a note.</div>
+                <ContactForm userId={userId} userEmail={user?.username} onSent={() => setShowContactModal(false)} />
+              </div>
+            </div>
+          </div>
+        )}
         <footer style={{ borderTop: `3px double ${T.ink}`, marginTop: 64, padding: "24px 28px", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
           <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid }}>
             © {new Date().getFullYear()} Vouch. All Rights Reserved.
