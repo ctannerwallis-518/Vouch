@@ -2854,19 +2854,13 @@ export default function Vouch() {
       : [...currentQueue, { id: itemId, title: item.title, poster: item.poster || null, sub: item.sub || item.subtitle || "", sourceUrl: item.sourceUrl || item.source_url || null, category: item._cat || item.category || item.catKey || "" }];
     setQueue(newQ);
     localStorage.setItem("vouch-queue-" + userId, JSON.stringify(newQ));
-    console.log("saving queue for userId:", userId, "newQ:", newQ);
-    const result = await supabase.from("profiles").update({ queue_items: JSON.stringify(newQ) }).eq("id", userId);
-    console.log("queue save result:", result);
+    await supabase.from("profiles").update({ queue_items: JSON.stringify(newQ) }).eq("id", userId);
   };
-  const removeFromQueue = (id) => {
-    setQueue(prev => {
-      const newQ = prev.filter(q => String(q.id) !== String(id));
-      localStorage.setItem("vouch-queue-" + userId, JSON.stringify(newQ));
-      setTimeout(() => {
-        supabase.from("profiles").update({ queue_items: JSON.stringify(newQ) }).eq("id", userId).catch(() => {});
-      }, 0);
-      return newQ;
-    });
+  const removeFromQueue = async (id) => {
+    const newQ = queueRef.current.filter(q => String(q.id) !== String(id));
+    setQueue(newQ);
+    localStorage.setItem("vouch-queue-" + userId, JSON.stringify(newQ));
+    await supabase.from("profiles").update({ queue_items: JSON.stringify(newQ) }).eq("id", userId);
   };
   const vouchedCount = Object.values(board).flat().filter(item => item.vouched).length;
 
