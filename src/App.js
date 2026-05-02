@@ -2439,8 +2439,7 @@ export default function Vouch() {
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT") { setUser(null); setUserId(null); setBoard({ ...EMPTY_BOARD }); return; }
-      // Only run full session setup on actual sign in, not token refreshes or tab focus events
-      if (event === "SIGNED_IN") setUserFromSession(session);
+      // Ignore TOKEN_REFRESHED, SIGNED_IN from tab focus - only handle initial auth
     });
     return () => subscription.unsubscribe();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
