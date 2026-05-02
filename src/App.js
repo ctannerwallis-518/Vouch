@@ -2368,7 +2368,7 @@ export default function Vouch() {
         }
         const nowVisit = new Date().toISOString();
         localStorage.setItem("vouch-last-visit", nowVisit);
-        supabase.from("profiles").update({ last_visit: nowVisit }).eq("id", uid).catch(() => {});
+        await supabase.from("profiles").update({ last_visit: nowVisit }).eq("id", uid);
         // Load category preferences
         const { data: prof } = await supabase.from("profiles").select("categories").eq("id", uid).maybeSingle();
         if (prof?.categories && prof.categories.length > 0) {
