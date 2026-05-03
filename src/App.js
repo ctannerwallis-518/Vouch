@@ -1442,9 +1442,9 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame 
   const touchStartX = useRef(null);
   const currentOffsetX = useRef(0);
   const containerRef = useRef(null);
-  const gvPrevIdxRef = useRef(0);
+
   useEffect(() => {
-    if (gvPrevIdxRef.current === idx) { return; } gvPrevIdxRef.current = idx;    const el = containerRef.current;
+    const el = containerRef.current;
     if (!el || !isMobile) return;
     const handleStart = e => { touchStartX.current = e.touches[0].clientX; touchStartY.current = e.touches[0].clientY; currentOffsetX.current = 0; };
     const touchStartY = { current: null };
