@@ -2028,7 +2028,6 @@ export default function Vouch() {
   const [pastNotifications, setPastNotifications] = useState([]);
   const [viewerReactions,setViewerReactions]= useState([]);
   const [viewActiveBoard,setViewActiveBoard]= useState(null);
-  const [viewLoading, setViewLoading] = useState(false);
   const [suggested, setSuggested] = useState([]); // eslint-disable-line no-unused-vars
   const [queue,          setQueue]          = useState([]);
   const queueRef = useRef([]);
@@ -2141,7 +2140,6 @@ export default function Vouch() {
       setViewBuddies(cached.buddies || []);
       return;
     }
-    setViewLoading(true);
     const { data, error } = await supabase
       .from("endorsements").select("*").eq("user_id", uid).order("created_at", { ascending: true });
     if (error) { console.error("loadViewBoard error:", error); return; }
@@ -3212,15 +3210,9 @@ export default function Vouch() {
                 </div>
                 {viewing && (
                   <div style={{ marginBottom: 16 }}>
-                    <button className="btn btn-ghost" onClick={() => { setViewing(null); setTab("friends"); window.history.placeState({}, "", "/"); scrollToTop(); }}>← Back to Buddies</button>
+                    <button className="btn btn-ghost" onClick={() => { setViewing(null); setTab("friends"); window.history.replaceState({}, "", "/"); scrollToTop(); }}>← Back to Buddies</button>
                   </div>
                 )}
-                {viewLoading && (
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "60px 0" }}>
-                    <div className="loading">Loading…</div>
-                  </div>
-                )}
-                {!viewLoading && viewing && null}
                 <div className="ornament"><span>—</span><span>✦</span><span>—</span></div>
 
                 {isOwn && (canPublish
