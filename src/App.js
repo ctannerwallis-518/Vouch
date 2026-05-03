@@ -937,14 +937,14 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
           )}
         </div>
       ) : (
-        <div style={{ display: "flex", gap: 12, justifyContent: isOwn ? "flex-start" : "center" }}>
+        <div style={{ display: "flex", gap: 12, justifyContent: "center", overflow: "hidden" }}>
           {allItems.map((it, i) => (
-            <div key={it.id + it._cat} className="card-large" style={{ position: "relative", flex: isOwn ? "1" : "0 0 auto", width: isOwn ? undefined : 280, maxWidth: 320 }}>
+            <div key={it.id + it._cat} className="card-large" style={{ position: "relative", flex: "1", maxWidth: 280 }}>
               <CardFace it={it} />
             </div>
           ))}
           {isOwn && Array(Math.max(0, 5 - allItems.length)).fill(null).map((_, i) => (
-            <div key={`ve${i}`} className="slot-empty-large" style={{ flex: "1", maxWidth: 320 }} onClick={onAdd}>
+            <div key={`ve${i}`} className="slot-empty-large" style={{ flex: "1", maxWidth: 280 }} onClick={onAdd}>
               <div className="slot-empty-inner"><span className="slot-empty-plus">+</span>Vouch</div>
             </div>
           ))}
