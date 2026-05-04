@@ -1062,16 +1062,17 @@ function BuddyModal({ userId, onClose, onSendRequest, onGenerateLink, inviteLink
       .neq("id", userId).not("id", "in", `(${existingBuddyIds.length > 0 ? existingBuddyIds.join(",") : userId})`).order("display_name").limit(50)
       .then(async ({ data }) => {
         if (!data) return setSuggested([]);
-        // Calculate mutual buddies for each suggested user
-        const { data: myBuddyRows } = await supabase.from("buddies")
-          .select("requester_id, receiver_id")
-          .or(`requester_id.eq.${userId},receiver_id.eq.${userId}`)
-          .eq("status", "accepted");
-        const myBuddyIds = (myBuddyRows || []).map(b => b.requester_id === userId ? b.receiver_id : b.requester_id); // eslint-disable-line no-unused-vars
-        const withMutual = data.map(u => {
-          // We'd need their buddy list to count mutuals - approximate with shared ids
-          return { ...u, mutual_count: 0 };
+        // Fetch mutual buddy counts via RPC in one shot
+        const candidateIds = data.map(u => u.id);
+        const { data: mutualData } = await supabase.rpc("get_mutual_buddy_counts", {
+          my_id: userId,
+          candidate_ids: candidateIds,
         });
+        const mutualMap = {};
+        (mutualData || []).forEach(row => { mutualMap[row.user_id] = Number(row.mutual_count); });
+        const withMutual = data.map(u => ({ ...u, mutual_count: mutualMap[u.id] || 0 }));
+        // Sort: mutual buddies first, then alphabetical
+        withMutual.sort((a, b) => (b.mutual_count - a.mutual_count) || (a.display_name || "").localeCompare(b.display_name || ""));
         setSuggested(withMutual);
       });
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
