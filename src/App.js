@@ -1904,13 +1904,6 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
   );
 }
 
-}, (prev, next) => {
-  return prev.selfId === next.selfId &&
-    prev.buddies.length === next.buddies.length &&
-    prev.buddies.every((b, i) => b.userId === next.buddies[i]?.userId) &&
-    prev.queue?.length === next.queue?.length &&
-    prev.myReactions?.length === next.myReactions?.length;
-});
 
 function ContactForm({ userId, userEmail, onSent }) {
   const [msg, setMsg] = useState("");
