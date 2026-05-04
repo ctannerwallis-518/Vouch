@@ -1,5 +1,5 @@
 // build: 2026-04-05T16:17:10.789151
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import { supabase } from "./supabase";
 
 const AVATAR_OPTIONS = [
@@ -882,7 +882,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
   const CardFace = ({ it }) => (
     <div style={{ position: "relative" }}>
       {it.poster
-        ? <img src={it.poster} alt={it.title} style={{ width: "100%", height: 340, objectFit: "cover", display: "block", border: `1px solid ${T.paperDark}`, cursor: it.sourceUrl ? "pointer" : "default" }} onClick={() => { if (Math.abs(currentOffsetX.current) > 8) return; it.sourceUrl ? window.open(it.sourceUrl, "_blank") : onCard(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id)); }} onError={e => e.target.style.display = "none"} />
+        ? <img src={it.poster} alt={it.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: `1px solid ${T.paperDark}`, cursor: it.sourceUrl ? "pointer" : "default" }} onClick={() => { if (Math.abs(currentOffsetX.current) > 8) return; it.sourceUrl ? window.open(it.sourceUrl, "_blank") : onCard(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id)); }} onError={e => e.target.style.display = "none"} />
         : <div style={{ width: "100%", height: 340, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 18, color: T.inkLight, padding: 24, textAlign: "center", cursor: it.sourceUrl ? "pointer" : "default" }} onClick={() => { if (Math.abs(currentOffsetX.current) > 8) return; it.sourceUrl ? window.open(it.sourceUrl, "_blank") : onCard(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id)); }}>{it.title}</div>}
       <div style={{ padding: "14px 4px 4px" }}>
         <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 4 }}>{it._catLabel}</div>
@@ -1027,7 +1027,7 @@ function MutualMentions({ reactions, myReactions, isOwn, boardOwnerName, buddies
             <div key={(item.id || item.item_id) + i} style={{ width: 100, flexShrink: 0 }}>
               <div style={{ cursor: url ? "pointer" : "default" }} onClick={() => url && window.open(url, "_blank")}>
                 {item.poster
-                  ? <img src={item.poster} alt={item.title} style={{ width: 100, height: 138, objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block" }} onError={e => e.target.style.display = "none"} />
+                  ? <img src={item.poster} alt={item.title} style={{ width: 100, height: 138, objectFit: "contain", background: "#000", border: `1px solid ${T.paperDark}`, display: "block" }} onError={e => e.target.style.display = "none"} />
                   : <div style={{ width: 100, height: 138, background: T.paperDark, border: `1px solid ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 6 }}>{item.title}</div>}
                 <div style={{ fontFamily: "'Spectral',serif", fontSize: 11, fontWeight: 600, lineHeight: 1.3, marginTop: 5 }}>{item.title}</div>
                 <div style={{ fontFamily: "'Spectral SC',serif", fontSize: 8.5, color: T.inkFaint, marginTop: 1 }}>{item.subtitle || ""}</div>
@@ -1477,7 +1477,7 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame 
   const CardFaceNoButtons = ({ item }) => (
     <div style={{ position: "relative" }}>
       {item.poster
-        ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: 340, objectFit: "cover", display: "block", border: "1px solid rgba(200,194,180,0.2)", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")} onError={e => e.target.style.display = "none"} />
+        ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: "1px solid rgba(200,194,180,0.2)", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")} onError={e => e.target.style.display = "none"} />
         : <div style={{ width: "100%", height: 340, background: "rgba(200,194,180,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")}>{item.title}</div>}
       <div title="Total Buddy Vouches" style={{ position: "absolute", top: 8, left: 8, background: "rgba(17,16,8,0.82)", color: "rgba(200,194,180,0.95)", fontFamily: "'Spectral SC',serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px" }}>{item.count} {item.count === 1 ? "Vouch" : "Vouches"}</div>
       <div style={{ padding: "10px 4px 4px" }}>
@@ -1494,7 +1494,7 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame 
     return (
       <div style={{ position: "relative" }}>
         {item.poster
-          ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: 340, objectFit: "cover", display: "block", border: "1px solid rgba(200,194,180,0.2)", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")} onError={e => e.target.style.display = "none"} />
+          ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: "1px solid rgba(200,194,180,0.2)", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")} onError={e => e.target.style.display = "none"} />
           : <div style={{ width: "100%", height: 340, background: "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")}>{item.title}</div>}
         <div title="Total Buddy Vouches" style={{ position: "absolute", top: 8, left: 8, background: "rgba(17,16,8,0.82)", color: "rgba(200,194,180,0.95)", fontFamily: "'Spectral SC',serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px" }}>{item.count} {item.count === 1 ? "Vouch" : "Vouches"}</div>
         <div style={{ padding: "10px 4px 4px" }}>
@@ -1604,7 +1604,7 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue,
     <div style={{ flexShrink: 0, width: isMobile ? 95 : 150, cursor: item.source_url ? "pointer" : "default" }}
       onClick={() => item.source_url && window.open(item.source_url, "_blank")}>
       {item.poster
-        ? <img src={item.poster} alt={item.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: "1px solid " + T.paperDark, display: "block" }} onError={e => e.target.style.display = "none"} />
+        ? <img src={item.poster} alt={item.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "contain", background: "#000", border: "1px solid " + T.paperDark, display: "block" }} onError={e => e.target.style.display = "none"} />
         : <div style={{ width: "100%", aspectRatio: "2/3", background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 6 }}>{item.title}</div>}
       <div style={{ fontFamily: "'Spectral',serif", fontSize: 11, fontWeight: 600, color: T.ink, marginTop: 5, lineHeight: 1.3 }}>{item.title}</div>
       {item.owners.length > 0 && (
@@ -1670,7 +1670,7 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue,
   );
 }
 
-function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeSame, onAddToQueue, queue, myReactions, onShelfExtras }) {
+const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeSame, onAddToQueue, queue, myReactions, onShelfExtras }) {
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -1828,7 +1828,7 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeS
                 </div>
               </div>
               <div style={{ width: "100%", maxWidth: 300, margin: "0 auto", cursor: primary.source_url ? "pointer" : "default" }} onClick={() => primary.source_url && window.open(primary.source_url, "_blank")}>
-                {primary.poster && <img src={primary.poster} alt={primary.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: "1px solid #b3ada0", display: "block" }} onError={e => e.target.style.display = "none"} />}
+                {primary.poster && <img src={primary.poster} alt={primary.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "contain", background: "#000", border: "1px solid #b3ada0", display: "block" }} onError={e => e.target.style.display = "none"} />}
                 <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{primary.title}</div>
                 {primary.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{primary.subtitle}</div>}
                 {onDudeSame && buddy && buddy.userId !== selfId && (
@@ -1879,7 +1879,7 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeS
               {r.poster && (
                 <div style={{ width: "100%", maxWidth: 300, margin: "0 auto" }}>
                   <div style={{ cursor: r.source_url ? "pointer" : "default" }} onClick={() => r.source_url && window.open(r.source_url, "_blank")}>
-                    <img src={r.poster} alt={r.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: "1px solid #b3ada0", display: "block" }} onError={e => e.target.style.display = "none"} />
+                    <img src={r.poster} alt={r.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "contain", background: "#000", border: "1px solid #b3ada0", display: "block" }} onError={e => e.target.style.display = "none"} />
                     <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{r.title}</div>
                     {r.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{r.subtitle}</div>}
                   </div>
@@ -1903,6 +1903,14 @@ function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeS
     </div>
   );
 }
+
+}, (prev, next) => {
+  return prev.selfId === next.selfId &&
+    prev.buddies.length === next.buddies.length &&
+    prev.buddies.every((b, i) => b.userId === next.buddies[i]?.userId) &&
+    prev.queue?.length === next.queue?.length &&
+    prev.myReactions?.length === next.myReactions?.length;
+});
 
 function ContactForm({ userId, userEmail, onSent }) {
   const [msg, setMsg] = useState("");
@@ -3308,7 +3316,7 @@ export default function Vouch() {
                             {queue.map(item => (
                               <div key={item.id} style={{ width: 180, flexShrink: 0, position: "relative" }}>
                                 {item.poster
-                                  ? <img src={item.poster} alt={item.title} style={{ width: 180, height: 248, objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block", cursor: item.sourceUrl ? "pointer" : "default" }} onClick={() => item.sourceUrl && window.open(item.sourceUrl, "_blank")} onError={e => e.target.style.display = "none"} />
+                                  ? <img src={item.poster} alt={item.title} style={{ width: 180, height: 248, objectFit: "contain", background: "#000", border: `1px solid ${T.paperDark}`, display: "block", cursor: item.sourceUrl ? "pointer" : "default" }} onClick={() => item.sourceUrl && window.open(item.sourceUrl, "_blank")} onError={e => e.target.style.display = "none"} />
                                   : <div style={{ width: 180, height: 248, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 10 }}>{item.title}</div>}
                                 <button onClick={() => removeFromQueue(item.id)} style={{ position: "absolute", top: 4, right: 4, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 26, height: 26, cursor: "pointer", fontSize: 16, lineHeight: "26px", textAlign: "center", borderRadius: 2 }}>×</button>
                                 <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: T.inkFaint, marginTop: 4 }}>{item.category}</div>
