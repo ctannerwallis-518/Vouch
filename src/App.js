@@ -3289,11 +3289,11 @@ export default function Vouch() {
                 <div className="ornament"><span>—</span><span>✦</span><span>—</span></div>
 
                 {isOwn && (() => {
-                  const hasDraft = (() => { try { return !!JSON.parse(localStorage.getItem("vouch-board-draft-v2") || "null"); } catch(e) { return false; } })();
+                  const hasDraft = (() => { try { const d = JSON.parse(localStorage.getItem("vouch-board-draft-v2") || "null"); return d && d.items && d.items.length > 0; } catch(e) { return false; } })();
                   return (
                     <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
                       <button onClick={() => { setEditingBoard(null); setBoardEditor(true); }} style={{ flex: 1, fontFamily: "'Spectral SC',serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.2em", padding: "14px", background: T.ink, color: T.bg, border: "none", cursor: "pointer" }}>
-                        {hasDraft ? "Continue Draft" : "New Vouch"}
+                        {hasDraft ? "Continue Draft" : "Publish a New Vouch"}
                       </button>
                     </div>
                   );
