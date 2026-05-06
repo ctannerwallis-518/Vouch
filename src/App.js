@@ -1977,6 +1977,10 @@ export default function Vouch() {
   const [avatarPicker,   setAvatarPicker]   = useState(false);
   const [avatarLightbox, setAvatarLightbox] = useState(null);
   const [showContactModal, setShowContactModal] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileUsername, setProfileUsername] = useState("");
+  const [profileDisplayName, setProfileDisplayName] = useState("");
+  const [profileSaveMsg, setProfileSaveMsg] = useState("");
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "instant" });
   const isMobileGlobal = typeof window !== "undefined" && window.innerWidth <= 640;
@@ -3059,6 +3063,52 @@ export default function Vouch() {
             <div style={{ maxWidth: 540, margin: "32px auto" }}>
               <div className="board-name" style={{ fontSize: 28, marginBottom: 8 }}>Settings</div>
               <div className="board-sub" style={{ marginBottom: 32 }}>Customize your Vouch experience</div>
+              <div style={{ marginBottom: 40, borderBottom: `1px solid ${T.paperDark}`, paddingBottom: 32 }}>
+                <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 8 }}>Profile</div>
+                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 20, lineHeight: 1.6 }}>
+                  Change your display name or username. Your profile URL will update immediately.
+                </div>
+                {!editingProfile ? (
+                  <div>
+                    <div style={{ fontFamily: "'Spectral',serif", fontSize: 14, marginBottom: 6 }}>
+                      <span style={{ fontFamily: "'Spectral SC',serif", fontSize: 10, color: T.inkLight, letterSpacing: "0.12em" }}>Display Name</span><br />
+                      {user?.displayName}
+                    </div>
+                    <div style={{ fontFamily: "'Spectral',serif", fontSize: 14, marginBottom: 16 }}>
+                      <span style={{ fontFamily: "'Spectral SC',serif", fontSize: 10, color: T.inkLight, letterSpacing: "0.12em" }}>Username</span><br />
+                      @{user?.username}
+                    </div>
+                    <button className="btn btn-ghost" onClick={() => { setProfileDisplayName(user?.displayName || ""); setProfileUsername(user?.username || ""); setProfileSaveMsg(""); setEditingProfile(true); }}>Edit Profile</button>
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ marginBottom: 14 }}>
+                      <span className="comment-label">Display Name</span>
+                      <input className="search-input" style={{ marginBottom: 0 }} value={profileDisplayName} onChange={e => setProfileDisplayName(e.target.value)} maxLength={60} placeholder="Your name" />
+                    </div>
+                    <div style={{ marginBottom: 14 }}>
+                      <span className="comment-label">Username</span>
+                      <input className="search-input" style={{ marginBottom: 0 }} value={profileUsername} onChange={e => setProfileUsername(e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, ""))} maxLength={30} placeholder="username" />
+                      <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 4 }}>vouch5.com/@{profileUsername}</div>
+                    </div>
+                    {profileSaveMsg && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 10 }}>{profileSaveMsg}</div>}
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button className="btn btn-solid" style={{ flex: 1 }} onClick={async () => {
+                        if (!profileUsername.trim() || !profileDisplayName.trim()) { setProfileSaveMsg("Both fields are required."); return; }
+                        // Check username uniqueness
+                        const { data: existing } = await supabase.from("profiles").select("id").eq("username", profileUsername).neq("id", userId).maybeSingle();
+                        if (existing) { setProfileSaveMsg("That username is taken — try another."); return; }
+                        await supabase.from("profiles").update({ username: profileUsername, display_name: profileDisplayName }).eq("id", userId);
+                        setUser(prev => ({ ...prev, username: profileUsername, displayName: profileDisplayName }));
+                        setEditingProfile(false);
+                        setProfileSaveMsg("");
+                        window.history.replaceState({}, "", "/");
+                      }}>Save</button>
+                      <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => { setEditingProfile(false); setProfileSaveMsg(""); }}>Cancel</button>
+                    </div>
+                  </div>
+                )}
+              </div>
               <div style={{ marginBottom: 40 }}>
                 <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 8 }}>My Shelf Categories</div>
                 <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 20, lineHeight: 1.6 }}>
