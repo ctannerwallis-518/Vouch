@@ -1828,7 +1828,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
                 </div>
               </div>
               <div style={{ width: "100%", maxWidth: 300, margin: "0 auto", cursor: primary.source_url ? "pointer" : "default" }} onClick={() => primary.source_url && window.open(primary.source_url, "_blank")}>
-                {primary.poster && <img src={primary.poster} alt={primary.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "contain", background: "#000", border: "1px solid #b3ada0", display: "block" }} onError={e => e.target.style.display = "none"} />}
+                {primary.poster && <img src={primary.poster} alt={primary.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "contain", background: "transparent", border: "1px solid #b3ada0", display: "block" }} onError={e => e.target.style.display = "none"} />}
                 <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{primary.title}</div>
                 {primary.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{primary.subtitle}</div>}
                 {onDudeSame && buddy && buddy.userId !== selfId && (
@@ -1879,7 +1879,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
               {r.poster && (
                 <div style={{ width: "100%", maxWidth: 300, margin: "0 auto" }}>
                   <div style={{ cursor: r.source_url ? "pointer" : "default" }} onClick={() => r.source_url && window.open(r.source_url, "_blank")}>
-                    <img src={r.poster} alt={r.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "contain", background: "#000", border: "1px solid #b3ada0", display: "block" }} onError={e => e.target.style.display = "none"} />
+                    <img src={r.poster} alt={r.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "contain", background: "transparent", border: "1px solid #b3ada0", display: "block" }} onError={e => e.target.style.display = "none"} />
                     <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{r.title}</div>
                     {r.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{r.subtitle}</div>}
                   </div>
