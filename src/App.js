@@ -1355,8 +1355,14 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
             <input className="search-input" style={{ marginBottom: 0 }} placeholder="e.g. These artists remind me of the summer…" value={description} onChange={e => setDescription(e.target.value)} maxLength={120} />
           </div>
 
-          <button onClick={handlePublish} disabled={items.length === 0} style={{ width: "100%", padding: "12px", background: items.length > 0 ? T.ink : "transparent", border: `2px solid ${items.length > 0 ? "#c9a820" : T.paperDark}`, color: items.length > 0 ? "#c9a820" : T.inkFaint, fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", cursor: items.length > 0 ? "pointer" : "not-allowed", transition: "all 0.2s" }}>Publish Vouch</button>
-          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 8, textAlign: "center" }}>Once published, you can update again in 7 days.</div>
+          <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+            {canPublish
+              ? <button onClick={handlePublish} disabled={items.length === 0} style={{ flex: 1, padding: "12px", background: items.length > 0 ? T.ink : "transparent", border: `2px solid ${items.length > 0 ? "#c9a820" : T.paperDark}`, color: items.length > 0 ? "#c9a820" : T.inkFaint, fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", cursor: items.length > 0 ? "pointer" : "not-allowed", transition: "all 0.2s" }}>Publish Vouch</button>
+              : <div style={{ flex: 1, padding: "12px", background: "transparent", border: `2px solid ${T.paperDark}`, color: T.inkFaint, fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}><span>🔒</span><span>Available {nextPublishDate}</span></div>
+            }
+            <button onClick={() => { onClose(); }} style={{ padding: "12px 16px", background: "transparent", border: `1px solid ${T.paperDark}`, color: T.inkMid, fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", cursor: "pointer" }}>Save Draft</button>
+          </div>
+          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, textAlign: "center" }}>{canPublish ? "Once published, you can update again in 7 days." : "Your draft is saved — come back when you're ready to publish."}</div>
         </div>
       </div>
     </div>
@@ -1977,6 +1983,7 @@ export default function Vouch() {
   const [avatarPicker,   setAvatarPicker]   = useState(false);
   const [avatarLightbox, setAvatarLightbox] = useState(null);
   const [showContactModal, setShowContactModal] = useState(false);
+  const [removeVouchModal, setRemoveVouchModal] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileUsername, setProfileUsername] = useState("");
   const [profileDisplayName, setProfileDisplayName] = useState("");
@@ -2092,6 +2099,20 @@ export default function Vouch() {
     setBoardEditor(false);
     setEditingBoard(null);
     setTimeout(() => setShareModal(true), 300);
+  };
+
+  const removeActiveVouch = async (mode) => {
+    if (!activeBoard) return;
+    if (mode === "delete") {
+      await supabase.from("vouch_board_items").delete().eq("board_id", activeBoard.id);
+      await supabase.from("vouch_boards").delete().eq("id", activeBoard.id);
+    } else {
+      // archive — keep it, just deactivate and clear published_at so timer resets
+      await supabase.from("vouch_boards").update({ is_active: false, published_at: null }).eq("id", activeBoard.id);
+    }
+    setActiveBoard(null);
+    await loadVouchBoards(userId);
+    setRemoveVouchModal(false);
   };
 
   const unpublishBoard = async () => { // eslint-disable-line no-unused-vars
@@ -3267,13 +3288,16 @@ export default function Vouch() {
                 )}
                 <div className="ornament"><span>—</span><span>✦</span><span>—</span></div>
 
-                {isOwn && (canPublish
-                  ? <button onClick={() => { setEditingBoard(null); setBoardEditor(true); }} style={{ width: "100%", fontFamily: "'Spectral SC',serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.2em", padding: "14px", background: T.ink, color: T.bg, border: "none", cursor: "pointer", marginBottom: 16 }}>Publish a New Vouch Board</button>
-                  : <div style={{ width: "100%", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", padding: "14px", background: "rgba(17,16,8,0.15)", color: T.inkMid, textAlign: "center", marginBottom: 16, border: `2px solid ${T.ink}`, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-                      <span style={{ fontSize: 16 }}>🔒</span>
-                      <span>Next Vouch available {nextPublishDate}</span>
+                {isOwn && (() => {
+                  const hasDraft = (() => { try { return !!JSON.parse(localStorage.getItem("vouch-board-draft-v2") || "null"); } catch(e) { return false; } })();
+                  return (
+                    <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+                      <button onClick={() => { setEditingBoard(null); setBoardEditor(true); }} style={{ flex: 1, fontFamily: "'Spectral SC',serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.2em", padding: "14px", background: T.ink, color: T.bg, border: "none", cursor: "pointer" }}>
+                        {hasDraft ? "Continue Draft" : "New Vouch"}
+                      </button>
                     </div>
-                )}
+                  );
+                })()}
 
                 {isOwn ? (
                   <div className="vouch-section" style={{ marginBottom: 52 }}>
@@ -3284,7 +3308,7 @@ export default function Vouch() {
                         {activeBoard?.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: "rgba(200,194,180,0.4)", marginTop: 2 }}>{activeBoard.description}</div>}
                         {activeBoard?.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.3)", marginTop: 4 }}>Published {new Date(activeBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} · Current Vouch</div>}
                       </div>
-
+                      {activeBoard && <button onClick={() => setRemoveVouchModal(true)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.14em", padding: "4px 12px", border: "1px solid rgba(200,194,180,0.25)", background: "transparent", color: "rgba(200,194,180,0.5)", cursor: "pointer", flexShrink: 0, alignSelf: "flex-start" }}>Remove</button>}
                     </div>
                     {activeBoard?.vouch_board_items?.length > 0 ? (
                       <VouchSection board={(() => {
@@ -3895,6 +3919,33 @@ export default function Vouch() {
             </div>
           );
         })()}
+
+        {removeVouchModal && (
+          <div className="modal-overlay" onClick={() => setRemoveVouchModal(false)}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <div className="modal-head">
+                <div className="modal-title">Remove Your Vouch</div>
+                <button className="modal-x" onClick={() => setRemoveVouchModal(false)}>×</button>
+              </div>
+              <div className="modal-body">
+                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkMid, marginBottom: 24, lineHeight: 1.7 }}>
+                  What would you like to do with this Vouch?
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <button className="btn btn-solid" onClick={() => removeActiveVouch("archive")} style={{ padding: "14px", textAlign: "left" }}>
+                    <div style={{ fontSize: 11 }}>Move to Archive</div>
+                    <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontWeight: 300, fontSize: 11, letterSpacing: 0, textTransform: "none", marginTop: 3, opacity: 0.7 }}>Saves it to your archive. You can republish it later.</div>
+                  </button>
+                  <button onClick={() => removeActiveVouch("delete")} style={{ padding: "14px", textAlign: "left", background: "transparent", border: `1px solid ${T.paperDark}`, fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.2em", cursor: "pointer", color: T.inkMid }}>
+                    <div style={{ fontSize: 11 }}>Delete Permanently</div>
+                    <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontWeight: 300, fontSize: 11, letterSpacing: 0, textTransform: "none", marginTop: 3, opacity: 0.7 }}>Removes it completely. This cannot be undone.</div>
+                  </button>
+                  <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, textAlign: "center", marginTop: 4 }}>Either option resets your publish timer so you can post a new Vouch right away.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {showContactModal && (
           <div className="modal-overlay" onClick={() => setShowContactModal(false)}>
