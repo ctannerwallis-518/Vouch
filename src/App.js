@@ -1902,7 +1902,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
       })}
     </div>
   );
-}
+});
 
 
 function ContactForm({ userId, userEmail, onSent }) {
