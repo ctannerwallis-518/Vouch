@@ -1208,7 +1208,7 @@ function LegalModal({ page, onClose }) {
   );
 }
 
-function BoardEditorModal({ onClose, onPublish, existing, categories, themes, userId }) {
+function BoardEditorModal({ onClose, onPublish, existing, categories, themes, userId, canPublish, nextPublishDate }) {
   const DRAFT_KEY = "vouch-board-draft-v2";
   const loadDraft = () => { try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || "null"); } catch(e) { return null; } };
   const savedDraft = !existing ? loadDraft() : null;
@@ -3554,6 +3554,8 @@ export default function Vouch() {
             categories={CATEGORIES}
             themes={BOARD_THEMES}
             userId={userId}
+            canPublish={canPublish}
+            nextPublishDate={nextPublishDate}
           />
         )}
 
@@ -3820,6 +3822,8 @@ export default function Vouch() {
             categories={CATEGORIES}
             themes={BOARD_THEMES}
             userId={userId}
+            canPublish={canPublish}
+            nextPublishDate={nextPublishDate}
           />
         )}
 
