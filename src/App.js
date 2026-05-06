@@ -811,7 +811,7 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
   );
 }
 
-function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, buddyCounts, hideHeader, hideEmptySlots, onAddToQueue, queue, ownerId }) {
+function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, buddyCounts, hideHeader, hideEmptySlots, onAddToQueue, queue, ownerId, onMusicOpen }) {
   const [idx, setIdx]      = useState(0);
   const touchStartX        = useRef(null);
   const touchStartY        = useRef(null);
@@ -882,7 +882,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
   const CardFace = ({ it }) => (
     <div style={{ position: "relative" }}>
       {it.poster
-        ? <img src={it.poster} alt={it.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: `1px solid ${T.paperDark}`, cursor: it.sourceUrl ? "pointer" : "default" }} onClick={() => { if (Math.abs(currentOffsetX.current) > 8) return; it.sourceUrl ? window.open(it.sourceUrl, "_blank") : onCard(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id)); }} onError={e => e.target.style.display = "none"} />
+        ? <img src={it.poster} alt={it.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: `1px solid ${T.paperDark}`, cursor: it.sourceUrl ? "pointer" : "default" }} onClick={() => { if (Math.abs(currentOffsetX.current) > 8) return; if (!it.sourceUrl) { onCard(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id)); return; } const isMusicCat = ["songs","albums","artists"].includes(it._cat); if (isMusicCat && onMusicOpen) { onMusicOpen(it.sourceUrl, it.title, it.sub, it._cat); } else { window.open(it.sourceUrl, "_blank"); } }} onError={e => e.target.style.display = "none"} />
         : <div style={{ width: "100%", height: 340, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 18, color: T.inkLight, padding: 24, textAlign: "center", cursor: it.sourceUrl ? "pointer" : "default" }} onClick={() => { if (Math.abs(currentOffsetX.current) > 8) return; it.sourceUrl ? window.open(it.sourceUrl, "_blank") : onCard(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id)); }}>{it.title}</div>}
       <div style={{ padding: "14px 4px 4px" }}>
         <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 4 }}>{it._catLabel}</div>
@@ -954,7 +954,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
   );
 }
 
-function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, buddyCounts, onAddToQueue, queue }) {
+function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, buddyCounts, onAddToQueue, queue, onMusicOpen }) {
   const [open, setOpen] = useState(true);
   const isMobile = typeof window !== "undefined" && window.innerWidth <= 640; // eslint-disable-line
   const slots = Array(5).fill(null).map((_, i) => items[i] || null);
@@ -972,7 +972,7 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
         <div className="cards-row">
           {slots.map((item, idx) =>
             item
-              ? <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => item.sourceUrl ? window.open(item.sourceUrl, "_blank") : onCard(catKey, idx)}>
+              ? <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => { if (!item.sourceUrl) { onCard(catKey, idx); return; } const isMusicCat = ["songs","albums","artists"].includes(catKey); if (isMusicCat && onMusicOpen) { onMusicOpen(item.sourceUrl, item.title, item.sub, catKey); } else { window.open(item.sourceUrl, "_blank"); } }}>
                   {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx, false); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 26, height: 26, cursor: "pointer", fontSize: 15, lineHeight: "26px", textAlign: "center", borderRadius: 2 }}>×</button>}
                   {item.poster ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} /> : null}
                   <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
@@ -1983,6 +1983,8 @@ export default function Vouch() {
   const [avatarPicker,   setAvatarPicker]   = useState(false);
   const [avatarLightbox, setAvatarLightbox] = useState(null);
   const [showContactModal, setShowContactModal] = useState(false);
+  const [musicPreference, setMusicPreference] = useState(null); // "spotify" | "apple_music" | null
+  const [musicPickerModal, setMusicPickerModal] = useState(null); // { url, title, sub, catKey }
   const [removeVouchModal, setRemoveVouchModal] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileUsername, setProfileUsername] = useState("");
@@ -2398,6 +2400,7 @@ export default function Vouch() {
         await supabase.from("profiles").update({ last_visit: nowVisit }).eq("id", uid);
         // Load category preferences
         const { data: prof } = await supabase.from("profiles").select("categories").eq("id", uid).maybeSingle();
+        if (prof?.music_preference) setMusicPreference(prof.music_preference);
         if (prof?.categories && prof.categories.length > 0) {
           setUserCategories(prof.categories);
         } else if (prof && !prof.categories) {
@@ -2473,6 +2476,29 @@ export default function Vouch() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const signOut = async () => { await supabase.auth.signOut(); setUser(null); };
+
+  const isMusicUrl = (url) => url && url.includes("open.spotify.com");
+
+  const appleUrl = (url, title, sub) => {
+    const term = encodeURIComponent([title, sub].filter(Boolean).join(" "));
+    return `https://music.apple.com/search?term=${term}`;
+  };
+
+  const openMusicUrl = (url, title, sub, catKey) => {
+    if (!isMusicUrl(url)) { window.open(url, "_blank"); return; }
+    if (musicPreference === "spotify") { window.open(url, "_blank"); return; }
+    if (musicPreference === "apple_music") { window.open(appleUrl(url, title, sub), "_blank"); return; }
+    // No preference set — show picker
+    setMusicPickerModal({ url, title, sub, catKey });
+  };
+
+  const saveMusicPreference = async (pref, url, title, sub) => {
+    setMusicPreference(pref);
+    await supabase.from("profiles").update({ music_preference: pref }).eq("id", userId);
+    setMusicPickerModal(null);
+    if (pref === "spotify") window.open(url, "_blank");
+    else window.open(appleUrl(url, title, sub), "_blank");
+  };
 
   const isOwn     = !viewing;
   const currBoard = isOwn ? board : viewBoard;
@@ -3141,6 +3167,17 @@ export default function Vouch() {
                 <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 16 }}>Avatar</div>
                 <button className="btn btn-ghost" onClick={() => setAvatarPicker(true)}>Change Avatar</button>
               </div>
+              <div style={{ borderTop: `1px solid ${T.paperDark}`, paddingTop: 28, marginTop: 28 }}>
+                <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 8 }}>Music App</div>
+                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 16, lineHeight: 1.6 }}>Choose where music tiles open.</div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {["spotify", "apple_music"].map(pref => (
+                    <button key={pref} onClick={async () => { setMusicPreference(pref); await supabase.from("profiles").update({ music_preference: pref }).eq("id", userId); }} style={{ flex: 1, padding: "10px", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", border: `1px solid ${musicPreference === pref ? T.ink : T.paperDark}`, background: musicPreference === pref ? T.ink : "transparent", color: musicPreference === pref ? T.bg : T.inkMid, cursor: "pointer" }}>
+                      {pref === "spotify" ? "Spotify" : "Apple Music"}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div id="contact-form" style={{ borderTop: `1px solid ${T.paperDark}`, paddingTop: 28, marginTop: 28 }}>
                 <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 8 }}>Contact & Feedback</div>
                 <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 16, lineHeight: 1.6 }}>Got feedback, a bug to report, or need help? Send a note.</div>
@@ -3407,7 +3444,7 @@ export default function Vouch() {
                     ) : (
                       visibleCats.map(cat => {
                         const items = currBoard[cat.key] || [];
-                        return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={(key) => {  setAddModal(key); }} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} onAddToQueue={addToQueue} queue={queue} />;
+                        return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={(key) => {  setAddModal(key); }} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} onAddToQueue={addToQueue} queue={queue} onMusicOpen={openMusicUrl} />;
                       })
                     )}
                   </>;
@@ -3946,6 +3983,39 @@ export default function Vouch() {
                   </button>
                   <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, textAlign: "center", marginTop: 4 }}>Either option resets your publish timer so you can post a new Vouch right away.</div>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {musicPickerModal && (
+          <div className="modal-overlay" onClick={() => setMusicPickerModal(null)}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <div className="modal-head">
+                <div className="modal-title">Open In</div>
+                <button className="modal-x" onClick={() => setMusicPickerModal(null)}>×</button>
+              </div>
+              <div className="modal-body">
+                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkMid, marginBottom: 20 }}>
+                  Where would you like to open <strong style={{ fontStyle: "normal" }}>{musicPickerModal.title}</strong>?
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+                  <button className="btn btn-solid" style={{ padding: "14px", display: "flex", alignItems: "center", gap: 12 }} onClick={() => saveMusicPreference("spotify", musicPickerModal.url, musicPickerModal.title, musicPickerModal.sub)}>
+                    <span style={{ fontSize: 20 }}>🎵</span>
+                    <div style={{ textAlign: "left" }}>
+                      <div>Spotify</div>
+                      <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontWeight: 300, fontSize: 10, letterSpacing: 0, textTransform: "none", opacity: 0.7, marginTop: 2 }}>Remember this choice</div>
+                    </div>
+                  </button>
+                  <button onClick={() => saveMusicPreference("apple_music", musicPickerModal.url, musicPickerModal.title, musicPickerModal.sub)} style={{ padding: "14px", display: "flex", alignItems: "center", gap: 12, background: "transparent", border: `1px solid ${T.ink}`, fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.2em", cursor: "pointer", color: T.ink }}>
+                    <span style={{ fontSize: 20 }}>🎵</span>
+                    <div style={{ textAlign: "left" }}>
+                      <div>Apple Music</div>
+                      <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontWeight: 300, fontSize: 10, letterSpacing: 0, textTransform: "none", opacity: 0.7, marginTop: 2 }}>Remember this choice</div>
+                    </div>
+                  </button>
+                </div>
+                <button onClick={() => setMusicPickerModal(null)} style={{ width: "100%", background: "transparent", border: "none", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkFaint, cursor: "pointer", padding: "8px 0" }}>Maybe later</button>
               </div>
             </div>
           </div>
