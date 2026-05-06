@@ -3355,18 +3355,30 @@ export default function Vouch() {
                     {isOwn && shelfView === "queue" ? (
                       queue.length === 0
                         ? <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkLight, padding: "24px 0" }}>Nothing in your queue yet — hit "Add to Queue" on any buddy's shelf or Group Shelf tile.</div>
-                        : <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-                            {queue.map(item => (
-                              <div key={item.id} style={{ width: 180, flexShrink: 0, position: "relative" }}>
-                                {item.poster
-                                  ? <img src={item.poster} alt={item.title} style={{ width: 180, height: 248, objectFit: "contain", background: "#000", border: `1px solid ${T.paperDark}`, display: "block", cursor: item.sourceUrl ? "pointer" : "default" }} onClick={() => item.sourceUrl && window.open(item.sourceUrl, "_blank")} onError={e => e.target.style.display = "none"} />
-                                  : <div style={{ width: 180, height: 248, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 10 }}>{item.title}</div>}
-                                <button onClick={() => removeFromQueue(item.id)} style={{ position: "absolute", top: 4, right: 4, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 26, height: 26, cursor: "pointer", fontSize: 16, lineHeight: "26px", textAlign: "center", borderRadius: 2 }}>×</button>
-                                <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: T.inkFaint, marginTop: 4 }}>{item.category}</div>
-                                <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 12.5, lineHeight: 1.35, marginTop: 2 }}>{item.title}</div>
-                                {item.sub && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: 9.5, color: T.inkLight, marginTop: 2 }}>{item.sub}</div>}
-                              </div>
-                            ))}
+                        : <div>
+                            {CATEGORIES.filter(cat => queue.some(q => q.category === cat.key)).map(cat => {
+                              const catItems = queue.filter(q => q.category === cat.key);
+                              return (
+                                <div key={cat.key} className="cat-section">
+                                  <div className="cat-header">
+                                    <div className="cat-label">{cat.label}</div>
+                                    <div className="cat-count">{catItems.length}</div>
+                                  </div>
+                                  <div className="cards-row">
+                                    {catItems.map(item => (
+                                      <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => item.sourceUrl && window.open(item.sourceUrl, "_blank")}>
+                                        <button onClick={e => { e.stopPropagation(); removeFromQueue(item.id); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 26, height: 26, cursor: "pointer", fontSize: 15, lineHeight: "26px", textAlign: "center", borderRadius: 2 }}>×</button>
+                                        {item.poster
+                                          ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => e.target.style.display = "none"} />
+                                          : <div className="card-poster-placeholder">{item.title}</div>}
+                                        <div className="card-title">{item.title}</div>
+                                        {item.sub && <div className="card-sub">{item.sub}</div>}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                     ) : (
                       visibleCats.map(cat => {
