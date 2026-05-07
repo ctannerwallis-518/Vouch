@@ -34,16 +34,17 @@ if ('serviceWorker' in navigator) {
 const TMDB = "24f3b03466f2f7db2d54a0f53607da4f";
 
 const CATEGORIES = [
-  { key: "movies",  label: "Film"       },
-  { key: "albums",  label: "Albums"     },
-  { key: "artists", label: "Artists"    },
-  { key: "songs",   label: "Songs"      },
-  { key: "books",   label: "Books"      },
-  { key: "shows",   label: "Television" },
+  { key: "movies",   label: "Film"       },
+  { key: "albums",   label: "Albums"     },
+  { key: "artists",  label: "Artists"    },
+  { key: "songs",    label: "Songs"      },
+  { key: "books",    label: "Books"      },
+  { key: "shows",    label: "Television" },
+  { key: "podcasts", label: "Podcasts"   },
 ];
 
 const EMPTY_BOARD = {
-  movies: [], albums: [], artists: [], songs: [], books: [], shows: [],
+  movies: [], albums: [], artists: [], songs: [], books: [], shows: [], podcasts: [],
 };
 
 const BOARD_THEMES = [
@@ -291,7 +292,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
           .maybeSingle();
         const { data: rows } = await supabase
           .from("endorsements").select("*").eq("user_id", inviteUserId).order("created_at", { ascending: true });
-        const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
+        const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [], podcasts: [] };
         (rows || []).forEach(row => {
           if (b[row.category] && b[row.category].length < 5) {
             b[row.category].push({
@@ -375,7 +376,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
           </div>
           {board?.activeVouchBoard && (() => {
             const avb = board.activeVouchBoard;
-            const vbBoard = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
+            const vbBoard = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [], podcasts: [] };
             (avb.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0,5).forEach(item => {
               if (vbBoard[item.category]) vbBoard[item.category].push({ id: item.item_id, title: item.title, sub: item.subtitle || "", poster: item.poster, comment: "", vouched: true, sourceUrl: item.source_url, _cat: item.category, _catLabel: CATEGORIES.find(c=>c.key===item.category)?.label || item.category });
             });
@@ -611,14 +612,16 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
             } catch { return { id: r.id, title: r.name, sub: r.first_air_date ? r.first_air_date.slice(0, 4) : "", poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null, sourceUrl: `https://www.imdb.com/find?q=${encodeURIComponent(r.name)}` }; }
           }));
           setResults(withImdb);
-        } else if (catKey === "songs" || catKey === "albums" || catKey === "artists") {
-          const typeMap = { songs: "track", albums: "album", artists: "artist" };
+        } else if (catKey === "songs" || catKey === "albums" || catKey === "artists" || catKey === "podcasts") {
+          const typeMap = { songs: "track", albums: "album", artists: "artist", podcasts: "show" };
           const res = await fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=${typeMap[catKey]}`);
           const data = await res.json();
           if (catKey === "songs") {
             setResults((data.tracks?.items || []).slice(0, 8).map(r => ({ id: r.id, title: r.name, sub: r.artists?.[0]?.name || "", poster: r.album?.images?.[0]?.url || null, sourceUrl: `https://open.spotify.com/track/${r.id}` })));
           } else if (catKey === "albums") {
             setResults((data.albums?.items || []).slice(0, 8).map(r => ({ id: r.id, title: r.name, sub: r.artists?.[0]?.name || "", poster: r.images?.[0]?.url || null, sourceUrl: `https://open.spotify.com/album/${r.id}` })));
+          } else if (catKey === "podcasts") {
+            setResults((data.shows?.items || []).slice(0, 8).map(r => ({ id: r.id, title: r.name, sub: r.publisher || "", poster: r.images?.[0]?.url || null, sourceUrl: `https://open.spotify.com/show/${r.id}` })));
           } else {
             setResults((data.artists?.items || []).slice(0, 8).map(r => ({ id: r.id, title: r.name, sub: r.genres?.[0] || "", poster: r.images?.[0]?.url || null, sourceUrl: `https://open.spotify.com/artist/${r.id}` })));
           }
@@ -701,13 +704,14 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
   const remaining             = 5 - used;
 
   const FILTERS = [
-    { key: "all",     label: "All"     },
-    { key: "movies",  label: "Film"    },
-    { key: "shows",   label: "TV"      },
-    { key: "songs",   label: "Songs"   },
-    { key: "albums",  label: "Albums"  },
-    { key: "artists", label: "Artists" },
-    { key: "books",   label: "Books"   },
+    { key: "all",      label: "All"      },
+    { key: "movies",   label: "Film"     },
+    { key: "shows",    label: "TV"       },
+    { key: "songs",    label: "Songs"    },
+    { key: "albums",   label: "Albums"   },
+    { key: "artists",  label: "Artists"  },
+    { key: "books",    label: "Books"    },
+    { key: "podcasts", label: "Podcasts" },
   ];
 
   const visibleResults = filter === "all" ? results : results.filter(r => r.catKey === filter);
@@ -718,12 +722,13 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
     timer.current = setTimeout(async () => {
       setBusy(true);
       try {
-        const [movieRes, tvRes, trackRes, albumRes, artistRes, booksRes] = await Promise.all([
+        const [movieRes, tvRes, trackRes, albumRes, artistRes, booksRes, podcastRes] = await Promise.all([
           fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB}&query=${encodeURIComponent(q)}&language=en-US`).then(r => r.json()),
           fetch(`https://api.themoviedb.org/3/search/tv?api_key=${TMDB}&query=${encodeURIComponent(q)}&language=en-US`).then(r => r.json()),
           fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=track`).then(r => r.json()),
           fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=album`).then(r => r.json()),
           fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=artist`).then(r => r.json()),
+          fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=show`).then(r => r.json()),
           fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=3&language=eng`).then(r => r.json()),
         ]);
         const mixed = [];
@@ -738,6 +743,7 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
         (trackRes.tracks?.items || []).slice(0, 3).forEach(r => mixed.push({ id: r.id, title: r.name, catKey: "songs", catLabel: "Songs", sub: r.artists?.[0]?.name || "", poster: r.album?.images?.[0]?.url || null, sourceUrl: `https://open.spotify.com/track/${r.id}` }));
         (albumRes.albums?.items || []).slice(0, 2).forEach(r => mixed.push({ id: r.id, title: r.name, catKey: "albums", catLabel: "Albums", sub: r.artists?.[0]?.name || "", poster: r.images?.[0]?.url || null, sourceUrl: `https://open.spotify.com/album/${r.id}` }));
         (artistRes.artists?.items || []).slice(0, 2).forEach(r => mixed.push({ id: r.id, title: r.name, catKey: "artists", catLabel: "Artists", sub: r.genres?.[0] || "", poster: r.images?.[0]?.url || null, sourceUrl: `https://open.spotify.com/artist/${r.id}` }));
+        (podcastRes?.shows?.items || []).slice(0, 2).forEach(r => mixed.push({ id: r.id, title: r.name, catKey: "podcasts", catLabel: "Podcasts", sub: r.publisher || "", poster: r.images?.[0]?.url || null, sourceUrl: `https://open.spotify.com/show/${r.id}` }));
         (booksRes.docs || []).slice(0, 2).forEach(r => {
           const coverId = r.cover_i;
           const isbn = (r.isbn || [])[0];
@@ -785,7 +791,7 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
                   <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9.5px", letterSpacing: "0.16em", color: T.inkFaint, marginBottom: 12 }}>
                     {remaining > 0 ? `${remaining} more can be added` : ""}
                   </div>
-                  <input className="search-input" placeholder="Search films, shows, songs, albums, artists, books…" value={q} onChange={e => setQ(e.target.value)} autoFocus />
+                  <input className="search-input" placeholder="Search films, shows, songs, albums, artists, books, podcasts…" value={q} onChange={e => setQ(e.target.value)} autoFocus />
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
                     {FILTERS.map(f => (
                       <button key={f.key} onClick={() => setFilter(f.key)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "4px 10px", border: `1px solid ${filter === f.key ? T.ink : T.paperDark}`, background: filter === f.key ? T.ink : "transparent", color: filter === f.key ? T.bg : T.inkMid, cursor: "pointer", transition: "all 0.12s" }}>{f.label}</button>
@@ -882,7 +888,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
   const CardFace = ({ it }) => (
     <div style={{ position: "relative" }}>
       {it.poster
-        ? <img src={it.poster} alt={it.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: `1px solid ${T.paperDark}`, cursor: it.sourceUrl ? "pointer" : "default" }} onClick={() => { if (Math.abs(currentOffsetX.current) > 8) return; if (!it.sourceUrl) { onCard(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id)); return; } const isMusicCat = ["songs","albums","artists"].includes(it._cat); if (isMusicCat && onMusicOpen) { onMusicOpen(it.sourceUrl, it.title, it.sub, it._cat); } else { window.open(it.sourceUrl, "_blank"); } }} onError={e => e.target.style.display = "none"} />
+        ? <img src={it.poster} alt={it.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: `1px solid ${T.paperDark}`, cursor: it.sourceUrl ? "pointer" : "default" }} onClick={() => { if (Math.abs(currentOffsetX.current) > 8) return; if (!it.sourceUrl) { onCard(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id)); return; } const isMusicCat = ["songs","albums","artists","podcasts"].includes(it._cat); if (isMusicCat && onMusicOpen) { onMusicOpen(it.sourceUrl, it.title, it.sub, it._cat); } else { window.open(it.sourceUrl, "_blank"); } }} onError={e => e.target.style.display = "none"} />
         : <div style={{ width: "100%", height: 340, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 18, color: T.inkLight, padding: 24, textAlign: "center", cursor: it.sourceUrl ? "pointer" : "default" }} onClick={() => { if (Math.abs(currentOffsetX.current) > 8) return; it.sourceUrl ? window.open(it.sourceUrl, "_blank") : onCard(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id)); }}>{it.title}</div>}
       <div style={{ padding: "14px 4px 4px" }}>
         <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 4 }}>{it._catLabel}</div>
@@ -972,7 +978,7 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
         <div className="cards-row">
           {slots.map((item, idx) =>
             item
-              ? <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => { if (!item.sourceUrl) { onCard(catKey, idx); return; } const isMusicCat = ["songs","albums","artists"].includes(catKey); if (isMusicCat && onMusicOpen) { onMusicOpen(item.sourceUrl, item.title, item.sub, catKey); } else { window.open(item.sourceUrl, "_blank"); } }}>
+              ? <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => { if (!item.sourceUrl) { onCard(catKey, idx); return; } const isMusicCat = ["songs","albums","artists","podcasts"].includes(catKey); if (isMusicCat && onMusicOpen) { onMusicOpen(item.sourceUrl, item.title, item.sub, catKey); } else { window.open(item.sourceUrl, "_blank"); } }}>
                   {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx, false); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 26, height: 26, cursor: "pointer", fontSize: 15, lineHeight: "26px", textAlign: "center", borderRadius: 2 }}>×</button>}
                   {item.poster ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} /> : null}
                   <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
@@ -1240,13 +1246,14 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
         const fetches = [];
         if (!singleCat || singleCat === "movies") fetches.push(fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`).then(r=>r.json()).then(d=>(d.results||[]).slice(0,3).map(r=>({ id:r.id, title:r.title, sub:r.release_date?.slice(0,4)||"", poster:r.poster_path?`https://image.tmdb.org/t/p/w500${r.poster_path}`:null, catKey:"movies", sourceUrl:`https://www.imdb.com/find?q=${encodeURIComponent(r.title)}` }))));
         if (!singleCat || singleCat === "shows") fetches.push(fetch(`https://api.themoviedb.org/3/search/tv?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`).then(r=>r.json()).then(d=>(d.results||[]).slice(0,2).map(r=>({ id:r.id, title:r.name, sub:r.first_air_date?.slice(0,4)||"", poster:r.poster_path?`https://image.tmdb.org/t/p/w500${r.poster_path}`:null, catKey:"shows", sourceUrl:`https://www.imdb.com/find?q=${encodeURIComponent(r.name)}` }))));
-        if (!singleCat || ["albums","songs","artists"].includes(singleCat)) {
-          const type = singleCat === "albums" ? "album" : singleCat === "songs" ? "track" : singleCat === "artists" ? "artist" : "track,album,artist";
+        if (!singleCat || ["albums","songs","artists","podcasts"].includes(singleCat)) {
+          const type = singleCat === "albums" ? "album" : singleCat === "songs" ? "track" : singleCat === "artists" ? "artist" : singleCat === "podcasts" ? "show" : "track,album,artist,show";
           fetches.push(fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=${type}`).then(r=>r.json()).then(d=>{
             const res = [];
             if (!singleCat || singleCat==="songs") (d.tracks?.items||[]).slice(0,2).forEach(r=>res.push({ id:r.id, title:r.name, sub:r.artists?.[0]?.name||"", poster:r.album?.images?.[0]?.url||null, catKey:"songs", sourceUrl:`https://open.spotify.com/track/${r.id}` }));
             if (!singleCat || singleCat==="albums") (d.albums?.items||[]).slice(0,2).forEach(r=>res.push({ id:r.id, title:r.name, sub:r.artists?.[0]?.name||"", poster:r.images?.[0]?.url||null, catKey:"albums", sourceUrl:`https://open.spotify.com/album/${r.id}` }));
             if (!singleCat || singleCat==="artists") (d.artists?.items||[]).slice(0,2).forEach(r=>res.push({ id:r.id, title:r.name, sub:r.genres?.[0]||"", poster:r.images?.[0]?.url||null, catKey:"artists", sourceUrl:`https://open.spotify.com/artist/${r.id}` }));
+            if (!singleCat || singleCat==="podcasts") (d.shows?.items||[]).slice(0,2).forEach(r=>res.push({ id:r.id, title:r.name, sub:r.publisher||"", poster:r.images?.[0]?.url||null, catKey:"podcasts", sourceUrl:`https://open.spotify.com/show/${r.id}` }));
             return res;
           }));
         }
@@ -1801,7 +1808,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
                   </div>
                 </div>
                 {items.length > 0 && (() => {
-                  const vbBoard = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
+                  const vbBoard = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [], podcasts: [] };
                   items.forEach(it => {
                     if (vbBoard[it.category]) vbBoard[it.category].push({ id: it.item_id, title: it.title, sub: it.subtitle || "", poster: it.poster, comment: "", vouched: true, sourceUrl: it.source_url, _cat: it.category, _catLabel: it.category });
                   });
@@ -2148,7 +2155,7 @@ export default function Vouch() {
     const { data, error } = await supabase
       .from("endorsements").select("*").eq("user_id", uid).order("created_at", { ascending: true });
     if (!error && data) {
-      const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
+      const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [], podcasts: [] };
       data.forEach(row => {
         const cat = row.category;
         if (b[cat] && b[cat].length < 5) {
@@ -2173,7 +2180,7 @@ export default function Vouch() {
     const { data, error } = await supabase
       .from("endorsements").select("*").eq("user_id", uid).order("created_at", { ascending: true });
     if (error) { console.error("loadViewBoard error:", error); return; }
-    const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
+    const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [], podcasts: [] };
     (data || []).forEach(row => {
       const cat = row.category;
       if (b[cat] && b[cat].length < 5) {
@@ -2808,7 +2815,7 @@ export default function Vouch() {
   };
 
   const addItem = async (catKey, item) => {
-    const catLabel = { movies: "Film", albums: "Albums", artists: "Artists", songs: "Songs", books: "Books", shows: "Television" }[catKey] || catKey;
+    const catLabel = { movies: "Film", albums: "Albums", artists: "Artists", songs: "Songs", books: "Books", shows: "Television", podcasts: "Podcasts" }[catKey] || catKey;
 
     // Check for duplicate vouch
     const alreadyVouched = board[catKey]?.find(i => String(i.id) === String(item.id) && i.vouched);
@@ -3359,7 +3366,7 @@ export default function Vouch() {
                     </div>
                     {activeBoard?.vouch_board_items?.length > 0 ? (
                       <VouchSection board={(() => {
-                        const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
+                        const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [], podcasts: [] };
                         (activeBoard.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0,5).forEach(item => {
                           if (b[item.category]) b[item.category].push({ id: item.item_id, title: item.title, sub: item.subtitle || "", poster: item.poster, comment: "", vouched: true, sourceUrl: item.source_url, _cat: item.category, _catLabel: CATEGORIES.find(c=>c.key===item.category)?.label || item.category });
                         });
@@ -3383,7 +3390,7 @@ export default function Vouch() {
                       </div>
                     </div>
                     <VouchSection board={(() => {
-                      const brd = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [] };
+                      const brd = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [], podcasts: [] };
                       (viewActiveBoard.vouch_board_items || []).sort((a,x) => a.position - x.position).slice(0,5).forEach(item => {
                         if (brd[item.category]) brd[item.category].push({ id: item.item_id, title: item.title, sub: item.subtitle || "", poster: item.poster, comment: "", vouched: true, sourceUrl: item.source_url, _cat: item.category, _catLabel: CATEGORIES.find(c=>c.key===item.category)?.label || item.category });
                       });
