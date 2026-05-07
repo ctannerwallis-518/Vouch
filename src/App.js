@@ -2489,9 +2489,15 @@ export default function Vouch() {
 
   const isMusicUrl = (url) => url && url.includes("open.spotify.com");
 
-  const appleUrl = (url, title, sub) => {
+  const appleUrl = (url, title, sub, catKey) => {
+    const isPodcast = catKey === "podcasts" || (url && url.includes("spotify.com/show/"));
     const term = encodeURIComponent([title, sub].filter(Boolean).join(" "));
-    return `https://music.apple.com/search?term=${term}`;
+    if (isPodcast) return `https://podcasts.apple.com/search?term=${encodeURIComponent(title)}`;
+    // For songs, put artist (sub) first for better matching
+    const musicTerm = catKey === "songs" && sub
+      ? encodeURIComponent(`${sub} ${title}`)
+      : term;
+    return `https://music.apple.com/search?term=${musicTerm}`;
   };
 
   const openMusicUrl = (url, title, sub, catKey) => {
@@ -2499,7 +2505,7 @@ export default function Vouch() {
     if (!isMusicUrl(url)) { window.open(url, "_blank"); return; }
     const pref = musicPrefRef.current;
     if (pref === "spotify") { window.open(url, "_blank"); return; }
-    if (pref === "apple_music") { window.open(appleUrl(url, title, sub), "_blank"); return; }
+    if (pref === "apple_music") { window.open(appleUrl(url, title, sub, catKey), "_blank"); return; }
     // No preference set — show picker
     setMusicPickerModal({ url, title, sub, catKey });
   };
@@ -2510,7 +2516,7 @@ export default function Vouch() {
     await supabase.from("profiles").update({ music_preference: pref }).eq("id", userId);
     setMusicPickerModal(null);
     if (pref === "spotify") window.open(url, "_blank");
-    else window.open(appleUrl(url, title, sub), "_blank");
+    else window.open(appleUrl(url, title, sub, catKey), "_blank");
   };
 
   const isOwn     = !viewing;
