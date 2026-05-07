@@ -1984,6 +1984,7 @@ export default function Vouch() {
   const [avatarLightbox, setAvatarLightbox] = useState(null);
   const [showContactModal, setShowContactModal] = useState(false);
   const [musicPreference, setMusicPreference] = useState(null); // "spotify" | "apple_music" | null
+  const musicPrefRef = useRef(null);
   const [musicPickerModal, setMusicPickerModal] = useState(null); // { url, title, sub, catKey }
   const [removeVouchModal, setRemoveVouchModal] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
@@ -2399,7 +2400,7 @@ export default function Vouch() {
         localStorage.setItem("vouch-last-visit", nowVisit);
         await supabase.from("profiles").update({ last_visit: nowVisit }).eq("id", uid);
         // Load category preferences
-        const { data: prof } = await supabase.from("profiles").select("categories").eq("id", uid).maybeSingle();
+        const { data: prof } = await supabase.from("profiles").select("categories, music_preference, queue_items").eq("id", uid).maybeSingle();
         if (prof?.music_preference) setMusicPreference(prof.music_preference);
         if (prof?.categories && prof.categories.length > 0) {
           setUserCategories(prof.categories);
@@ -2477,6 +2478,8 @@ export default function Vouch() {
 
   const signOut = async () => { await supabase.auth.signOut(); setUser(null); };
 
+  useEffect(() => { musicPrefRef.current = musicPreference; }, [musicPreference]);
+
   const isMusicUrl = (url) => url && url.includes("open.spotify.com");
 
   const appleUrl = (url, title, sub) => {
@@ -2486,14 +2489,16 @@ export default function Vouch() {
 
   const openMusicUrl = (url, title, sub, catKey) => {
     if (!isMusicUrl(url)) { window.open(url, "_blank"); return; }
-    if (musicPreference === "spotify") { window.open(url, "_blank"); return; }
-    if (musicPreference === "apple_music") { window.open(appleUrl(url, title, sub), "_blank"); return; }
+    const pref = musicPrefRef.current;
+    if (pref === "spotify") { window.open(url, "_blank"); return; }
+    if (pref === "apple_music") { window.open(appleUrl(url, title, sub), "_blank"); return; }
     // No preference set — show picker
     setMusicPickerModal({ url, title, sub, catKey });
   };
 
   const saveMusicPreference = async (pref, url, title, sub) => {
     setMusicPreference(pref);
+    musicPrefRef.current = pref;
     await supabase.from("profiles").update({ music_preference: pref }).eq("id", userId);
     setMusicPickerModal(null);
     if (pref === "spotify") window.open(url, "_blank");
@@ -3170,13 +3175,14 @@ export default function Vouch() {
               <div style={{ borderTop: `1px solid ${T.paperDark}`, paddingTop: 28, marginTop: 28 }}>
                 <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 8 }}>Music App</div>
                 <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 16, lineHeight: 1.6 }}>Choose where music tiles open.</div>
-                <div style={{ display: "flex", gap: 8 }}>
+                <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
                   {["spotify", "apple_music"].map(pref => (
-                    <button key={pref} onClick={async () => { setMusicPreference(pref); await supabase.from("profiles").update({ music_preference: pref }).eq("id", userId); }} style={{ flex: 1, padding: "10px", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", border: `1px solid ${musicPreference === pref ? T.ink : T.paperDark}`, background: musicPreference === pref ? T.ink : "transparent", color: musicPreference === pref ? T.bg : T.inkMid, cursor: "pointer" }}>
+                    <button key={pref} onClick={() => setMusicPreference(pref)} style={{ flex: 1, padding: "10px", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", border: `1px solid ${musicPreference === pref ? T.ink : T.paperDark}`, background: musicPreference === pref ? T.ink : "transparent", color: musicPreference === pref ? T.bg : T.inkMid, cursor: "pointer" }}>
                       {pref === "spotify" ? "Spotify" : "Apple Music"}
                     </button>
                   ))}
                 </div>
+                <button className="btn btn-solid" style={{ width: "100%" }} onClick={async () => { musicPrefRef.current = musicPreference; await supabase.from("profiles").update({ music_preference: musicPreference }).eq("id", userId); alert("Saved!"); }}>Save Music Preference</button>
               </div>
               <div id="contact-form" style={{ borderTop: `1px solid ${T.paperDark}`, paddingTop: 28, marginTop: 28 }}>
                 <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 8 }}>Contact & Feedback</div>
