@@ -2488,6 +2488,7 @@ export default function Vouch() {
   };
 
   const openMusicUrl = (url, title, sub, catKey) => {
+    console.log("openMusicUrl called", { url, pref: musicPrefRef.current, catKey });
     if (!isMusicUrl(url)) { window.open(url, "_blank"); return; }
     const pref = musicPrefRef.current;
     if (pref === "spotify") { window.open(url, "_blank"); return; }
