@@ -2401,7 +2401,7 @@ export default function Vouch() {
         await supabase.from("profiles").update({ last_visit: nowVisit }).eq("id", uid);
         // Load category preferences
         const { data: prof } = await supabase.from("profiles").select("categories, music_preference, queue_items").eq("id", uid).maybeSingle();
-        if (prof?.music_preference) setMusicPreference(prof.music_preference);
+        if (prof?.music_preference) { setMusicPreference(prof.music_preference); musicPrefRef.current = prof.music_preference; }
         if (prof?.categories && prof.categories.length > 0) {
           setUserCategories(prof.categories);
         } else if (prof && !prof.categories) {
