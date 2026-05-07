@@ -2516,7 +2516,7 @@ export default function Vouch() {
     await supabase.from("profiles").update({ music_preference: pref }).eq("id", userId);
     setMusicPickerModal(null);
     if (pref === "spotify") window.open(url, "_blank");
-    else window.open(appleUrl(url, title, sub, catKey), "_blank");
+    else window.open(appleUrl(url, title, sub, musicPickerModal?.catKey), "_blank");
   };
 
   const isOwn     = !viewing;
