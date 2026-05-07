@@ -3119,17 +3119,25 @@ export default function Vouch() {
               <div style={{ marginBottom: 40, borderBottom: `1px solid ${T.paperDark}`, paddingBottom: 32 }}>
                 <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 8 }}>Profile</div>
                 <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 20, lineHeight: 1.6 }}>
-                  Change your display name or username. Your profile URL will update immediately.
+                  Change your avatar, display name, or username.
                 </div>
                 {!editingProfile ? (
                   <div>
-                    <div style={{ fontFamily: "'Spectral',serif", fontSize: 14, marginBottom: 6 }}>
-                      <span style={{ fontFamily: "'Spectral SC',serif", fontSize: 10, color: T.inkLight, letterSpacing: "0.12em" }}>Display Name</span><br />
-                      {user?.displayName}
-                    </div>
-                    <div style={{ fontFamily: "'Spectral',serif", fontSize: 14, marginBottom: 16 }}>
-                      <span style={{ fontFamily: "'Spectral SC',serif", fontSize: 10, color: T.inkLight, letterSpacing: "0.12em" }}>Username</span><br />
-                      @{user?.username}
+                    <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
+                      <div onClick={() => setAvatarPicker(true)} style={{ cursor: "pointer", position: "relative", flexShrink: 0 }}>
+                        <Avatar name={user?.displayName} size={56} avatarUrl={user?.avatarUrl} />
+                        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(17,16,8,0.55)", fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.12em", color: "rgba(200,194,180,0.9)", textAlign: "center", padding: "3px 0" }}>edit</div>
+                      </div>
+                      <div>
+                        <div style={{ fontFamily: "'Spectral',serif", fontSize: 14, marginBottom: 4 }}>
+                          <span style={{ fontFamily: "'Spectral SC',serif", fontSize: 10, color: T.inkLight, letterSpacing: "0.12em" }}>Display Name</span><br />
+                          {user?.displayName}
+                        </div>
+                        <div style={{ fontFamily: "'Spectral',serif", fontSize: 14 }}>
+                          <span style={{ fontFamily: "'Spectral SC',serif", fontSize: 10, color: T.inkLight, letterSpacing: "0.12em" }}>Username</span><br />
+                          @{user?.username}
+                        </div>
+                      </div>
                     </div>
                     <button className="btn btn-ghost" onClick={() => { setProfileDisplayName(user?.displayName || ""); setProfileUsername(user?.username || ""); setProfileSaveMsg(""); setEditingProfile(true); }}>Edit Profile</button>
                   </div>
@@ -3148,7 +3156,6 @@ export default function Vouch() {
                     <div style={{ display: "flex", gap: 8 }}>
                       <button className="btn btn-solid" style={{ flex: 1 }} onClick={async () => {
                         if (!profileUsername.trim() || !profileDisplayName.trim()) { setProfileSaveMsg("Both fields are required."); return; }
-                        // Check username uniqueness
                         const { data: existing } = await supabase.from("profiles").select("id").eq("username", profileUsername).neq("id", userId).maybeSingle();
                         if (existing) { setProfileSaveMsg("That username is taken — try another."); return; }
                         await supabase.from("profiles").update({ username: profileUsername, display_name: profileDisplayName }).eq("id", userId);
@@ -3162,18 +3169,7 @@ export default function Vouch() {
                   </div>
                 )}
               </div>
-              <div style={{ marginBottom: 40 }}>
-                <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 8 }}>My Shelf Categories</div>
-                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 20, lineHeight: 1.6 }}>
-                  Choose which categories appear on your shelf.
-                </div>
-                <CategoryPicker selected={userCategories || CATEGORIES.map(c => c.key)} all={CATEGORIES} onSave={saveCategories} />
-              </div>
-              <div style={{ borderTop: `1px solid ${T.paperDark}`, paddingTop: 28 }}>
-                <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 16 }}>Avatar</div>
-                <button className="btn btn-ghost" onClick={() => setAvatarPicker(true)}>Change Avatar</button>
-              </div>
-              <div style={{ borderTop: `1px solid ${T.paperDark}`, paddingTop: 28, marginTop: 28 }}>
+              <div style={{ marginBottom: 40, borderBottom: `1px solid ${T.paperDark}`, paddingBottom: 32 }}>
                 <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 8 }}>Music App</div>
                 <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 16, lineHeight: 1.6 }}>Choose where music tiles open.</div>
                 <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
@@ -3184,6 +3180,13 @@ export default function Vouch() {
                   ))}
                 </div>
                 <button className="btn btn-solid" style={{ width: "100%" }} onClick={async () => { musicPrefRef.current = musicPreference; await supabase.from("profiles").update({ music_preference: musicPreference }).eq("id", userId); alert("Saved!"); }}>Save Music Preference</button>
+              </div>
+              <div style={{ marginBottom: 40 }}>
+                <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 8 }}>My Shelf Categories</div>
+                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 20, lineHeight: 1.6 }}>
+                  Choose which categories appear on your shelf.
+                </div>
+                <CategoryPicker selected={userCategories || CATEGORIES.map(c => c.key)} all={CATEGORIES} onSave={saveCategories} />
               </div>
               <div id="contact-form" style={{ borderTop: `1px solid ${T.paperDark}`, paddingTop: 28, marginTop: 28 }}>
                 <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 8 }}>Contact & Feedback</div>
