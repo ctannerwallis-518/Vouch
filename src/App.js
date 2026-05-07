@@ -1833,7 +1833,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
                   <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: "#a09890", marginLeft: 8 }}>{item.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
                 </div>
               </div>
-              <div style={{ width: "100%", maxWidth: 300, margin: "0 auto", cursor: primary.source_url ? "pointer" : "default" }} onClick={() => { if (!primary.source_url) return; const isMusicCat = ["songs","albums","artists"].includes(primary.category); if (isMusicCat && onMusicOpen) { onMusicOpen(primary.source_url, primary.title, primary.subtitle, primary.category); } else { window.open(primary.source_url, "_blank"); } }}>
+              <div style={{ width: "100%", maxWidth: 300, margin: "0 auto", cursor: primary.source_url ? "pointer" : "default" }} onClick={() => { if (!primary.source_url) return; const isMusicUrl = primary.source_url.includes("open.spotify.com"); if (isMusicUrl && onMusicOpen) { onMusicOpen(primary.source_url, primary.title, primary.subtitle, primary.category); } else { window.open(primary.source_url, "_blank"); } }}>
                 {primary.poster && <img src={primary.poster} alt={primary.title} style={{ width: "100%", display: "block" }} onError={e => e.target.style.display = "none"} />}
                 <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{primary.title}</div>
                 {primary.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{primary.subtitle}</div>}
@@ -1884,7 +1884,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
               </div>
               {r.poster && (
                 <div style={{ width: "100%", maxWidth: 300, margin: "0 auto" }}>
-                  <div style={{ cursor: r.source_url ? "pointer" : "default" }} onClick={() => { if (!r.source_url) return; const isMusicCat = ["songs","albums","artists"].includes(r.category); if (isMusicCat && onMusicOpen) { onMusicOpen(r.source_url, r.title, r.subtitle, r.category); } else { window.open(r.source_url, "_blank"); } }}>
+                  <div style={{ cursor: r.source_url ? "pointer" : "default" }} onClick={() => { if (!r.source_url) return; const isMusicUrl = r.source_url.includes("open.spotify.com"); if (isMusicUrl && onMusicOpen) { onMusicOpen(r.source_url, r.title, r.subtitle, r.category); } else { window.open(r.source_url, "_blank"); } }}>
                     <img src={r.poster} alt={r.title} style={{ width: "100%", display: "block" }} onError={e => e.target.style.display = "none"} />
                     <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{r.title}</div>
                     {r.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{r.subtitle}</div>}
