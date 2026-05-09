@@ -2883,14 +2883,14 @@ export default function Vouch() {
       const offsetStep = tileCount <= 1 ? 0 : Math.min(80, (totalW - cardW) / (tileCount - 1));
       const startX = 72 + (totalW - (cardW + offsetStep * (tileCount - 1))) / 2;
       for (let i = tileCount - 1; i >= 0; i--) {
-        const x = startX + i * offsetStep;
+        const x = startX + (tileCount - 1 - i) * offsetStep;
         const isFront = i === 0;
         const overlayAlpha = isFront ? 0 : 0.82 - (i / Math.max(tileCount - 1, 1)) * 0.35;
         ctx.save();
         if (isFront) { ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 40; ctx.shadowOffsetX = -10; }
         ctx.fillStyle = "#111008"; ctx.fillRect(x, stackY, cardW, cardH);
         const img = posterImgs[i];
-        if (img && isFront) {
+        if (img) {
           const imgRatio = img.naturalWidth / img.naturalHeight;
           const cardRatio = cardW / cardH;
           let sx, sy, sw, sh;
