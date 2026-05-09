@@ -1634,7 +1634,7 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue,
     <div style={{ flexShrink: 0, width: isMobile ? 95 : 150, cursor: item.source_url ? "pointer" : "default" }}
       onClick={() => item.source_url && window.open(item.source_url, "_blank")}>
       {item.poster
-        ? <img src={item.poster} alt={item.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "contain", background: "#000", border: "1px solid " + T.paperDark, display: "block" }} onError={e => e.target.style.display = "none"} />
+        ? <img src={item.poster} alt={item.title} style={{ width: "100%", display: "block" }} onError={e => e.target.style.display = "none"} />
         : <div style={{ width: "100%", aspectRatio: "2/3", background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 6 }}>{item.title}</div>}
       <div style={{ fontFamily: "'Spectral',serif", fontSize: 11, fontWeight: 600, color: T.ink, marginTop: 5, lineHeight: 1.3 }}>{item.title}</div>
       {item.owners.length > 0 && (
