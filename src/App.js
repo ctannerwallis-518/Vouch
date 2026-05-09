@@ -1766,7 +1766,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
             if (date > shelfGroups[key].date) shelfGroups[key].date = date;
           }
         });
-        items.sort((a, b) => b.date - a.date);
+        items.sort((a, b) => { const typeWeight = { vouch: 0, shelf: 1, agree: 2 }; const wa = typeWeight[a.type] ?? 1; const wb = typeWeight[b.type] ?? 1; if (wa !== wb) return wa - wb; return b.date - a.date; });
         // Group agrees by item_id + item_owner_id
         const grouped = [];
         const agreeGroups = {};
@@ -1785,7 +1785,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
             grouped.push(item);
           }
         });
-        grouped.sort((a, b) => b.date - a.date);
+        grouped.sort((a, b) => { const typeWeight = { vouch: 0, shelf: 1, agree: 2 }; const wa = typeWeight[a.type] ?? 1; const wb = typeWeight[b.type] ?? 1; if (wa !== wb) return wa - wb; return b.date - a.date; });
         setFeed(grouped.slice(0, 40));
       } catch(e) { console.error(e); }
       setLoading(false);
