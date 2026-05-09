@@ -943,17 +943,28 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
           )}
         </div>
       ) : (
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", overflow: "hidden" }}>
-          {allItems.map((it, i) => (
-            <div key={it.id + it._cat} className="card-large" style={{ position: "relative", flex: "1", maxWidth: 280 }}>
-              <CardFace it={it} />
+        <div>
+          {allItems.length === 0 && isOwn ? (
+            <div style={{ height: 280, border: "1px dashed rgba(200,194,180,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 8, cursor: "pointer" }} onClick={onAdd}>
+              <span style={{ fontSize: 28, color: "rgba(200,194,180,0.4)" }}>+</span>
+              <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)" }}>Create Your Vouch</span>
             </div>
-          ))}
-          {isOwn && Array(Math.max(0, 5 - allItems.length)).fill(null).map((_, i) => (
-            <div key={`ve${i}`} className="slot-empty-large" style={{ flex: "1", maxWidth: 280 }} onClick={onAdd}>
-              <div className="slot-empty-inner"><span className="slot-empty-plus">+</span>Vouch</div>
+          ) : (
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <button onClick={() => setIdx(x => Math.max(x - 1, 0))} disabled={idx === 0} style={{ background: "transparent", border: "none", color: idx === 0 ? "rgba(200,194,180,0.2)" : "rgba(200,194,180,0.7)", fontSize: 32, cursor: idx === 0 ? "default" : "pointer", padding: "0 8px", flexShrink: 0, lineHeight: 1 }}>‹</button>
+              <div style={{ flex: 1, maxWidth: 400, margin: "0 auto" }}>
+                {allItems[idx] && <CardFace it={allItems[idx]} />}
+              </div>
+              <button onClick={() => setIdx(x => Math.min(x + 1, total - 1))} disabled={idx === total - 1} style={{ background: "transparent", border: "none", color: idx === total - 1 ? "rgba(200,194,180,0.2)" : "rgba(200,194,180,0.7)", fontSize: 32, cursor: idx === total - 1 ? "default" : "pointer", padding: "0 8px", flexShrink: 0, lineHeight: 1 }}>›</button>
             </div>
-          ))}
+          )}
+          {total > 1 && (
+            <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 14 }}>
+              {allItems.map((_, i) => (
+                <div key={i} onClick={() => setIdx(i)} style={{ width: 6, height: 6, borderRadius: "50%", background: i === idx ? "rgba(200,194,180,0.9)" : "rgba(200,194,180,0.25)", cursor: "pointer", transition: "background 0.2s" }} />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -3049,6 +3060,15 @@ export default function Vouch() {
 
           {tab === "home" && !viewing && (
             <div style={{ maxWidth: 680, margin: "0 auto", paddingTop: 24 }}>
+              {!localStorage.getItem("vouch-podcast-announce-dismissed") && (
+                <div style={{ background: T.ink, color: T.bg, padding: "14px 16px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                  <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13 }}>
+                    🎙️ <strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11, letterSpacing: "0.12em" }}>New:</strong> You can now vouch for Podcasts and add them to your shelf.{" "}
+                    <span onClick={() => { setTab("settings"); window.history.pushState({tab:"settings"}, "", "/"); scrollToTop(); }} style={{ cursor: "pointer", borderBottom: "1px solid rgba(200,194,180,0.5)", fontStyle: "normal" }}>Add in Settings →</span>
+                  </div>
+                  <button onClick={() => { localStorage.setItem("vouch-podcast-announce-dismissed", "1"); window.location.reload(); }} style={{ background: "transparent", border: "none", color: "rgba(200,194,180,0.5)", fontSize: 20, cursor: "pointer", padding: 0, flexShrink: 0 }}>×</button>
+                </div>
+              )}
               {newAgreements.length > 0 && (
                 <div style={{ background: T.ink, color: T.bg, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }} onClick={() => setShowAgreements(true)}>
                   <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13 }}>
