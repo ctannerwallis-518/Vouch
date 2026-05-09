@@ -1785,7 +1785,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
             grouped.push(item);
           }
         });
-        const VOUCH_BOOST_MS = 48 * 60 * 60 * 1000; grouped.sort((a, b) => { const aScore = a.date.getTime() + (a.type === "vouch" ? VOUCH_BOOST_MS : 0); const bScore = b.date.getTime() + (b.type === "vouch" ? VOUCH_BOOST_MS : 0); return bScore - aScore; });
+        grouped.sort((a, b) => { const aScore = a.date.getTime() + (a.type === "vouch" ? 48*60*60*1000 : 0); const bScore = b.date.getTime() + (b.type === "vouch" ? 48*60*60*1000 : 0); return bScore - aScore; });
         setFeed(grouped.slice(0, 40));
       } catch(e) { console.error(e); }
       setLoading(false);
