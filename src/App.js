@@ -2236,73 +2236,79 @@ export default function Vouch() {
   const loadGroupVouch = async (buddyIds, excludeId) => {
     if (!buddyIds.length) return;
     try {
-      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const buildCounts = (vbItems, shelfItems, agreeItems, profileMap) => {
+        const counts = {};
+        const addRow = (row) => {
+          if (!row.item_id || !row.title) return;
+          const key = (row.category || "") + ":" + row.item_id;
+          if (!counts[key]) counts[key] = { item_id: row.item_id, title: row.title, category: row.category || "", poster: row.poster || null, source_url: row.source_url || null, count: 0, voucher_ids: new Set(), voucher_names: [], primary_user: null };
+          const uid = row.user_id || row.item_owner_id;
+          if (uid && !counts[key].voucher_ids.has(uid)) {
+            counts[key].voucher_ids.add(uid);
+            if (profileMap[uid]) counts[key].voucher_names.push(profileMap[uid]);
+            if (!counts[key].primary_user) counts[key].primary_user = uid;
+          }
+          counts[key].count++;
+        };
+        (vbItems || []).forEach(r => addRow(r));
+        (shelfItems || []).forEach(r => addRow(r));
+        (agreeItems || []).forEach(r => addRow({ ...r, user_id: r.user_id }));
+        return Object.values(counts).filter(i => i.category);
+      };
 
-      // Active vouch board items
-      const { data: buddyBoards } = await supabase
-        .from("vouch_boards")
-        .select("id, user_id, published_at")
-        .in("user_id", buddyIds)
-        .eq("is_active", true);
-      const boardMap = {};
-      (buddyBoards || []).forEach(b => { boardMap[b.id] = { user_id: b.user_id, published_at: b.published_at }; });
-      const boardIds = Object.keys(boardMap);
-      const { data: vbItems } = boardIds.length > 0 ? await supabase
-        .from("vouch_board_items")
-        .select("item_id, title, category, poster, source_url, board_id")
-        .in("board_id", boardIds) : { data: [] };
-      (vbItems || []).forEach(r => { r.user_id = boardMap[r.board_id]?.user_id || null; r.created_at = boardMap[r.board_id]?.published_at || null; });
+      const pick5WithCap = (items) => {
+        // Sort by count descending
+        const sorted = items.sort((a, b) => b.count - a.count);
+        // Pick top items but cap each buddy at 2 tiles
+        const userCounts = {};
+        const selected = [];
+        for (const item of sorted) {
+          if (selected.length >= 8) break;
+          const uid = item.primary_user;
+          if (uid) {
+            userCounts[uid] = (userCounts[uid] || 0);
+            if (userCounts[uid] >= 2) continue;
+            userCounts[uid]++;
+          }
+          selected.push(item);
+        }
+        // Shuffle and return 5
+        return selected.sort(() => Math.random() - 0.5).slice(0, 5);
+      };
 
-      // Shelf items — recent only
-      const { data: shelfItems } = await supabase
-        .from("endorsements")
-        .select("item_id, title, category, poster, source_url, user_id, created_at")
-        .in("user_id", buddyIds)
-        .gte("created_at", weekAgo);
-
-      // Agrees — recent only
-      const { data: agreeItems } = await supabase
-        .from("reactions")
-        .select("item_id, title, category, poster, source_url, item_owner_id, user_id, created_at")
-        .in("user_id", buddyIds)
-        .gte("created_at", weekAgo);
-
-      // Load buddy profiles for voucher names
+      // Load buddy profiles
       const { data: buddyProfiles } = await supabase
-        .from("profiles")
-        .select("id, display_name")
-        .in("id", buddyIds);
+        .from("profiles").select("id, display_name").in("id", buddyIds);
       const profileMap = {};
       (buddyProfiles || []).forEach(p => { profileMap[p.id] = p.display_name; });
 
-      const counts = {};
-      const addRow = (row, weight, isRecent) => {
-        if (!row.item_id || !row.title) return;
-        const key = (row.category || "") + ":" + row.item_id;
-        if (!counts[key]) counts[key] = { item_id: row.item_id, title: row.title, category: row.category || "", poster: row.poster || null, source_url: row.source_url || null, score: 0, count: 0, voucher_ids: new Set(), voucher_names: [] };
-        const uid = row.user_id || row.item_owner_id;
-        if (uid && !counts[key].voucher_ids.has(uid)) {
-          counts[key].voucher_ids.add(uid);
-          if (profileMap[uid]) counts[key].voucher_names.push(profileMap[uid]);
-        }
-        counts[key].count++;
-        counts[key].score += isRecent ? weight * 2 : weight;
-      };
+      // Active vouch board items
+      const { data: buddyBoards } = await supabase
+        .from("vouch_boards").select("id, user_id").in("user_id", buddyIds).eq("is_active", true);
+      const boardMap = {};
+      (buddyBoards || []).forEach(b => { boardMap[b.id] = b.user_id; });
+      const boardIds = Object.keys(boardMap);
+      const { data: vbItemsRaw } = boardIds.length > 0 ? await supabase
+        .from("vouch_board_items").select("item_id, title, category, poster, source_url, board_id").in("board_id", boardIds) : { data: [] };
+      const vbItems = (vbItemsRaw || []).map(r => ({ ...r, user_id: boardMap[r.board_id] || null }));
 
-      (vbItems || []).forEach(r => {
-        const isRecent = r.created_at && new Date(r.created_at) > new Date(weekAgo);
-        addRow(r, 3, isRecent);
-      });
-      (shelfItems || []).forEach(r => addRow(r, 1, true));
-      (agreeItems || []).forEach(r => addRow({ ...r, user_id: r.user_id }, 1, true));
+      // Try past 7 days first
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: shelfWeek } = await supabase.from("endorsements").select("item_id, title, category, poster, source_url, user_id").in("user_id", buddyIds).gte("created_at", weekAgo);
+      const { data: agreeWeek } = await supabase.from("reactions").select("item_id, title, category, poster, source_url, item_owner_id, user_id").in("user_id", buddyIds).gte("created_at", weekAgo);
 
-      const sorted = Object.values(counts)
-        .filter(i => i.category)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 8);
+      let items = buildCounts(vbItems, shelfWeek, agreeWeek, profileMap);
+      let result = pick5WithCap(items);
 
-      const shuffled = sorted.sort(() => Math.random() * 0.6 - 0.3).slice(0, 5);
-      setGroupVouchItems(shuffled.map(i => ({ ...i, vouchers: i.voucher_names })));
+      // Fall back to all time if fewer than 5
+      if (result.length < 5) {
+        const { data: shelfAll } = await supabase.from("endorsements").select("item_id, title, category, poster, source_url, user_id").in("user_id", buddyIds);
+        const { data: agreeAll } = await supabase.from("reactions").select("item_id, title, category, poster, source_url, item_owner_id, user_id").in("user_id", buddyIds);
+        items = buildCounts(vbItems, shelfAll, agreeAll, profileMap);
+        result = pick5WithCap(items);
+      }
+
+      setGroupVouchItems(result.map(i => ({ ...i, vouchers: i.voucher_names })));
     } catch(e) { console.error("loadGroupVouch error:", e); }
   };
 
