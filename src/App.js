@@ -1468,7 +1468,7 @@ function EditMetaForm({ board, themes, onSave, onClose }) {
   );
 }
 
-function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame }) {
+function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame, onShowVouchers }) {
   const [idx, setIdx] = useState(0);
   const touchStartX = useRef(null);
   const currentOffsetX = useRef(0);
@@ -1509,7 +1509,7 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame 
       {item.poster
         ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: "1px solid rgba(200,194,180,0.2)", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")} onError={e => e.target.style.display = "none"} />
         : <div style={{ width: "100%", height: 340, background: "rgba(200,194,180,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")}>{item.title}</div>}
-      <div title="Total Buddy Vouches" style={{ position: "absolute", top: 8, left: 8, background: "rgba(17,16,8,0.82)", color: "rgba(200,194,180,0.95)", fontFamily: "'Spectral SC',serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px" }}>{item.count} {item.count === 1 ? "Vouch" : "Vouches"}</div>
+      <div title="See who vouched" onClick={e => { e.stopPropagation(); onShowVouchers && onShowVouchers(item); }} style={{ position: "absolute", top: 8, left: 8, background: "rgba(17,16,8,0.82)", color: "rgba(200,194,180,0.95)", fontFamily: "'Spectral SC',serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "pointer" }}>{item.count} {item.count === 1 ? "Vouch" : "Vouches"}</div>
       <div style={{ padding: "10px 4px 4px" }}>
         <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 4 }}>{item.category}</div>
         <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: "#C8C2B4" }}>{item.title}</div>
@@ -1526,7 +1526,7 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame 
         {item.poster
           ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: "1px solid rgba(200,194,180,0.2)", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")} onError={e => e.target.style.display = "none"} />
           : <div style={{ width: "100%", height: 340, background: "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")}>{item.title}</div>}
-        <div title="Total Buddy Vouches" style={{ position: "absolute", top: 8, left: 8, background: "rgba(17,16,8,0.82)", color: "rgba(200,194,180,0.95)", fontFamily: "'Spectral SC',serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px" }}>{item.count} {item.count === 1 ? "Vouch" : "Vouches"}</div>
+        <div title="See who vouched" onClick={e => { e.stopPropagation(); onShowVouchers && onShowVouchers(item); }} style={{ position: "absolute", top: 8, left: 8, background: "rgba(17,16,8,0.82)", color: "rgba(200,194,180,0.95)", fontFamily: "'Spectral SC',serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "pointer" }}>{item.count} {item.count === 1 ? "Vouch" : "Vouches"}</div>
         <div style={{ padding: "10px 4px 4px" }}>
           <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 4 }}>{item.category}</div>
           <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: "#C8C2B4" }}>{item.title}</div>
@@ -1547,7 +1547,7 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame 
       <div className="vouch-section-header">
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="vouch-section-label">Group Vouch</div>
-          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginTop: 3 }}>Most vouched across your circle</div>
+          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginTop: 3 }}>Buzzing in your circle this week</div>
         </div>
       </div>
       {isMobile ? (
@@ -2007,6 +2007,7 @@ export default function Vouch() {
   const [avatarPicker,   setAvatarPicker]   = useState(false);
   const [avatarLightbox, setAvatarLightbox] = useState(null);
   const [showContactModal, setShowContactModal] = useState(false);
+  const [voucherModal, setVoucherModal] = useState(null); // { title, names }
   const [musicPreference, setMusicPreference] = useState(null); // "spotify" | "apple_music" | null
   const musicPrefRef = useRef(null);
   const [musicPickerModal, setMusicPickerModal] = useState(null); // { url, title, sub, catKey }
@@ -2235,57 +2236,77 @@ export default function Vouch() {
   const loadGroupVouch = async (buddyIds, excludeId) => {
     if (!buddyIds.length) return;
     try {
-      // Vouch board items from all buddy boards (active + archived)
-      // Get vouch board ids for buddies first
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+      // Active vouch board items
       const { data: buddyBoards } = await supabase
         .from("vouch_boards")
-        .select("id, user_id")
+        .select("id, user_id, published_at")
         .in("user_id", buddyIds)
         .eq("is_active", true);
       const boardMap = {};
-      (buddyBoards || []).forEach(b => { boardMap[b.id] = b.user_id; });
+      (buddyBoards || []).forEach(b => { boardMap[b.id] = { user_id: b.user_id, published_at: b.published_at }; });
       const boardIds = Object.keys(boardMap);
       const { data: vbItems } = boardIds.length > 0 ? await supabase
         .from("vouch_board_items")
         .select("item_id, title, category, poster, source_url, board_id")
         .in("board_id", boardIds) : { data: [] };
-      // Attach user_id from boardMap
-      (vbItems || []).forEach(r => { r.user_id = boardMap[r.board_id] || null; });
+      (vbItems || []).forEach(r => { r.user_id = boardMap[r.board_id]?.user_id || null; r.created_at = boardMap[r.board_id]?.published_at || null; });
 
-      // Shelf items from buddies
+      // Shelf items — recent only
       const { data: shelfItems } = await supabase
         .from("endorsements")
-        .select("item_id, title, category, poster, source_url, user_id")
-        .in("user_id", buddyIds);
+        .select("item_id, title, category, poster, source_url, user_id, created_at")
+        .in("user_id", buddyIds)
+        .gte("created_at", weekAgo);
 
-      // Agrees from buddies (not self)
+      // Agrees — recent only
       const { data: agreeItems } = await supabase
         .from("reactions")
-        .select("item_id, title, category, poster, source_url, item_owner_id")
-        .in("user_id", buddyIds);
+        .select("item_id, title, category, poster, source_url, item_owner_id, user_id, created_at")
+        .in("user_id", buddyIds)
+        .gte("created_at", weekAgo);
+
+      // Load buddy profiles for voucher names
+      const { data: buddyProfiles } = await supabase
+        .from("profiles")
+        .select("id, display_name")
+        .in("id", buddyIds);
+      const profileMap = {};
+      (buddyProfiles || []).forEach(p => { profileMap[p.id] = p.display_name; });
 
       const counts = {};
-      const addRow = (row) => {
+      const addRow = (row, weight, isRecent) => {
         if (!row.item_id || !row.title) return;
         const key = (row.category || "") + ":" + row.item_id;
-        if (!counts[key]) counts[key] = { item_id: row.item_id, title: row.title, category: row.category || "", poster: row.poster || null, source_url: row.source_url || null, count: 0, user_id: row.user_id || null };
+        if (!counts[key]) counts[key] = { item_id: row.item_id, title: row.title, category: row.category || "", poster: row.poster || null, source_url: row.source_url || null, score: 0, count: 0, voucher_ids: new Set(), voucher_names: [] };
+        const uid = row.user_id || row.item_owner_id;
+        if (uid && !counts[key].voucher_ids.has(uid)) {
+          counts[key].voucher_ids.add(uid);
+          if (profileMap[uid]) counts[key].voucher_names.push(profileMap[uid]);
+        }
         counts[key].count++;
+        counts[key].score += isRecent ? weight * 2 : weight;
       };
-      (vbItems || []).forEach(r => addRow(r));
-      (shelfItems || []).forEach(r => addRow(r));
-      (agreeItems || []).forEach(r => addRow({ ...r, user_id: r.item_owner_id }));
 
-      const top5 = Object.values(counts)
+      (vbItems || []).forEach(r => {
+        const isRecent = r.created_at && new Date(r.created_at) > new Date(weekAgo);
+        addRow(r, 3, isRecent);
+      });
+      (shelfItems || []).forEach(r => addRow(r, 1, true));
+      (agreeItems || []).forEach(r => addRow({ ...r, user_id: r.user_id }, 1, true));
+
+      const sorted = Object.values(counts)
         .filter(i => i.category)
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5)
-        .map(i => ({ ...i, vouchers: [], source_url: i.source_url }));
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 8);
 
-      setGroupVouchItems(top5);
+      const shuffled = sorted.sort(() => Math.random() * 0.6 - 0.3).slice(0, 5);
+      setGroupVouchItems(shuffled.map(i => ({ ...i, vouchers: i.voucher_names })));
     } catch(e) { console.error("loadGroupVouch error:", e); }
   };
 
-  const loadAllBuddyBoards = async (buddyList, uid) => {
+    const loadAllBuddyBoards = async (buddyList, uid) => {
     const allBoards = await Promise.all(buddyList.map(async b => {
       const { data } = await supabase.from("endorsements").select("*").eq("user_id", b.userId);
       return data || [];
@@ -3312,7 +3333,7 @@ export default function Vouch() {
 
                 {/* GROUP VOUCH - top of page */}
                 {groupVouchItems.length > 0 && (
-                  <GroupVouchSlideshow items={groupVouchItems} isMobile={isMobileGlobal} onAddToQueue={addToQueue} queue={queue} onDudeSame={dudeSame} />
+                  <GroupVouchSlideshow items={groupVouchItems} isMobile={isMobileGlobal} onAddToQueue={addToQueue} queue={queue} onDudeSame={dudeSame} onShowVouchers={(item) => setVoucherModal({ title: item.title, names: item.vouchers || [] })} />
                 )}
 
                 <BuddiesBin allBuddyBoards={allBuddyBoards} buddies={buddies} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId, true); window.scrollTo(0,0); }} onAddToQueue={addToQueue} queue={queue} onDudeSame={dudeSame} myReactions={myReactions} userId={userId} />
@@ -4065,6 +4086,29 @@ export default function Vouch() {
                   </button>
                 </div>
                 <button onClick={() => setMusicPickerModal(null)} style={{ width: "100%", background: "transparent", border: "none", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkFaint, cursor: "pointer", padding: "8px 0" }}>Maybe later</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {voucherModal && (
+          <div className="modal-overlay" onClick={() => setVoucherModal(null)}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <div className="modal-head">
+                <div className="modal-title">Vouched by</div>
+                <button className="modal-x" onClick={() => setVoucherModal(null)}>×</button>
+              </div>
+              <div className="modal-body">
+                <div style={{ fontFamily: "'Spectral',serif", fontWeight: 700, fontSize: 16, marginBottom: 16 }}>{voucherModal.title}</div>
+                {voucherModal.names.length === 0
+                  ? <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight }}>No names available.</div>
+                  : voucherModal.names.map((name, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
+                      <Avatar name={name} size={36} />
+                      <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 15 }}>{name}</div>
+                    </div>
+                  ))
+                }
               </div>
             </div>
           </div>
