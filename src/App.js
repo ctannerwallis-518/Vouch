@@ -1766,7 +1766,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
             if (date > shelfGroups[key].date) shelfGroups[key].date = date;
           }
         });
-        const VOUCH_BOOST_MS = 48 * 60 * 60 * 1000; items.sort((a, b) => { const aScore = a.date.getTime() + (a.type === "vouch" ? VOUCH_BOOST_MS : 0); const bScore = b.date.getTime() + (b.type === "vouch" ? VOUCH_BOOST_MS : 0); return bScore - aScore; });
+        items.sort((a, b) => b.date - a.date);
         // Group agrees by item_id + item_owner_id
         const grouped = [];
         const agreeGroups = {};
@@ -1785,7 +1785,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
             grouped.push(item);
           }
         });
-        grouped.sort((a, b) => { const aScore = a.date.getTime() + (a.type === "vouch" ? 48*60*60*1000 : 0); const bScore = b.date.getTime() + (b.type === "vouch" ? 48*60*60*1000 : 0); return bScore - aScore; });
+        grouped.sort((a, b) => b.date - a.date);
         setFeed(grouped.slice(0, 40));
       } catch(e) { console.error(e); }
       setLoading(false);
@@ -2984,31 +2984,29 @@ export default function Vouch() {
       ctx.fillRect(0, 1915, 1080, 5);
     };
 
-    if (topItem?.poster) {
-      // Use image proxy to avoid CORS
+    const loadImg = async (url) => {
+      if (!url) return null;
       try {
-        const proxyUrl = `/api/imgproxy?url=${encodeURIComponent(topItem.poster)}`;
+        const proxyUrl = `/api/imgproxy?url=${encodeURIComponent(url)}`;
         const response = await fetch(proxyUrl);
         const blob = await response.blob();
         const objectUrl = URL.createObjectURL(blob);
-        const img = new Image();
-        img.onload = async () => {
-          drawCard(img);
-          URL.revokeObjectURL(objectUrl);
-          await doShare(canvas, shareUrl, shareName);
-        };
-        img.onerror = async () => {
-          drawCard(null);
-          URL.revokeObjectURL(objectUrl);
-          await doShare(canvas, shareUrl, shareName);
-        };
-        img.src = objectUrl;
-      } catch {
-        drawCard(null);
-        await doShare(canvas, shareUrl, shareName);
-      }
-    } else {
-      drawCard(null);
+        return await new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => { URL.revokeObjectURL(objectUrl); resolve(img); };
+          img.onerror = () => { URL.revokeObjectURL(objectUrl); resolve(null); };
+          img.src = objectUrl;
+        });
+      } catch { return null; }
+    };
+
+    try {
+      const activeBoardItems = (activeBoard?.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0, 5);
+      const posterImgs = await Promise.all(activeBoardItems.map(item => loadImg(item.poster)));
+      drawCard(posterImgs);
+      await doShare(canvas, shareUrl, shareName);
+    } catch {
+      drawCard([]);
       await doShare(canvas, shareUrl, shareName);
     }
   };
