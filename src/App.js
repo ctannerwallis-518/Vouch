@@ -817,7 +817,7 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
   );
 }
 
-function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, buddyCounts, hideHeader, hideEmptySlots, onAddToQueue, queue, ownerId, onMusicOpen }) {
+function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, buddyCounts, hideHeader, hideEmptySlots, onAddToQueue, queue, ownerId, onMusicOpen, singleTile }) {
   const [idx, setIdx]      = useState(0);
   const touchStartX        = useRef(null);
   const touchStartY        = useRef(null);
@@ -942,22 +942,15 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
             </div>
           )}
         </div>
-      ) : (
+      ) : singleTile ? (
         <div>
-          {allItems.length === 0 && isOwn ? (
-            <div style={{ height: 280, border: "1px dashed rgba(200,194,180,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 8, cursor: "pointer" }} onClick={onAdd}>
-              <span style={{ fontSize: 28, color: "rgba(200,194,180,0.4)" }}>+</span>
-              <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)" }}>Create Your Vouch</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <button onClick={() => setIdx(x => Math.max(x - 1, 0))} disabled={idx === 0} style={{ background: "transparent", border: "none", color: idx === 0 ? "rgba(200,194,180,0.2)" : "rgba(200,194,180,0.7)", fontSize: 32, cursor: idx === 0 ? "default" : "pointer", padding: "0 8px", flexShrink: 0, lineHeight: 1 }}>‹</button>
+            <div style={{ flex: 1, maxWidth: 400, margin: "0 auto" }}>
+              {allItems[idx] && <CardFace it={allItems[idx]} />}
             </div>
-          ) : (
-            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-              <button onClick={() => setIdx(x => Math.max(x - 1, 0))} disabled={idx === 0} style={{ background: "transparent", border: "none", color: idx === 0 ? "rgba(200,194,180,0.2)" : "rgba(200,194,180,0.7)", fontSize: 32, cursor: idx === 0 ? "default" : "pointer", padding: "0 8px", flexShrink: 0, lineHeight: 1 }}>‹</button>
-              <div style={{ flex: 1, maxWidth: 400, margin: "0 auto" }}>
-                {allItems[idx] && <CardFace it={allItems[idx]} />}
-              </div>
-              <button onClick={() => setIdx(x => Math.min(x + 1, total - 1))} disabled={idx === total - 1} style={{ background: "transparent", border: "none", color: idx === total - 1 ? "rgba(200,194,180,0.2)" : "rgba(200,194,180,0.7)", fontSize: 32, cursor: idx === total - 1 ? "default" : "pointer", padding: "0 8px", flexShrink: 0, lineHeight: 1 }}>›</button>
-            </div>
-          )}
+            <button onClick={() => setIdx(x => Math.min(x + 1, total - 1))} disabled={idx === total - 1} style={{ background: "transparent", border: "none", color: idx === total - 1 ? "rgba(200,194,180,0.2)" : "rgba(200,194,180,0.7)", fontSize: 32, cursor: idx === total - 1 ? "default" : "pointer", padding: "0 8px", flexShrink: 0, lineHeight: 1 }}>›</button>
+          </div>
           {total > 1 && (
             <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 14 }}>
               {allItems.map((_, i) => (
@@ -965,6 +958,19 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
               ))}
             </div>
           )}
+        </div>
+      ) : (
+        <div style={{ display: "flex", gap: 12, justifyContent: "center", overflow: "hidden" }}>
+          {allItems.map((it, i) => (
+            <div key={it.id + it._cat} className="card-large" style={{ position: "relative", flex: "1", maxWidth: 280 }}>
+              <CardFace it={it} />
+            </div>
+          ))}
+          {isOwn && Array(Math.max(0, 5 - allItems.length)).fill(null).map((_, i) => (
+            <div key={`ve${i}`} className="slot-empty-large" style={{ flex: "1", maxWidth: 280 }} onClick={onAdd}>
+              <div className="slot-empty-inner"><span className="slot-empty-plus">+</span>Vouch</div>
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -1823,7 +1829,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
                   items.forEach(it => {
                     if (vbBoard[it.category]) vbBoard[it.category].push({ id: it.item_id, title: it.title, sub: it.subtitle || "", poster: it.poster, comment: "", vouched: true, sourceUrl: it.source_url, _cat: it.category, _catLabel: it.category });
                   });
-                  const isSelfBoard = b.user_id === selfId; return <VouchSection board={vbBoard} isOwn={isSelfBoard} onCard={()=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={onDudeSame || (()=>{})} myReactions={(myReactions || []).filter(r => r.item_owner_id === b.user_id).map(r => r.item_id)} hideHeader={true} hideEmptySlots={true} onAddToQueue={isSelfBoard ? null : (onAddToQueue || null)} queue={queue} ownerId={b.user_id} onMusicOpen={onMusicOpen} />;
+                  const isSelfBoard = b.user_id === selfId; return <VouchSection board={vbBoard} isOwn={isSelfBoard} onCard={()=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={onDudeSame || (()=>{})} myReactions={(myReactions || []).filter(r => r.item_owner_id === b.user_id).map(r => r.item_id)} hideHeader={true} hideEmptySlots={true} onAddToQueue={isSelfBoard ? null : (onAddToQueue || null)} queue={queue} ownerId={b.user_id} onMusicOpen={onMusicOpen} singleTile={true} />;
                 })()}
               </div>
             </div>
