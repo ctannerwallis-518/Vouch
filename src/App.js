@@ -2868,7 +2868,7 @@ export default function Vouch() {
       ctx.fillStyle = "#888"; ctx.font = "400 28px Georgia";
       ctx.fillText("Est. 2026", 72, 100); ctx.textAlign = "right";
       ctx.fillText("vouch5.com", 1008, 100); ctx.textAlign = "left";
-      ctx.fillStyle = "#111008"; ctx.font = "900 190px \'Times New Roman\', serif";
+      ctx.fillStyle = "#111008"; ctx.font = "900 190px 'Times New Roman', serif";
       ctx.textAlign = "center"; ctx.fillText("Vouch.", 540, 295); ctx.textAlign = "left";
       ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 36px Georgia";
       ctx.textAlign = "center"; ctx.fillText("Love it? Vouch for it.", 540, 348); ctx.textAlign = "left";
@@ -2877,7 +2877,7 @@ export default function Vouch() {
       ctx.beginPath(); ctx.moveTo(72, 390); ctx.lineTo(1008, 390); ctx.stroke();
       ctx.fillStyle = "#555"; ctx.font = "italic 400 36px Georgia";
       ctx.fillText(firstName + " is vouching for", 72, 440);
-      ctx.fillStyle = "#111008"; ctx.font = "900 68px \'Times New Roman\', serif";
+      ctx.fillStyle = "#111008"; ctx.font = "900 68px 'Times New Roman', serif";
       ctx.fillText(boardTheme, 72, 526);
       const cardW = 560, cardH = 780, stackY = 570, totalW = 936;
       const offsetStep = tileCount <= 1 ? 0 : Math.min(80, (totalW - cardW) / (tileCount - 1));
@@ -2911,7 +2911,7 @@ export default function Vouch() {
           if (topItem) {
             ctx.fillStyle = "rgba(200,194,180,0.5)"; ctx.font = "400 26px Georgia";
             ctx.fillText((topItem._cat || "").toUpperCase(), x + 32, stackY + 52);
-            ctx.fillStyle = "#C8C2B4"; ctx.font = "900 64px \'Times New Roman\', serif";
+            ctx.fillStyle = "#C8C2B4"; ctx.font = "900 64px 'Times New Roman', serif";
             const shortTitle = (topItem.title || "").slice(0, 20) + ((topItem.title || "").length > 20 ? "\u2026" : "");
             ctx.fillText(shortTitle, x + 32, stackY + cardH - 80);
             ctx.fillStyle = "rgba(200,194,180,0.65)"; ctx.font = "italic 400 40px Georgia";
@@ -2931,7 +2931,7 @@ export default function Vouch() {
       ctx.beginPath(); ctx.moveTo(72, bottomY); ctx.lineTo(1008, bottomY); ctx.stroke();
       ctx.fillStyle = "#555"; ctx.font = "italic 400 34px Georgia"; ctx.textAlign = "center";
       ctx.fillText("What would you put your name behind right now?", 540, bottomY + 52);
-      ctx.fillStyle = "#111008"; ctx.font = "900 48px \'Times New Roman\', serif"; ctx.textAlign = "center";
+      ctx.fillStyle = "#111008"; ctx.font = "900 48px 'Times New Roman', serif"; ctx.textAlign = "center";
       ctx.fillText("vouch5.com/@" + shareUsername, 540, bottomY + 118);
       ctx.textAlign = "left";
       ctx.fillStyle = "#111008"; ctx.fillRect(0, 1915, 1080, 5);
