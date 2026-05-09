@@ -2012,12 +2012,6 @@ function StartPage({ onSignUp }) {
     artists: [], songs: [], books: [], shows: [], podcasts: [],
   };
 
-  const dummyShelf = {
-    movies: featuredMovies.slice(0, 4),
-    albums: featuredAlbums.slice(0, 4),
-    artists: [], songs: [], books: [], shows: [], podcasts: [],
-  };
-
   return (
     <>
       <Styles />
