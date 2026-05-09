@@ -1980,6 +1980,220 @@ function ContactForm({ userId, userEmail, onSent }) {
   );
 }
 
+function StartPage({ onSignUp }) {
+  const [featuredMovies, setFeaturedMovies] = useState([]);
+  const [featuredAlbums, setFeaturedAlbums] = useState([]);
+  const [showSignupNudge, setShowSignupNudge] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [movieRes, albumRes] = await Promise.all([
+          fetch(`https://api.themoviedb.org/3/movie/popular?api_key=24f3b03466f2f7db2d54a0f53607da4f&language=en-US&page=1`).then(r => r.json()),
+          fetch(`/api/spotify?q=best+albums+2024&type=album`).then(r => r.json()),
+        ]);
+        setFeaturedMovies((movieRes.results || []).slice(0, 5).map(r => ({
+          id: r.id, title: r.title, sub: r.release_date?.slice(0,4) || "",
+          poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null,
+          sourceUrl: null,
+        })));
+        setFeaturedAlbums((albumRes.albums?.items || []).slice(0, 5).map(r => ({
+          id: r.id, title: r.name, sub: r.artists?.[0]?.name || "",
+          poster: r.images?.[0]?.url || null, sourceUrl: null,
+        })));
+      } catch(e) { console.error(e); }
+    };
+    load();
+  }, []);
+
+  const dummyVouchBoard = {
+    movies: featuredMovies.slice(0, 3).map(m => ({ ...m, vouched: true, _cat: "movies", _catLabel: "Film" })),
+    albums: featuredAlbums.slice(0, 2).map(a => ({ ...a, vouched: true, _cat: "albums", _catLabel: "Albums" })),
+    artists: [], songs: [], books: [], shows: [], podcasts: [],
+  };
+
+  const dummyShelf = {
+    movies: featuredMovies.slice(0, 4),
+    albums: featuredAlbums.slice(0, 4),
+    artists: [], songs: [], books: [], shows: [], podcasts: [],
+  };
+
+  return (
+    <>
+      <Styles />
+      <div className="app">
+        {/* Top banner */}
+        <div style={{ background: T.ink, color: T.bg, padding: "12px 20px", display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14 }}>
+            The place where people put their name behind what they love.
+          </div>
+          <button onClick={onSignUp} style={{ background: T.bg, color: T.ink, border: "none", fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.15em", padding: "10px 18px", cursor: "pointer", width: "100%" }}>
+            Create Your Board — It's Free →
+          </button>
+        </div>
+
+        {/* Masthead */}
+        <header className="masthead">
+          <div className="masthead-meta">
+            <span style={{ flex: 1 }}>Est. 2026</span>
+            <span className="masthead-meta-stars">✦ · ✦ · ✦</span>
+            <span style={{ flex: 1, display: "flex", justifyContent: "flex-end", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkMid }}>vouch5.com</span>
+          </div>
+          <div className="masthead-nameplate"><span className="nameplate-word">Vouch.</span></div>
+          <div className="masthead-rule-ornament"><span>—</span><span>✦</span><span>—</span></div>
+          <div className="masthead-tagline">Love it? Vouch for it.</div>
+        </header>
+
+        <main className="page">
+          {/* How it works strip */}
+          <div style={{ marginBottom: 24, borderTop: `1px solid ${T.paperDark}`, borderBottom: `1px solid ${T.paperDark}`, padding: "14px 0", display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 8 }}>
+            {[
+              { label: "Your Vouch", desc: "Up to 5 picks, one board at a time — updated once a week. Put your name behind it." },
+              { label: "Your Shelf", desc: "Up to 5 per category across Film, Music, Books, TV, Podcasts. Change it whenever." },
+              { label: "Buddies", desc: "See what your friends are vouching for. Agree with what resonates. Build your taste together." }
+            ].map(item => (
+              <div key={item.label} style={{ textAlign: "center", flex: "1 1 100px" }}>
+                <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 10, letterSpacing: "0.15em", color: T.ink }}>{item.label}</div>
+                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkMid, marginTop: 3 }}>{item.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          <button onClick={onSignUp} className="btn btn-solid" style={{ width: "100%", padding: "12px", fontSize: 13, marginBottom: 28 }}>Create Your Board — It's Free →</button>
+
+          <div className="ornament"><span>—</span><span>✦</span><span>—</span></div>
+
+          {/* Dummy profile header */}
+          <div style={{ marginBottom: 28, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                <div style={{ width: 56, height: 56, background: T.ink, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Times New Roman',serif", fontWeight: 900, fontSize: 18, color: T.bg }}>AJ</div>
+                <div className="board-name" style={{ fontSize: 28, marginBottom: 0 }}>Alex Jordan</div>
+              </div>
+              <div className="board-sub" style={{ marginBottom: 8 }}>@alexjordan</div>
+              <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.12em", color: T.inkLight }}>
+                <span style={{ fontWeight: 700, color: T.ink, fontSize: "12px", fontFamily: "'Spectral',serif" }}>14</span> vouches &nbsp;
+                <span style={{ fontWeight: 700, color: T.ink, fontSize: "12px", fontFamily: "'Spectral',serif" }}>8</span> buddies
+              </div>
+            </div>
+            <button onClick={() => setShowSignupNudge(true)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "6px 14px", background: "transparent", color: T.ink, border: `1px solid ${T.ink}`, cursor: "pointer", whiteSpace: "nowrap", marginTop: 4 }}>+ Add Buddy</button>
+          </div>
+
+          <div className="ornament"><span>—</span><span>✦</span><span>—</span></div>
+
+          {/* Dummy Vouch Board */}
+          {featuredMovies.length > 0 && (
+            <div className="vouch-section" style={{ marginBottom: 52 }}>
+              <div className="vouch-section-header">
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="vouch-section-label">Feelin' Lately</div>
+                  <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginTop: 3 }}>Vouch</div>
+                  <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 4 }}>What I'd put my name behind right now</div>
+                </div>
+              </div>
+              <VouchSection
+                board={dummyVouchBoard}
+                isOwn={false}
+                onCard={() => {}}
+                onAdd={() => {}}
+                onRemove={() => {}}
+                onDudeSame={() => setShowSignupNudge(true)}
+                myReactions={[]}
+                hideHeader={true}
+              />
+            </div>
+          )}
+
+          {/* Dummy shelf — Film */}
+          {featuredMovies.length > 0 && (
+            <div className="cat-section">
+              <div className="cat-header">
+                <div className="cat-label">Film</div>
+                <div className="cat-sublabel">My Shelf</div>
+                <div className="cat-count">{featuredMovies.slice(0,4).length}</div>
+              </div>
+              <div className="cards-row">
+                {featuredMovies.slice(0,4).map(item => (
+                  <div key={item.id} className="card" onClick={() => setShowSignupNudge(true)} style={{ cursor: "pointer" }}>
+                    {item.poster
+                      ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => e.target.style.display="none"} />
+                      : <div className="card-poster-placeholder">{item.title}</div>}
+                    <div className="card-title">{item.title}</div>
+                    <div className="card-sub">{item.sub}</div>
+                    <div style={{ display: "flex", marginTop: 6 }}>
+                      <button onClick={e => { e.stopPropagation(); setShowSignupNudge(true); }} style={{ flex: 1, background: "transparent", border: `1px solid ${T.paperDark}`, color: T.inkMid, cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 2px", fontWeight: 700 }}>Agree</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Dummy shelf — Albums */}
+          {featuredAlbums.length > 0 && (
+            <div className="cat-section">
+              <div className="cat-header">
+                <div className="cat-label">Albums</div>
+                <div className="cat-sublabel">My Shelf</div>
+                <div className="cat-count">{featuredAlbums.slice(0,4).length}</div>
+              </div>
+              <div className="cards-row">
+                {featuredAlbums.slice(0,4).map(item => (
+                  <div key={item.id} className="card" onClick={() => setShowSignupNudge(true)} style={{ cursor: "pointer" }}>
+                    {item.poster
+                      ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => e.target.style.display="none"} />
+                      : <div className="card-poster-placeholder">{item.title}</div>}
+                    <div className="card-title">{item.title}</div>
+                    <div className="card-sub">{item.sub}</div>
+                    <div style={{ display: "flex", marginTop: 6 }}>
+                      <button onClick={e => { e.stopPropagation(); setShowSignupNudge(true); }} style={{ flex: 1, background: "transparent", border: `1px solid ${T.paperDark}`, color: T.inkMid, cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 2px", fontWeight: 700 }}>Agree</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Bottom CTA */}
+          <div style={{ marginTop: 48, padding: "32px 0", borderTop: `3px double ${T.ink}`, textAlign: "center" }}>
+            <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 26, fontWeight: 900, marginBottom: 8 }}>Make your own board.</div>
+            <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkMid, marginBottom: 8, lineHeight: 1.7 }}>
+              Film, music, books, TV, podcasts — whatever you'd put your name behind right now.
+            </div>
+            <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 24 }}>
+              Free. No algorithm. Just taste.
+            </div>
+            <button onClick={onSignUp} className="btn btn-solid" style={{ fontSize: 13, padding: "12px 32px" }}>Get Started — It's Free →</button>
+          </div>
+        </main>
+
+        <footer style={{ borderTop: `3px double ${T.ink}`, padding: "24px 28px", textAlign: "center" }}>
+          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid }}>© {new Date().getFullYear()} Vouch. All Rights Reserved.</div>
+        </footer>
+
+        {/* Signup nudge modal */}
+        {showSignupNudge && (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(17,16,8,0.82)", zIndex: 900, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={() => setShowSignupNudge(false)}>
+            <div style={{ background: T.bg, maxWidth: 420, width: "100%", border: `2px solid ${T.ink}`, padding: "32px 28px" }} onClick={e => e.stopPropagation()}>
+              <div style={{ fontFamily: "'Times New Roman',Times,serif", fontWeight: 900, fontSize: 36, marginBottom: 4 }}>Vouch.</div>
+              <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 24 }}>Love it? Vouch for it.</div>
+              <div style={{ marginBottom: 28, borderBottom: `1px solid ${T.paperDark}`, paddingBottom: 28 }}>
+                <HowItWorks />
+              </div>
+              <button onClick={onSignUp} style={{ width: "100%", fontFamily: "'Spectral SC',serif", fontSize: "10.5px", fontWeight: 600, letterSpacing: "0.25em", padding: 13, background: T.ink, color: T.bg, border: "none", cursor: "pointer" }}>
+                Create Your Account →
+              </button>
+              <button onClick={() => setShowSignupNudge(false)} style={{ width: "100%", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", padding: "10px", background: "transparent", color: T.inkFaint, border: "none", cursor: "pointer", marginTop: 8 }}>
+                Maybe later
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
 export default function Vouch() {
   const [user,           setUser]           = useState(null);
   const [userId,         setUserId]         = useState(null);
@@ -3018,6 +3232,7 @@ export default function Vouch() {
   const inviteParam  = new URLSearchParams(window.location.search).get("invite");
   // Support /@username clean URLs
   const pathUsername = window.location.pathname.startsWith("/@") ? window.location.pathname.slice(2) : null;
+  const isStartPage = window.location.pathname === "/start";
 
   const [pathUserId, setPathUserId] = useState(null);
   useEffect(() => {
@@ -3046,6 +3261,11 @@ export default function Vouch() {
   }, [user, pathUserId, userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!user) {
+    if (isStartPage) {
+      return <StartPage onSignUp={() => {
+        supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin } });
+      }} />;
+    }
     if (resolvedInviteId) {
       return <PublicBoard inviteUserId={resolvedInviteId} onSignUp={() => {
         supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin + `?invite=${resolvedInviteId}` } });

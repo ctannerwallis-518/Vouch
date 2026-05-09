@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/start",
+      "destination": "/index.html"
+    },
+    {
       "source": "/og/@:username",
       "destination": "/api/og?username=:username"
     },
