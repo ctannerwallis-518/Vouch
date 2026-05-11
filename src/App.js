@@ -2923,14 +2923,7 @@ export default function Vouch() {
       }
       const boardTheme = activeBoard?.theme && activeBoard.theme !== "Other" ? activeBoard.theme : (activeBoard?.name || "");
       const tileCount = (activeBoard?.vouch_board_items || []).length;
-      // "+ X more tiles"
-      if (tileCount > 1) {
-        ctx.fillStyle = "#7a7568";
-        ctx.font = "italic 400 36px Georgia";
-        ctx.textAlign = "center";
-        ctx.fillText("+ " + (tileCount - 1) + " more tile" + (tileCount - 1 > 1 ? "s" : "") + " on this Vouch", 540, 1580);
-        ctx.textAlign = "left";
-      }
+
       // The
       ctx.strokeStyle = "rgba(17,16,8,0.25)";
       ctx.lineWidth = 1.5;
