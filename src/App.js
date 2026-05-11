@@ -2922,7 +2922,6 @@ export default function Vouch() {
         ctx.fillText(topItem.sub || "", posterX + 32, posterY + posterH - 34);
       }
       const boardTheme = activeBoard?.theme && activeBoard.theme !== "Other" ? activeBoard.theme : (activeBoard?.name || "");
-      const tileCount = (activeBoard?.vouch_board_items || []).length;
 
       // The
       ctx.strokeStyle = "rgba(17,16,8,0.25)";
