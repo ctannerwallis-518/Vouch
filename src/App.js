@@ -2890,7 +2890,7 @@ export default function Vouch() {
       const posterX = 72, posterY = 490, posterW = 936, posterH = 1050;
       ctx.fillStyle = "#111008";
       ctx.fillRect(posterX, posterY, posterW, posterH);
-      if (posterImg) {
+      if (posterImg && posterImg instanceof HTMLImageElement && posterImg.naturalWidth > 0) {
         const imgRatio = posterImg.naturalWidth / posterImg.naturalHeight;
         const cardRatio = posterW / posterH;
         let sx, sy, sw, sh;
