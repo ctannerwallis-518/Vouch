@@ -2845,7 +2845,7 @@ export default function Vouch() {
     navigator.clipboard?.writeText(link);
   };
 
-  const shareBoard = async () => {
+  const shareBoard = async () => { console.log("shareBoard called", { activeBoard: !!activeBoard, topItem: !!activeBoard?.vouch_board_items?.length });
     const shareUsername = viewing ? viewing.username : user.username;
     const shareName = viewing ? viewing.displayName : user.displayName;
     const shareUrl = `${window.location.origin}/@${shareUsername}`;
