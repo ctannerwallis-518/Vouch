@@ -2845,7 +2845,7 @@ export default function Vouch() {
     navigator.clipboard?.writeText(link);
   };
 
-  const shareBoard = async () => { console.log("shareBoard called", { activeBoard: !!activeBoard, topItem: !!activeBoard?.vouch_board_items?.length });
+  const shareBoard = async () => {
     const shareUsername = viewing ? viewing.username : user.username;
     const shareName = viewing ? viewing.displayName : user.displayName;
     const shareUrl = `${window.location.origin}/@${shareUsername}`;
@@ -2936,8 +2936,8 @@ export default function Vouch() {
       ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(72, 1608); ctx.lineTo(380, 1608); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(700, 1608); ctx.lineTo(1008, 1608); ctx.stroke();
-      ctx.fillStyle = "#555";
-      ctx.font = "italic 400 40px 'Times New Roman', serif";
+      ctx.fillStyle = "#111008";
+      ctx.font = "900 52px 'Times New Roman', serif";
       ctx.textAlign = "center";
       ctx.fillText(boardTheme, 540, 1622);
       ctx.textAlign = "left";
@@ -2964,33 +2964,22 @@ export default function Vouch() {
       ctx.fillStyle = "#111008";
       ctx.fillRect(0, 1915, 1080, 5);
     };
-    const loadImg = async (url) => {
-      if (!url) return null;
+    if (topItem?.poster) {
       try {
-        const proxyUrl = `/api/imgproxy?url=${encodeURIComponent(url)}`;
+        const proxyUrl = `/api/imgproxy?url=${encodeURIComponent(topItem.poster)}`;
         const response = await fetch(proxyUrl);
         const blob = await response.blob();
         const objectUrl = URL.createObjectURL(blob);
-        return await new Promise((resolve) => {
-          const img = new Image();
-          img.onload = () => { URL.revokeObjectURL(objectUrl); resolve(img); };
-          img.onerror = () => { URL.revokeObjectURL(objectUrl); resolve(null); };
-          img.src = objectUrl;
-        });
-      } catch { return null; }
-    };
-
-    try {
-      const activeBoardItems = (activeBoard?.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0, 5);
-      const posterImgs = await Promise.all(activeBoardItems.map(item => loadImg(item.poster)));
-      drawCard(posterImgs);
-      await doShare(canvas, shareUrl, shareName);
-    } catch {
-      drawCard([]);
+        const img = new Image();
+        img.onload = async () => { drawCard(img); URL.revokeObjectURL(objectUrl); await doShare(canvas, shareUrl, shareName); };
+        img.onerror = async () => { drawCard(null); URL.revokeObjectURL(objectUrl); await doShare(canvas, shareUrl, shareName); };
+        img.src = objectUrl;
+      } catch { drawCard(null); await doShare(canvas, shareUrl, shareName); }
+    } else {
+      drawCard(null);
       await doShare(canvas, shareUrl, shareName);
     }
   };
-
   const doShare = async (canvas, shareUrl, shareName) => {
     try { await navigator.clipboard.writeText(shareUrl); } catch(e) {}
     canvas.toBlob(async (blob) => {
