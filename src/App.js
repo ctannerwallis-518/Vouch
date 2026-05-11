@@ -2887,7 +2887,7 @@ export default function Vouch() {
       ctx.fillStyle = "#444";
       ctx.font = "italic 400 40px Georgia";
       ctx.fillText((shareName || shareUsername).split(" ")[0] + " is vouching for", 72, 468);
-      const posterX = 72, posterY = 490, posterW = 936, posterH = 960;
+      const posterX = 72, posterY = 490, posterW = 936, posterH = 1050;
       ctx.fillStyle = "#111008";
       ctx.fillRect(posterX, posterY, posterW, posterH);
       if (posterImg && posterImg instanceof HTMLImageElement && posterImg.naturalWidth > 0) {
@@ -2928,14 +2928,14 @@ export default function Vouch() {
         ctx.fillStyle = "#7a7568";
         ctx.font = "italic 400 36px Georgia";
         ctx.textAlign = "center";
-        ctx.fillText("+ " + (tileCount - 1) + " more tile" + (tileCount - 1 > 1 ? "s" : "") + " on this Vouch", 540, 1510);
+        ctx.fillText("+ " + (tileCount - 1) + " more tile" + (tileCount - 1 > 1 ? "s" : "") + " on this Vouch", 540, 1580);
         ctx.textAlign = "left";
       }
       // The
       ctx.strokeStyle = "rgba(17,16,8,0.25)";
       ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(72, 1548); ctx.lineTo(380, 1548); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(700, 1548); ctx.lineTo(1008, 1548); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(72, 1608); ctx.lineTo(380, 1608); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(700, 1608); ctx.lineTo(1008, 1608); ctx.stroke();
       ctx.fillStyle = "#111008";
       ctx.font = "900 52px 'Times New Roman', serif";
       ctx.textAlign = "center";
@@ -2945,7 +2945,7 @@ export default function Vouch() {
       ctx.fillStyle = "#333";
       ctx.font = "italic 400 38px Georgia";
       ctx.textAlign = "center";
-      ctx.fillText("What would you put your name behind right now?", 540, 1638);
+      ctx.fillText("What would you put your name behind right now?", 540, 1700);
       ctx.textAlign = "left";
       // URL
       ctx.fillStyle = "#111008";
