@@ -2582,6 +2582,8 @@ export default function Vouch() {
       const incoming = data.filter(b => b.status === "pending" && b.receiver_id === uid).map(b => ({
         buddyRowId: b.id, userId: b.requester.id, username: b.requester.username, displayName: b.requester.display_name, avatarUrl: b.requester.avatar_url || null
       }));
+      const sentOut = data.filter(b => b.status === "pending" && b.requester_id === uid).map(b => b.receiver_id);
+      setSentRequests(sentOut);
       setBuddies(accepted);
       setPendingIn(incoming);
       if (accepted.length > 0) {
