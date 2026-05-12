@@ -2501,10 +2501,10 @@ export default function Vouch() {
         return Object.values(counts).filter(i => i.category);
       };
 
-      const pick5WithCap = (items) => {
-        // Sort by count descending
-        const sorted = items.sort((a, b) => b.count - a.count);
-        // Pick top items but cap each buddy at 2 tiles
+      const pick5WithCap = (items, minCount = 1) => {
+        // Filter by minimum unique buddy count, sort descending
+        const sorted = items.filter(i => i.count >= minCount).sort((a, b) => b.count - a.count);
+        // Cap each buddy at 2 tiles
         const userCounts = {};
         const selected = [];
         for (const item of sorted) {
@@ -2517,7 +2517,6 @@ export default function Vouch() {
           }
           selected.push(item);
         }
-        // Shuffle and return 5
         return selected.sort(() => Math.random() - 0.5).slice(0, 5);
       };
 
@@ -2543,14 +2542,17 @@ export default function Vouch() {
       const { data: agreeWeek } = await supabase.from("reactions").select("item_id, title, category, poster, source_url, item_owner_id, user_id").in("user_id", buddyIds).gte("created_at", weekAgo);
 
       let items = buildCounts(vbItems, shelfWeek, agreeWeek, profileMap);
-      let result = pick5WithCap(items);
-
-      // Fall back to all time if fewer than 5
+      // Try min 2 unique buddies first (avoids one-off picks)
+      let result = pick5WithCap(items, 2);
+      // Fall back to min 1 within weekly window
+      if (result.length < 5) result = pick5WithCap(items, 1);
+      // Fall back to all time with min 2
       if (result.length < 5) {
         const { data: shelfAll } = await supabase.from("endorsements").select("item_id, title, category, poster, source_url, user_id").in("user_id", buddyIds);
         const { data: agreeAll } = await supabase.from("reactions").select("item_id, title, category, poster, source_url, item_owner_id, user_id").in("user_id", buddyIds);
         items = buildCounts(vbItems, shelfAll, agreeAll, profileMap);
-        result = pick5WithCap(items);
+        result = pick5WithCap(items, 2);
+        if (result.length < 5) result = pick5WithCap(items, 1);
       }
 
       setGroupVouchItems(result.map(i => ({ ...i, vouchers: i.voucher_names })));
