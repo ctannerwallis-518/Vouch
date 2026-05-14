@@ -2634,8 +2634,12 @@ export default function Vouch() {
             }
           }
         } else if (existingProfile && !storedAvatar && googleAvatar) {
-          // Only set Google avatar if user has no avatar at all
-          await supabase.from("profiles").update({ avatar_url: googleAvatar }).eq("id", uid);
+          // Only set Google avatar if user has absolutely no avatar stored
+          // Double-check DB hasn't been updated since we fetched existingProfile
+          const { data: freshProfile } = await supabase.from("profiles").select("avatar_url").eq("id", uid).maybeSingle();
+          if (!freshProfile?.avatar_url) {
+            await supabase.from("profiles").update({ avatar_url: googleAvatar }).eq("id", uid);
+          }
         }
         // Always ensure auto-buddy with Christian regardless of new/existing user
         if (uid !== "bd7a4b83-c56c-438a-8ad0-d188f810fe70") {
@@ -2651,7 +2655,12 @@ export default function Vouch() {
           if (isNewBuddy) setNewBuddies(["Christian Wallis"]);
         }
         // Never overwrite a custom (non-Google) avatar on login
-        setUser({ username: existingProfile?.username || session.user.email.split("@")[0], displayName: existingProfile?.display_name || session.user.user_metadata?.full_name || session.user.email.split("@")[0], avatarUrl });
+        // Re-fetch fresh profile to avoid stale data setting wrong username/avatar
+        const { data: freshForState } = await supabase.from("profiles").select("username, display_name, avatar_url").eq("id", uid).maybeSingle();
+        const finalUsername = freshForState?.username || existingProfile?.username || session.user.email.split("@")[0];
+        const finalDisplayName = freshForState?.display_name || existingProfile?.display_name || session.user.user_metadata?.full_name || session.user.email.split("@")[0];
+        const finalAvatar = freshForState?.avatar_url || avatarUrl;
+        setUser({ username: finalUsername, displayName: finalDisplayName, avatarUrl: finalAvatar });
         setUserId(uid);
         setTab("home");
         loadBoard(uid);
