@@ -2862,7 +2862,6 @@ export default function Vouch() {
     const shareUsername = viewing ? viewing.username : user.username;
     const shareName = viewing ? viewing.displayName : user.displayName;
     const shareUrl = `${window.location.origin}/@${shareUsername}`;
-    const activeBoardItems = (activeBoard?.vouch_board_items || []).sort((a,b) => a.position - b.position);
 
     const canvas = document.createElement("canvas");
     canvas.width = 1080;
