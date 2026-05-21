@@ -2923,7 +2923,7 @@ export default function Vouch() {
       };
 
       const PAD = 72, GAP = 6, INNER = W - PAD * 2;
-      const tileY = 560;
+      const tileY = 520;
 
       if (tileCount === 1) {
         const tw = INNER * 0.82, th = tw * 3/2;
@@ -2963,9 +2963,9 @@ export default function Vouch() {
 
       // Theme always below tiles
       ctx.fillStyle = "#111008"; ctx.font = "900 58px 'Times New Roman', serif";
-      ctx.textAlign = "center"; ctx.fillText(boardTheme, 540, tileY + gridH + 56); ctx.textAlign = "left";
+      ctx.textAlign = "center"; ctx.fillText(boardTheme, 540, tileY + gridH + 72); ctx.textAlign = "left";
 
-      const bottomY = tileY + gridH + 120;
+      const bottomY = tileY + gridH + 140;
 
       ctx.strokeStyle = "rgba(17,16,8,0.2)"; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(72, bottomY); ctx.lineTo(1008, bottomY); ctx.stroke();
