@@ -2865,7 +2865,7 @@ export default function Vouch() {
 
     const canvas = document.createElement("canvas");
     canvas.width = 1080;
-    canvas.height = 1920;
+    canvas.height = 2160;
     const ctx = canvas.getContext("2d");
 
     const drawCard = (posterImgs) => {
