@@ -2893,7 +2893,7 @@ export default function Vouch() {
       ctx.beginPath(); ctx.moveTo(72, 390); ctx.lineTo(1008, 390); ctx.stroke();
 
       ctx.fillStyle = "#555"; ctx.font = "italic 400 36px Georgia";
-      ctx.fillText(firstName + " is vouching for", 72, 468);
+      ctx.fillText(firstName + " is vouching for", 72, 450);
 
 
       const drawTile = (img, x, y, w, h, item, alpha, goldBorder) => {
@@ -2923,7 +2923,7 @@ export default function Vouch() {
       };
 
       const PAD = 72, GAP = 6, INNER = W - PAD * 2;
-      const tileY = 470;
+      const tileY = 540;
 
       if (tileCount === 1) {
         const tw = INNER * 0.74, th = tw * 3/2;
