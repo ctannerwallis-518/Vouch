@@ -2973,6 +2973,8 @@ export default function Vouch() {
       ctx.fillText("What would you put your name behind right now?", 540, bottomY + 52);
       ctx.fillStyle = "#111008"; ctx.font = "900 48px 'Times New Roman', serif"; ctx.textAlign = "center";
       ctx.fillText("vouch5.com/@" + shareUsername, 540, bottomY + 118);
+      ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 28px Georgia";
+      ctx.fillText("See what else " + firstName + " is vouching for — Link in Bio", 540, bottomY + 168);
       ctx.textAlign = "left";
       ctx.fillStyle = "#111008"; ctx.fillRect(0, 1915, 1080, 5);
     };
