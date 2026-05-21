@@ -2893,7 +2893,7 @@ export default function Vouch() {
       ctx.beginPath(); ctx.moveTo(72, 390); ctx.lineTo(1008, 390); ctx.stroke();
 
       ctx.fillStyle = "#555"; ctx.font = "italic 400 36px Georgia";
-      ctx.fillText(firstName + " is vouching for", 72, 450);
+      ctx.fillText(firstName + " is vouching for", 72, 505);
 
 
       const drawTile = (img, x, y, w, h, item, alpha, goldBorder) => {
