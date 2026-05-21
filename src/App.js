@@ -2872,116 +2872,132 @@ export default function Vouch() {
     canvas.height = 1920;
     const ctx = canvas.getContext("2d");
 
-    const drawCard = (posterImg) => {
-      ctx.fillStyle = "#C8C2B4";
-      ctx.fillRect(0, 0, 1080, 1920);
-      ctx.fillStyle = "#111008";
-      ctx.fillRect(0, 0, 1080, 5);
-      ctx.fillStyle = "#888";
-      ctx.font = "400 30px Georgia";
-      ctx.fillText("Est. 2026", 72, 110);
-      ctx.textAlign = "right";
-      ctx.fillText("vouch5.com", 1008, 110);
-      ctx.textAlign = "left";
-      ctx.fillStyle = "#111008";
-      ctx.font = "900 200px 'Times New Roman', serif";
-      ctx.textAlign = "center";
-      ctx.fillText("Vouch.", 540, 310);
-      ctx.textAlign = "left";
-      ctx.fillStyle = "#555";
-      ctx.font = "italic 400 40px Georgia";
-      ctx.textAlign = "center";
-      ctx.fillText("Love it? Vouch for it.", 540, 370);
-      ctx.textAlign = "left";
-      ctx.strokeStyle = "#111008";
-      ctx.lineWidth = 4;
-      ctx.beginPath(); ctx.moveTo(72, 400); ctx.lineTo(1008, 400); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(72, 412); ctx.lineTo(1008, 412); ctx.stroke();
-      ctx.fillStyle = "#444";
-      ctx.font = "italic 400 40px Georgia";
-      ctx.fillText((shareName || shareUsername).split(" ")[0] + " is vouching for", 72, 468);
-      const posterX = 72, posterY = 490, posterW = 936, posterH = 1050;
-      ctx.fillStyle = "#111008";
-      ctx.fillRect(posterX, posterY, posterW, posterH);
-      if (posterImg && posterImg instanceof HTMLImageElement && posterImg.naturalWidth > 0) {
-        const imgRatio = posterImg.naturalWidth / posterImg.naturalHeight;
-        const cardRatio = posterW / posterH;
-        let sx, sy, sw, sh;
-        if (imgRatio > cardRatio) {
-          sh = posterImg.naturalHeight; sw = sh * cardRatio;
-          sx = (posterImg.naturalWidth - sw) / 2; sy = 0;
-        } else {
-          sw = posterImg.naturalWidth; sh = sw / cardRatio;
-          sx = 0; sy = (posterImg.naturalHeight - sh) / 2;
-        }
-        ctx.drawImage(posterImg, sx, sy, sw, sh, posterX, posterY, posterW, posterH);
-        const grad = ctx.createLinearGradient(0, posterY + posterH * 0.45, 0, posterY + posterH);
-        grad.addColorStop(0, "rgba(0,0,0,0)");
-        grad.addColorStop(1, "rgba(0,0,0,0.88)");
-        ctx.fillStyle = grad;
-        ctx.fillRect(posterX, posterY, posterW, posterH);
-      }
-      if (topItem) {
-        ctx.fillStyle = "rgba(200,194,180,0.45)";
-        ctx.font = "400 28px Georgia";
-        ctx.fillText((topItem._cat || "").toUpperCase(), posterX + 32, posterY + 56);
-        ctx.fillStyle = "#C8C2B4";
-        ctx.font = "900 78px 'Times New Roman', serif";
-        const title = topItem.title || "";
-        const shortTitle = title.length > 22 ? title.slice(0, 22) + "..." : title;
-        ctx.fillText(shortTitle, posterX + 32, posterY + posterH - 90);
-        ctx.fillStyle = "rgba(200,194,180,0.65)";
-        ctx.font = "400 44px Georgia";
-        ctx.fillText(topItem.sub || "", posterX + 32, posterY + posterH - 34);
-      }
-      const boardTheme = activeBoard?.theme && activeBoard.theme !== "Other" ? activeBoard.theme : (activeBoard?.name || "");
+    const drawCard = (posterImgs) => {
+      const boardTheme = activeBoard?.theme && activeBoard.theme !== "Other" ? activeBoard.theme : (activeBoard?.name || "Vouch");
+      const firstName = (shareName || shareUsername).split(" ")[0];
+      const tileCount = Math.min((activeBoard?.vouch_board_items || []).length, 5);
+      const items = (activeBoard?.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0, 5);
 
-      // The
-      ctx.strokeStyle = "rgba(17,16,8,0.25)";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(72, 1608); ctx.lineTo(380, 1608); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(700, 1608); ctx.lineTo(1008, 1608); ctx.stroke();
-      ctx.fillStyle = "#111008";
-      ctx.font = "900 52px 'Times New Roman', serif";
-      ctx.textAlign = "center";
-      ctx.fillText(boardTheme, 540, 1622);
+      const W = 1080, H = 1920;
+      ctx.fillStyle = "#C8C2B4"; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#111008"; ctx.fillRect(0, 0, W, 5);
+
+      ctx.fillStyle = "#888"; ctx.font = "400 28px Georgia";
+      ctx.fillText("Est. 2026", 72, 100);
+      ctx.textAlign = "right"; ctx.fillText("vouch5.com", 1008, 100); ctx.textAlign = "left";
+
+      ctx.fillStyle = "#111008"; ctx.font = "900 190px 'Times New Roman', serif";
+      ctx.textAlign = "center"; ctx.fillText("Vouch.", 540, 295); ctx.textAlign = "left";
+
+      ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 36px Georgia";
+      ctx.textAlign = "center"; ctx.fillText("Love it? Vouch for it.", 540, 348); ctx.textAlign = "left";
+
+      ctx.strokeStyle = "#111008"; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(72, 378); ctx.lineTo(1008, 378); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(72, 390); ctx.lineTo(1008, 390); ctx.stroke();
+
+      ctx.fillStyle = "#555"; ctx.font = "italic 400 36px Georgia";
+      ctx.fillText(firstName + " is vouching for", 72, 440);
+      ctx.fillStyle = "#111008"; ctx.font = "900 68px 'Times New Roman', serif";
+      ctx.fillText(boardTheme, 72, 526);
+
+      const drawTile = (img, x, y, w, h, item, alpha, goldBorder) => {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = "#111008"; ctx.fillRect(x, y, w, h);
+        if (img) {
+          const ir = img.naturalWidth / img.naturalHeight, cr = w / h;
+          let sx, sy, sw, sh;
+          if (ir > cr) { sh = img.naturalHeight; sw = sh * cr; sx = (img.naturalWidth - sw) / 2; sy = 0; }
+          else { sw = img.naturalWidth; sh = sw / cr; sx = 0; sy = (img.naturalHeight - sh) / 2; }
+          ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+        }
+        const grad = ctx.createLinearGradient(0, y + h * 0.5, 0, y + h);
+        grad.addColorStop(0, "rgba(0,0,0,0)"); grad.addColorStop(1, "rgba(0,0,0,0.88)");
+        ctx.fillStyle = grad; ctx.fillRect(x, y, w, h);
+        if (goldBorder) { ctx.strokeStyle = "#C9A84C"; ctx.lineWidth = 6; ctx.strokeRect(x+3, y+3, w-6, h-6); }
+        if (item) {
+          ctx.fillStyle = "rgba(200,194,180,0.5)"; ctx.font = "400 " + Math.max(18, w*0.06) + "px Georgia";
+          ctx.fillText((item.category || "").toUpperCase(), x + 20, y + 40);
+          ctx.fillStyle = "#C8C2B4"; ctx.font = "900 " + Math.max(28, w*0.1) + "px 'Times New Roman', serif";
+          const t = (item.title || "").slice(0, 18) + ((item.title||"").length > 18 ? "…" : "");
+          ctx.fillText(t, x + 20, y + h - 60);
+          if (item.subtitle) { ctx.fillStyle = "rgba(200,194,180,0.65)"; ctx.font = "italic 400 " + Math.max(22, w*0.07) + "px Georgia"; ctx.fillText(item.subtitle.slice(0,22), x + 20, y + h - 22); }
+        }
+        ctx.restore();
+      };
+
+      const PAD = 72, GAP = 6, INNER = W - PAD * 2;
+      const tileY = 560;
+
+      if (tileCount === 1) {
+        const tw = 420, th = tw * 3/2;
+        drawTile(posterImgs[0], PAD + (INNER-tw)/2, tileY, tw, th, items[0], 1, true);
+      } else if (tileCount === 2) {
+        const tw = (INNER - GAP) / 2, th = tw * 3/2;
+        drawTile(posterImgs[0], PAD, tileY, tw, th, items[0], 1, true);
+        drawTile(posterImgs[1], PAD + tw + GAP, tileY, tw, th, items[1], 1, false);
+      } else if (tileCount === 3) {
+        const tw = (INNER - GAP*2) / 3, th = tw * 3/2;
+        for (let i = 0; i < 3; i++) drawTile(posterImgs[i], PAD + i*(tw+GAP), tileY, tw, th, items[i], 1, i===0);
+      } else if (tileCount === 4) {
+        const tw = (INNER - GAP) / 2, th = tw;
+        drawTile(posterImgs[0], PAD, tileY, tw, th, items[0], 1, true);
+        drawTile(posterImgs[1], PAD+tw+GAP, tileY, tw, th, items[1], 1, false);
+        drawTile(posterImgs[2], PAD, tileY+th+GAP, tw, th, items[2], 1, false);
+        drawTile(posterImgs[3], PAD+tw+GAP, tileY+th+GAP, tw, th, items[3], 1, false);
+      } else {
+        // 5 tiles: 2x2 grid behind, hero centered on top
+        const tw = (INNER - GAP) / 2, th = tw;
+        // back 4 dimmed
+        drawTile(posterImgs[1], PAD, tileY, tw, th, null, 0.45, false);
+        drawTile(posterImgs[2], PAD+tw+GAP, tileY, tw, th, null, 0.45, false);
+        drawTile(posterImgs[3], PAD, tileY+th+GAP, tw, th, null, 0.45, false);
+        drawTile(posterImgs[4], PAD+tw+GAP, tileY+th+GAP, tw, th, null, 0.45, false);
+        // hero tile centered
+        const hw = tw * 0.85, hh = hw * 3/2;
+        const hx = PAD + (INNER - hw) / 2, hy = tileY + (th*2+GAP - hh) / 2;
+        drawTile(posterImgs[0], hx, hy, hw, hh, items[0], 1, true);
+      }
+
+      const gridH = tileCount === 4 ? (INNER/2 + GAP + INNER/2) :
+                    tileCount === 5 ? (INNER/2 + GAP + INNER/2) :
+                    tileCount <= 2 ? (INNER/2 * 3/2) :
+                    ((INNER - GAP*2)/3 * 3/2);
+      const bottomY = tileY + gridH + 60;
+
+      ctx.strokeStyle = "rgba(17,16,8,0.2)"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(72, bottomY); ctx.lineTo(1008, bottomY); ctx.stroke();
+      ctx.fillStyle = "#555"; ctx.font = "italic 400 34px Georgia"; ctx.textAlign = "center";
+      ctx.fillText("What would you put your name behind right now?", 540, bottomY + 52);
+      ctx.fillStyle = "#111008"; ctx.font = "900 48px 'Times New Roman', serif"; ctx.textAlign = "center";
+      ctx.fillText("vouch5.com/@" + shareUsername, 540, bottomY + 118);
       ctx.textAlign = "left";
-      // CTA
-      ctx.fillStyle = "#333";
-      ctx.font = "italic 400 38px Georgia";
-      ctx.textAlign = "center";
-      ctx.fillText("What would you put your name behind right now?", 540, 1700);
-      ctx.textAlign = "left";
-      // URL
-      ctx.fillStyle = "#111008";
-      ctx.font = "900 48px 'Times New Roman', serif";
-      ctx.textAlign = "center";
-      ctx.fillText("vouch5.com/@" + shareUsername, 540, 1760);
-      ctx.textAlign = "left";
-      // Link in bio bar
-      ctx.fillStyle = "#C8C2B4";
-      ctx.fillRect(72, 1785, 936, 72);
-      ctx.fillStyle = "#111008";
-      ctx.font = "400 30px Georgia";
-      ctx.textAlign = "center";
-      ctx.fillText("See what else " + (shareName || shareUsername).split(" ")[0] + " is vouching for — Link in Bio", 540, 1832);
-      ctx.textAlign = "left";
-      ctx.fillStyle = "#111008";
-      ctx.fillRect(0, 1915, 1080, 5);
+      ctx.fillStyle = "#111008"; ctx.fillRect(0, 1915, 1080, 5);
     };
-    if (topItem?.poster) {
+
+    const loadImg = async (url) => {
+      if (!url) return null;
       try {
-        const proxyUrl = `/api/imgproxy?url=${encodeURIComponent(topItem.poster)}`;
+        const proxyUrl = `/api/imgproxy?url=${encodeURIComponent(url)}`;
         const response = await fetch(proxyUrl);
         const blob = await response.blob();
         const objectUrl = URL.createObjectURL(blob);
-        const img = new Image();
-        img.onload = async () => { drawCard(img); URL.revokeObjectURL(objectUrl); await doShare(canvas, shareUrl, shareName); };
-        img.onerror = async () => { drawCard(null); URL.revokeObjectURL(objectUrl); await doShare(canvas, shareUrl, shareName); };
-        img.src = objectUrl;
-      } catch { drawCard(null); await doShare(canvas, shareUrl, shareName); }
-    } else {
-      drawCard(null);
+        return await new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => { URL.revokeObjectURL(objectUrl); resolve(img); };
+          img.onerror = () => { URL.revokeObjectURL(objectUrl); resolve(null); };
+          img.src = objectUrl;
+        });
+      } catch { return null; }
+    };
+    try {
+      const activeBoardItems = (activeBoard?.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0, 5);
+      const posterImgs = await Promise.all(activeBoardItems.map(item => loadImg(item.poster)));
+      drawCard(posterImgs);
+      await doShare(canvas, shareUrl, shareName);
+    } catch {
+      drawCard([]);
       await doShare(canvas, shareUrl, shareName);
     }
   };
