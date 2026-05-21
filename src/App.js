@@ -2893,7 +2893,7 @@ export default function Vouch() {
       ctx.beginPath(); ctx.moveTo(72, 390); ctx.lineTo(1008, 390); ctx.stroke();
 
       ctx.fillStyle = "#555"; ctx.font = "italic 400 36px Georgia";
-      ctx.fillText(firstName + " is vouching for", 72, 505);
+      ctx.fillText(firstName + " is vouching for", 72, 462);
 
 
       const drawTile = (img, x, y, w, h, item, alpha, goldBorder) => {
@@ -2923,10 +2923,10 @@ export default function Vouch() {
       };
 
       const PAD = 72, GAP = 6, INNER = W - PAD * 2;
-      const tileY = 540;
+      const tileY = 510;
 
       if (tileCount === 1) {
-        const tw = INNER * 0.74, th = tw * 3/2;
+        const tw = INNER * 0.65, th = tw * 3/2;
         drawTile(posterImgs[0], PAD + (INNER-tw)/2, tileY, tw, th, items[0], 1, true);
       } else if (tileCount === 2) {
         const tw = (INNER - GAP) / 2, th = tw * 3/2;
@@ -2957,15 +2957,15 @@ export default function Vouch() {
 
       const gridH = tileCount === 4 ? (INNER/2 + GAP + INNER/2) :
                     tileCount === 5 ? (INNER/2 + GAP + INNER/2) :
-                    tileCount === 1 ? (INNER * 0.82 * 3/2) :
-                    tileCount <= 2 ? (INNER/2 * 3/2) :
+                    tileCount === 1 ? (INNER * 0.65 * 3/2) :
+                    tileCount === 2 ? ((INNER - GAP) / 2 * 1.2) :
                     ((INNER - GAP*2)/3 * 3/2);
 
       // Theme always below tiles
       ctx.fillStyle = "#111008"; ctx.font = "900 58px 'Times New Roman', serif";
-      ctx.textAlign = "center"; ctx.fillText(boardTheme, 540, tileY + gridH + 72); ctx.textAlign = "left";
+      ctx.textAlign = "center"; ctx.fillText(boardTheme, 540, tileY + gridH + 60); ctx.textAlign = "left";
 
-      const bottomY = tileY + gridH + 90;
+      const bottomY = tileY + gridH + 110;
 
       ctx.strokeStyle = "rgba(17,16,8,0.2)"; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(72, bottomY); ctx.lineTo(1008, bottomY); ctx.stroke();
