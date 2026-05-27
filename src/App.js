@@ -2345,7 +2345,7 @@ export default function Vouch() {
   };
 
   const publishBoard = async (boardData) => {
-    const { name, theme, description, singleCategory, items, existingBoardId, existingPublishedAt } = boardData;
+    const { name, theme, description, singleCategory, items, existingPublishedAt } = boardData;
     // Deactivate current active board
     await supabase.from("vouch_boards").update({ is_active: false }).eq("user_id", userId).eq("is_active", true);
     // Create new board — preserve published_at if editing so feed order doesn't change
