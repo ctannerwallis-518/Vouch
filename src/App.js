@@ -1297,7 +1297,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
     if (items.length === 0) { alert("Add at least one title to your Vouch."); return; }
     const finalName = theme === "Other" ? name : theme;
     localStorage.removeItem(DRAFT_KEY);
-    onPublish({ name: finalName, theme, description, singleCategory: singleCat, items });
+    onPublish({ name: finalName, theme, description, singleCategory: singleCat, items, existingBoardId: existing?.id || null, existingPublishedAt: existing?.published_at || null });
   };
 
   const catLabel = (key) => categories.find(c => c.key === key)?.label || key;
@@ -1320,7 +1320,10 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
               ))}
             </div>
             {theme === "Other" && (
-              <input className="search-input" style={{ marginTop: 10, marginBottom: 0 }} placeholder="e.g. Summer of 2009, Scorsese's Best…" value={name} onChange={e => setName(e.target.value)} maxLength={60} />
+              <div>
+                <input className="search-input" style={{ marginTop: 10, marginBottom: 0 }} placeholder="e.g. Summer of 2009, Scorsese's Best…" value={name} onChange={e => setName(e.target.value.slice(0, 30))} maxLength={30} />
+                <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: name.length >= 25 ? "#c0392b" : T.inkFaint, textAlign: "right", marginTop: 3 }}>{name.length}/30</div>
+              </div>
             )}
           </div>
 
@@ -1454,7 +1457,10 @@ function EditMetaForm({ board, themes, onSave, onClose }) {
             <button key={t} onClick={() => setTheme(t)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "4px 10px", border: `1px solid ${theme === t ? T.ink : T.paperDark}`, background: theme === t ? T.ink : "transparent", color: theme === t ? T.bg : T.inkMid, cursor: "pointer" }}>{t === "Other" ? "Other — Create Your Own" : t}</button>
           ))}
         </div>
-        {theme === "Other" && <input className="search-input" style={{ marginTop: 10, marginBottom: 0 }} placeholder="e.g. Summer of 2009…" value={name} onChange={e => setName(e.target.value)} maxLength={60} />}
+        {theme === "Other" && <div>
+          <input className="search-input" style={{ marginTop: 10, marginBottom: 0 }} placeholder="e.g. Summer of 2009…" value={name} onChange={e => setName(e.target.value.slice(0, 30))} maxLength={30} />
+          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: name.length >= 25 ? "#c0392b" : T.inkFaint, textAlign: "right", marginTop: 3 }}>{name.length}/30</div>
+        </div>}
       </div>
       <div style={{ marginBottom: 16 }}>
         <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>One Line Description (optional)</div>
@@ -2339,17 +2345,17 @@ export default function Vouch() {
   };
 
   const publishBoard = async (boardData) => {
-    const { name, theme, description, singleCategory, items } = boardData;
+    const { name, theme, description, singleCategory, items, existingBoardId, existingPublishedAt } = boardData;
     // Deactivate current active board
     await supabase.from("vouch_boards").update({ is_active: false }).eq("user_id", userId).eq("is_active", true);
-    // Create new board
+    // Create new board — preserve published_at if editing so feed order doesn't change
     const { data: newBoard } = await supabase.from("vouch_boards").insert({
       user_id: userId,
       name,
       theme,
       description,
       single_category: singleCategory || null,
-      published_at: new Date().toISOString(),
+      published_at: existingPublishedAt || new Date().toISOString(),
       is_active: true,
     }).select().single();
     if (!newBoard) return;
@@ -3663,7 +3669,10 @@ export default function Vouch() {
                         {activeBoard?.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: "rgba(200,194,180,0.4)", marginTop: 2 }}>{activeBoard.description}</div>}
                         {activeBoard?.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.3)", marginTop: 4 }}>Published {new Date(activeBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} · Current Vouch</div>}
                       </div>
-                      {activeBoard && <button onClick={() => setRemoveVouchModal(true)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.14em", padding: "4px 12px", border: "1px solid rgba(200,194,180,0.25)", background: "transparent", color: "rgba(200,194,180,0.5)", cursor: "pointer", flexShrink: 0, alignSelf: "flex-start" }}>Remove</button>}
+                      {activeBoard && <div style={{ display: "flex", gap: 6, flexShrink: 0, alignSelf: "flex-start" }}>
+                        <button onClick={() => { setEditingBoard(activeBoard); setBoardEditor(true); }} style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.14em", padding: "4px 12px", border: "1px solid rgba(200,194,180,0.25)", background: "transparent", color: "rgba(200,194,180,0.5)", cursor: "pointer" }}>Edit</button>
+                        <button onClick={() => setRemoveVouchModal(true)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.14em", padding: "4px 12px", border: "1px solid rgba(200,194,180,0.25)", background: "transparent", color: "rgba(200,194,180,0.5)", cursor: "pointer" }}>Remove</button>
+                      </div>}
                     </div>
                     {activeBoard?.vouch_board_items?.length > 0 ? (
                       <VouchSection board={(() => {
