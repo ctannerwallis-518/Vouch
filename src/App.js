@@ -1383,13 +1383,15 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
           </div>
 
           <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-            {canPublish
-              ? <button onClick={handlePublish} disabled={items.length === 0} style={{ flex: 1, padding: "12px", background: items.length > 0 ? T.ink : "transparent", border: `2px solid ${items.length > 0 ? "#c9a820" : T.paperDark}`, color: items.length > 0 ? "#c9a820" : T.inkFaint, fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", cursor: items.length > 0 ? "pointer" : "not-allowed", transition: "all 0.2s" }}>Publish Vouch</button>
-              : <div style={{ flex: 1, padding: "12px", background: "transparent", border: `2px solid ${T.paperDark}`, color: T.inkFaint, fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}><span>🔒</span><span>Available {nextPublishDate}</span></div>
+            {existing
+              ? <button onClick={handlePublish} disabled={items.length === 0} style={{ flex: 1, padding: "12px", background: items.length > 0 ? T.ink : "transparent", border: `2px solid ${items.length > 0 ? "#c9a820" : T.paperDark}`, color: items.length > 0 ? "#c9a820" : T.inkFaint, fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", cursor: items.length > 0 ? "pointer" : "not-allowed", transition: "all 0.2s" }}>Save Changes</button>
+              : canPublish
+                ? <button onClick={handlePublish} disabled={items.length === 0} style={{ flex: 1, padding: "12px", background: items.length > 0 ? T.ink : "transparent", border: `2px solid ${items.length > 0 ? "#c9a820" : T.paperDark}`, color: items.length > 0 ? "#c9a820" : T.inkFaint, fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", cursor: items.length > 0 ? "pointer" : "not-allowed", transition: "all 0.2s" }}>Publish Vouch</button>
+                : <div style={{ flex: 1, padding: "12px", background: "transparent", border: `2px solid ${T.paperDark}`, color: T.inkFaint, fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}><span>🔒</span><span>Available {nextPublishDate}</span></div>
             }
-            <button onClick={() => { onClose(); }} style={{ padding: "12px 16px", background: "transparent", border: `1px solid ${T.paperDark}`, color: T.inkMid, fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", cursor: "pointer" }}>Save Draft</button>
+            {!existing && <button onClick={() => { onClose(); }} style={{ padding: "12px 16px", background: "transparent", border: `1px solid ${T.paperDark}`, color: T.inkMid, fontFamily: "'Spectral SC',serif",ontSize: "9px", letterSpacing: "0.18em", cursor: "pointer" }}>Save Draft</button>}
           </div>
-          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, textAlign: "center" }}>{canPublish ? "Once published, you can update again in 7 days." : "Your draft is saved — come back when you're ready to publish."}</div>
+          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, textAlign: "center" }}>{existing ? "Changes will be saved to your current Vouch." : canPublish ? "Once published, you can update again in 7 days." : "Your draft is saved — come back when you're ready to publish."}</div>
         </div>
       </div>
     </div>
