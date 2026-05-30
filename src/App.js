@@ -1728,21 +1728,24 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
           .in("user_id", buddyIds)
           .eq("is_active", true)
           .order("published_at", { ascending: false })
-          .limit(30);
+          .limit(100);
+        const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
         // Load buddy reactions
         const { data: reactions } = await supabase
           .from("reactions")
           .select("*")
           .in("user_id", buddyIds)
+          .gte("created_at", ninetyDaysAgo)
           .order("created_at", { ascending: false })
-          .limit(30);
+          .limit(200);
         // Shelf additions from buddies
         const { data: shelfAdds } = await supabase
           .from("endorsements")
           .select("*")
           .in("user_id", buddyIds)
+          .gte("created_at", ninetyDaysAgo)
           .order("created_at", { ascending: false })
-          .limit(30);
+          .limit(200);
         // Fetch owner profiles separately
         const ownerIds = [...new Set((reactions || []).map(r => r.item_owner_id).filter(Boolean))];
         const ownerProfiles = {};
