@@ -1797,6 +1797,17 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
         });
         grouped.sort((a, b) => b.date - a.date);
         setFeed(grouped.slice(0, 40));
+        // Load discovery boards from non-buddies
+        try {
+          const { data: discover } = await supabase
+            .from('vouch_boards')
+            .select('*, vouch_board_items(*), profiles!vouch_boards_user_id_fkey(id, display_name, username, avatar_url)')
+            .eq('is_active', true)
+            .not('user_id', 'in', `(${buddyIds.join(',')})`)
+            .order('published_at', { ascending: false })
+            .limit(10);
+          setDiscoveryBoards(discover || []);
+        } catch(e) { console.error('discovery error', e); }
       } catch(e) { console.error(e); }
       setLoading(false);
     };
