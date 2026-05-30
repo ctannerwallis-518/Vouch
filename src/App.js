@@ -1957,11 +1957,6 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
                       </button>}
                     </div>
                   )}
-      {totalFiltered > visibleCount && (
-        <div style={{ textAlign: 'center', padding: '16px 0 8px' }}>
-          <button onClick={() => setVisibleCount(v => v + 15)} style={{ fontFamily: "'Spectral SC',serif", fontSize: '9px', letterSpacing: '0.18em', padding: '10px 28px', background: 'transparent', border: `1px solid ${T.paperDark}`, color: T.inkMid, cursor: 'pointer' }}>Load More</button>
-        </div>
-      )}
       {feedTab === 'vouches' && discoveryBoards.length > 0 && (
         <div style={{ marginTop: 40 }}>
           <div style={{ borderTop: `3px double ${T.ink}`, paddingTop: 20, marginBottom: 20 }}>
@@ -2005,6 +2000,11 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
         }
         return null;
       })}
+      {totalFiltered > visibleCount && (
+        <div style={{ textAlign: 'center', padding: '16px 0 8px' }}>
+          <button onClick={() => setVisibleCount(v => v + 15)} style={{ fontFamily: "'Spectral SC',serif", fontSize: '9px', letterSpacing: '0.18em', padding: '10px 28px', background: 'transparent', border: `1px solid ${T.paperDark}`, color: T.inkMid, cursor: 'pointer' }}>Load More</button>
+        </div>
+      )}
     </div>
   );
 });
