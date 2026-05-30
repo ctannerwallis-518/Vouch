@@ -3357,10 +3357,12 @@ export default function Vouch() {
                   <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13 }}>
                     {newAgreements.length === 1
                       ? <><strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11 }}>{newAgreements[0].display_name}</strong> agreed with <strong style={{ fontStyle: "normal" }}>{newAgreements[0].title}</strong> →</>
-                      : <><strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11 }}>{newAgreements.length} people</strong> agreed with your titles — tap to see →</>
+                      : [...new Set(newAgreements.map(r => r.user_id))].length === 1
+                        ? <><strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11 }}>{newAgreements[0].display_name}</strong> agreed with {newAgreements.length} of your titles — tap to see →</>
+                        : <><strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11 }}>{[...new Set(newAgreements.map(r => r.user_id))].length} people</strong> agreed with your titles — tap to see →</>
                     }
                   </div>
-                  <button onClick={e => { e.stopPropagation(); setNewAgreements([]); }} style={{ background: "transparent", border: "none", color: "rgba(200,194,180,0.5)", fontSize: 20, cursor: "pointer", padding: 0, flexShrink: 0 }}>×</button>
+                  <button onClick={e => { e.stopPropagation(); setNewAgreements([]); const now = new Date().toISOString(); localStorage.setItem("vouch-last-visit", now); supabase.from("profiles").update({ last_visit: now }).eq("id", userId); }} style={{ background: "transparent", border: "none", color: "rgba(200,194,180,0.5)", fontSize: 20, cursor: "pointer", padding: 0, flexShrink: 0 }}>×</button>
                 </div>
               )}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
@@ -4051,7 +4053,7 @@ export default function Vouch() {
                       setPastNotifications(updated);
                       localStorage.setItem("vouch-past-notifs-" + userId, JSON.stringify(updated));
                       setShowNotifications(false);
-                      setNewAgreements([]);
+                      setNewAgreements([]); const now = new Date().toISOString(); localStorage.setItem("vouch-last-visit", now); supabase.from("profiles").update({ last_visit: now }).eq("id", userId);
                       setNewBuddies([]);
                     }}>Dismiss All</button>
                   </div>
