@@ -1807,18 +1807,18 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
             .from('vouch_boards')
             .select('*, vouch_board_items(*)')
             .eq('is_active', true)
-            .not('user_id', 'in', `(${buddyIds.join(',')})`)
             .order('published_at', { ascending: false })
-            .limit(10);
-          if (discover && discover.length > 0) {
-            const discoverUserIds = [...new Set(discover.map(b => b.user_id))];
+            .limit(30);
+          const discoverFiltered = (discover || []).filter(b => !buddyIds.includes(b.user_id)).slice(0, 10);
+          if (discoverFiltered && discoverFiltered.length > 0) {
+            const discoverUserIds = [...new Set(discoverFiltered.map(b => b.user_id))];
             const { data: discoverProfiles } = await supabase.from('profiles').select('id, display_name, username, avatar_url').in('id', discoverUserIds);
             const profileMap = {};
             (discoverProfiles || []).forEach(p => { profileMap[p.id] = p; });
-            discover.forEach(b => { b.profiles = profileMap[b.user_id] || null; });
+            discoverFiltered.forEach(b => { b.profiles = profileMap[b.user_id] || null; });
           }
-          console.log('discovery boards:', discover?.length, discover);
-          setDiscoveryBoards(discover || []);
+          console.log('discovery boards:', discoverFiltered?.length, discoverFiltered);
+          setDiscoveryBoards(discoverFiltered || []);
         } catch(e) { console.error('discovery error', e); }
       } catch(e) { console.error(e); }
       setLoading(false);
