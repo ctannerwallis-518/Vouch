@@ -1939,6 +1939,42 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
                       </button>}
                     </div>
                   )}
+      {feedTab === 'vouches' && discoveryBoards.length > 0 && (
+        <div style={{ marginTop: 40 }}>
+          <div style={{ borderTop: `3px double ${T.ink}`, paddingTop: 20, marginBottom: 20 }}>
+            <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.18em", color: T.inkMid, marginBottom: 4 }}>Discover</div>
+            <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkFaint }}>What others are vouching for</div>
+          </div>
+          {discoveryBoards.map((b, i) => {
+            const profile = b.profiles;
+            const theme = (b.theme && b.theme !== "Other") ? b.theme : (b.name || "Vouch");
+            const items = (b.vouch_board_items || []).sort((a,x) => a.position - x.position).slice(0,5);
+            const dummyBuddy = { userId: b.user_id, displayName: profile?.display_name || "Someone", avatarUrl: null, username: profile?.username };
+            return (
+              <div key={i} style={{ marginBottom: 32, opacity: 0.85 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                  <Avatar name={dummyBuddy.displayName} size={28} avatarUrl={dummyBuddy.avatarUrl} />
+                  <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.inkMid }}>
+                    <span style={{ fontWeight: 600 }}>{dummyBuddy.displayName}</span>
+                    <span style={{ fontStyle: "italic", color: T.inkLight }}> vouched</span>
+                    <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: T.inkFaint, marginLeft: 8 }}>{new Date(b.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                  </div>
+                </div>
+                <div className="vouch-section" style={{ marginBottom: 8 }}>
+                  <div className="vouch-section-header">
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="vouch-section-label">{theme}</div>
+                      <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginTop: 3 }}>Vouch</div>
+                      {b.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: "rgba(200,194,180,0.4)", marginTop: 2 }}>{b.description}</div>}
+                    </div>
+                  </div>
+                  <VouchSection board={(() => { const brd = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [], podcasts: [] }; items.forEach(item => { if (brd[item.category]) brd[item.category].push({ id: item.item_id, title: item.title, sub: item.subtitle || "", poster: item.poster, comment: "", vouched: true, sourceUrl: item.source_url, _cat: item.category }); }); return brd; })()} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={(cat, item) => onDudeSame(cat, item)} myReactions={myReactions} hideHeader={true} onMusicOpen={onMusicOpen} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
                 </div>
               )}
             </div>
