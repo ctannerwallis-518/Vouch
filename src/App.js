@@ -1817,6 +1817,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
             (discoverProfiles || []).forEach(p => { profileMap[p.id] = p; });
             discover.forEach(b => { b.profiles = profileMap[b.user_id] || null; });
           }
+          console.log('discovery boards:', discover?.length, discover);
           setDiscoveryBoards(discover || []);
         } catch(e) { console.error('discovery error', e); }
       } catch(e) { console.error(e); }
