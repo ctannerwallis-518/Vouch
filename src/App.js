@@ -2347,7 +2347,7 @@ export default function Vouch() {
   };
 
   const publishBoard = async (boardData) => {
-    const { name, theme, description, singleCategory, items, existingBoardId, existingPublishedAt } = boardData;
+    const { name, theme, description, singleCategory, items, existingBoardId } = boardData;
 
     if (existingBoardId) {
       // EDIT MODE: update existing board in place, no new row
