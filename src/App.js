@@ -1712,6 +1712,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
   const [feedTab, setFeedTab] = useState('vouches');
+  const [discoveryBoards, setDiscoveryBoards] = useState([]);
 
   useEffect(() => {
     if (!buddies.length) { setLoading(false); return; }
