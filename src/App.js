@@ -2347,34 +2347,55 @@ export default function Vouch() {
   };
 
   const publishBoard = async (boardData) => {
-    const { name, theme, description, singleCategory, items, existingPublishedAt } = boardData;
-    // Deactivate current active board
-    await supabase.from("vouch_boards").update({ is_active: false }).eq("user_id", userId).eq("is_active", true);
-    // Create new board — preserve published_at if editing so feed order doesn't change
-    const { data: newBoard } = await supabase.from("vouch_boards").insert({
-      user_id: userId,
-      name,
-      theme,
-      description,
-      single_category: singleCategory || null,
-      published_at: existingPublishedAt || new Date().toISOString(),
-      is_active: true,
-    }).select().single();
-    if (!newBoard) return;
-    // Insert items
-    if (items.length > 0) {
-      await supabase.from("vouch_board_items").insert(
-        items.map((item, i) => ({
-          board_id: newBoard.id,
-          item_id: String(item.id || item.item_id),
-          title: item.title,
-          subtitle: item.sub || item.subtitle || "",
-          poster: item.poster || null,
-          source_url: item.sourceUrl || item.source_url || null,
-          category: item.catKey || item.category || "",
-          position: i,
-        }))
-      );
+    const { name, theme, description, singleCategory, items, existingBoardId, existingPublishedAt } = boardData;
+
+    if (existingBoardId) {
+      // EDIT MODE: update existing board in place, no new row
+      await supabase.from("vouch_boards").update({
+        name, theme, description,
+        single_category: singleCategory || null,
+      }).eq("id", existingBoardId);
+      // Replace items
+      await supabase.from("vouch_board_items").delete().eq("board_id", existingBoardId);
+      if (items.length > 0) {
+        await supabase.from("vouch_board_items").insert(
+          items.map((item, i) => ({
+            board_id: existingBoardId,
+            item_id: String(item.id || item.item_id),
+            title: item.title,
+            subtitle: item.sub || item.subtitle || "",
+            poster: item.poster || null,
+            source_url: item.sourceUrl || item.source_url || null,
+            category: item.catKey || item.category || "",
+            position: i,
+          }))
+        );
+      }
+    } else {
+      // NEW PUBLISH: deactivate current, create new board
+      await supabase.from("vouch_boards").update({ is_active: false }).eq("user_id", userId).eq("is_active", true);
+      const { data: newBoard } = await supabase.from("vouch_boards").insert({
+        user_id: userId,
+        name, theme, description,
+        single_category: singleCategory || null,
+        published_at: new Date().toISOString(),
+        is_active: true,
+      }).select().single();
+      if (!newBoard) return;
+      if (items.length > 0) {
+        await supabase.from("vouch_board_items").insert(
+          items.map((item, i) => ({
+            board_id: newBoard.id,
+            item_id: String(item.id || item.item_id),
+            title: item.title,
+            subtitle: item.sub || item.subtitle || "",
+            poster: item.poster || null,
+            source_url: item.sourceUrl || item.source_url || null,
+            category: item.catKey || item.category || "",
+            position: i,
+          }))
+        );
+      }
     }
     await loadVouchBoards(userId);
     setBoardEditor(false);
