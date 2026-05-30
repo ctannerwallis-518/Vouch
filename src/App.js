@@ -1391,7 +1391,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
             }
             {!existing && <button onClick={() => { onClose(); }} style={{ padding: "12px 16px", background: "transparent", border: `1px solid ${T.paperDark}`, color: T.inkMid, fontFamily: "'Spectral SC',serif",ontSize: "9px", letterSpacing: "0.18em", cursor: "pointer" }}>Save Draft</button>}
           </div>
-          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, textAlign: "center" }}>{existing ? "Changes will be saved to your current Vouch." : canPublish ? "Vouch boards update once a week. Build your next one anytime — it'll be ready to publish in 7 days." : `Vouches update once a week — your next window opens ${nextPublishDate}.`}</div>
+          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, textAlign: "center" }}>{existing ? "Edits will update your current Vouch." : canPublish ? "You can publish a Vouch once a week." : `Your next Vouch unlocks ${nextPublishDate}.`}</div>
         </div>
       </div>
     </div>
