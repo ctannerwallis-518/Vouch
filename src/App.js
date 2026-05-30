@@ -1711,6 +1711,7 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue,
 const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeSame, onAddToQueue, queue, myReactions, onShelfExtras, onMusicOpen }) {
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [feedTab, setFeedTab] = useState('vouches');
 
   useEffect(() => {
     if (!buddies.length) { setLoading(false); return; }
@@ -1804,9 +1805,16 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
   if (loading) return <div className="loading">Loading…</div>;
   if (!feed.length && buddies.length > 0) return <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: "#7a7568", padding: "24px 0" }}>No activity yet — check back soon.</div>;
 
+  const filteredFeed = feed.filter(item => feedTab === 'vouches' ? item.type === 'vouch' : item.type !== 'vouch');
   return (
     <div>
-      {feed.map((item, i) => {
+      <div style={{ display: "flex", gap: 0, marginBottom: 24, borderBottom: `2px solid ${T.ink}` }}>
+        {[['vouches', 'Vouches'], ['activity', 'Activity']].map(([key, label]) => (
+          <button key={key} onClick={() => setFeedTab(key)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", padding: "10px 20px", background: feedTab === key ? T.ink : "transparent", color: feedTab === key ? T.bg : T.inkMid, border: "none", cursor: "pointer", fontWeight: feedTab === key ? 700 : 400 }}>{label}</button>
+        ))}
+      </div>
+      {filteredFeed.length === 0 && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: "#7a7568", padding: "24px 0" }}>{feedTab === 'vouches' ? 'No vouches yet — check back soon.' : 'No activity yet — check back soon.'}</div>}
+      {filteredFeed.map((item, i) => {
         if (item.type === "vouch") {
           const b = item.board;
           const buddy = item.buddy;
