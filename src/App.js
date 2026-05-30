@@ -1713,6 +1713,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
   const [loading, setLoading] = useState(true);
   const [feedTab, setFeedTab] = useState('vouches');
   const [discoveryBoards, setDiscoveryBoards] = useState([]);
+  const [visibleCount, setVisibleCount] = useState(15);
 
   useEffect(() => {
     if (!buddies.length) { setLoading(false); return; }
@@ -1796,7 +1797,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
           }
         });
         grouped.sort((a, b) => b.date - a.date);
-        setFeed(grouped.slice(0, 40));
+        setFeed(grouped);
         // Load discovery boards from non-buddies
         try {
           const { data: discover } = await supabase
@@ -1817,7 +1818,9 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
   if (loading) return <div className="loading">Loading…</div>;
   if (!feed.length && buddies.length > 0) return <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: "#7a7568", padding: "24px 0" }}>No activity yet — check back soon.</div>;
 
-  const filteredFeed = feed.filter(item => feedTab === 'vouches' ? item.type === 'vouch' : item.type !== 'vouch');
+  const allFiltered = feed.filter(item => feedTab === 'vouches' ? item.type === 'vouch' : item.type !== 'vouch');
+  const filteredFeed = allFiltered.slice(0, visibleCount);
+  const totalFiltered = allFiltered.length;
   return (
     <div>
       <div style={{ display: "flex", gap: 0, marginBottom: 24, borderBottom: `2px solid ${T.ink}` }}>
@@ -1951,6 +1954,11 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
                       </button>}
                     </div>
                   )}
+      {totalFiltered > visibleCount && (
+        <div style={{ textAlign: 'center', padding: '16px 0 8px' }}>
+          <button onClick={() => setVisibleCount(v => v + 15)} style={{ fontFamily: "'Spectral SC',serif", fontSize: '9px', letterSpacing: '0.18em', padding: '10px 28px', background: 'transparent', border: `1px solid ${T.paperDark}`, color: T.inkMid, cursor: 'pointer' }}>Load More</button>
+        </div>
+      )}
       {feedTab === 'vouches' && discoveryBoards.length > 0 && (
         <div style={{ marginTop: 40 }}>
           <div style={{ borderTop: `3px double ${T.ink}`, paddingTop: 20, marginBottom: 20 }}>
