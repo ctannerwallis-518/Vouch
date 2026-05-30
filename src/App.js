@@ -1805,11 +1805,18 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
         try {
           const { data: discover } = await supabase
             .from('vouch_boards')
-            .select('*, vouch_board_items(*), profiles!vouch_boards_user_id_fkey(id, display_name, username, avatar_url)')
+            .select('*, vouch_board_items(*)')
             .eq('is_active', true)
             .not('user_id', 'in', `(${buddyIds.join(',')})`)
             .order('published_at', { ascending: false })
             .limit(10);
+          if (discover && discover.length > 0) {
+            const discoverUserIds = [...new Set(discover.map(b => b.user_id))];
+            const { data: discoverProfiles } = await supabase.from('profiles').select('id, display_name, username, avatar_url').in('id', discoverUserIds);
+            const profileMap = {};
+            (discoverProfiles || []).forEach(p => { profileMap[p.id] = p; });
+            discover.forEach(b => { b.profiles = profileMap[b.user_id] || null; });
+          }
           setDiscoveryBoards(discover || []);
         } catch(e) { console.error('discovery error', e); }
       } catch(e) { console.error(e); }
