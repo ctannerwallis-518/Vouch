@@ -1261,8 +1261,24 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
       setBusy(true);
       try {
         const fetches = [];
-        if (!singleCat || singleCat === "movies") fetches.push(fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`).then(r=>r.json()).then(d=>(d.results||[]).slice(0,3).map(r=>({ id:r.id, title:r.title, sub:r.release_date?.slice(0,4)||"", poster:r.poster_path?`https://image.tmdb.org/t/p/w500${r.poster_path}`:null, catKey:"movies", sourceUrl:`https://www.imdb.com/find?q=${encodeURIComponent(r.title)}` }))));
-        if (!singleCat || singleCat === "shows") fetches.push(fetch(`https://api.themoviedb.org/3/search/tv?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`).then(r=>r.json()).then(d=>(d.results||[]).slice(0,2).map(r=>({ id:r.id, title:r.name, sub:r.first_air_date?.slice(0,4)||"", poster:r.poster_path?`https://image.tmdb.org/t/p/w500${r.poster_path}`:null, catKey:"shows", sourceUrl:`https://www.imdb.com/find?q=${encodeURIComponent(r.name)}` }))));
+        if (!singleCat || singleCat === "movies") fetches.push(
+          fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`).then(r=>r.json()).then(async d => {
+            const results = (d.results||[]).slice(0,3);
+            return Promise.all(results.map(async r => {
+              try { const ext = await fetch(`https://api.themoviedb.org/3/movie/${r.id}/external_ids?api_key=${TMDB_KEY}`).then(x=>x.json()); return { id:r.id, title:r.title, sub:r.release_date?.slice(0,4)||'', poster:r.poster_path?`https://image.tmdb.org/t/p/w500${r.poster_path}`:null, catKey:'movies', sourceUrl: ext.imdb_id ? `https://www.imdb.com/title/${ext.imdb_id}/` : `https://www.imdb.com/find?q=${encodeURIComponent(r.title)}` }; }
+              catch { return { id:r.id, title:r.title, sub:r.release_date?.slice(0,4)||'', poster:r.poster_path?`https://image.tmdb.org/t/p/w500${r.poster_path}`:null, catKey:'movies', sourceUrl:`https://www.imdb.com/find?q=${encodeURIComponent(r.title)}` }; }
+            }));
+          }))
+        );
+        if (!singleCat || singleCat === "shows") fetches.push(
+          fetch(`https://api.themoviedb.org/3/search/tv?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`).then(r=>r.json()).then(async d => {
+            const results = (d.results||[]).slice(0,2);
+            return Promise.all(results.map(async r => {
+              try { const ext = await fetch(`https://api.themoviedb.org/3/tv/${r.id}/external_ids?api_key=${TMDB_KEY}`).then(x=>x.json()); return { id:r.id, title:r.name, sub:r.first_air_date?.slice(0,4)||'', poster:r.poster_path?`https://image.tmdb.org/t/p/w500${r.poster_path}`:null, catKey:'shows', sourceUrl: ext.imdb_id ? `https://www.imdb.com/title/${ext.imdb_id}/` : `https://www.imdb.com/find?q=${encodeURIComponent(r.name)}` }; }
+              catch { return { id:r.id, title:r.name, sub:r.first_air_date?.slice(0,4)||'', poster:r.poster_path?`https://image.tmdb.org/t/p/w500${r.poster_path}`:null, catKey:'shows', sourceUrl:`https://www.imdb.com/find?q=${encodeURIComponent(r.name)}` }; }
+            }));
+          }))
+        );
         if (!singleCat || ["albums","songs","artists","podcasts"].includes(singleCat)) {
           const type = singleCat === "albums" ? "album" : singleCat === "songs" ? "track" : singleCat === "artists" ? "artist" : singleCat === "podcasts" ? "show" : "track,album,artist,show";
           fetches.push(fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=${type}`).then(r=>r.json()).then(d=>{
