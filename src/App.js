@@ -3559,6 +3559,14 @@ export default function Vouch() {
 
           {tab === "home" && !viewing && (
             <div style={{ maxWidth: 680, margin: "0 auto", paddingTop: 24 }}>
+              {!localStorage.getItem("vouch-archive-public-announce") && (
+                <div style={{ background: T.ink, color: T.bg, padding: "14px 16px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                  <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, lineHeight: 1.5 }}>
+                    <strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11, letterSpacing: "0.12em" }}>New:</strong> Your previous Vouch boards are now visible on your profile. Others can see your full history.
+                  </div>
+                  <button onClick={() => { localStorage.setItem("vouch-archive-public-announce", "1"); window.location.reload(); }} style={{ background: "transparent", border: "none", color: "rgba(200,194,180,0.5)", fontSize: 20, cursor: "pointer", padding: 0, flexShrink: 0 }}>×</button>
+                </div>
+              )}
               {newAgreements.length > 0 && (
                 <div style={{ background: T.ink, color: T.bg, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }} onClick={() => setShowAgreements(true)}>
                   <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13 }}>
