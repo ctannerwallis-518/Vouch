@@ -3109,115 +3109,151 @@ export default function Vouch() {
 
     const drawCard = (posterImgs) => {
       const boardTheme = activeBoard?.theme && activeBoard.theme !== "Other" ? activeBoard.theme : (activeBoard?.name || "Vouch");
-      const firstName = (shareName || shareUsername).split(" ")[0];
       const tileCount = Math.min((activeBoard?.vouch_board_items || []).length, 5);
       const items = (activeBoard?.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0, 5);
+      const catLabels = { movies: "Film", shows: "Show", albums: "Album", artists: "Artist", songs: "Song", books: "Book", podcasts: "Podcast" };
+      const musicCats = ["albums", "artists", "songs", "podcasts"];
 
       const W = 1080, H = 1920;
       ctx.fillStyle = "#C8C2B4"; ctx.fillRect(0, 0, W, H);
       ctx.fillStyle = "#111008"; ctx.fillRect(0, 0, W, 5);
 
+      // Header meta
       ctx.fillStyle = "#888"; ctx.font = "400 28px Georgia";
       ctx.fillText("Est. 2026", 72, 100);
       ctx.textAlign = "right"; ctx.fillText("vouch5.com", 1008, 100); ctx.textAlign = "left";
 
+      // Wordmark
       ctx.fillStyle = "#111008"; ctx.font = "900 190px 'Times New Roman', serif";
       ctx.textAlign = "center"; ctx.fillText("Vouch.", 540, 295); ctx.textAlign = "left";
 
-      ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 36px Georgia";
-      ctx.textAlign = "center"; ctx.fillText("Love it? Vouch for it.", 540, 348); ctx.textAlign = "left";
+      // Tagline
+      ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 34px Georgia";
+      ctx.textAlign = "center"; ctx.fillText("Love it? Vouch for it.", 540, 345); ctx.textAlign = "left";
 
+      // Double rule
       ctx.strokeStyle = "#111008"; ctx.lineWidth = 4;
-      ctx.beginPath(); ctx.moveTo(72, 378); ctx.lineTo(1008, 378); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(72, 390); ctx.lineTo(1008, 390); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(72, 375); ctx.lineTo(1008, 375); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(72, 387); ctx.lineTo(1008, 387); ctx.stroke();
 
-      ctx.fillStyle = "#555"; ctx.font = "italic 400 36px Georgia";
-      ctx.fillText(firstName + " is vouching for", 72, 462);
+      // Theme name (big)
+      ctx.fillStyle = "#111008"; ctx.font = "900 72px 'Times New Roman', serif";
+      ctx.fillText(boardTheme, 72, 460);
 
+      // Username
+      ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 38px Georgia";
+      ctx.fillText("@" + shareUsername, 72, 516);
 
-      const drawTile = (img, x, y, w, h, item, alpha, goldBorder) => {
-        ctx.save();
-        ctx.globalAlpha = alpha;
-        ctx.fillStyle = "#111008"; ctx.fillRect(x, y, w, h);
+      const PAD = 72, INNER = W - PAD * 2;
+
+      if (tileCount === 1) {
+        // Single tile — centered, large
+        const item = items[0];
+        const isMusicCat = musicCats.includes(item?.category);
+        const isSquare = isMusicCat;
+        const imgW = isSquare ? 480 : 360;
+        const imgH = isSquare ? 480 : 520;
+        const imgX = (W - imgW) / 2;
+        const imgY = 580;
+
+        ctx.fillStyle = "#111008";
+        ctx.fillRect(imgX, imgY, imgW, imgH);
+
+        const img = posterImgs[0];
         if (img) {
-          const ir = img.naturalWidth / img.naturalHeight, cr = w / h;
+          const ir = img.naturalWidth / img.naturalHeight, cr = imgW / imgH;
           let sx, sy, sw, sh;
           if (ir > cr) { sh = img.naturalHeight; sw = sh * cr; sx = (img.naturalWidth - sw) / 2; sy = 0; }
           else { sw = img.naturalWidth; sh = sw / cr; sx = 0; sy = (img.naturalHeight - sh) / 2; }
-          ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+          ctx.drawImage(img, sx, sy, sw, sh, imgX, imgY, imgW, imgH);
         }
-        const grad = ctx.createLinearGradient(0, y + h * 0.5, 0, y + h);
-        grad.addColorStop(0, "rgba(0,0,0,0)"); grad.addColorStop(1, "rgba(0,0,0,0.88)");
-        ctx.fillStyle = grad; ctx.fillRect(x, y, w, h);
-        if (goldBorder) { ctx.strokeStyle = "#C9A84C"; ctx.lineWidth = 6; ctx.strokeRect(x+3, y+3, w-6, h-6); }
-        if (item) {
-          ctx.fillStyle = "rgba(200,194,180,0.5)"; ctx.font = "400 " + Math.max(18, w*0.06) + "px Georgia";
-          ctx.fillText((item.category || "").toUpperCase(), x + 20, y + 40);
-          ctx.fillStyle = "#C8C2B4"; ctx.font = "900 " + Math.max(28, w*0.1) + "px 'Times New Roman', serif";
-          const t = (item.title || "").slice(0, 18) + ((item.title||"").length > 18 ? "…" : "");
-          ctx.fillText(t, x + 20, y + h - 60);
-          if (item.subtitle) { ctx.fillStyle = "rgba(200,194,180,0.65)"; ctx.font = "italic 400 " + Math.max(22, w*0.07) + "px Georgia"; ctx.fillText(item.subtitle.slice(0,22), x + 20, y + h - 22); }
+
+        const labelY = imgY + imgH + 48;
+        ctx.fillStyle = "#111008"; ctx.font = "900 64px 'Times New Roman', serif";
+        ctx.textAlign = "center";
+        const shortTitle = (item?.title || "").slice(0, 22) + ((item?.title || "").length > 22 ? "…" : "");
+        ctx.fillText(shortTitle, 540, labelY);
+        if (item?.subtitle) {
+          ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 40px Georgia";
+          ctx.fillText(item.subtitle.slice(0, 28), 540, labelY + 52);
         }
-        ctx.restore();
-      };
+        ctx.fillStyle = "rgba(17,16,8,0.4)"; ctx.font = "400 28px Georgia";
+        ctx.fillText((catLabels[item?.category] || "").toUpperCase(), 540, labelY + (item?.subtitle ? 108 : 60));
+        ctx.textAlign = "left";
 
-      const PAD = 72, GAP = 6, INNER = W - PAD * 2;
-      const tileY = 510;
-
-      if (tileCount === 1) {
-        const tw = INNER * 0.65, th = tw * 3/2;
-        drawTile(posterImgs[0], PAD + (INNER-tw)/2, tileY, tw, th, items[0], 1, true);
-      } else if (tileCount === 2) {
-        const tw = (INNER - GAP) / 2, th = tw * 3/2;
-        drawTile(posterImgs[0], PAD, tileY, tw, th, items[0], 1, true);
-        drawTile(posterImgs[1], PAD + tw + GAP, tileY, tw, th, items[1], 1, false);
-      } else if (tileCount === 3) {
-        const tw = (INNER - GAP*2) / 3, th = tw * 3/2;
-        for (let i = 0; i < 3; i++) drawTile(posterImgs[i], PAD + i*(tw+GAP), tileY, tw, th, items[i], 1, i===0);
-      } else if (tileCount === 4) {
-        const tw = (INNER - GAP) / 2, th = tw;
-        drawTile(posterImgs[0], PAD, tileY, tw, th, items[0], 1, true);
-        drawTile(posterImgs[1], PAD+tw+GAP, tileY, tw, th, items[1], 1, false);
-        drawTile(posterImgs[2], PAD, tileY+th+GAP, tw, th, items[2], 1, false);
-        drawTile(posterImgs[3], PAD+tw+GAP, tileY+th+GAP, tw, th, items[3], 1, false);
       } else {
-        // 5 tiles: 2x2 grid behind, hero centered on top
-        const tw = (INNER - GAP) / 2, th = tw;
-        // back 4 dimmed
-        drawTile(posterImgs[1], PAD, tileY, tw, th, null, 0.45, false);
-        drawTile(posterImgs[2], PAD+tw+GAP, tileY, tw, th, null, 0.45, false);
-        drawTile(posterImgs[3], PAD, tileY+th+GAP, tw, th, null, 0.45, false);
-        drawTile(posterImgs[4], PAD+tw+GAP, tileY+th+GAP, tw, th, null, 0.45, false);
-        // hero tile centered
-        const hw = tw * 0.85, hh = hw * 3/2;
-        const hx = PAD + (INNER - hw) / 2, hy = tileY + (th*2+GAP - hh) / 2;
-        drawTile(posterImgs[0], hx, hy, hw, hh, items[0], 1, true);
+        // List layout — thumbnail left, title/sub/cat right
+        const isMusicCat = (cat) => musicCats.includes(cat);
+        const thumbW_rect = 120, thumbH_rect = 172;
+        const thumbW_sq = 144, thumbH_sq = 144;
+        const rowH = 180;
+        const startY = 570;
+        const textX = PAD + thumbW_sq + 32;
+
+        items.forEach((item, i) => {
+          const y = startY + i * (rowH + 2);
+          const isSquare = isMusicCat(item.category);
+          const tw = isSquare ? thumbW_sq : thumbW_rect;
+          const th = isSquare ? thumbH_sq : thumbH_rect;
+          const thumbY = y + (rowH - th) / 2;
+
+          // Thumbnail bg
+          ctx.fillStyle = "#111008";
+          ctx.fillRect(PAD, thumbY, tw, th);
+
+          // Poster image
+          const img = posterImgs[i];
+          if (img) {
+            const ir = img.naturalWidth / img.naturalHeight, cr = tw / th;
+            let sx, sy, sw, sh;
+            if (ir > cr) { sh = img.naturalHeight; sw = sh * cr; sx = (img.naturalWidth - sw) / 2; sy = 0; }
+            else { sw = img.naturalWidth; sh = sw / cr; sx = 0; sy = (img.naturalHeight - sh) / 2; }
+            ctx.drawImage(img, sx, sy, sw, sh, PAD, thumbY, tw, th);
+          }
+
+          // Title
+          const titleX = PAD + thumbW_sq + 28;
+          const titleY = y + 48;
+          ctx.fillStyle = "#111008"; ctx.font = "900 48px 'Times New Roman', serif";
+          const shortTitle = (item.title || "").slice(0, 20) + ((item.title || "").length > 20 ? "…" : "");
+          ctx.fillText(shortTitle, titleX, titleY);
+
+          // Subtitle
+          if (item.subtitle) {
+            ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 34px Georgia";
+            ctx.fillText(item.subtitle.slice(0, 24), titleX, titleY + 48);
+          }
+
+          // Category label
+          ctx.fillStyle = "rgba(17,16,8,0.35)"; ctx.font = "400 24px Georgia";
+          ctx.fillText((catLabels[item.category] || "").toUpperCase(), titleX, titleY + (item.subtitle ? 96 : 52));
+
+          // Divider (except last)
+          if (i < tileCount - 1) {
+            const divY = y + rowH + 1;
+            ctx.strokeStyle = "rgba(17,16,8,0.12)"; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(PAD, divY); ctx.lineTo(W - PAD, divY); ctx.stroke();
+          }
+        });
       }
 
-      const gridH = tileCount === 4 ? (INNER/2 + GAP + INNER/2) :
-                    tileCount === 5 ? (INNER/2 + GAP + INNER/2) :
-                    tileCount === 1 ? (INNER * 0.65 * 3/2) :
-                    tileCount === 2 ? ((INNER - GAP) / 2 * 1.2) :
-                    ((INNER - GAP*2)/3 * 3/2);
-
-      // Theme always below tiles
-      ctx.fillStyle = "#111008"; ctx.font = "900 58px 'Times New Roman', serif";
-      ctx.textAlign = "center"; ctx.fillText(boardTheme, 540, tileY + gridH + 60); ctx.textAlign = "left";
-
-      const bottomY = tileY + gridH + 110;
-
+      // Bottom section
+      const bottomY = tileCount === 1 ? 1550 : 570 + tileCount * 182 + 40;
       ctx.strokeStyle = "rgba(17,16,8,0.2)"; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(72, bottomY); ctx.lineTo(1008, bottomY); ctx.stroke();
-      ctx.fillStyle = "#555"; ctx.font = "italic 400 34px Georgia"; ctx.textAlign = "center";
-      ctx.fillText("What would you put your name behind right now?", 540, bottomY + 52);
-      ctx.fillStyle = "#111008"; ctx.font = "900 48px 'Times New Roman', serif"; ctx.textAlign = "center";
-      ctx.fillText("vouch5.com/@" + shareUsername, 540, bottomY + 118);
-      ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 28px Georgia";
-      ctx.fillText("See what else " + firstName + " is vouching for — Link in Bio", 540, bottomY + 168);
+      ctx.beginPath(); ctx.moveTo(PAD, bottomY); ctx.lineTo(W - PAD, bottomY); ctx.stroke();
+
+      ctx.fillStyle = "#555"; ctx.font = "italic 400 32px Georgia"; ctx.textAlign = "center";
+      ctx.fillText("What would you put your name behind right now?", 540, bottomY + 48);
+
+      ctx.fillStyle = "#111008"; ctx.font = "900 44px 'Times New Roman', serif"; ctx.textAlign = "center";
+      ctx.fillText("vouch5.com/@" + shareUsername, 540, bottomY + 104);
+
+      ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 26px Georgia"; ctx.textAlign = "center";
+      ctx.fillText("See what else " + (shareName || shareUsername).split(" ")[0] + " is vouching for — Link in Bio", 540, bottomY + 148);
       ctx.textAlign = "left";
+
       ctx.fillStyle = "#111008"; ctx.fillRect(0, 1915, 1080, 5);
     };
-
     const loadImg = async (url) => {
       if (!url) return null;
       try {
