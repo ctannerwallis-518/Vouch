@@ -1459,23 +1459,21 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
           <div style={{ marginBottom: 16 }}>
             <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 8 }}>Tiles ({items.length}/5)</div>
             {items.length > 0 && (
-              <div style={{ display: "flex", alignItems: "flex-start", gap: 2, marginBottom: 10 }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 6, marginBottom: 10 }}>
                 {items.map((item, i) => (
-                  <>{/* tile */}
-                    {i > 0 && (
-                      <button onClick={() => moveItem(i, -1)} style={{ background: "transparent", border: "none", color: T.inkMid, cursor: "pointer", padding: "0 1px", fontSize: 16, alignSelf: "center", flexShrink: 0, lineHeight: 1 }}>‹</button>
-                    )}
-                    <div style={{ position: "relative", flex: 1, minWidth: 0 }}>
+                  <div key={i} style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "center" }}>
+                    <div style={{ position: "relative", width: "100%" }}>
                       {item.poster
                         ? <img src={item.poster} alt={item.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block" }} onError={e => e.target.style.display="none"} />
                         : <div style={{ width: "100%", aspectRatio: "2/3", background: T.paperDark, border: `1px solid ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 2 }}>{item.title}</div>}
-                      <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "6px", color: T.inkFaint, marginTop: 2, textAlign: "center", lineHeight: 1.2 }}>{catLabel(item.catKey || item.category)}</div>
                       <button onClick={() => removeItem(i)} style={{ position: "absolute", top: 2, right: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 18, height: 18, cursor: "pointer", fontSize: 12, lineHeight: "18px", textAlign: "center" }}>×</button>
                     </div>
-                    {i < items.length - 1 && (
-                      <button onClick={() => moveItem(i + 1, -1)} style={{ background: "transparent", border: "none", color: T.inkMid, cursor: "pointer", padding: "0 1px", fontSize: 16, alignSelf: "center", flexShrink: 0, lineHeight: 1 }}>›</button>
-                    )}
-                  </>
+                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "6px", color: T.inkFaint, marginTop: 2, textAlign: "center", lineHeight: 1.2 }}>{catLabel(item.catKey || item.category)}</div>
+                    <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
+                      <button onClick={() => moveItem(i, -1)} disabled={i === 0} style={{ background: "transparent", border: `1px solid ${i === 0 ? T.paperDark : T.inkMid}`, color: i === 0 ? T.inkFaint : T.inkMid, cursor: i === 0 ? "default" : "pointer", width: 24, height: 24, fontSize: 12, lineHeight: "22px", textAlign: "center" }}>←</button>
+                      <button onClick={() => moveItem(i, 1)} disabled={i === items.length - 1} style={{ background: "transparent", border: `1px solid ${i === items.length - 1 ? T.paperDark : T.inkMid}`, color: i === items.length - 1 ? T.inkFaint : T.inkMid, cursor: i === items.length - 1 ? "default" : "pointer", width: 24, height: 24, fontSize: 12, lineHeight: "22px", textAlign: "center" }}>→</button>
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
