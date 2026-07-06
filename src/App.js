@@ -3564,7 +3564,7 @@ export default function Vouch() {
                   <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, lineHeight: 1.5 }}>
                     <strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11, letterSpacing: "0.12em" }}>New:</strong> Your previous Vouches (Archives) are now available for others to see on your board.
                   </div>
-                  <button onClick={() => { localStorage.setItem("vouch-archive-public-announce", "1"); window.location.reload(); }} style={{ background: "transparent", border: "none", color: "rgba(200,194,180,0.5)", fontSize: 20, cursor: "pointer", padding: 0, flexShrink: 0 }}>×</button>
+                  <button onClick={() => { localStorage.setItem("vouch-archive-public-announce", "1"); const el = document.getElementById("archive-banner"); if(el) el.style.display="none"; }} style={{ background: "transparent", border: "none", color: "rgba(200,194,180,0.5)", fontSize: 20, cursor: "pointer", padding: 0, flexShrink: 0 }}>×</button>
                 </div>
               )}
               {newAgreements.length > 0 && (
