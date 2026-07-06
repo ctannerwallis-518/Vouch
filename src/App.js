@@ -2510,6 +2510,7 @@ export default function Vouch() {
   const [editingBoard,   setEditingBoard]   = useState(null);
   const [editingMeta,    setEditingMeta]    = useState(false);
   const [newAgreements,  setNewAgreements]  = useState([]);
+  const [archiveBannerDismissed, setArchiveBannerDismissed] = useState(!!localStorage.getItem('vouch-archive-public-announce'));
   const [newBuddies,     setNewBuddies]     = useState([]);
   const [showAgreements, setShowAgreements] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -3559,12 +3560,12 @@ export default function Vouch() {
 
           {tab === "home" && !viewing && (
             <div style={{ maxWidth: 680, margin: "0 auto", paddingTop: 24 }}>
-              {!localStorage.getItem("vouch-archive-public-announce") && (
+              {!archiveBannerDismissed && (
                 <div style={{ background: T.ink, color: T.bg, padding: "14px 16px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
                   <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, lineHeight: 1.5 }}>
                     <strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11, letterSpacing: "0.12em" }}>New:</strong> Your previous Vouches (Archives) are now available for others to see on your board.
                   </div>
-                  <button onClick={() => { localStorage.setItem("vouch-archive-public-announce", "1"); const el = document.getElementById("archive-banner"); if(el) el.style.display="none"; }} style={{ background: "transparent", border: "none", color: "rgba(200,194,180,0.5)", fontSize: 20, cursor: "pointer", padding: 0, flexShrink: 0 }}>×</button>
+                  <button onClick={() => { localStorage.setItem("vouch-archive-public-announce", "1"); setArchiveBannerDismissed(true); }} style={{ background: "transparent", border: "none", color: "rgba(200,194,180,0.5)", fontSize: 20, cursor: "pointer", padding: 0, flexShrink: 0 }}>×</button>
                 </div>
               )}
               {newAgreements.length > 0 && (
