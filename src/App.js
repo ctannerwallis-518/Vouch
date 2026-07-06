@@ -3562,7 +3562,7 @@ export default function Vouch() {
               {!localStorage.getItem("vouch-archive-public-announce") && (
                 <div style={{ background: T.ink, color: T.bg, padding: "14px 16px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
                   <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, lineHeight: 1.5 }}>
-                    <strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11, letterSpacing: "0.12em" }}>New:</strong> Your previous Vouch boards are now visible on your profile. Others can see your full history.
+                    <strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11, letterSpacing: "0.12em" }}>New:</strong> Your previous Vouches (Archives) are now available for others to see on your board.
                   </div>
                   <button onClick={() => { localStorage.setItem("vouch-archive-public-announce", "1"); window.location.reload(); }} style={{ background: "transparent", border: "none", color: "rgba(200,194,180,0.5)", fontSize: 20, cursor: "pointer", padding: 0, flexShrink: 0 }}>×</button>
                 </div>
