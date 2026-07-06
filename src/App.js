@@ -255,6 +255,68 @@ function Auth({ inviteUserId }) {
   );
 }
 
+function PreviousVouches({ userId, onDudeSame, myReactions, queue, onAddToQueue, onMusicOpen }) {
+  const [boards, setBoards] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    if (!open || boards.length > 0) return;
+    setLoading(true);
+    supabase.from("vouch_boards").select("*, vouch_board_items(*)").eq("user_id", userId).eq("is_active", false).order("published_at", { ascending: false })
+      .then(({ data }) => { setBoards((data || []).filter(b => b.published_at && b.vouch_board_items?.length > 0)); setLoading(false); });
+  }, [open, userId, boards.length]);
+  if (!userId) return null;
+  return (
+    <div style={{ marginBottom: 32 }}>
+      <button onClick={() => setOpen(o => !o)} style={{ display: "flex", alignItems: "center", gap: 10, background: "transparent", border: "none", cursor: "pointer", padding: "10px 0", width: "100%" }}>
+        <div style={{ flex: 1, height: 1, background: T.paperDark }} />
+        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, whiteSpace: "nowrap" }}>{open ? "Hide Previous Vouches ▲" : "Previous Vouches ▼"}</div>
+        <div style={{ flex: 1, height: 1, background: T.paperDark }} />
+      </button>
+      {open && (
+        <div style={{ marginTop: 8 }}>
+          {loading && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkFaint, padding: "12px 0" }}>Loading…</div>}
+          {!loading && boards.length === 0 && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkFaint, padding: "12px 0" }}>No previous vouches.</div>}
+          {boards.reduce((acc, b) => {
+            const d = new Date(b.published_at);
+            const key = d.toLocaleString("en-US", { month: "long" }) + " " + d.getFullYear();
+            const existing = acc.find(g => g.key === key);
+            if (existing) existing.boards.push(b);
+            else acc.push({ key, boards: [b] });
+            return acc;
+          }, []).map(({ key: monthYear, boards: mBoards }) => (
+            <div key={monthYear} style={{ marginBottom: 32 }}>
+              <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 10, letterSpacing: "0.18em", color: T.inkMid, borderBottom: "2px solid " + T.ink, paddingBottom: 8, marginBottom: 16 }}>{monthYear}</div>
+              {mBoards.map(b => {
+                const theme = (b.theme && b.theme !== "Other") ? b.theme : (b.name || "Vouch");
+                const items = (b.vouch_board_items || []).sort((a,x) => a.position - x.position).slice(0,5);
+                return (
+                  <div key={b.id} style={{ marginBottom: 28 }}>
+                    <div style={{ marginBottom: 10 }}>
+                      <div style={{ fontFamily: "'Times New Roman',Times,serif", fontWeight: 900, fontSize: 20, color: T.ink }}>{theme}</div>
+                      <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.12em", color: T.inkLight, marginTop: 2 }}>{new Date(b.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
+                      {b.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkMid, marginTop: 3 }}>{b.description}</div>}
+                    </div>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      {items.map((item, idx) => (
+                        <div key={idx} style={{ flexShrink: 0, flex: 1 }}>
+                          {item.poster ? <img src={item.poster} alt={item.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: "1px solid " + T.paperDark, display: "block" }} onError={e => e.target.style.display = "none"} />
+                            : <div style={{ width: "100%", aspectRatio: "2/3", background: T.paperDark, border: "1px solid " + T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 4 }}>{item.title}</div>}
+                          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: T.inkFaint, marginTop: 3, textAlign: "center", lineHeight: 1.3 }}>{item.title}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PublicBoard({ inviteUserId, onSignUp }) {
   const [board, setBoard]           = useState(null);
   const [profile, setProfile]       = useState(null);
@@ -3502,10 +3564,10 @@ export default function Vouch() {
                       {b.vouch_board_items && b.vouch_board_items.length > 0 && (
                         <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4 }}>
                           {b.vouch_board_items.slice().sort((a,x) => a.position - x.position).slice(0,5).map((item, i) => (
-                            <div key={i} style={{ flexShrink: 0, width: 80 }}>
+                            <div key={i} style={{ flexShrink: 0, width: 60 }}>
                               {item.poster
-                                ? <img src={item.poster} alt={item.title} style={{ width: 80, height: 110, objectFit: "cover", border: "1px solid " + T.paperDark, display: "block" }} onError={e => e.target.style.display = "none"} />
-                                : <div style={{ width: 80, height: 110, background: T.paperDark, border: "1px solid " + T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 4 }}>{item.title}</div>}
+                                ? <img src={item.poster} alt={item.title} style={{ width: 60, height: 84, objectFit: "cover", border: "1px solid " + T.paperDark, display: "block" }} onError={e => e.target.style.display = "none"} />
+                                : <div style={{ width: 60, height: 84, background: T.paperDark, border: "1px solid " + T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 4 }}>{item.title}</div>}
                               <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: T.inkFaint, marginTop: 4, textAlign: "center", lineHeight: 1.3 }}>{item.title}</div>
                             </div>
                           ))}
@@ -3799,6 +3861,9 @@ export default function Vouch() {
                     })()} isOwn={false} onCard={(k,i)=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} hideHeader={true} onAddToQueue={addToQueue} queue={queue} ownerId={viewing?.userId} onMusicOpen={openMusicUrl} />
                   </div>
                 ) : null}
+                {viewing && !isOwn && (
+                  <PreviousVouches userId={viewing.userId} onDudeSame={dudeSame} myReactions={myReactions} queue={queue} onAddToQueue={addToQueue} onMusicOpen={openMusicUrl} />
+                )}
 
                 {(() => {
                   const cats = isOwn
