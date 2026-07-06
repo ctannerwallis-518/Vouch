@@ -1461,7 +1461,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
             {items.length > 0 && (
               <div style={{ display: "flex", alignItems: "flex-start", gap: 2, marginBottom: 10 }}>
                 {items.map((item, i) => (
-                  <React.Fragment key={i}>
+                  <>{/* tile */}
                     {i > 0 && (
                       <button onClick={() => moveItem(i, -1)} style={{ background: "transparent", border: "none", color: T.inkMid, cursor: "pointer", padding: "0 1px", fontSize: 16, alignSelf: "center", flexShrink: 0, lineHeight: 1 }}>‹</button>
                     )}
@@ -1475,7 +1475,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
                     {i < items.length - 1 && (
                       <button onClick={() => moveItem(i + 1, -1)} style={{ background: "transparent", border: "none", color: T.inkMid, cursor: "pointer", padding: "0 1px", fontSize: 16, alignSelf: "center", flexShrink: 0, lineHeight: 1 }}>›</button>
                     )}
-                  </React.Fragment>
+                  </>
                 ))}
               </div>
             )}
