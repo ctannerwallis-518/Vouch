@@ -1459,19 +1459,23 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
           <div style={{ marginBottom: 16 }}>
             <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 8 }}>Tiles ({items.length}/5)</div>
             {items.length > 0 && (
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 2, marginBottom: 10 }}>
                 {items.map((item, i) => (
-                  <div key={i} style={{ position: "relative", width: 70 }}>
-                    {item.poster
-                      ? <img src={item.poster} alt={item.title} style={{ width: 70, height: 96, objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block" }} onError={e => e.target.style.display="none"} />
-                      : <div style={{ width: 70, height: 96, background: T.paperDark, border: `1px solid ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 4 }}>{item.title}</div>}
-                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: T.inkFaint, marginTop: 2, textAlign: "center" }}>{catLabel(item.catKey || item.category)}</div>
-                    <button onClick={() => removeItem(i)} style={{ position: "absolute", top: 2, right: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 20, height: 20, cursor: "pointer", fontSize: 14, lineHeight: "20px", textAlign: "center" }}>×</button>
-                    <div style={{ position: "absolute", bottom: 2, right: 2, display: "flex", flexDirection: "column", gap: 1 }}>
-                      <button onClick={() => moveItem(i, -1)} disabled={i === 0} style={{ background: "rgba(17,16,8,0.85)", border: "none", color: i === 0 ? "rgba(200,194,180,0.2)" : "#C8C2B4", width: 20, height: 18, cursor: i === 0 ? "default" : "pointer", fontSize: 10, lineHeight: "18px", textAlign: "center" }}>▲</button>
-                      <button onClick={() => moveItem(i, 1)} disabled={i === items.length - 1} style={{ background: "rgba(17,16,8,0.85)", border: "none", color: i === items.length - 1 ? "rgba(200,194,180,0.2)" : "#C8C2B4", width: 20, height: 18, cursor: i === items.length - 1 ? "default" : "pointer", fontSize: 10, lineHeight: "18px", textAlign: "center" }}>▼</button>
+                  <React.Fragment key={i}>
+                    {i > 0 && (
+                      <button onClick={() => moveItem(i, -1)} style={{ background: "transparent", border: "none", color: T.inkMid, cursor: "pointer", padding: "0 1px", fontSize: 16, alignSelf: "center", flexShrink: 0, lineHeight: 1 }}>‹</button>
+                    )}
+                    <div style={{ position: "relative", flex: 1, minWidth: 0 }}>
+                      {item.poster
+                        ? <img src={item.poster} alt={item.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block" }} onError={e => e.target.style.display="none"} />
+                        : <div style={{ width: "100%", aspectRatio: "2/3", background: T.paperDark, border: `1px solid ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 2 }}>{item.title}</div>}
+                      <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "6px", color: T.inkFaint, marginTop: 2, textAlign: "center", lineHeight: 1.2 }}>{catLabel(item.catKey || item.category)}</div>
+                      <button onClick={() => removeItem(i)} style={{ position: "absolute", top: 2, right: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 18, height: 18, cursor: "pointer", fontSize: 12, lineHeight: "18px", textAlign: "center" }}>×</button>
                     </div>
-                  </div>
+                    {i < items.length - 1 && (
+                      <button onClick={() => moveItem(i + 1, -1)} style={{ background: "transparent", border: "none", color: T.inkMid, cursor: "pointer", padding: "0 1px", fontSize: 16, alignSelf: "center", flexShrink: 0, lineHeight: 1 }}>›</button>
+                    )}
+                  </React.Fragment>
                 ))}
               </div>
             )}
