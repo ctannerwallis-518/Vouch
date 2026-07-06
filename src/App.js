@@ -3455,15 +3455,6 @@ export default function Vouch() {
 
           {tab === "home" && !viewing && (
             <div style={{ maxWidth: 680, margin: "0 auto", paddingTop: 24 }}>
-              {!localStorage.getItem("vouch-podcast-announce-dismissed") && (
-                <div style={{ background: T.ink, color: T.bg, padding: "14px 16px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                  <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13 }}>
-                    🎙️ <strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11, letterSpacing: "0.12em" }}>New:</strong> You can now vouch for Podcasts and add them to your shelf.{" "}
-                    <span onClick={() => { setTab("settings"); window.history.pushState({tab:"settings"}, "", "/"); scrollToTop(); }} style={{ cursor: "pointer", borderBottom: "1px solid rgba(200,194,180,0.5)", fontStyle: "normal" }}>Add in Settings →</span>
-                  </div>
-                  <button onClick={() => { localStorage.setItem("vouch-podcast-announce-dismissed", "1"); window.location.reload(); }} style={{ background: "transparent", border: "none", color: "rgba(200,194,180,0.5)", fontSize: 20, cursor: "pointer", padding: 0, flexShrink: 0 }}>×</button>
-                </div>
-              )}
               {newAgreements.length > 0 && (
                 <div style={{ background: T.ink, color: T.bg, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }} onClick={() => setShowAgreements(true)}>
                   <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13 }}>
