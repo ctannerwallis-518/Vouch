@@ -1442,8 +1442,8 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
             </div>
             {theme === "Other" && (
               <div>
-                <input className="search-input" style={{ marginTop: 10, marginBottom: 0 }} placeholder="e.g. Summer of 2009, Scorsese's Best…" value={name} onChange={e => setName(e.target.value.slice(0, 20))} maxLength={20} />
-                <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: name.length >= 16 ? "#c0392b" : T.inkFaint, textAlign: "right", marginTop: 3 }}>{name.length}/20</div>
+                <input className="search-input" style={{ marginTop: 10, marginBottom: 0 }} placeholder="e.g. Summer of 2009, Scorsese's Best…" value={name} onChange={e => setName(e.target.value.slice(0, 25))} maxLength={25} />
+                <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: name.length >= 21 ? "#c0392b" : T.inkFaint, textAlign: "right", marginTop: 3 }}>{name.length}/25</div>
               </div>
             )}
           </div>
@@ -1581,8 +1581,8 @@ function EditMetaForm({ board, themes, onSave, onClose }) {
           ))}
         </div>
         {theme === "Other" && <div>
-          <input className="search-input" style={{ marginTop: 10, marginBottom: 0 }} placeholder="e.g. Summer of 2009…" value={name} onChange={e => setName(e.target.value.slice(0, 20))} maxLength={20} />
-          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: name.length >= 16 ? "#c0392b" : T.inkFaint, textAlign: "right", marginTop: 3 }}>{name.length}/20</div>
+          <input className="search-input" style={{ marginTop: 10, marginBottom: 0 }} placeholder="e.g. Summer of 2009…" value={name} onChange={e => setName(e.target.value.slice(0, 25))} maxLength={25} />
+          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: name.length >= 21 ? "#c0392b" : T.inkFaint, textAlign: "right", marginTop: 3 }}>{name.length}/25</div>
         </div>}
       </div>
       <div style={{ marginBottom: 16 }}>
