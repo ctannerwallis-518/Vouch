@@ -255,6 +255,65 @@ function Auth({ inviteUserId }) {
   );
 }
 
+function OwnArchive({ boards, canPublish, onRepublish, onDelete }) {
+  const [open, setOpen] = useState(false);
+  const inactive = boards.filter(b => !b.is_active && b.published_at);
+  if (!inactive.length) return null;
+  return (
+    <div style={{ marginBottom: 32 }}>
+      <button onClick={() => setOpen(o => !o)} style={{ display: "flex", alignItems: "center", gap: 10, background: "transparent", border: "none", cursor: "pointer", padding: "10px 0", width: "100%" }}>
+        <div style={{ flex: 1, height: 1, background: T.paperDark }} />
+        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, whiteSpace: "nowrap" }}>{open ? "Hide Previous Vouches ▲" : "Previous Vouches ▼"}</div>
+        <div style={{ flex: 1, height: 1, background: T.paperDark }} />
+      </button>
+      {open && (
+        <div style={{ marginTop: 8 }}>
+          {inactive.reduce((acc, b) => {
+            const d = new Date(b.published_at);
+            const key = d.toLocaleString("en-US", { month: "long" }) + " " + d.getFullYear();
+            const existing = acc.find(g => g.key === key);
+            if (existing) existing.boards.push(b);
+            else acc.push({ key, boards: [b] });
+            return acc;
+          }, []).map(({ key: monthYear, boards: mBoards }) => (
+            <div key={monthYear} style={{ marginBottom: 32 }}>
+              <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 10, letterSpacing: "0.18em", color: T.inkMid, borderBottom: "2px solid " + T.ink, paddingBottom: 8, marginBottom: 16 }}>{monthYear}</div>
+              {mBoards.map(b => {
+                const theme = (b.theme && b.theme !== "Other") ? b.theme : (b.name || "Vouch");
+                const items = (b.vouch_board_items || []).sort((a,x) => a.position - x.position).slice(0,5);
+                return (
+                  <div key={b.id} style={{ marginBottom: 28 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                      <div>
+                        <div style={{ fontFamily: "'Times New Roman',Times,serif", fontWeight: 900, fontSize: 20, color: T.ink }}>{theme}</div>
+                        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.12em", color: T.inkLight, marginTop: 2 }}>{new Date(b.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
+                        {b.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkMid, marginTop: 3 }}>{b.description}</div>}
+                      </div>
+                      <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                        <button className="btn btn-solid" style={{ padding: "4px 12px", fontSize: 10, opacity: canPublish ? 1 : 0.4, cursor: canPublish ? "pointer" : "not-allowed" }} onClick={() => canPublish && onRepublish(b)}>Republish</button>
+                        <button onClick={() => { if (window.confirm("Delete this Vouch permanently?")) onDelete(b); }} style={{ padding: "4px 12px", fontSize: 10, fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", background: "transparent", border: "1px solid " + T.paperDark, color: T.inkMid, cursor: "pointer" }}>Delete</button>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      {items.map((item, idx) => (
+                        <div key={idx} style={{ flexShrink: 0, flex: 1 }}>
+                          {item.poster ? <img src={item.poster} alt={item.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: "1px solid " + T.paperDark, display: "block" }} onError={e => e.target.style.display = "none"} />
+                            : <div style={{ width: "100%", aspectRatio: "2/3", background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 4 }}>{item.title}</div>}
+                          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: T.inkFaint, marginTop: 3, textAlign: "center", lineHeight: 1.3 }}>{item.title}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PreviousVouches({ userId, onDudeSame, myReactions, queue, onAddToQueue, onMusicOpen }) {
   const [boards, setBoards] = useState([]);
   const [open, setOpen] = useState(false);
@@ -3490,7 +3549,6 @@ export default function Vouch() {
               Buddies
               {pendingIn.length > 0 && <span style={{ position: "absolute", top: 5, right: 5, background: tab === "friends" ? T.bg : T.ink, borderRadius: "50%", width: 6, height: 6, display: "inline-block" }} />}
             </button>
-            <button className={`nav-btn${tab === "archive" ? " active" : ""}`} onClick={() => { setTab("archive"); setViewing(null); window.history.pushState({tab:"archive"}, "", "/"); scrollToTop(); }}>Archive</button>
             <button className={`nav-btn${tab === "settings" ? " active" : ""}`} onClick={() => { setTab("settings"); setViewing(null); window.history.pushState({tab:"settings"}, "", "/"); scrollToTop(); }}>Settings</button>
 
           </nav>
@@ -3527,56 +3585,6 @@ export default function Vouch() {
                 ? <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: "#7a7568", padding: "24px 0" }}>Add some buddies to see their activity here.</div>
                 : <BuddyFeed buddies={buddies} selfId={userId} selfName={user?.displayName} selfAvatar={user?.avatarUrl} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId, true); window.scrollTo(0,0); }} onDudeSame={dudeSame} onAddToQueue={addToQueue} queue={queue} myReactions={myReactions} onShelfExtras={setShelfExtras} onMusicOpen={openMusicUrl} />
               }
-            </div>
-          )}
-          {tab === "archive" && !viewing && (
-            <div style={{ maxWidth: 540, margin: "32px auto" }}>
-              <div className="board-name" style={{ fontSize: 28, marginBottom: 8 }}>Your Archive</div>
-              <div className="board-sub" style={{ marginBottom: 32 }}>Every Vouch you have published</div>
-              {boardArchive.length === 0 && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight }}>No archived boards yet.</div>}
-              {boardArchive.reduce((acc, b) => {
-                const d = b.published_at ? new Date(b.published_at) : null;
-                const key = d ? d.toLocaleString("en-US", { month: "long" }) + " " + d.getFullYear() : "Unpublished";
-                const existing = acc.find(g => g.key === key);
-                if (existing) existing.boards.push(b);
-                else acc.push({ key, boards: [b] });
-                return acc;
-              }, []).map(({ key: monthYear, boards }) => (
-                <div key={monthYear} style={{ marginBottom: 40 }}>
-                  <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 10, letterSpacing: "0.18em", color: T.inkMid, borderBottom: "2px solid " + T.ink, paddingBottom: 8, marginBottom: 20 }}>{monthYear}</div>
-                  {boards.map(b => (
-                    <div key={b.id} style={{ marginBottom: 32 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                        <div>
-                          <div style={{ fontFamily: "'Times New Roman',Times,serif", fontWeight: 900, fontSize: 22, color: T.ink }}>{(b.theme && b.theme !== "Other") ? b.theme : (b.name || "Untitled Vouch")}</div>
-                          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.12em", color: T.inkLight, marginTop: 3 }}>
-                            {b.published_at ? new Date(b.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : ""}
-                            {b.is_active && <span style={{ marginLeft: 8, color: "#c9a820", fontWeight: 700 }}>Active</span>}
-                          </div>
-                          {b.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkMid, marginTop: 4 }}>{b.description}</div>}
-                        </div>
-                        {!b.is_active && (
-                          <button className="btn btn-solid" style={{ padding: "6px 14px", flexShrink: 0, opacity: canPublish ? 1 : 0.6, cursor: canPublish ? "pointer" : "not-allowed", background: canPublish ? undefined : "transparent", color: canPublish ? undefined : T.inkMid, border: canPublish ? undefined : `1px solid ${T.paperDark}` }} onClick={() => canPublish && republishBoard(b)}>
-                            Republish
-                          </button>
-                        )}
-                      </div>
-                      {b.vouch_board_items && b.vouch_board_items.length > 0 && (
-                        <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4 }}>
-                          {b.vouch_board_items.slice().sort((a,x) => a.position - x.position).slice(0,5).map((item, i) => (
-                            <div key={i} style={{ flexShrink: 0, width: 60 }}>
-                              {item.poster
-                                ? <img src={item.poster} alt={item.title} style={{ width: 60, height: 84, objectFit: "cover", border: "1px solid " + T.paperDark, display: "block" }} onError={e => e.target.style.display = "none"} />
-                                : <div style={{ width: 60, height: 84, background: T.paperDark, border: "1px solid " + T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 4 }}>{item.title}</div>}
-                              <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: T.inkFaint, marginTop: 4, textAlign: "center", lineHeight: 1.3 }}>{item.title}</div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ))}
             </div>
           )}
           {tab === "settings" && !viewing && (
@@ -3863,6 +3871,9 @@ export default function Vouch() {
                 ) : null}
                 {viewing && !isOwn && (
                   <PreviousVouches userId={viewing.userId} onDudeSame={dudeSame} myReactions={myReactions} queue={queue} onAddToQueue={addToQueue} onMusicOpen={openMusicUrl} />
+                )}
+                {isOwn && boardArchive.filter(b => !b.is_active && b.published_at).length > 0 && (
+                  <OwnArchive boards={boardArchive} canPublish={canPublish} onRepublish={republishBoard} onDelete={async (b) => { await supabase.from("vouch_board_items").delete().eq("board_id", b.id); await supabase.from("vouch_boards").delete().eq("id", b.id); setBoardArchive(prev => prev.filter(x => x.id !== b.id)); }} />
                 )}
 
                 {(() => {
