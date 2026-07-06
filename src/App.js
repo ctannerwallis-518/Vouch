@@ -2466,6 +2466,7 @@ export default function Vouch() {
   const [showBuddyList,  setShowBuddyList]  = useState(false);
   const [buddySearch,    setBuddySearch]    = useState("");
   const [shareModal,     setShareModal]     = useState(false);
+  const [shareCardUrl,   setShareCardUrl]   = useState(null);
   const [avatarPicker,   setAvatarPicker]   = useState(false);
   const [avatarLightbox, setAvatarLightbox] = useState(null);
   const [showContactModal, setShowContactModal] = useState(false);
@@ -3144,7 +3145,7 @@ export default function Vouch() {
       ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 38px Georgia";
       ctx.fillText("@" + shareUsername, 72, 516);
 
-      const PAD = 72, INNER = W - PAD * 2;
+      const PAD = 72;
 
       if (tileCount === 1) {
         // Single tile — centered, large
@@ -3282,6 +3283,7 @@ export default function Vouch() {
   const doShare = async (canvas, shareUrl, shareName) => {
     try { await navigator.clipboard.writeText(shareUrl); } catch(e) {}
     canvas.toBlob(async (blob) => {
+      try { const previewUrl = URL.createObjectURL(blob); setShareCardUrl(previewUrl); } catch(e) {}
       const file = new File([blob], "vouch-board.png", { type: "image/png" });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
@@ -4332,6 +4334,11 @@ export default function Vouch() {
                 </div>
                 <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
                   <button className="btn btn-solid" style={{ flex: 1, padding: "12px", fontSize: "10px", letterSpacing: "0.15em" }} onClick={() => { navigator.clipboard?.writeText(window.location.origin + "/@" + user?.username); alert("Link copied!"); }}>Copy Link</button>
+                  {shareCardUrl && (
+                    <div style={{ marginBottom: 16, textAlign: "center" }}>
+                      <img src={shareCardUrl} alt="Share card preview" style={{ width: "100%", maxWidth: 320, border: `1px solid ${T.paperDark}`, display: "block", margin: "0 auto" }} />
+                    </div>
+                  )}
                   <button className="btn btn-ghost" style={{ flex: 1, padding: "12px", fontSize: "10px", letterSpacing: "0.15em" }} onClick={() => { shareBoard(); }}>Download Card</button>
                 </div>
                 {navigator.share && <button className="btn btn-ghost" style={{ width: "100%", padding: "12px", fontSize: "10px", letterSpacing: "0.15em" }} onClick={() => { navigator.share({ title: "Check out my Vouch", url: window.location.origin + "/@" + user?.username }); setShowShareNudge(false); }}>Share via...</button>}
@@ -4476,11 +4483,11 @@ export default function Vouch() {
           const shareUsername = user.username;
           const shareUrl = `${window.location.origin}/@${shareUsername}`;
           return (
-            <div className="modal-overlay" onClick={() => setShareModal(false)}>
+            <div className="modal-overlay" onClick={() => { setShareModal(false); setShareCardUrl(null); }}>
               <div className="modal" onClick={e => e.stopPropagation()}>
                 <div className="modal-head">
                   <div className="modal-title">Your Vouch is Live! Share it.</div>
-                  <button className="modal-x" onClick={() => setShareModal(false)}>×</button>
+                  <button className="modal-x" onClick={() => { setShareModal(false); setShareCardUrl(null); }}>×</button>
                 </div>
                 <div className="modal-body">
 
