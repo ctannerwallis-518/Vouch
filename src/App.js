@@ -3189,7 +3189,6 @@ export default function Vouch() {
         const thumbW_sq = 144, thumbH_sq = 144;
         const rowH = 180;
         const startY = 570;
-        const textX = PAD + thumbW_sq + 32;
 
         items.forEach((item, i) => {
           const y = startY + i * (rowH + 2);
