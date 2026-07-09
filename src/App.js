@@ -3692,7 +3692,12 @@ export default function Vouch() {
                         if (!profileUsername.trim() || !profileDisplayName.trim()) { setProfileSaveMsg("Both fields are required."); return; }
                         const { data: existing } = await supabase.from("profiles").select("id").eq("username", profileUsername).neq("id", userId).maybeSingle();
                         if (existing) { setProfileSaveMsg("That username is taken — try another."); return; }
-                        await supabase.from("profiles").update({ username: profileUsername, display_name: profileDisplayName }).eq("id", userId);
+                        const { error } = await supabase.from("profiles").update({ username: profileUsername, display_name: profileDisplayName }).eq("id", userId);
+                        if (error) {
+                          console.error("Profile update failed:", error);
+                          setProfileSaveMsg("Something went wrong saving — try again.");
+                          return;
+                        }
                         setUser(prev => ({ ...prev, username: profileUsername, displayName: profileDisplayName }));
                         setEditingProfile(false);
                         setProfileSaveMsg("");
