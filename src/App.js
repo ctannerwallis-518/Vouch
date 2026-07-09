@@ -3163,7 +3163,12 @@ export default function Vouch() {
           imgH = isMusicCat ? 560 : 664;
         }
         const imgX = (W - imgW) / 2;
-        const imgY = 520 + (maxH - imgH) / 2;
+
+        const topBound = 560;
+        const bottomBoundSingle = 1520;
+        const textBlockHeight = 48 + (item?.subtitle ? 108 : 60) + 24;
+        const totalBlockHeight = imgH + textBlockHeight;
+        const imgY = topBound + Math.max(0, (bottomBoundSingle - topBound - totalBlockHeight) / 2);
 
         ctx.fillStyle = "#111008";
         ctx.fillRect(imgX, imgY, imgW, imgH);
@@ -3172,7 +3177,7 @@ export default function Vouch() {
           ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, imgX, imgY, imgW, imgH);
         }
 
-        const labelY = 520 + maxH + 48;
+        const labelY = imgY + imgH + 48;
         ctx.fillStyle = "#111008"; ctx.font = "900 64px 'Times New Roman', serif";
         ctx.textAlign = "center";
         const shortTitle = (item?.title || "").slice(0, 22) + ((item?.title || "").length > 22 ? "…" : "");
