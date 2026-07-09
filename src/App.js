@@ -3214,12 +3214,19 @@ export default function Vouch() {
             ctx.drawImage(img, sx, sy, sw, sh, PAD, thumbY, tw, th);
           }
 
-          // Title
+          // Title — shrink font until the full title fits on one line, never truncated
           const titleX = PAD + thumbW_sq + 28;
           const titleY = y + 48;
-          ctx.fillStyle = "#111008"; ctx.font = "900 48px 'Times New Roman', serif";
-          const shortTitle = (item.title || "").slice(0, 20) + ((item.title || "").length > 20 ? "…" : "");
-          ctx.fillText(shortTitle, titleX, titleY);
+          const maxTitleWidth = W - PAD - titleX;
+          const fullTitle = item.title || "";
+          let titleFontSize = 48;
+          ctx.fillStyle = "#111008";
+          ctx.font = `900 ${titleFontSize}px 'Times New Roman', serif`;
+          while (ctx.measureText(fullTitle).width > maxTitleWidth && titleFontSize > 22) {
+            titleFontSize -= 2;
+            ctx.font = `900 ${titleFontSize}px 'Times New Roman', serif`;
+          }
+          ctx.fillText(fullTitle, titleX, titleY);
 
           // Subtitle
           if (item.subtitle) {
