@@ -3151,25 +3151,28 @@ export default function Vouch() {
         // Single tile — centered, large
         const item = items[0];
         const isMusicCat = musicCats.includes(item?.category);
-        const isSquare = isMusicCat;
-        const imgW = isSquare ? 480 : 360;
-        const imgH = isSquare ? 480 : 520;
+        const img = posterImgs[0];
+        const maxW = 620, maxH = 760;
+        let imgW, imgH;
+        if (img) {
+          const ir = img.naturalWidth / img.naturalHeight;
+          if (ir > maxW / maxH) { imgW = maxW; imgH = maxW / ir; }
+          else { imgH = maxH; imgW = maxH * ir; }
+        } else {
+          imgW = isMusicCat ? 560 : 460;
+          imgH = isMusicCat ? 560 : 664;
+        }
         const imgX = (W - imgW) / 2;
-        const imgY = 580;
+        const imgY = 520 + (maxH - imgH) / 2;
 
         ctx.fillStyle = "#111008";
         ctx.fillRect(imgX, imgY, imgW, imgH);
 
-        const img = posterImgs[0];
         if (img) {
-          const ir = img.naturalWidth / img.naturalHeight, cr = imgW / imgH;
-          let sx, sy, sw, sh;
-          if (ir > cr) { sh = img.naturalHeight; sw = sh * cr; sx = (img.naturalWidth - sw) / 2; sy = 0; }
-          else { sw = img.naturalWidth; sh = sw / cr; sx = 0; sy = (img.naturalHeight - sh) / 2; }
-          ctx.drawImage(img, sx, sy, sw, sh, imgX, imgY, imgW, imgH);
+          ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, imgX, imgY, imgW, imgH);
         }
 
-        const labelY = imgY + imgH + 48;
+        const labelY = 520 + maxH + 48;
         ctx.fillStyle = "#111008"; ctx.font = "900 64px 'Times New Roman', serif";
         ctx.textAlign = "center";
         const shortTitle = (item?.title || "").slice(0, 22) + ((item?.title || "").length > 22 ? "…" : "");
