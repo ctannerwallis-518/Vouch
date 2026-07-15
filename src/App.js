@@ -2467,6 +2467,7 @@ export default function Vouch() {
   const [buddySearch,    setBuddySearch]    = useState("");
   const [shareModal,     setShareModal]     = useState(false);
   const [shareCardUrl,   setShareCardUrl]   = useState(null);
+  const [isAdmin,        setIsAdmin]        = useState(false);
   const [avatarPicker,   setAvatarPicker]   = useState(false);
   const [avatarLightbox, setAvatarLightbox] = useState(null);
   const [showContactModal, setShowContactModal] = useState(false);
@@ -2896,7 +2897,8 @@ export default function Vouch() {
         }
         // Never overwrite a custom (non-Google) avatar on login
         // Re-fetch fresh profile to avoid stale data setting wrong username/avatar
-        const { data: freshForState } = await supabase.from("profiles").select("username, display_name, avatar_url").eq("id", uid).maybeSingle();
+        const { data: freshForState } = await supabase.from("profiles").select("username, display_name, avatar_url, is_admin").eq("id", uid).maybeSingle();
+        if (freshForState?.is_admin) setIsAdmin(true);
         const finalUsername = freshForState?.username || existingProfile?.username || session.user.email.split("@")[0];
         const finalDisplayName = freshForState?.display_name || existingProfile?.display_name || session.user.user_metadata?.full_name || session.user.email.split("@")[0];
         const finalAvatar = freshForState?.avatar_url || avatarUrl;
@@ -3517,6 +3519,7 @@ export default function Vouch() {
   }, [newAgreements.length, pendingIn.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const canPublish = (() => {
+    if (isAdmin) return true;
     if (!activeBoard || !activeBoard.published_at) return true;
     const publishedAt = new Date(activeBoard.published_at);
     const pubDay = new Date(publishedAt.getFullYear(), publishedAt.getMonth(), publishedAt.getDate());
