@@ -2468,6 +2468,7 @@ export default function Vouch() {
   const [shareModal,     setShareModal]     = useState(false);
   const [shareCardUrl,   setShareCardUrl]   = useState(null);
   const [isAdmin,        setIsAdmin]        = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(false);
   const [avatarPicker,   setAvatarPicker]   = useState(false);
   const [avatarLightbox, setAvatarLightbox] = useState(null);
   const [showContactModal, setShowContactModal] = useState(false);
@@ -3012,13 +3013,14 @@ export default function Vouch() {
         const now = Math.floor(Date.now() / 1000);
         if (session.expires_at && session.expires_at < now) {
           const { data: { session: refreshed } } = await supabase.auth.refreshSession();
-          setUserFromSession(refreshed);
+          await setUserFromSession(refreshed);
         } else {
-          setUserFromSession(session);
+          await setUserFromSession(session);
         }
       } else {
         setUserFromSession(null);
       }
+      setSessionChecked(true);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT") { setUser(null); setUserId(null); setBoard({ ...EMPTY_BOARD }); return; }
@@ -3576,6 +3578,7 @@ export default function Vouch() {
     }
   }, [user, pathUserId, userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  if (!sessionChecked) return <><Styles /><div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#C8C2B4" }}><div style={{ fontFamily: "'Times New Roman', serif", fontStyle: "italic", fontSize: 18, color: "#7a7568" }}>Vouch.</div></div></>;
   if (!user) {
     if (isStartPage) {
       return <StartPage onSignUp={() => {
