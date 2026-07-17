@@ -1419,7 +1419,10 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
     return next;
   });
 
+  const [publishing, setPublishing] = useState(false);
   const handlePublish = () => {
+    if (publishing) return;
+    setPublishing(true);
     if (!theme) { alert("Pick a title for your Vouch."); return; }
     if (theme === "Other" && !name.trim()) { alert("Give your custom Vouch a name — like 'Summer of 2009' or 'Scorsese’s Best'"); return; }
     if (items.length === 0) { alert("Add at least one title to your Vouch."); return; }
@@ -1518,9 +1521,9 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
 
           <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
             {existing
-              ? <button onClick={handlePublish} disabled={items.length === 0} style={{ flex: 1, padding: "12px", background: items.length > 0 ? T.ink : "transparent", border: `2px solid ${items.length > 0 ? "#c9a820" : T.paperDark}`, color: items.length > 0 ? "#c9a820" : T.inkFaint, fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", cursor: items.length > 0 ? "pointer" : "not-allowed", transition: "all 0.2s" }}>Save Changes</button>
+              ? <button onClick={handlePublish} disabled={items.length === 0 || publishing} style={{ flex: 1, padding: "12px", background: items.length > 0 ? T.ink : "transparent", border: `2px solid ${items.length > 0 ? "#c9a820" : T.paperDark}`, color: items.length > 0 ? "#c9a820" : T.inkFaint, fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", cursor: items.length > 0 ? "pointer" : "not-allowed", transition: "all 0.2s" }}>{publishing ? "Saving…" : "Save Changes"}</button>
               : canPublish
-                ? <button onClick={handlePublish} disabled={items.length === 0} style={{ flex: 1, padding: "12px", background: items.length > 0 ? T.ink : "transparent", border: `2px solid ${items.length > 0 ? "#c9a820" : T.paperDark}`, color: items.length > 0 ? "#c9a820" : T.inkFaint, fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", cursor: items.length > 0 ? "pointer" : "not-allowed", transition: "all 0.2s" }}>Publish Vouch</button>
+                ? <button onClick={handlePublish} disabled={items.length === 0 || publishing} style={{ flex: 1, padding: "12px", background: items.length > 0 ? T.ink : "transparent", border: `2px solid ${items.length > 0 ? "#c9a820" : T.paperDark}`, color: items.length > 0 ? "#c9a820" : T.inkFaint, fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", cursor: items.length > 0 ? "pointer" : "not-allowed", transition: "all 0.2s" }}>{publishing ? "Publishing…" : "Publish Vouch"}</button>
                 : <div style={{ flex: 1, padding: "12px", background: "transparent", border: `2px solid ${T.paperDark}`, color: T.inkFaint, fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}><span>🔒</span><span style={{ whiteSpace: "nowrap" }}>Next Vouch unlocks {nextPublishDate}</span></div>
             }
             {!existing && <button onClick={() => { onClose(); }} style={{ padding: "12px 16px", background: "transparent", border: `1px solid ${T.paperDark}`, color: T.inkMid, fontFamily: "'Spectral SC',serif",ontSize: "9px", letterSpacing: "0.18em", cursor: "pointer" }}>Save Draft</button>}
