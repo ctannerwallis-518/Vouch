@@ -392,19 +392,27 @@ function PublicBoard({ inviteUserId, onSignUp }) {
           .from("profiles").select("id, username, display_name, avatar_url").eq("id", inviteUserId).maybeSingle();
         if (prof) setProfile(prof);
         // Load buddies for public display
+        // Load actual buddies first, then fill to 20 with other users
         const { data: buddyRows } = await supabase
           .from("buddies")
           .select("requester_id, receiver_id")
           .or(`requester_id.eq.${inviteUserId},receiver_id.eq.${inviteUserId}`)
           .eq("status", "accepted");
-        if (buddyRows && buddyRows.length > 0) {
-          const buddyIds = buddyRows.map(b =>
-            b.requester_id === inviteUserId ? b.receiver_id : b.requester_id
-          ).filter(Boolean);
-          const { data: profiles } = await supabase
-            .from("profiles").select("id, display_name, avatar_url, created_at").in("id", buddyIds).order("created_at", { ascending: false });
-          if (profiles) setPublicBuddies(profiles);
-        }
+        const buddyIds = (buddyRows || []).map(b =>
+          b.requester_id === inviteUserId ? b.receiver_id : b.requester_id
+        ).filter(Boolean);
+        const { data: buddyProfiles } = buddyIds.length > 0 ? await supabase
+          .from("profiles").select("id, display_name, avatar_url, created_at").in("id", buddyIds) : { data: [] };
+        // Fill remaining slots with other users (exclude the profile owner and already-shown buddies)
+        const excludeIds = [inviteUserId, ...buddyIds];
+        const needed = Math.max(0, 20 - (buddyProfiles || []).length);
+        const { data: otherProfiles } = needed > 0 ? await supabase
+          .from("profiles").select("id, display_name, avatar_url, created_at")
+          .not("id", "in", `(${excludeIds.join(",")})`)
+          .order("created_at", { ascending: false })
+          .limit(needed) : { data: [] };
+        const combined = [...(buddyProfiles || []), ...(otherProfiles || [])];
+        if (combined.length > 0) setPublicBuddies(combined);
         const { data: activeVouchBoard } = await supabase
           .from("vouch_boards")
           .select("*, vouch_board_items(*)")
