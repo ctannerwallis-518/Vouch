@@ -3154,11 +3154,11 @@ export default function Vouch() {
 
       // Theme name (big)
       ctx.fillStyle = "#111008"; ctx.font = "900 72px 'Times New Roman', serif";
-      ctx.fillText(boardTheme, 72, 460);
+      ctx.fillText(boardTheme, 72, 490);
 
       // Username
       ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 38px Georgia";
-      ctx.fillText("@" + shareUsername, 72, 516);
+      ctx.fillText("@" + shareUsername, 72, 548);
 
       const PAD = 72;
 
