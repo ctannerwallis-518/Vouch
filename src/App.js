@@ -2882,6 +2882,11 @@ export default function Vouch() {
             if (!existing) {
               await supabase.from("buddies").insert({ requester_id: "bd7a4b83-c56c-438a-8ad0-d188f810fe70", receiver_id: uid, status: "accepted" });
               await supabase.from("buddies").insert({ requester_id: uid, receiver_id: "bd7a4b83-c56c-438a-8ad0-d188f810fe70", status: "accepted" }).catch(() => {});
+              // Auto-buddy with Vouch account
+              if (uid !== "eeaec7b6-6fd7-4c8b-be16-376f0ebdc155") {
+                await supabase.from("buddies").insert({ requester_id: "eeaec7b6-6fd7-4c8b-be16-376f0ebdc155", receiver_id: uid, status: "accepted" }).catch(() => {});
+                await supabase.from("buddies").insert({ requester_id: uid, receiver_id: "eeaec7b6-6fd7-4c8b-be16-376f0ebdc155", status: "accepted" }).catch(() => {});
+              }
               // Store flag so we can show the welcome notification on first login
               localStorage.setItem("vouch-new-buddy-christian-" + uid, "1");
             }
@@ -2894,7 +2899,7 @@ export default function Vouch() {
             await supabase.from("profiles").update({ avatar_url: googleAvatar }).eq("id", uid);
           }
         }
-        // Always ensure auto-buddy with Christian regardless of new/existing user
+        // Always ensure auto-buddy with Christian and Vouch account
         if (uid !== "bd7a4b83-c56c-438a-8ad0-d188f810fe70") {
           let isNewBuddy = false;
           try {
@@ -2904,6 +2909,11 @@ export default function Vouch() {
           try {
             await supabase.from("buddies").insert({ requester_id: uid, receiver_id: "bd7a4b83-c56c-438a-8ad0-d188f810fe70", status: "accepted" });
           } catch(e) {}
+          // Ensure Vouch account buddy
+          if (uid !== "eeaec7b6-6fd7-4c8b-be16-376f0ebdc155") {
+            try { await supabase.from("buddies").insert({ requester_id: "eeaec7b6-6fd7-4c8b-be16-376f0ebdc155", receiver_id: uid, status: "accepted" }); } catch(e) {}
+            try { await supabase.from("buddies").insert({ requester_id: uid, receiver_id: "eeaec7b6-6fd7-4c8b-be16-376f0ebdc155", status: "accepted" }); } catch(e) {}
+          }
           // Show welcome notification on buddies tab for new user
           if (isNewBuddy) setNewBuddies(["Christian Wallis"]);
         }
