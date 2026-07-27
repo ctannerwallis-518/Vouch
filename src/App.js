@@ -3195,14 +3195,20 @@ export default function Vouch() {
         const totalBlockHeight = imgH + textBlockHeight;
         const imgY = topBound + Math.max(0, (bottomBoundSingle - topBound - totalBlockHeight) / 2);
 
+        ctx.save();
+        ctx.shadowColor = "rgba(0,0,0,0.35)";
+        ctx.shadowBlur = 40;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 12;
         ctx.fillStyle = "#111008";
         ctx.fillRect(imgX, imgY, imgW, imgH);
 
         if (img) {
+        ctx.restore();
           ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, imgX, imgY, imgW, imgH);
         }
 
-        const labelY = imgY + imgH + 48;
+        const labelY = imgY + imgH + 72;
         ctx.fillStyle = "#111008"; ctx.font = "900 64px 'Times New Roman', serif";
         ctx.textAlign = "center";
         const shortTitle = (item?.title || "").slice(0, 22) + ((item?.title || "").length > 22 ? "…" : "");
