@@ -2624,7 +2624,7 @@ export default function Vouch() {
     await loadVouchBoards(userId);
     setBoardEditor(false);
     setEditingBoard(null);
-    setTimeout(() => { setShareModal(true); setTimeout(() => shareBoard(), 400); }, 300);
+    setTimeout(() => setShareModal(true), 300);
   };
 
   const removeActiveVouch = async (mode) => {
@@ -3053,6 +3053,7 @@ export default function Vouch() {
   const signOut = async () => { await supabase.auth.signOut(); setUser(null); };
 
   useEffect(() => { musicPrefRef.current = musicPreference; }, [musicPreference]);
+  useEffect(() => { if (shareModal) { setTimeout(() => shareBoard(), 300); } }, [shareModal]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isMusicUrl = (url) => url && url.includes("open.spotify.com");
 
@@ -3902,7 +3903,7 @@ export default function Vouch() {
                         : <button onClick={() => { sendBuddyRequest(viewing.userId); setSentRequests(prev => [...prev, viewing.userId]); }} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "6px 14px", background: "transparent", color: T.ink, border: `1px solid ${T.ink}`, cursor: "pointer", whiteSpace: "nowrap" }}>+ Add Buddies</button>;
                     })()}
                     {!viewing && (
-                      <button onClick={() => { setShareModal(true); setTimeout(() => shareBoard(), 400); }} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "6px 14px", background: T.ink, color: T.bg, border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>Share</button>
+                      <button onClick={() => setShareModal(true)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "6px 14px", background: T.ink, color: T.bg, border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>Share</button>
                     )}
                   </div>
                 </div>
