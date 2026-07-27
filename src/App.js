@@ -2624,7 +2624,7 @@ export default function Vouch() {
     await loadVouchBoards(userId);
     setBoardEditor(false);
     setEditingBoard(null);
-    setTimeout(() => setShareModal(true), 300);
+    setTimeout(() => { setShareModal(true); setTimeout(() => shareBoard(), 400); }, 300);
   };
 
   const removeActiveVouch = async (mode) => {
@@ -3911,7 +3911,7 @@ export default function Vouch() {
                         : <button onClick={() => { sendBuddyRequest(viewing.userId); setSentRequests(prev => [...prev, viewing.userId]); }} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "6px 14px", background: "transparent", color: T.ink, border: `1px solid ${T.ink}`, cursor: "pointer", whiteSpace: "nowrap" }}>+ Add Buddies</button>;
                     })()}
                     {!viewing && (
-                      <button onClick={() => setShareModal(true)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "6px 14px", background: T.ink, color: T.bg, border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>Share</button>
+                      <button onClick={() => { setShareModal(true); setTimeout(() => shareBoard(), 400); }} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", padding: "6px 14px", background: T.ink, color: T.bg, border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>Share</button>
                     )}
                   </div>
                 </div>
@@ -4386,11 +4386,18 @@ export default function Vouch() {
                 </div>
                 <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
                   <button className="btn btn-solid" style={{ flex: 1, padding: "12px", fontSize: "10px", letterSpacing: "0.15em" }} onClick={() => { navigator.clipboard?.writeText(window.location.origin + "/@" + user?.username); alert("Link copied!"); }}>Copy Link</button>
-                  {shareCardUrl && (
-                    <div style={{ marginBottom: 16, textAlign: "center" }}>
-                      <img src={shareCardUrl} alt="Share card preview" style={{ width: "100%", maxWidth: 320, border: `1px solid ${T.paperDark}`, display: "block", margin: "0 auto" }} />
-                    </div>
-                  )}
+                  <div style={{ marginBottom: 16, textAlign: "center" }}>
+                    {shareCardUrl ? (
+                      <div style={{ position: "relative", display: "inline-block" }}>
+                        <img src={shareCardUrl} alt="Share card preview" style={{ width: "100%", maxWidth: 280, border: `1px solid ${T.paperDark}`, display: "block", margin: "0 auto" }} />
+                        <a href={shareCardUrl} download="vouch-card.png" style={{ position: "absolute", bottom: 8, right: 8, background: "rgba(17,16,8,0.85)", borderRadius: "50%", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none" }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C8C2B4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        </a>
+                      </div>
+                    ) : (
+                      <div style={{ width: 280, height: 160, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto", fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkFaint }}>Generating card…</div>
+                    )}
+                  </div>
                   <button className="btn btn-ghost" style={{ flex: 1, padding: "12px", fontSize: "10px", letterSpacing: "0.15em" }} onClick={() => { shareBoard(); }}>Download Card</button>
                 </div>
                 {navigator.share && <button className="btn btn-ghost" style={{ width: "100%", padding: "12px", fontSize: "10px", letterSpacing: "0.15em" }} onClick={() => { navigator.share({ title: "Check out my Vouch", url: window.location.origin + "/@" + user?.username }); setShowShareNudge(false); }}>Share via...</button>}
