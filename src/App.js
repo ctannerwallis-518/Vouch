@@ -3331,10 +3331,16 @@ export default function Vouch() {
       if (!blob) return;
       try {
         const previewUrl = URL.createObjectURL(blob);
-        setShareCardUrl(previewUrl);
-        const img = document.getElementById("vouch-card-preview"); if (img) { img.src = previewUrl; img.style.display = "block"; }
-        const ph = document.getElementById("vouch-card-placeholder"); if (ph) ph.style.display = "none";
         window._vouchCardBlob = blob;
+        window._vouchPreviewUrl = previewUrl;
+        // Force update via DOM directly
+        const previewImg = document.getElementById("vouch-card-preview");
+        if (previewImg) { previewImg.src = previewUrl; previewImg.style.display = "block"; }
+        const placeholder = document.getElementById("vouch-card-placeholder");
+        if (placeholder) placeholder.style.display = "none";
+        const downloadBtn = document.getElementById("vouch-download-btn");
+        if (downloadBtn) { downloadBtn.href = previewUrl; downloadBtn.style.display = "flex"; }
+        setShareCardUrl(previewUrl);
         window._vouchShareName = shareName;
       } catch(e) { console.error("preview error", e); }
     }, "image/png");
@@ -4372,20 +4378,15 @@ export default function Vouch() {
                 <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
                   <button className="btn btn-solid" style={{ flex: 1, padding: "12px", fontSize: "10px", letterSpacing: "0.15em" }} onClick={() => { navigator.clipboard?.writeText(window.location.origin + "/@" + user?.username); alert("Link copied!"); }}>Copy Link</button>
                   <div style={{ marginBottom: 16 }}>
-                    {shareCardUrl ? (
-                      <div>
-                        <img id="vouch-card-preview" src={shareCardUrl || ""} alt="Share card preview" style={{ width: "100%", border: `1px solid ${T.paperDark}`, display: shareCardUrl ? "block" : "none", marginBottom: 12 }} />
-                        <div style={{ display: "flex", gap: 8 }}>
-                          <a href={shareCardUrl} download="vouch-card.png" className="btn btn-solid" style={{ flex: 1, padding: "12px", fontSize: "10px", letterSpacing: "0.15em", textAlign: "center", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            Save to Photos
-                          </a>
-                          {navigator.share && window._vouchCardBlob && <button className="btn btn-ghost" style={{ flex: 1, padding: "12px", fontSize: "10px", letterSpacing: "0.15em" }} onClick={async () => { try { const file = new File([window._vouchCardBlob], "vouch-card.png", { type: "image/png" }); await navigator.share({ files: [file], title: `${window._vouchShareName || user?.displayName}'s Vouch Board` }); } catch(e) {} }}>Share…</button>}
-                        </div>
-                      </div>
-                    ) : (
-                      <div id="vouch-card-placeholder" style={{ height: 120, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkFaint }}>Generating your card…</div>
-                    )}
+                    <img id="vouch-card-preview" alt="Share card preview" style={{ width: "100%", border: `1px solid ${T.paperDark}`, display: "none", marginBottom: 12 }} />
+                    <div id="vouch-card-placeholder" style={{ height: 120, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkFaint }}>Generating your card…</div>
+                    <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                      <a id="vouch-download-btn" href="#" download="vouch-card.png" className="btn btn-solid" style={{ flex: 1, padding: "12px", fontSize: "10px", letterSpacing: "0.15em", textAlign: "center", textDecoration: "none", display: "none", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Save Image
+                      </a>
+                      <button className="btn btn-ghost" style={{ flex: 1, padding: "12px", fontSize: "10px", letterSpacing: "0.15em" }} onClick={async () => { if (window._vouchCardBlob) { try { const file = new File([window._vouchCardBlob], "vouch-card.png", { type: "image/png" }); await navigator.share({ files: [file], title: "My Vouch" }); } catch(e) {} } }}>Share…</button>
+                    </div>
                   </div>
                   <button className="btn btn-ghost" style={{ flex: 1, padding: "12px", fontSize: "10px", letterSpacing: "0.15em" }} onClick={() => { shareBoard(); }}>Download Card</button>
                 </div>
