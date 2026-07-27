@@ -3332,6 +3332,8 @@ export default function Vouch() {
       try {
         const previewUrl = URL.createObjectURL(blob);
         setShareCardUrl(previewUrl);
+        const img = document.getElementById("vouch-card-preview"); if (img) { img.src = previewUrl; img.style.display = "block"; }
+        const ph = document.getElementById("vouch-card-placeholder"); if (ph) ph.style.display = "none";
         window._vouchCardBlob = blob;
         window._vouchShareName = shareName;
       } catch(e) { console.error("preview error", e); }
@@ -4372,7 +4374,7 @@ export default function Vouch() {
                   <div style={{ marginBottom: 16 }}>
                     {shareCardUrl ? (
                       <div>
-                        <img src={shareCardUrl} alt="Share card preview" style={{ width: "100%", border: `1px solid ${T.paperDark}`, display: "block", marginBottom: 12 }} />
+                        <img id="vouch-card-preview" src={shareCardUrl || ""} alt="Share card preview" style={{ width: "100%", border: `1px solid ${T.paperDark}`, display: shareCardUrl ? "block" : "none", marginBottom: 12 }} />
                         <div style={{ display: "flex", gap: 8 }}>
                           <a href={shareCardUrl} download="vouch-card.png" className="btn btn-solid" style={{ flex: 1, padding: "12px", fontSize: "10px", letterSpacing: "0.15em", textAlign: "center", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -4382,7 +4384,7 @@ export default function Vouch() {
                         </div>
                       </div>
                     ) : (
-                      <div style={{ height: 120, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkFaint }}>Generating your card…</div>
+                      <div id="vouch-card-placeholder" style={{ height: 120, background: T.paperDark, id="vouch-card-placeholder" display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkFaint }}>Generating your card…</div>
                     )}
                   </div>
                   <button className="btn btn-ghost" style={{ flex: 1, padding: "12px", fontSize: "10px", letterSpacing: "0.15em" }} onClick={() => { shareBoard(); }}>Download Card</button>
