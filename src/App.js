@@ -2477,7 +2477,7 @@ export default function Vouch() {
   const [showBuddyList,  setShowBuddyList]  = useState(false);
   const [buddySearch,    setBuddySearch]    = useState("");
   const [shareModal,     setShareModal]     = useState(false);
-  const [shareCardUrl,   setShareCardUrl]   = useState(null);
+
   const [isAdmin,        setIsAdmin]        = useState(false);
   const [sessionChecked, setSessionChecked] = useState(false);
   const [avatarPicker,   setAvatarPicker]   = useState(false);
@@ -3340,7 +3340,7 @@ export default function Vouch() {
         if (placeholder) placeholder.style.display = "none";
         const downloadBtn = document.getElementById("vouch-download-btn");
         if (downloadBtn) { downloadBtn.href = previewUrl; downloadBtn.style.display = "flex"; }
-        setShareCardUrl(previewUrl);
+        
         window._vouchShareName = shareName;
       } catch(e) { console.error("preview error", e); }
     }, "image/png");
@@ -4381,7 +4381,7 @@ export default function Vouch() {
                     <img id="vouch-card-preview" alt="Share card preview" style={{ width: "100%", border: `1px solid ${T.paperDark}`, display: "none", marginBottom: 12 }} />
                     <div id="vouch-card-placeholder" style={{ height: 120, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkFaint }}>Generating your card…</div>
                     <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                      <a id="vouch-download-btn" href="#" download="vouch-card.png" className="btn btn-solid" style={{ flex: 1, padding: "12px", fontSize: "10px", letterSpacing: "0.15em", textAlign: "center", textDecoration: "none", display: "none", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                      <a id="vouch-download-btn" href="/" download="vouch-card.png" className="btn btn-solid" style={{ flex: 1, padding: "12px", fontSize: "10px", letterSpacing: "0.15em", textAlign: "center", textDecoration: "none", display: "none", alignItems: "center", justifyContent: "center", gap: 6 }}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         Save Image
                       </a>
@@ -4532,11 +4532,11 @@ export default function Vouch() {
           const shareUsername = user.username;
           const shareUrl = `${window.location.origin}/@${shareUsername}`;
           return (
-            <div className="modal-overlay" onClick={() => { setShareModal(false); setShareCardUrl(null); }}>
+            <div className="modal-overlay" onClick={() => { setShareModal(false); window._vouchCardBlob = null; window._vouchPreviewUrl = null; }}>
               <div className="modal" onClick={e => e.stopPropagation()}>
                 <div className="modal-head">
                   <div className="modal-title">Your Vouch is Live! Share it.</div>
-                  <button className="modal-x" onClick={() => { setShareModal(false); setShareCardUrl(null); }}>×</button>
+                  <button className="modal-x" onClick={() => { setShareModal(false); window._vouchCardBlob = null; window._vouchPreviewUrl = null; }}>×</button>
                 </div>
                 <div className="modal-body">
 
