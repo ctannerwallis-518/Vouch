@@ -3328,11 +3328,11 @@ export default function Vouch() {
   const doShare = async (canvas, shareUrl, shareName) => {
     try { await navigator.clipboard.writeText(shareUrl); } catch(e) {}
     canvas.toBlob(async (blob) => {
-      try { const previewUrl = URL.createObjectURL(blob); setShareCardUrl(previewUrl); } catch(e) {}
+      try { const previewUrl = URL.createObjectURL(blob); setShareCardUrl(previewUrl); window._vouchCardBlob = blob; window._vouchShareName = shareName; } catch(e) {}
       const file = new File([blob], "vouch-board.png", { type: "image/png" });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
-          await navigator.share({ files: [file], title: `${shareName}'s Vouch Board`, text: shareUrl });
+          // Card ready — user can now download or share from modal
           setTimeout(() => {
             try { navigator.clipboard.writeText(shareUrl); } catch(e) {}
           }, 800);
@@ -4386,16 +4386,20 @@ export default function Vouch() {
                 </div>
                 <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
                   <button className="btn btn-solid" style={{ flex: 1, padding: "12px", fontSize: "10px", letterSpacing: "0.15em" }} onClick={() => { navigator.clipboard?.writeText(window.location.origin + "/@" + user?.username); alert("Link copied!"); }}>Copy Link</button>
-                  <div style={{ marginBottom: 16, textAlign: "center" }}>
+                  <div style={{ marginBottom: 16 }}>
                     {shareCardUrl ? (
-                      <div style={{ position: "relative", display: "inline-block" }}>
-                        <img src={shareCardUrl} alt="Share card preview" style={{ width: "100%", maxWidth: 280, border: `1px solid ${T.paperDark}`, display: "block", margin: "0 auto" }} />
-                        <a href={shareCardUrl} download="vouch-card.png" style={{ position: "absolute", bottom: 8, right: 8, background: "rgba(17,16,8,0.85)", borderRadius: "50%", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none" }}>
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C8C2B4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        </a>
+                      <div>
+                        <img src={shareCardUrl} alt="Share card preview" style={{ width: "100%", border: `1px solid ${T.paperDark}`, display: "block", marginBottom: 12 }} />
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <a href={shareCardUrl} download="vouch-card.png" className="btn btn-solid" style={{ flex: 1, padding: "12px", fontSize: "10px", letterSpacing: "0.15em", textAlign: "center", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Save to Photos
+                          </a>
+                          {navigator.share && window._vouchCardBlob && <button className="btn btn-ghost" style={{ flex: 1, padding: "12px", fontSize: "10px", letterSpacing: "0.15em" }} onClick={async () => { try { const file = new File([window._vouchCardBlob], "vouch-card.png", { type: "image/png" }); await navigator.share({ files: [file], title: `${window._vouchShareName || user?.displayName}'s Vouch Board` }); } catch(e) {} }}>Share…</button>}
+                        </div>
                       </div>
                     ) : (
-                      <div style={{ width: 280, height: 160, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto", fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkFaint }}>Generating card…</div>
+                      <div style={{ height: 120, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkFaint }}>Generating your card…</div>
                     )}
                   </div>
                   <button className="btn btn-ghost" style={{ flex: 1, padding: "12px", fontSize: "10px", letterSpacing: "0.15em" }} onClick={() => { shareBoard(); }}>Download Card</button>
