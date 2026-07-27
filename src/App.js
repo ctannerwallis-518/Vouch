@@ -3327,33 +3327,16 @@ export default function Vouch() {
   };
   const doShare = async (canvas, shareUrl, shareName) => {
     try { await navigator.clipboard.writeText(shareUrl); } catch(e) {}
-    canvas.toBlob(async (blob) => {
-      try { const previewUrl = URL.createObjectURL(blob); setShareCardUrl(previewUrl); window._vouchCardBlob = blob; window._vouchShareName = shareName; } catch(e) {}
-      const file = new File([blob], "vouch-board.png", { type: "image/png" });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          // Card ready — user can now download or share from modal
-          setTimeout(() => {
-            try { navigator.clipboard.writeText(shareUrl); } catch(e) {}
-          }, 800);
-        } catch (e) {
-          if (e.name !== "AbortError") {
-            const a = document.createElement("a");
-            a.href = canvas.toDataURL("image/png");
-            a.download = "vouch-board.png";
-            a.click();
-          }
-        }
-      } else {
-        const a = document.createElement("a");
-        a.href = canvas.toDataURL("image/png");
-        a.download = "vouch-board.png";
-        a.click();
-        try { navigator.clipboard.writeText(shareUrl); } catch(e) {}
-      }
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      try {
+        const previewUrl = URL.createObjectURL(blob);
+        setShareCardUrl(previewUrl);
+        window._vouchCardBlob = blob;
+        window._vouchShareName = shareName;
+      } catch(e) { console.error("preview error", e); }
     }, "image/png");
   };
-
   const saveCategories = async (cats) => {
     await supabase.from("profiles").update({ categories: cats }).eq("id", userId);
     setUserCategories(cats);
