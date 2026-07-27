@@ -4384,7 +4384,7 @@ export default function Vouch() {
                         </div>
                       </div>
                     ) : (
-                      <div id="vouch-card-placeholder" style={{ height: 120, background: T.paperDark, id="vouch-card-placeholder" display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkFaint }}>Generating your card…</div>
+                      <div id="vouch-card-placeholder" style={{ height: 120, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkFaint }}>Generating your card…</div>
                     )}
                   </div>
                   <button className="btn btn-ghost" style={{ flex: 1, padding: "12px", fontSize: "10px", letterSpacing: "0.15em" }} onClick={() => { shareBoard(); }}>Download Card</button>
