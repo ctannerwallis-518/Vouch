@@ -2262,7 +2262,7 @@ function StartPage({ onSignUp }) {
             <span className="masthead-meta-stars">✦ · ✦ · ✦</span>
             <span style={{ flex: 1, display: "flex", justifyContent: "flex-end", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkMid }}>vouch5.com</span>
           </div>
-          <div className="masthead-nameplate"><span className="nameplate-word">Vouch.</span></div>
+          <div className="masthead-nameplate"><span className="nameplate-word">Vouch<span style={{ color: "#C9A84C" }}>5</span></span></div>
           <div className="masthead-rule-ornament"><span>—</span><span>✦</span><span>—</span></div>
           <div className="masthead-tagline">Love it? Vouch for it.</div>
         </header>
