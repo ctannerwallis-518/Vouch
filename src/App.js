@@ -94,6 +94,7 @@ const Styles = () => (
       font-size: clamp(58px, 11vw, 104px); letter-spacing: 0.02em;
       line-height: 0.92; color: ${T.ink};
     }
+    .nameplate-gold { color: #C9A84C !important; font-family: inherit; font-weight: inherit; font-size: inherit; }
     .masthead-rule-ornament { text-align: center; font-family: 'Spectral', serif; font-size: 11px; color: ${T.inkLight}; padding: 4px 0 2px; display: flex; align-items: center; justify-content: center; gap: 10px; letter-spacing: 0; }
     .masthead-tagline { text-align: center; font-family: 'Spectral', serif; font-style: italic; font-weight: 300; font-size: 12.5px; letter-spacing: 0.12em; color: ${T.inkLight}; padding-bottom: 12px; }
 
@@ -244,7 +245,7 @@ function Auth({ inviteUserId }) {
   return (
     <div className="auth-wrap">
       <div className="auth-box">
-        <div className="auth-plate"><span className="auth-plate-name">Vouch<span style={{ color: "#C9A84C" }}>5</span></span></div>
+        <div className="auth-plate"><span className="auth-plate-name">Vouch<span className="nameplate-gold">5</span></span></div>
         <div className="auth-tagline">Love it? Vouch for it.</div>
         <div style={{ marginBottom: 32, borderBottom: `1px solid ${T.paperDark}`, paddingBottom: 32 }}>
           <HowItWorks />
@@ -461,7 +462,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
             <span className="masthead-meta-stars" style={{ flex: "0 0 auto" }}>✦ · ✦ · ✦</span>
             <span style={{ flex: 1, display: "flex", justifyContent: "flex-end", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkMid }}>vouch5.com</span>
           </div>
-          <div className="masthead-nameplate"><span className="nameplate-word">Vouch<span style={{ color: "#C9A84C" }}>5</span></span></div>
+          <div className="masthead-nameplate"><span className="nameplate-word">Vouch<span className="nameplate-gold">5</span></span></div>
           <div className="masthead-rule-ornament"><span>—</span><span>✦</span><span>—</span></div>
           <div className="masthead-tagline">Love it? Vouch for it.</div>
         </header>
@@ -580,7 +581,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
         {showSignupNudge && (
           <div style={{ position: "fixed", inset: 0, background: "rgba(17,16,8,0.82)", zIndex: 900, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={() => setShowSignupNudge(false)}>
             <div style={{ background: T.bg, maxWidth: 420, width: "100%", border: `2px solid ${T.ink}`, padding: "32px 28px" }} onClick={e => e.stopPropagation()}>
-              <div style={{ fontFamily: "'Times New Roman',Times,serif", fontWeight: 900, fontSize: 36, marginBottom: 4 }}>Vouch<span style={{ color: "#C9A84C" }}>5</span></div>
+              <div style={{ fontFamily: "'Times New Roman',Times,serif", fontWeight: 900, fontSize: 36, marginBottom: 4 }}>Vouch<span className="nameplate-gold">5</span></div>
               <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 24 }}>Love it? Vouch for it.</div>
               <div style={{ marginBottom: 28, borderBottom: `1px solid ${T.paperDark}`, paddingBottom: 28 }}>
                 <HowItWorks />
@@ -2262,7 +2263,7 @@ function StartPage({ onSignUp }) {
             <span className="masthead-meta-stars">✦ · ✦ · ✦</span>
             <span style={{ flex: 1, display: "flex", justifyContent: "flex-end", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkMid }}>vouch5.com</span>
           </div>
-          <div className="masthead-nameplate"><span className="nameplate-word">Vouch<span style={{ color: "#C9A84C" }}>5</span></span></div>
+          <div className="masthead-nameplate"><span className="nameplate-word">Vouch<span className="nameplate-gold">5</span></span></div>
           <div className="masthead-rule-ornament"><span>—</span><span>✦</span><span>—</span></div>
           <div className="masthead-tagline">Love it? Vouch for it.</div>
         </header>
