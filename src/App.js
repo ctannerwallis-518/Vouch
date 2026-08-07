@@ -462,7 +462,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
             <span className="masthead-meta-stars" style={{ flex: "0 0 auto" }}>✦ · ✦ · ✦</span>
             <span style={{ flex: 1, display: "flex", justifyContent: "flex-end", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkMid }}>vouch5.com</span>
           </div>
-          <div className="masthead-nameplate"><span className="nameplate-word">Vouch<span className="nameplate-gold">5</span></span></div>
+          <div className="masthead-nameplate"><span className="nameplate-word">Vouch<sup style={{ fontSize: "0.45em", verticalAlign: "super", fontWeight: 900, letterSpacing: 0 }}>5</sup></span></div>
           <div className="masthead-rule-ornament"><span>—</span><span>✦</span><span>—</span></div>
           <div className="masthead-tagline">Love it? Vouch for it.</div>
         </header>
@@ -2263,7 +2263,7 @@ function StartPage({ onSignUp }) {
             <span className="masthead-meta-stars">✦ · ✦ · ✦</span>
             <span style={{ flex: 1, display: "flex", justifyContent: "flex-end", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkMid }}>vouch5.com</span>
           </div>
-          <div className="masthead-nameplate"><span className="nameplate-word">Vouch<span className="nameplate-gold">5</span></span></div>
+          <div className="masthead-nameplate"><span className="nameplate-word">Vouch<sup style={{ fontSize: "0.45em", verticalAlign: "super", fontWeight: 900, letterSpacing: 0 }}>5</sup></span></div>
           <div className="masthead-rule-ornament"><span>—</span><span>✦</span><span>—</span></div>
           <div className="masthead-tagline">Love it? Vouch for it.</div>
         </header>
