@@ -3153,8 +3153,8 @@ export default function Vouch() {
       // Wordmark
       ctx.font = "900 190px 'Times New Roman', serif";
       ctx.textAlign = "center";
-      ctx.fillStyle = "#111008"; ctx.fillText("Vouch", 506, 295);
-      ctx.fillStyle = "#C9A84C"; ctx.fillText("5", 644, 295);
+      ctx.fillStyle = "#111008"; ctx.font = "900 190px 'Times New Roman', serif";
+      ctx.textAlign = "center"; ctx.fillText("Vouch.", 540, 295); ctx.textAlign = "left";
       ctx.textAlign = "left";
 
       // Tagline
