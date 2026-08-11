@@ -3160,7 +3160,7 @@ export default function Vouch() {
 
       // Tagline
       ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 34px Georgia";
-      ctx.textAlign = "center"; ctx.fillText("Love it? Vouch for it.", 540, 345); ctx.textAlign = "left";
+      ctx.textAlign = "center"; ctx.fillText("Love it? Vouch for it. ✦", 540, 345); ctx.textAlign = "left";
 
       // Double rule
       ctx.strokeStyle = "#111008"; ctx.lineWidth = 4;
