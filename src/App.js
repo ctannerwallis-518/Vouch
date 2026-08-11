@@ -245,7 +245,7 @@ function Auth({ inviteUserId }) {
   return (
     <div className="auth-wrap">
       <div className="auth-box">
-        <div className="auth-plate"><span className="auth-plate-name">Vouch<span className="nameplate-gold">5</span></span></div>
+        <div className="auth-plate"><span className="auth-plate-name">Vouch.</span></div>
         <div className="auth-tagline">Love it? Vouch for it.</div>
         <div style={{ marginBottom: 32, borderBottom: `1px solid ${T.paperDark}`, paddingBottom: 32 }}>
           <HowItWorks />
@@ -581,7 +581,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
         {showSignupNudge && (
           <div style={{ position: "fixed", inset: 0, background: "rgba(17,16,8,0.82)", zIndex: 900, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }} onClick={() => setShowSignupNudge(false)}>
             <div style={{ background: T.bg, maxWidth: 420, width: "100%", border: `2px solid ${T.ink}`, padding: "32px 28px" }} onClick={e => e.stopPropagation()}>
-              <div style={{ fontFamily: "'Times New Roman',Times,serif", fontWeight: 900, fontSize: 36, marginBottom: 4 }}>Vouch<span className="nameplate-gold">5</span></div>
+              <div style={{ fontFamily: "'Times New Roman',Times,serif", fontWeight: 900, fontSize: 36, marginBottom: 4 }}>Vouch.</div>
               <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 24 }}>Love it? Vouch for it.</div>
               <div style={{ marginBottom: 28, borderBottom: `1px solid ${T.paperDark}`, paddingBottom: 28 }}>
                 <HowItWorks />
@@ -2455,7 +2455,6 @@ function StartPage({ onSignUp }) {
 
 
 export default function Vouch() {
-  console.log("BUILD DATE: Aug 10 2026 - test");
   const [user,           setUser]           = useState(null);
   const [userId,         setUserId]         = useState(null);
   const [tab,            setTab]            = useState("board");
@@ -3160,7 +3159,7 @@ export default function Vouch() {
 
       // Tagline
       ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 34px Georgia";
-      ctx.textAlign = "center"; ctx.fillText("Love it? Vouch for it. ✦", 540, 345); ctx.textAlign = "left";
+      ctx.textAlign = "center"; ctx.fillText("Love it? Vouch for it.", 540, 345); ctx.textAlign = "left";
 
       // Double rule
       ctx.strokeStyle = "#111008"; ctx.lineWidth = 4;
