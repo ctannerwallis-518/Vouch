@@ -2455,6 +2455,7 @@ function StartPage({ onSignUp }) {
 
 
 export default function Vouch() {
+  console.log("BUILD DATE: Aug 10 2026 - test");
   const [user,           setUser]           = useState(null);
   const [userId,         setUserId]         = useState(null);
   const [tab,            setTab]            = useState("board");
