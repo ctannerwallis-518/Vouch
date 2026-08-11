@@ -245,7 +245,7 @@ function Auth({ inviteUserId }) {
   return (
     <div className="auth-wrap">
       <div className="auth-box">
-        <div className="auth-plate"><span className="auth-plate-name"><em style={{fontStyle:"italic"}}>V</em>ouch<sup style={{fontSize:"0.42em",verticalAlign:"super",lineHeight:0,fontWeight:900}}>5</sup></span></div>
+        <div className="auth-plate"><img src="/vouch5-logo.png" alt="Vouch5" style={{height:"clamp(48px,9vw,86px)",display:"block",margin:"0 auto"}} /></div>
         <div className="auth-tagline">Love it? Vouch for it.</div>
         <div style={{ marginBottom: 32, borderBottom: `1px solid ${T.paperDark}`, paddingBottom: 32 }}>
           <HowItWorks />
@@ -3154,7 +3154,17 @@ export default function Vouch() {
       ctx.font = "900 190px 'Times New Roman', serif";
       ctx.textAlign = "center";
       ctx.fillStyle = "#111008"; ctx.font = "900 190px 'Times New Roman', serif";
-      ctx.textAlign = "center"; ctx.fillText("Vouch.", 540, 295); ctx.textAlign = "left";
+      // Draw Vouch5 logo
+      const logoImg = new Image();
+      logoImg.src = "/vouch5-logo.png";
+      await new Promise(resolve => { logoImg.onload = resolve; logoImg.onerror = resolve; setTimeout(resolve, 1000); });
+      if (logoImg.complete && logoImg.naturalWidth > 0) {
+        const logoH = 120; const logoW = logoImg.naturalWidth * (logoH / logoImg.naturalHeight);
+        ctx.drawImage(logoImg, (W - logoW) / 2, 200, logoW, logoH);
+      } else {
+        ctx.fillStyle = "#111008"; ctx.font = "900 190px 'Times New Roman', serif";
+        ctx.textAlign = "center"; ctx.fillText("Vouch.", 540, 295); ctx.textAlign = "left";
+      }
       ctx.textAlign = "left";
 
       // Tagline
