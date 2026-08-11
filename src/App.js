@@ -3638,7 +3638,7 @@ export default function Vouch() {
               <span className="clickable" onClick={signOut}>Sign out</span>
           </div>
           <div className="masthead-nameplate" onClick={() => { setTab("board"); setViewing(null); window.history.replaceState({}, "", "/"); scrollToTop(); }}>
-            <span className="nameplate-word">Vouch.</span>
+            <img src="/vouch5-logo.png" alt="Vouch5" style={{height:"clamp(48px,9vw,86px)",display:"block",margin:"0 auto"}} />
           </div>
           <div className="masthead-rule-ornament"><span>—</span><span>✦</span><span>—</span></div>
           <div className="masthead-tagline">Love it? Vouch for it.</div>
