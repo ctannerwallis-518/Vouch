@@ -245,7 +245,7 @@ function Auth({ inviteUserId }) {
   return (
     <div className="auth-wrap">
       <div className="auth-box">
-        <div className="auth-plate"><img src="/vouch5-logo.png" alt="Vouch5" style={{height:"clamp(70px,14vw,140px)",display:"block",margin:"0 auto"}} /></div>
+        <div className="auth-plate"><img src="/vouch5-logo.png" alt="Vouch5" style={{height:"clamp(100px,20vw,200px)",display:"block",margin:"0 auto"}} /></div>
         <div className="auth-tagline">Love it? Vouch for it.</div>
         <div style={{ marginBottom: 32, borderBottom: `1px solid ${T.paperDark}`, paddingBottom: 32 }}>
           <HowItWorks />
@@ -462,7 +462,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
             <span className="masthead-meta-stars" style={{ flex: "0 0 auto" }}>✦ · ✦ · ✦</span>
             <span style={{ flex: 1, display: "flex", justifyContent: "flex-end", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkMid }}>vouch5.com</span>
           </div>
-          <div className="masthead-nameplate"><img src="/vouch5-logo.png" alt="Vouch5" style={{height:"clamp(70px,14vw,140px)",display:"block",margin:"0 auto"}} /></div>
+          <div className="masthead-nameplate"><img src="/vouch5-logo.png" alt="Vouch5" style={{height:"clamp(100px,20vw,200px)",display:"block",margin:"0 auto"}} /></div>
           <div className="masthead-rule-ornament"><span>—</span><span>✦</span><span>—</span></div>
           <div className="masthead-tagline">Love it? Vouch for it.</div>
         </header>
@@ -2263,7 +2263,7 @@ function StartPage({ onSignUp }) {
             <span className="masthead-meta-stars">✦ · ✦ · ✦</span>
             <span style={{ flex: 1, display: "flex", justifyContent: "flex-end", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkMid }}>vouch5.com</span>
           </div>
-          <div className="masthead-nameplate"><img src="/vouch5-logo.png" alt="Vouch5" style={{height:"clamp(70px,14vw,140px)",display:"block",margin:"0 auto"}} /></div>
+          <div className="masthead-nameplate"><img src="/vouch5-logo.png" alt="Vouch5" style={{height:"clamp(100px,20vw,200px)",display:"block",margin:"0 auto"}} /></div>
           <div className="masthead-rule-ornament"><span>—</span><span>✦</span><span>—</span></div>
           <div className="masthead-tagline">Love it? Vouch for it.</div>
         </header>
@@ -3637,7 +3637,7 @@ export default function Vouch() {
               <span className="clickable" onClick={signOut}>Sign out</span>
           </div>
           <div className="masthead-nameplate" onClick={() => { setTab("board"); setViewing(null); window.history.replaceState({}, "", "/"); scrollToTop(); }}>
-            <img src="/vouch5-logo.png" alt="Vouch5" style={{height:"clamp(70px,14vw,140px)",display:"block",margin:"0 auto"}} />
+            <img src="/vouch5-logo.png" alt="Vouch5" style={{height:"clamp(100px,20vw,200px)",display:"block",margin:"0 auto"}} />
           </div>
           <div className="masthead-rule-ornament"><span>—</span><span>✦</span><span>—</span></div>
           <div className="masthead-tagline">Love it? Vouch for it.</div>
