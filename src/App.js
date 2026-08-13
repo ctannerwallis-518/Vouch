@@ -3154,16 +3154,10 @@ export default function Vouch() {
       ctx.font = "900 190px 'Times New Roman', serif";
       ctx.textAlign = "center";
       ctx.fillStyle = "#111008"; ctx.font = "900 190px 'Times New Roman', serif";
-      // Draw Vouch5 logo
-      const logoImg = new Image();
-      logoImg.src = "/vouch5-logo.png";
-      await new Promise(resolve => { logoImg.onload = resolve; logoImg.onerror = resolve; setTimeout(resolve, 1000); });
-      if (logoImg.complete && logoImg.naturalWidth > 0) {
-        const logoH = 120; const logoW = logoImg.naturalWidth * (logoH / logoImg.naturalHeight);
-        ctx.drawImage(logoImg, (W - logoW) / 2, 200, logoW, logoH);
-      } else {
-        ctx.fillStyle = "#111008"; ctx.font = "900 190px 'Times New Roman', serif";
-        ctx.textAlign = "center"; ctx.fillText("Vouch.", 540, 295); ctx.textAlign = "left";
+      const logoImg2 = new Image();
+      logoImg2.src = "/vouch5-logo.png";
+      ctx.fillStyle = "#111008"; ctx.font = "900 190px 'Times New Roman', serif";
+      ctx.textAlign = "center"; ctx.fillText("Vouch.", 540, 295); ctx.textAlign = "left";
       }
       ctx.textAlign = "left";
 
