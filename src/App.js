@@ -3154,11 +3154,6 @@ export default function Vouch() {
       ctx.font = "900 190px 'Times New Roman', serif";
       ctx.textAlign = "center";
       ctx.fillStyle = "#111008"; ctx.font = "900 190px 'Times New Roman', serif";
-      const logoImg2 = new Image();
-      logoImg2.src = "/vouch5-logo.png";
-      ctx.fillStyle = "#111008"; ctx.font = "900 190px 'Times New Roman', serif";
-      ctx.textAlign = "center"; ctx.fillText("Vouch.", 540, 295); ctx.textAlign = "left";
-      }
       ctx.textAlign = "left";
 
       // Tagline
