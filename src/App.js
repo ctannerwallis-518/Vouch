@@ -3135,27 +3135,32 @@ export default function Vouch() {
     const ctx = canvas.getContext("2d");
 
     const drawCard = async (posterImgs) => {
+      const boardTheme = activeBoard?.theme && activeBoard.theme !== "Other" ? activeBoard.theme : (activeBoard?.name || "Vouch");
+      const tileCount = Math.min((activeBoard?.vouch_board_items || []).length, 5);
+      const items = (activeBoard?.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0, 5);
+      const catLabels = { movies: "Film", shows: "Show", albums: "Album", artists: "Artist", songs: "Song", books: "Book", podcasts: "Podcast" };
+      const musicCats = ["albums", "artists", "songs", "podcasts"];
+
       const W = 1080, H = 1920;
       ctx.fillStyle = "#C8C2B4"; ctx.fillRect(0, 0, W, H);
       ctx.fillStyle = "#111008"; ctx.fillRect(0, 0, W, 5);
-      ctx.fillRect(0, 1915, W, 5);
 
-      // Meta
+      // Header meta
       ctx.fillStyle = "#888"; ctx.font = "400 28px Georgia";
       ctx.fillText("Est. 2026", 72, 100);
       ctx.textAlign = "right"; ctx.fillText("vouch5.com", 1008, 100); ctx.textAlign = "left";
 
-      // Logo image
+      // Vouch5 logo
       const vLogo = new Image();
       vLogo.crossOrigin = "anonymous";
       vLogo.src = window.location.origin + "/vouch5-logo.png";
       await new Promise(r => { vLogo.onload = r; vLogo.onerror = r; setTimeout(r, 2000); });
       if (vLogo.naturalWidth > 0) {
         const lh = 180; const lw = vLogo.naturalWidth * (lh / vLogo.naturalHeight);
-        ctx.drawImage(vLogo, (W - lw) / 2, 130, lw, lh);
+        ctx.drawImage(vLogo, (W - lw) / 2, 125, lw, lh);
       } else {
         ctx.fillStyle = "#111008"; ctx.font = "900 160px 'Times New Roman', serif";
-        ctx.textAlign = "center"; ctx.fillText("Vouch5", 540, 295); ctx.textAlign = "left";
+        ctx.textAlign = "center"; ctx.fillText("Vouch5", 540, 270); ctx.textAlign = "left";
       }
 
       // Double rule
@@ -3163,100 +3168,96 @@ export default function Vouch() {
       ctx.beginPath(); ctx.moveTo(72, 335); ctx.lineTo(1008, 335); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(72, 347); ctx.lineTo(1008, 347); ctx.stroke();
 
-      // Theme + username
-      const boardTheme = activeBoard?.theme && activeBoard.theme !== "Other" ? activeBoard.theme : (activeBoard?.name || "Vouch");
+      // Byline
+      const firstName = (shareName || shareUsername || "").split(" ")[0];
+      ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 38px Georgia";
+      ctx.fillText(firstName + " is vouching for", 72, 408);
+
+      // Theme
       ctx.fillStyle = "#111008"; ctx.font = "900 72px 'Times New Roman', serif";
-      ctx.fillText(boardTheme, 72, 432);
-      ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 36px Georgia";
-      ctx.fillText("@" + shareUsername, 72, 482);
+      ctx.fillText(boardTheme.length > 20 ? boardTheme.slice(0,20) + "…" : boardTheme, 72, 488);
 
-      const items = (activeBoard?.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0,5);
-      const count = items.length;
       const PAD = 72, GAP = 8;
-      const gridTop = 520;
+      const gridTop = 540;
+      const colW = (W - PAD * 2 - GAP * 4) / 5;
 
-      // Grid layout logic
-      // 1 tile: large centered
-      // 2 tiles: 3 cols — tile, V5, tile
-      // 3 tiles: 3 cols — 3 tiles
-      // 4 tiles: 2x2 grid
-      // 5 tiles: 3 cols — 3 top, then tile, V5, tile bottom
-
-      const drawPoster = (img, x, y, w, h) => {
-        ctx.fillStyle = "#111008"; ctx.fillRect(x, y, w, h);
-        if (img && img.naturalWidth > 0) {
-          const ir = img.naturalWidth / img.naturalHeight, cr = w / h;
-          let sx, sy, sw, sh;
-          if (ir > cr) { sh = img.naturalHeight; sw = sh * cr; sx = (img.naturalWidth - sw) / 2; sy = 0; }
-          else { sw = img.naturalWidth; sh = sw / cr; sx = 0; sy = (img.naturalHeight - sh) / 2; }
-          ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
-        }
-      };
-
-      // Preload V5 icon
-      const v5Icon = new Image();
-      v5Icon.crossOrigin = "anonymous";
-      v5Icon.src = window.location.origin + "/v5-icon.png";
-      await new Promise(r => { v5Icon.onload = r; v5Icon.onerror = r; setTimeout(r, 2000); });
-
-      const drawV5 = (x, y, w, h) => {
-        ctx.fillStyle = "#C8C2B4"; ctx.fillRect(x, y, w, h);
-        ctx.strokeStyle = "rgba(17,16,8,0.1)"; ctx.lineWidth = 1;
-        ctx.strokeRect(x, y, w, h);
-        if (v5Icon.naturalWidth > 0) {
-          const size = Math.min(w, h) * 0.7;
-          const ix = x + (w - size) / 2;
-          const iy = y + (h - size) / 2;
-          ctx.drawImage(v5Icon, ix, iy, size, size);
-        } else {
-          ctx.fillStyle = "#111008"; ctx.font = "900 " + Math.floor(w * 0.45) + "px 'Times New Roman', serif";
-          ctx.textAlign = "center"; ctx.fillText("V5", x + w/2, y + h * 0.55);
-          ctx.textAlign = "left";
-        }
-      };
-
-      const colW3 = (W - PAD * 2 - GAP * 2) / 3;
-      const colW2 = (W - PAD * 2 - GAP) / 2;
-      const rowH3 = colW3 * 1.5;
-      const rowH2 = colW2 * 1.5;
-
-      if (count === 1) {
-        const pw = 480, ph = 680;
-        const px = (W - pw) / 2;
-        drawPoster(posterImgs[0], px, gridTop, pw, ph);
+      if (tileCount === 1) {
         const item = items[0];
-        ctx.fillStyle = "#111008"; ctx.font = "900 52px 'Times New Roman', serif";
-        ctx.textAlign = "center"; ctx.fillText((item.title||"").slice(0,22), 540, gridTop + ph + 60);
-        ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 36px Georgia";
-        ctx.fillText(item.subtitle||"", 540, gridTop + ph + 108);
+        const isMusicCat = musicCats.includes(item?.category);
+        const img = posterImgs[0];
+        const maxW = 620, maxH = 760;
+        let imgW, imgH;
+        if (img && img.naturalWidth > 0) {
+          const ir = img.naturalWidth / img.naturalHeight;
+          if (ir > maxW / maxH) { imgW = maxW; imgH = maxW / ir; }
+          else { imgH = maxH; imgW = maxH * ir; }
+        } else { imgW = isMusicCat ? 560 : 460; imgH = isMusicCat ? 560 : 660; }
+        const imgX = (W - imgW) / 2;
+        const imgY = gridTop;
+        ctx.fillStyle = "#111008"; ctx.fillRect(imgX, imgY, imgW, imgH);
+        if (img && img.naturalWidth > 0) ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, imgX, imgY, imgW, imgH);
+        const labelY = imgY + imgH + 72;
+        ctx.fillStyle = "#111008"; ctx.font = "900 64px 'Times New Roman', serif"; ctx.textAlign = "center";
+        ctx.fillText((item?.title||"").slice(0,22), 540, labelY);
+        if (item?.subtitle) { ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 40px Georgia"; ctx.fillText(item.subtitle.slice(0,28), 540, labelY + 56); }
+        ctx.fillStyle = "rgba(17,16,8,0.4)"; ctx.font = "400 28px Georgia";
+        ctx.fillText((catLabels[item?.category]||"").toUpperCase(), 540, labelY + (item?.subtitle ? 108 : 60));
         ctx.textAlign = "left";
-      } else if (count === 2) {
-        drawPoster(posterImgs[0], PAD, gridTop, colW3, rowH3);
-        drawV5(PAD + colW3 + GAP, gridTop, colW3, rowH3);
-        drawPoster(posterImgs[1], PAD + (colW3 + GAP) * 2, gridTop, colW3, rowH3);
-      } else if (count === 3) {
-        for (let i = 0; i < 3; i++) {
-          drawPoster(posterImgs[i], PAD + i * (colW3 + GAP), gridTop, colW3, rowH3);
+      } else {
+        // Grid: 2x2 for 4, 2 rows of tiles for 2/3/5
+        const colW3 = (W - PAD * 2 - GAP * 2) / 3;
+        const colW2 = (W - PAD * 2 - GAP) / 2;
+        const rowH3 = colW3 * 1.5;
+        const rowH2 = colW2 * 1.5;
+
+        const drawPoster = (img, x, y, w, h) => {
+          ctx.fillStyle = "#111008"; ctx.fillRect(x, y, w, h);
+          if (img && img.naturalWidth > 0) {
+            const ir = img.naturalWidth / img.naturalHeight, cr = w / h;
+            let sx, sy, sw, sh;
+            if (ir > cr) { sh = img.naturalHeight; sw = sh * cr; sx = (img.naturalWidth - sw) / 2; sy = 0; }
+            else { sw = img.naturalWidth; sh = sw / cr; sx = 0; sy = (img.naturalHeight - sh) / 2; }
+            ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+          }
+        };
+
+        const drawV5slot = async (x, y, w, h) => {
+          ctx.fillStyle = "#C8C2B4"; ctx.fillRect(x, y, w, h);
+          ctx.strokeStyle = "rgba(17,16,8,0.12)"; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
+          const v5 = new Image(); v5.crossOrigin = "anonymous"; v5.src = window.location.origin + "/v5-icon.png";
+          await new Promise(r => { v5.onload = r; v5.onerror = r; setTimeout(r, 1500); });
+          if (v5.naturalWidth > 0) {
+            const size = Math.min(w, h) * 0.65;
+            ctx.drawImage(v5, x + (w - size)/2, y + (h - size)/2, size, size);
+          }
+        };
+
+        if (tileCount === 2) {
+          await drawV5slot(PAD, gridTop, colW3, rowH3);
+          drawPoster(posterImgs[0], PAD + colW3 + GAP, gridTop, colW3, rowH3);
+          drawPoster(posterImgs[1], PAD + (colW3 + GAP) * 2, gridTop, colW3, rowH3);
+        } else if (tileCount === 3) {
+          for (let i = 0; i < 3; i++) drawPoster(posterImgs[i], PAD + i * (colW3 + GAP), gridTop, colW3, rowH3);
+        } else if (tileCount === 4) {
+          for (let i = 0; i < 2; i++) drawPoster(posterImgs[i], PAD + i * (colW2 + GAP), gridTop, colW2, rowH2);
+          for (let i = 2; i < 4; i++) drawPoster(posterImgs[i], PAD + (i-2) * (colW2 + GAP), gridTop + rowH2 + GAP, colW2, rowH2);
+        } else if (tileCount === 5) {
+          for (let i = 0; i < 3; i++) drawPoster(posterImgs[i], PAD + i * (colW3 + GAP), gridTop, colW3, rowH3);
+          drawPoster(posterImgs[3], PAD, gridTop + rowH3 + GAP, colW3, rowH3);
+          await drawV5slot(PAD + colW3 + GAP, gridTop + rowH3 + GAP, colW3, rowH3);
+          drawPoster(posterImgs[4], PAD + (colW3 + GAP) * 2, gridTop + rowH3 + GAP, colW3, rowH3);
         }
-      } else if (count === 4) {
-        for (let i = 0; i < 2; i++) drawPoster(posterImgs[i], PAD + i * (colW2 + GAP), gridTop, colW2, rowH2);
-        for (let i = 2; i < 4; i++) drawPoster(posterImgs[i], PAD + (i-2) * (colW2 + GAP), gridTop + rowH2 + GAP, colW2, rowH2);
-      } else if (count === 5) {
-        for (let i = 0; i < 3; i++) drawPoster(posterImgs[i], PAD + i * (colW3 + GAP), gridTop, colW3, rowH3);
-        drawPoster(posterImgs[3], PAD, gridTop + rowH3 + GAP, colW3, rowH3);
-        drawV5(PAD + colW3 + GAP, gridTop + rowH3 + GAP, colW3, rowH3);
-        drawPoster(posterImgs[4], PAD + (colW3 + GAP) * 2, gridTop + rowH3 + GAP, colW3, rowH3);
+
+        const bottomY = tileCount <= 3 ? gridTop + rowH3 + 40 : tileCount === 4 ? gridTop + rowH2 * 2 + GAP + 40 : gridTop + rowH3 * 2 + GAP + 40;
+        ctx.strokeStyle = "rgba(17,16,8,0.2)"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(PAD, bottomY); ctx.lineTo(W - PAD, bottomY); ctx.stroke();
+        ctx.fillStyle = "#555"; ctx.font = "italic 400 30px Georgia"; ctx.textAlign = "center";
+        ctx.fillText("What would you put your name behind right now?", 540, bottomY + 44);
+        ctx.fillStyle = "#111008"; ctx.font = "900 40px 'Times New Roman', serif";
+        ctx.fillText("vouch5.com/@" + shareUsername, 540, bottomY + 96);
+        ctx.textAlign = "left";
       }
 
-      // Bottom
-      const bottomY = count <= 3 ? gridTop + rowH3 + 48 : count === 4 ? gridTop + rowH2 * 2 + GAP + 48 : gridTop + rowH3 * 2 + GAP + 48;
-      ctx.strokeStyle = "rgba(17,16,8,0.2)"; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(PAD, bottomY); ctx.lineTo(W - PAD, bottomY); ctx.stroke();
-      ctx.fillStyle = "#555"; ctx.font = "italic 400 30px Georgia"; ctx.textAlign = "center";
-      ctx.fillText("What would you put your name behind right now?", 540, bottomY + 44);
-      ctx.fillStyle = "#111008"; ctx.font = "900 40px 'Times New Roman', serif";
-      ctx.fillText("vouch5.com/@" + shareUsername, 540, bottomY + 96);
-      ctx.textAlign = "left";
       ctx.fillStyle = "#111008"; ctx.fillRect(0, 1915, W, 5);
     };
     const loadImg = async (url) => {
