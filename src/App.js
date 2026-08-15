@@ -3179,8 +3179,7 @@ export default function Vouch() {
 
       const PAD = 72, GAP = 8;
       const gridTop = 540;
-      const colW = (W - PAD * 2 - GAP * 4) / 5;
-
+      
       if (tileCount === 1) {
         const item = items[0];
         const isMusicCat = musicCats.includes(item?.category);
