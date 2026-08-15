@@ -3608,7 +3608,7 @@ export default function Vouch() {
     }
   }, [user, pathUserId, userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!sessionChecked) return <><Styles /><div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#C8C2B4" }}><div style={{ fontFamily: "'Times New Roman', serif", fontStyle: "italic", fontSize: 18, color: "#7a7568" }}><em style={{fontStyle:"italic"}}>V</em>ouch<sup style={{fontSize:"0.42em",verticalAlign:"super",lineHeight:0,fontWeight:900}}>5</sup></div></div></>;
+  if (!sessionChecked) return <><Styles /><div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#C8C2B4" }}><img src="/v5-icon.png" alt="Vouch5" style={{ height: "clamp(160px,40vw,320px)", display: "block" }} /></div></>;
   if (!user) {
     if (isStartPage) {
       return <StartPage onSignUp={() => {
