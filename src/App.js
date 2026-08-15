@@ -3134,7 +3134,7 @@ export default function Vouch() {
     canvas.height = 1920;
     const ctx = canvas.getContext("2d");
 
-    const drawCard = (posterImgs) => {
+    const drawCard = async (posterImgs) => {
       const boardTheme = activeBoard?.theme && activeBoard.theme !== "Other" ? activeBoard.theme : (activeBoard?.name || "Vouch");
       const tileCount = Math.min((activeBoard?.vouch_board_items || []).length, 5);
       const items = (activeBoard?.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0, 5);
@@ -3158,6 +3158,17 @@ export default function Vouch() {
 
       // Tagline
       ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 34px Georgia";
+      const vLogo = new Image();
+      vLogo.crossOrigin = "anonymous";
+      vLogo.src = window.location.origin + "/vouch5-logo.png";
+      await new Promise(r => { vLogo.onload = r; vLogo.onerror = r; setTimeout(r, 2000); });
+      if (vLogo.naturalWidth > 0) {
+        const lh = 160; const lw = vLogo.naturalWidth * (lh / vLogo.naturalHeight);
+        ctx.drawImage(vLogo, (W - lw) / 2, 180, lw, lh);
+      } else {
+        ctx.fillStyle = "#111008"; ctx.font = "900 190px 'Times New Roman', serif";
+        ctx.textAlign = "center"; ctx.fillText("Vouch5", 540, 295); ctx.textAlign = "left";
+      }
       ctx.textAlign = "center"; ctx.fillText("Love it? Vouch for it.", 540, 345); ctx.textAlign = "left";
 
       // Double rule
@@ -3321,10 +3332,10 @@ export default function Vouch() {
     try {
       const activeBoardItems = (activeBoard?.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0, 5);
       const posterImgs = await Promise.all(activeBoardItems.map(item => loadImg(item.poster)));
-      drawCard(posterImgs);
+      await drawCard(posterImgs);
       await doShare(canvas, shareUrl, shareName);
     } catch {
-      drawCard([]);
+      await drawCard([]);
       await doShare(canvas, shareUrl, shareName);
     }
   };
@@ -4454,7 +4465,7 @@ export default function Vouch() {
         {onboarding && (
           <div className="modal-overlay">
             <div className="modal" onClick={e => e.stopPropagation()}>
-              <div className="modal-head"><div className="modal-title">Welcome to Vouch.</div></div>
+              <div className="modal-head"><div className="modal-title">Welcome to Vouch5</div></div>
               <div className="modal-body">
                 <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkMid, marginBottom: 24, lineHeight: 1.7 }}>
                   Pick which categories you want on your shelf and put them in the order that feels right for you.
