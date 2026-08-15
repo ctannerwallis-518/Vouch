@@ -96,7 +96,7 @@ const Styles = () => (
     }
     .nameplate-gold { color: #C9A84C !important; font-family: inherit; font-weight: inherit; font-size: inherit; }
     .masthead-rule-ornament { text-align: center; font-family: 'Spectral', serif; font-size: 11px; color: ${T.inkLight}; padding: 4px 0 2px; display: flex; align-items: center; justify-content: center; gap: 10px; letter-spacing: 0; }
-    .masthead-tagline { text-align: center; font-family: 'Spectral', serif; font-style: italic; font-weight: 300; font-size: 12.5px; letter-spacing: 0.12em; color: ${T.inkLight}; padding-bottom: 12px; }
+    .masthead-tagline { text-align: center; font-family: 'Spectral', serif; font-style: italic; font-weight: 300; font-size: 12.5px; letter-spacing: 0.12em; color: ${T.inkLight}; padding-bottom: 20px; }
 
     .nav { display: flex; overflow-x: auto; scrollbar-width: none; border-top: 1px solid ${T.ink}; }
     .nav::-webkit-scrollbar { display: none; }
@@ -3135,184 +3135,118 @@ export default function Vouch() {
     const ctx = canvas.getContext("2d");
 
     const drawCard = async (posterImgs) => {
-      const boardTheme = activeBoard?.theme && activeBoard.theme !== "Other" ? activeBoard.theme : (activeBoard?.name || "Vouch");
-      const tileCount = Math.min((activeBoard?.vouch_board_items || []).length, 5);
-      const items = (activeBoard?.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0, 5);
-      const catLabels = { movies: "Film", shows: "Show", albums: "Album", artists: "Artist", songs: "Song", books: "Book", podcasts: "Podcast" };
-      const musicCats = ["albums", "artists", "songs", "podcasts"];
-
       const W = 1080, H = 1920;
       ctx.fillStyle = "#C8C2B4"; ctx.fillRect(0, 0, W, H);
       ctx.fillStyle = "#111008"; ctx.fillRect(0, 0, W, 5);
+      ctx.fillRect(0, 1915, W, 5);
 
-      // Header meta
+      // Meta
       ctx.fillStyle = "#888"; ctx.font = "400 28px Georgia";
       ctx.fillText("Est. 2026", 72, 100);
       ctx.textAlign = "right"; ctx.fillText("vouch5.com", 1008, 100); ctx.textAlign = "left";
 
-      // Wordmark
-      ctx.font = "900 190px 'Times New Roman', serif";
-      ctx.textAlign = "center";
-      ctx.fillStyle = "#111008"; ctx.font = "900 190px 'Times New Roman', serif";
-      ctx.textAlign = "left";
-
-      // Tagline
-      ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 34px Georgia";
+      // Logo image
       const vLogo = new Image();
       vLogo.crossOrigin = "anonymous";
       vLogo.src = window.location.origin + "/vouch5-logo.png";
       await new Promise(r => { vLogo.onload = r; vLogo.onerror = r; setTimeout(r, 2000); });
       if (vLogo.naturalWidth > 0) {
-        const lh = 160; const lw = vLogo.naturalWidth * (lh / vLogo.naturalHeight);
-        ctx.drawImage(vLogo, (W - lw) / 2, 180, lw, lh);
+        const lh = 180; const lw = vLogo.naturalWidth * (lh / vLogo.naturalHeight);
+        ctx.drawImage(vLogo, (W - lw) / 2, 130, lw, lh);
       } else {
-        ctx.fillStyle = "#111008"; ctx.font = "900 190px 'Times New Roman', serif";
+        ctx.fillStyle = "#111008"; ctx.font = "900 160px 'Times New Roman', serif";
         ctx.textAlign = "center"; ctx.fillText("Vouch5", 540, 295); ctx.textAlign = "left";
       }
-      ctx.textAlign = "center"; ctx.fillText("Love it? Vouch for it.", 540, 345); ctx.textAlign = "left";
 
       // Double rule
       ctx.strokeStyle = "#111008"; ctx.lineWidth = 4;
-      ctx.beginPath(); ctx.moveTo(72, 375); ctx.lineTo(1008, 375); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(72, 387); ctx.lineTo(1008, 387); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(72, 335); ctx.lineTo(1008, 335); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(72, 347); ctx.lineTo(1008, 347); ctx.stroke();
 
-      // Theme name (big)
+      // Theme + username
+      const boardTheme = activeBoard?.theme && activeBoard.theme !== "Other" ? activeBoard.theme : (activeBoard?.name || "Vouch");
       ctx.fillStyle = "#111008"; ctx.font = "900 72px 'Times New Roman', serif";
-      ctx.fillText(boardTheme, 72, 490);
+      ctx.fillText(boardTheme, 72, 432);
+      ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 36px Georgia";
+      ctx.fillText("@" + shareUsername, 72, 482);
 
-      // Username
-      ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 38px Georgia";
-      ctx.fillText("@" + shareUsername, 72, 548);
+      const items = (activeBoard?.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0,5);
+      const count = items.length;
+      const PAD = 72, GAP = 8;
+      const gridTop = 520;
 
-      const PAD = 72;
+      // Grid layout logic
+      // 1 tile: large centered
+      // 2 tiles: 3 cols — tile, V5, tile
+      // 3 tiles: 3 cols — 3 tiles
+      // 4 tiles: 2x2 grid
+      // 5 tiles: 3 cols — 3 top, then tile, V5, tile bottom
 
-      if (tileCount === 1) {
-        // Single tile — centered, large
-        const item = items[0];
-        const isMusicCat = musicCats.includes(item?.category);
-        const img = posterImgs[0];
-        const maxW = 620, maxH = 760;
-        let imgW, imgH;
-        if (img) {
-          const ir = img.naturalWidth / img.naturalHeight;
-          if (ir > maxW / maxH) { imgW = maxW; imgH = maxW / ir; }
-          else { imgH = maxH; imgW = maxH * ir; }
-        } else {
-          imgW = isMusicCat ? 560 : 460;
-          imgH = isMusicCat ? 560 : 664;
+      const drawPoster = (img, x, y, w, h) => {
+        ctx.fillStyle = "#111008"; ctx.fillRect(x, y, w, h);
+        if (img && img.naturalWidth > 0) {
+          const ir = img.naturalWidth / img.naturalHeight, cr = w / h;
+          let sx, sy, sw, sh;
+          if (ir > cr) { sh = img.naturalHeight; sw = sh * cr; sx = (img.naturalWidth - sw) / 2; sy = 0; }
+          else { sw = img.naturalWidth; sh = sw / cr; sx = 0; sy = (img.naturalHeight - sh) / 2; }
+          ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
         }
-        const imgX = (W - imgW) / 2;
+      };
 
-        const topBound = 560;
-        const bottomBoundSingle = 1520;
-        const textBlockHeight = 48 + (item?.subtitle ? 108 : 60) + 24;
-        const totalBlockHeight = imgH + textBlockHeight;
-        const imgY = topBound + Math.max(0, (bottomBoundSingle - topBound - totalBlockHeight) / 2);
-
-        ctx.save();
-        ctx.shadowColor = "rgba(0,0,0,0.35)";
-        ctx.shadowBlur = 40;
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 12;
-        ctx.fillStyle = "#111008";
-        ctx.fillRect(imgX, imgY, imgW, imgH);
-
-        if (img) {
-        ctx.restore();
-          ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, imgX, imgY, imgW, imgH);
-        }
-
-        const labelY = imgY + imgH + 72;
-        ctx.fillStyle = "#111008"; ctx.font = "900 64px 'Times New Roman', serif";
-        ctx.textAlign = "center";
-        const shortTitle = (item?.title || "").slice(0, 22) + ((item?.title || "").length > 22 ? "…" : "");
-        ctx.fillText(shortTitle, 540, labelY);
-        if (item?.subtitle) {
-          ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 40px Georgia";
-          ctx.fillText(item.subtitle.slice(0, 28), 540, labelY + 52);
-        }
-        ctx.fillStyle = "rgba(17,16,8,0.4)"; ctx.font = "400 28px Georgia";
-        ctx.fillText((catLabels[item?.category] || "").toUpperCase(), 540, labelY + (item?.subtitle ? 108 : 60));
+      const drawV5 = (x, y, w, h) => {
+        ctx.fillStyle = "#C8C2B4"; ctx.fillRect(x, y, w, h);
+        ctx.strokeStyle = "rgba(17,16,8,0.15)"; ctx.lineWidth = 1;
+        ctx.strokeRect(x, y, w, h);
+        ctx.fillStyle = "#111008"; ctx.font = "900 " + Math.floor(w * 0.45) + "px 'Times New Roman', serif";
+        ctx.textAlign = "center"; ctx.fillText("V5", x + w/2, y + h * 0.55);
+        ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 " + Math.floor(w * 0.1) + "px Georgia";
+        ctx.fillText("vouch5.com", x + w/2, y + h * 0.75);
         ctx.textAlign = "left";
+      };
 
-      } else {
-        // List layout — thumbnail left, title/sub/cat right
-        const isMusicCat = (cat) => musicCats.includes(cat);
-        const thumbW_rect = 120, thumbH_rect = 172;
-        const thumbW_sq = 144, thumbH_sq = 144;
-        const rowH = 180;
-        const startY = 570;
+      const colW3 = (W - PAD * 2 - GAP * 2) / 3;
+      const colW2 = (W - PAD * 2 - GAP) / 2;
+      const rowH3 = colW3 * 1.5;
+      const rowH2 = colW2 * 1.5;
 
-        items.forEach((item, i) => {
-          const y = startY + i * (rowH + 2);
-          const isSquare = isMusicCat(item.category);
-          const tw = isSquare ? thumbW_sq : thumbW_rect;
-          const th = isSquare ? thumbH_sq : thumbH_rect;
-          const thumbY = y + (rowH - th) / 2;
-
-          // Thumbnail bg
-          ctx.fillStyle = "#111008";
-          ctx.fillRect(PAD, thumbY, tw, th);
-
-          // Poster image
-          const img = posterImgs[i];
-          if (img) {
-            const ir = img.naturalWidth / img.naturalHeight, cr = tw / th;
-            let sx, sy, sw, sh;
-            if (ir > cr) { sh = img.naturalHeight; sw = sh * cr; sx = (img.naturalWidth - sw) / 2; sy = 0; }
-            else { sw = img.naturalWidth; sh = sw / cr; sx = 0; sy = (img.naturalHeight - sh) / 2; }
-            ctx.drawImage(img, sx, sy, sw, sh, PAD, thumbY, tw, th);
-          }
-
-          // Title — shrink font until the full title fits on one line, never truncated
-          const titleX = PAD + thumbW_sq + 28;
-          const titleY = y + 48;
-          const maxTitleWidth = W - PAD - titleX;
-          const fullTitle = item.title || "";
-          let titleFontSize = 48;
-          ctx.fillStyle = "#111008";
-          ctx.font = `900 ${titleFontSize}px 'Times New Roman', serif`;
-          while (ctx.measureText(fullTitle).width > maxTitleWidth && titleFontSize > 22) {
-            titleFontSize -= 2;
-            ctx.font = `900 ${titleFontSize}px 'Times New Roman', serif`;
-          }
-          ctx.fillText(fullTitle, titleX, titleY);
-
-          // Subtitle
-          if (item.subtitle) {
-            ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 34px Georgia";
-            ctx.fillText(item.subtitle.slice(0, 24), titleX, titleY + 48);
-          }
-
-          // Category label
-          ctx.fillStyle = "rgba(17,16,8,0.35)"; ctx.font = "400 24px Georgia";
-          ctx.fillText((catLabels[item.category] || "").toUpperCase(), titleX, titleY + (item.subtitle ? 96 : 52));
-
-          // Divider (except last)
-          if (i < tileCount - 1) {
-            const divY = y + rowH + 1;
-            ctx.strokeStyle = "rgba(17,16,8,0.12)"; ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.moveTo(PAD, divY); ctx.lineTo(W - PAD, divY); ctx.stroke();
-          }
-        });
+      if (count === 1) {
+        const pw = 480, ph = 680;
+        const px = (W - pw) / 2;
+        drawPoster(posterImgs[0], px, gridTop, pw, ph);
+        const item = items[0];
+        ctx.fillStyle = "#111008"; ctx.font = "900 52px 'Times New Roman', serif";
+        ctx.textAlign = "center"; ctx.fillText((item.title||"").slice(0,22), 540, gridTop + ph + 60);
+        ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 36px Georgia";
+        ctx.fillText(item.subtitle||"", 540, gridTop + ph + 108);
+        ctx.textAlign = "left";
+      } else if (count === 2) {
+        drawPoster(posterImgs[0], PAD, gridTop, colW3, rowH3);
+        drawV5(PAD + colW3 + GAP, gridTop, colW3, rowH3);
+        drawPoster(posterImgs[1], PAD + (colW3 + GAP) * 2, gridTop, colW3, rowH3);
+      } else if (count === 3) {
+        for (let i = 0; i < 3; i++) {
+          drawPoster(posterImgs[i], PAD + i * (colW3 + GAP), gridTop, colW3, rowH3);
+        }
+      } else if (count === 4) {
+        for (let i = 0; i < 2; i++) drawPoster(posterImgs[i], PAD + i * (colW2 + GAP), gridTop, colW2, rowH2);
+        for (let i = 2; i < 4; i++) drawPoster(posterImgs[i], PAD + (i-2) * (colW2 + GAP), gridTop + rowH2 + GAP, colW2, rowH2);
+      } else if (count === 5) {
+        for (let i = 0; i < 3; i++) drawPoster(posterImgs[i], PAD + i * (colW3 + GAP), gridTop, colW3, rowH3);
+        drawPoster(posterImgs[3], PAD, gridTop + rowH3 + GAP, colW3, rowH3);
+        drawV5(PAD + colW3 + GAP, gridTop + rowH3 + GAP, colW3, rowH3);
+        drawPoster(posterImgs[4], PAD + (colW3 + GAP) * 2, gridTop + rowH3 + GAP, colW3, rowH3);
       }
 
-      // Bottom section
-      const bottomY = tileCount === 1 ? 1550 : 570 + tileCount * 182 + 40;
+      // Bottom
+      const bottomY = count <= 3 ? gridTop + rowH3 + 48 : count === 4 ? gridTop + rowH2 * 2 + GAP + 48 : gridTop + rowH3 * 2 + GAP + 48;
       ctx.strokeStyle = "rgba(17,16,8,0.2)"; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(PAD, bottomY); ctx.lineTo(W - PAD, bottomY); ctx.stroke();
-
-      ctx.fillStyle = "#555"; ctx.font = "italic 400 32px Georgia"; ctx.textAlign = "center";
-      ctx.fillText("What would you put your name behind right now?", 540, bottomY + 48);
-
-      ctx.fillStyle = "#111008"; ctx.font = "900 44px 'Times New Roman', serif"; ctx.textAlign = "center";
-      ctx.fillText("vouch5.com/@" + shareUsername, 540, bottomY + 104);
-
-      ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 26px Georgia"; ctx.textAlign = "center";
-      ctx.fillText("See what else " + (shareName || shareUsername).split(" ")[0] + " is vouching for — Link in Bio", 540, bottomY + 148);
+      ctx.fillStyle = "#555"; ctx.font = "italic 400 30px Georgia"; ctx.textAlign = "center";
+      ctx.fillText("What would you put your name behind right now?", 540, bottomY + 44);
+      ctx.fillStyle = "#111008"; ctx.font = "900 40px 'Times New Roman', serif";
+      ctx.fillText("vouch5.com/@" + shareUsername, 540, bottomY + 96);
       ctx.textAlign = "left";
-
-      ctx.fillStyle = "#111008"; ctx.fillRect(0, 1915, 1080, 5);
+      ctx.fillStyle = "#111008"; ctx.fillRect(0, 1915, W, 5);
     };
     const loadImg = async (url) => {
       if (!url) return null;
