@@ -3193,15 +3193,24 @@ export default function Vouch() {
         }
       };
 
+      // Preload V5 icon
+      const v5Icon = new Image();
+      v5Icon.crossOrigin = "anonymous";
+      v5Icon.src = window.location.origin + "/v5-icon.png";
+      await new Promise(r => { v5Icon.onload = r; v5Icon.onerror = r; setTimeout(r, 2000); });
+
       const drawV5 = (x, y, w, h) => {
         ctx.fillStyle = "#C8C2B4"; ctx.fillRect(x, y, w, h);
-        ctx.strokeStyle = "rgba(17,16,8,0.15)"; ctx.lineWidth = 1;
+        ctx.strokeStyle = "rgba(17,16,8,0.1)"; ctx.lineWidth = 1;
         ctx.strokeRect(x, y, w, h);
-        ctx.fillStyle = "#111008"; ctx.font = "900 " + Math.floor(w * 0.45) + "px 'Times New Roman', serif";
-        ctx.textAlign = "center"; ctx.fillText("V5", x + w/2, y + h * 0.55);
-        ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 " + Math.floor(w * 0.1) + "px Georgia";
-        ctx.fillText("vouch5.com", x + w/2, y + h * 0.75);
-        ctx.textAlign = "left";
+        if (v5Icon.naturalWidth > 0) {
+          const pad = w * 0.15;
+          ctx.drawImage(v5Icon, x + pad, y + pad, w - pad * 2, h - pad * 2);
+        } else {
+          ctx.fillStyle = "#111008"; ctx.font = "900 " + Math.floor(w * 0.45) + "px 'Times New Roman', serif";
+          ctx.textAlign = "center"; ctx.fillText("V5", x + w/2, y + h * 0.55);
+          ctx.textAlign = "left";
+        }
       };
 
       const colW3 = (W - PAD * 2 - GAP * 2) / 3;
