@@ -3204,8 +3204,10 @@ export default function Vouch() {
         ctx.strokeStyle = "rgba(17,16,8,0.1)"; ctx.lineWidth = 1;
         ctx.strokeRect(x, y, w, h);
         if (v5Icon.naturalWidth > 0) {
-          const pad = w * 0.15;
-          ctx.drawImage(v5Icon, x + pad, y + pad, w - pad * 2, h - pad * 2);
+          const size = Math.min(w, h) * 0.7;
+          const ix = x + (w - size) / 2;
+          const iy = y + (h - size) / 2;
+          ctx.drawImage(v5Icon, ix, iy, size, size);
         } else {
           ctx.fillStyle = "#111008"; ctx.font = "900 " + Math.floor(w * 0.45) + "px 'Times New Roman', serif";
           ctx.textAlign = "center"; ctx.fillText("V5", x + w/2, y + h * 0.55);
