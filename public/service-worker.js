@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vouch-v11';
+const CACHE_NAME = 'vouch-v12';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
