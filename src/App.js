@@ -3200,7 +3200,7 @@ export default function Vouch() {
       if (tileCount === 1) {
         // Single large tile
         const isSq = musicCats.includes(items[0]?.category);
-        const pw = gridW * 0.82, ph = isSq ? pw : pw * 1.48;
+        const pw = gridW * 0.72, ph = isSq ? pw : pw * 1.4;
         const px = (W-pw)/2;
         dp(posterImgs[0], px, gridTop, pw, ph);
         ctx.fillStyle = "#111008"; ctx.font = "900 48px 'Times New Roman', serif"; ctx.textAlign = "center";
@@ -3236,25 +3236,35 @@ export default function Vouch() {
 
       } else {
         // 5 tiles: 2x2 grid of tiles 2-5, hero tile 1 overlaps center
-        const cw = (gridW-GAP)/2, ch = cw*1.5;
+        const cw = (gridW-GAP)/2 * 0.82, ch = cw*1.5;
         const row2 = gridTop + ch + GAP;
+        const colOff = (gridW - cw*2 - GAP) / 2;
         // Draw 4 corner tiles first
-        dp(posterImgs[1], PAD, gridTop, cw, ch);         // top left
-        dp(posterImgs[2], PAD+cw+GAP, gridTop, cw, ch); // top right
-        dp(posterImgs[3], PAD, row2, cw, ch);            // bottom left
-        dp(posterImgs[4], PAD+cw+GAP, row2, cw, ch);    // bottom right
+        dp(posterImgs[1], PAD+colOff, gridTop, cw, ch);
+        dp(posterImgs[2], PAD+colOff+cw+GAP, gridTop, cw, ch);
+        dp(posterImgs[3], PAD+colOff, row2, cw, ch);
+        dp(posterImgs[4], PAD+colOff+cw+GAP, row2, cw, ch);
+        // Borders on corner tiles
+        ctx.strokeStyle="rgba(17,16,8,0.15)"; ctx.lineWidth=1.5;
+        ctx.strokeRect(PAD+colOff, gridTop, cw, ch);
+        ctx.strokeRect(PAD+colOff+cw+GAP, gridTop, cw, ch);
+        ctx.strokeRect(PAD+colOff, row2, cw, ch);
+        ctx.strokeRect(PAD+colOff+cw+GAP, row2, cw, ch);
         // Corner labels
-        dl(items[1], PAD+cw/2, gridTop+ch+32);
-        dl(items[2], PAD+cw+GAP+cw/2, gridTop+ch+32);
-        dl(items[3], PAD+cw/2, row2+ch+32);
-        dl(items[4], PAD+cw+GAP+cw/2, row2+ch+32);
+        dl(items[1], PAD+colOff+cw/2, gridTop+ch+32);
+        dl(items[2], PAD+colOff+cw+GAP+cw/2, gridTop+ch+32);
+        dl(items[3], PAD+colOff+cw/2, row2+ch+32);
+        dl(items[4], PAD+colOff+cw+GAP+cw/2, row2+ch+32);
         // Hero tile overlapping center
-        const hw = cw*0.85, hh = ch*0.85;
+        const hw = cw*0.88, hh = ch*0.88;
         const hx = (W-hw)/2, hy = gridTop + (ch*2+GAP-hh)/2;
         // Shadow under hero
-        ctx.save(); ctx.shadowColor="rgba(0,0,0,0.4)"; ctx.shadowBlur=30; ctx.shadowOffsetY=8;
+        ctx.save(); ctx.shadowColor="rgba(0,0,0,0.45)"; ctx.shadowBlur=36; ctx.shadowOffsetY=10;
         dp(posterImgs[0], hx, hy, hw, hh);
         ctx.restore();
+        // Border on hero
+        ctx.strokeStyle="rgba(17,16,8,0.2)"; ctx.lineWidth=2;
+        ctx.strokeRect(hx, hy, hw, hh);
         // Hero label centered below grid
         const heroLabelY = row2+ch+70;
         ctx.fillStyle="#111008"; ctx.font="700 28px 'Times New Roman', serif"; ctx.textAlign="center";
@@ -3266,7 +3276,7 @@ export default function Vouch() {
       }
 
       // CTA
-      const ctaY = 1770;
+      const ctaY = 1800;
       ctx.strokeStyle="rgba(17,16,8,0.2)"; ctx.lineWidth=1.5;
       ctx.beginPath(); ctx.moveTo(PAD, ctaY); ctx.lineTo(W-PAD, ctaY); ctx.stroke();
       ctx.fillStyle="#555"; ctx.font="italic 400 28px Georgia"; ctx.textAlign="center";
