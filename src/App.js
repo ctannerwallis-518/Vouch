@@ -3212,8 +3212,7 @@ export default function Vouch() {
         const tw = (gridW-GAP)/2, th = tw*1.5;
         dp(posterImgs[0], PAD, gridTop, tw, th);
         dp(posterImgs[1], PAD+tw+GAP, gridTop, tw, th);
-        dl(items[0], PAD+tw/2, gridTop+th+34);
-        dl(items[1], PAD+tw+GAP+tw/2, gridTop+th+34);
+
 
       } else if (tileCount === 3) {
         const tw3 = (gridW-GAP*2)/3, th3 = tw3*1.5;
@@ -3226,13 +3225,11 @@ export default function Vouch() {
         const tw4 = (gridW-GAP)/2, th4 = tw4*1.5;
         dp(posterImgs[0], PAD, gridTop, tw4, th4);
         dp(posterImgs[1], PAD+tw4+GAP, gridTop, tw4, th4);
-        dl(items[0], PAD+tw4/2, gridTop+th4+34);
-        dl(items[1], PAD+tw4+GAP+tw4/2, gridTop+th4+34);
+
         const r2 = gridTop+th4+70;
         dp(posterImgs[2], PAD, r2, tw4, th4);
         dp(posterImgs[3], PAD+tw4+GAP, r2, tw4, th4);
-        dl(items[2], PAD+tw4/2, r2+th4+34);
-        dl(items[3], PAD+tw4+GAP+tw4/2, r2+th4+34);
+
 
       } else {
         // 5 tiles: 2x2 grid of tiles 2-5, hero tile 1 overlaps center
@@ -3251,10 +3248,9 @@ export default function Vouch() {
         ctx.strokeRect(PAD+colOff, row2, cw, ch);
         ctx.strokeRect(PAD+colOff+cw+GAP, row2, cw, ch);
         // Corner labels
-        dl(items[1], PAD+colOff+cw/2, gridTop+ch+32);
-        dl(items[2], PAD+colOff+cw+GAP+cw/2, gridTop+ch+32);
-        dl(items[3], PAD+colOff+cw/2, row2+ch+32);
-        dl(items[4], PAD+colOff+cw+GAP+cw/2, row2+ch+32);
+
+
+
         // Hero tile overlapping center
         const hw = cw*0.88, hh = ch*0.88;
         const hx = (W-hw)/2, hy = gridTop + (ch*2+GAP-hh)/2;
