@@ -3180,19 +3180,26 @@ export default function Vouch() {
         }
         // Overlay label at bottom of tile
         if (item && item.title) {
-          const barH = h * 0.22;
+          const barH = h * 0.28;
           const grad = ctx.createLinearGradient(x, y+h-barH, x, y+h);
           grad.addColorStop(0, "rgba(0,0,0,0)");
-          grad.addColorStop(1, "rgba(0,0,0,0.72)");
+          grad.addColorStop(1, "rgba(0,0,0,0.88)");
           ctx.fillStyle = grad; ctx.fillRect(x, y+h-barH, w, barH);
-          const fs = Math.max(16, Math.floor(w * 0.1));
-          ctx.fillStyle = "#fff"; ctx.font = "700 " + fs + "px 'Times New Roman', serif";
-          ctx.textAlign = "center";
-          const title = (item.title||"").slice(0, Math.floor(w/fs*1.4));
-          ctx.fillText(title, x+w/2, y+h - barH*0.42);
+          // Auto-scale font size so title fits within tile width
+          const maxTitleW = w - 16;
+          let fs = Math.floor(w * 0.1);
+          ctx.font = "700 " + fs + "px 'Times New Roman', serif";
+          while (ctx.measureText(item.title||"").width > maxTitleW && fs > 12) {
+            fs -= 1;
+            ctx.font = "700 " + fs + "px 'Times New Roman', serif";
+          }
+          ctx.fillStyle = "#fff";
+          ctx.textAlign = "left";
+          ctx.fillText(item.title||"", x+8, y+h - barH*0.38);
           if (item.subtitle) {
-            ctx.fillStyle = "rgba(255,255,255,0.65)"; ctx.font = "italic 400 " + Math.max(13, Math.floor(w*0.075)) + "px Georgia";
-            ctx.fillText(item.subtitle.slice(0,6), x+w/2, y+h - barH*0.15);
+            const subFs = Math.max(11, Math.floor(fs * 0.75));
+            ctx.fillStyle = "rgba(255,255,255,0.7)"; ctx.font = "italic 400 " + subFs + "px Georgia";
+            ctx.fillText(item.subtitle.slice(0,8), x+8, y+h - barH*0.12);
           }
           ctx.textAlign = "left";
         }
