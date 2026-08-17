@@ -3144,35 +3144,33 @@ export default function Vouch() {
       ctx.fillStyle = "#C8C2B4"; ctx.fillRect(0, 0, W, H);
       ctx.fillStyle = "#111008"; ctx.fillRect(0, 0, W, 5); ctx.fillRect(0, 1915, W, 5);
 
-      // Meta
+      // Meta row
       ctx.fillStyle = "#888"; ctx.font = "400 26px Georgia";
-      ctx.fillText("Est. 2026", 72, 96);
-      ctx.textAlign = "right"; ctx.fillText("vouch5.com", 1008, 96); ctx.textAlign = "left";
+      ctx.fillText("Est. 2026", 64, 92);
+      ctx.textAlign = "right"; ctx.fillText("vouch5.com", 1016, 92); ctx.textAlign = "left";
 
       // Vouch5 logo
       const vLogo = new Image(); vLogo.crossOrigin = "anonymous";
       vLogo.src = window.location.origin + "/vouch5-logo.png";
       await new Promise(r => { vLogo.onload = r; vLogo.onerror = r; setTimeout(r, 2000); });
       if (vLogo.naturalWidth > 0) {
-        const lh = 170; const lw = vLogo.naturalWidth * (lh / vLogo.naturalHeight);
-        ctx.drawImage(vLogo, (W - lw) / 2, 118, lw, lh);
-      } else {
-        ctx.fillStyle = "#111008"; ctx.font = "900 150px 'Times New Roman', serif";
-        ctx.textAlign = "center"; ctx.fillText("Vouch5", 540, 270); ctx.textAlign = "left";
+        const lh = 160; const lw = vLogo.naturalWidth * (lh / vLogo.naturalHeight);
+        ctx.drawImage(vLogo, (W - lw) / 2, 110, lw, lh);
       }
 
-      // Double rule
-      ctx.strokeStyle = "#111008"; ctx.lineWidth = 4;
-      ctx.beginPath(); ctx.moveTo(72, 312); ctx.lineTo(1008, 312); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(72, 324); ctx.lineTo(1008, 324); ctx.stroke();
+      // Rule under logo
+      ctx.strokeStyle = "#111008"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(64, 292); ctx.lineTo(1016, 292); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(64, 302); ctx.lineTo(1016, 302); ctx.stroke();
 
-      // Byline + theme
+      // Theme + byline
+      ctx.fillStyle = "#111008"; ctx.font = "900 64px 'Times New Roman', serif";
+      ctx.fillText(boardTheme.length > 22 ? boardTheme.slice(0,22) + "…" : boardTheme, 64, 378);
+      ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 32px Georgia";
       const firstName = (shareName || shareUsername || "").split(" ")[0];
-      ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 36px Georgia";
-      ctx.fillText(firstName + " is vouching for", 72, 384);
-      ctx.fillStyle = "#111008"; ctx.font = "900 68px 'Times New Roman', serif";
-      ctx.fillText(boardTheme.length > 22 ? boardTheme.slice(0,22) + "…" : boardTheme, 72, 460);
+      ctx.fillText("@" + shareUsername, 64, 422);
 
+      // Helper: draw poster with cover fit
       const drawPoster = (img, x, y, w, h) => {
         ctx.fillStyle = "#111008"; ctx.fillRect(x, y, w, h);
         if (img && img.naturalWidth > 0) {
@@ -3184,66 +3182,95 @@ export default function Vouch() {
         }
       };
 
-      const PAD = 60, GAP = 10;
-      const gridTop = 510;
-      const gridH = 1260;
+      // Helper: draw tile label (title + subtitle)
+      const drawLabel = (item, cx, y, maxW) => {
+        if (!item) return;
+        const title = (item.title || "").slice(0, 18) + ((item.title||"").length > 18 ? "…" : "");
+        const year = item.subtitle ? item.subtitle.slice(0,4) : "";
+        const label = year ? title + " (" + year + ")" : title;
+        ctx.fillStyle = "#111008"; ctx.font = "700 22px 'Times New Roman', serif"; ctx.textAlign = "center";
+        ctx.fillText(label, cx, y);
+        ctx.fillStyle = "rgba(17,16,8,0.4)"; ctx.font = "400 18px Georgia";
+        ctx.fillText((catLabels[item.category]||"").toUpperCase(), cx, y + 26);
+        ctx.textAlign = "left";
+      };
 
-      if (tileCount <= 1) {
-        // Single: large centered
+      const PAD = 56, GAP = 12;
+      const gridTop = 456;
+
+      if (tileCount === 1) {
+        // Single: large, fills most of card
         const item = items[0];
         const isSq = musicCats.includes(item?.category);
-        const pw = isSq ? 620 : 480, ph = isSq ? 620 : 700;
-        const px = (W - pw) / 2;
-        const py = gridTop + (gridH - ph) / 2 - 60;
+        const pw = isSq ? 680 : 560, ph = isSq ? 680 : 800;
+        const px = (W - pw) / 2, py = gridTop;
         drawPoster(posterImgs[0], px, py, pw, ph);
-        ctx.fillStyle = "#111008"; ctx.font = "900 56px 'Times New Roman', serif"; ctx.textAlign = "center";
-        ctx.fillText((item?.title||"").slice(0,22), 540, py + ph + 64);
-        if (item?.subtitle) { ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 36px Georgia"; ctx.fillText(item.subtitle.slice(0,28), 540, py + ph + 112); }
-        ctx.fillStyle = "rgba(17,16,8,0.4)"; ctx.font = "400 26px Georgia";
-        ctx.fillText((catLabels[item?.category]||"").toUpperCase(), 540, py + ph + (item?.subtitle ? 152 : 108));
+        ctx.fillStyle = "#111008"; ctx.font = "900 52px 'Times New Roman', serif"; ctx.textAlign = "center";
+        ctx.fillText((item?.title||"").slice(0,22), 540, py + ph + 60);
+        if (item?.subtitle) { ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 34px Georgia"; ctx.fillText(item.subtitle, 540, py + ph + 104); }
         ctx.textAlign = "left";
       } else if (tileCount === 2) {
-        const cw = (W - PAD*2 - GAP) / 2;
-        const ch = cw * 1.5;
-        const cy = gridTop + (gridH - ch) / 2 - 40;
-        drawPoster(posterImgs[0], PAD, cy, cw, ch);
-        drawPoster(posterImgs[1], PAD + cw + GAP, cy, cw, ch);
+        const cw = (W - PAD*2 - GAP) / 2, ch = cw * 1.5;
+        drawPoster(posterImgs[0], PAD, gridTop, cw, ch);
+        drawLabel(items[0], PAD + cw/2, gridTop + ch + 36, cw);
+        drawPoster(posterImgs[1], PAD + cw + GAP, gridTop, cw, ch);
+        drawLabel(items[1], PAD + cw + GAP + cw/2, gridTop + ch + 36, cw);
       } else if (tileCount === 3) {
-        const cw3 = (W - PAD*2 - GAP*2) / 3;
-        const ch3 = cw3 * 1.5;
-        const cy3 = gridTop + (gridH - ch3) / 2 - 40;
-        for (let i = 0; i < 3; i++) drawPoster(posterImgs[i], PAD + i * (cw3+GAP), cy3, cw3, ch3);
+        const cw3 = (W - PAD*2 - GAP*2) / 3, ch3 = cw3 * 1.5;
+        for (let i = 0; i < 3; i++) {
+          const x = PAD + i * (cw3 + GAP);
+          drawPoster(posterImgs[i], x, gridTop, cw3, ch3);
+          drawLabel(items[i], x + cw3/2, gridTop + ch3 + 34, cw3);
+        }
       } else if (tileCount === 4) {
-        const cw4 = (W - PAD*2 - GAP) / 2;
-        const ch4 = cw4 * 1.5;
-        const topY = gridTop + 20;
-        const botY = topY + ch4 + GAP;
-        for (let i = 0; i < 2; i++) drawPoster(posterImgs[i], PAD + i*(cw4+GAP), topY, cw4, ch4);
-        for (let i = 2; i < 4; i++) drawPoster(posterImgs[i], PAD + (i-2)*(cw4+GAP), botY, cw4, ch4);
+        const cw4 = (W - PAD*2 - GAP) / 2, ch4 = cw4 * 1.5;
+        for (let i = 0; i < 2; i++) {
+          const x = PAD + i * (cw4 + GAP);
+          drawPoster(posterImgs[i], x, gridTop, cw4, ch4);
+          drawLabel(items[i], x + cw4/2, gridTop + ch4 + 34, cw4);
+        }
+        const row2Y = gridTop + ch4 + 72;
+        for (let i = 2; i < 4; i++) {
+          const x = PAD + (i-2) * (cw4 + GAP);
+          drawPoster(posterImgs[i], x, row2Y, cw4, ch4);
+          drawLabel(items[i], x + cw4/2, row2Y + ch4 + 34, cw4);
+        }
       } else {
-        // 5 tiles: hero center + 4 corners
-        const heroW = 460, heroH = 660;
+        // 5 tiles: hero center on top, 4 corners behind
+        const heroW = 440, heroH = 630;
         const heroX = (W - heroW) / 2;
-        const heroY = gridTop + (gridH - heroH) / 2 - 40;
-        const cornerW = 260, cornerH = 380;
-        const pad = 48;
-        // Draw corners first (behind hero)
-        drawPoster(posterImgs[1], pad, heroY - 20, cornerW, cornerH); // top left
-        drawPoster(posterImgs[2], W - pad - cornerW, heroY - 20, cornerW, cornerH); // top right
-        drawPoster(posterImgs[3], pad, heroY + heroH - cornerH + 20, cornerW, cornerH); // bottom left
-        drawPoster(posterImgs[4], W - pad - cornerW, heroY + heroH - cornerH + 20, cornerW, cornerH); // bottom right
-        // Draw hero on top
+        const heroY = gridTop + 40;
+        const cw = 260, ch = cw * 1.5;
+        // Corner positions
+        const tl = { x: PAD, y: gridTop };
+        const tr = { x: W - PAD - cw, y: gridTop };
+        const bl = { x: PAD, y: heroY + heroH - ch };
+        const br = { x: W - PAD - cw, y: heroY + heroH - ch };
+        // Draw corners first
+        drawPoster(posterImgs[1], tl.x, tl.y, cw, ch);
+        drawPoster(posterImgs[2], tr.x, tr.y, cw, ch);
+        drawPoster(posterImgs[3], bl.x, bl.y, cw, ch);
+        drawPoster(posterImgs[4], br.x, br.y, cw, ch);
+        // Hero on top
         drawPoster(posterImgs[0], heroX, heroY, heroW, heroH);
+        // Labels under corners
+        const labelY = heroY + heroH + 36;
+        drawLabel(items[1], tl.x + cw/2, labelY, cw);
+        drawLabel(items[2], tr.x + cw/2, labelY, cw);
+        drawLabel(items[0], 540, labelY + 64, heroW); // hero label centered
+        const bot = heroY + heroH - ch;
+        drawLabel(items[3], bl.x + cw/2, bot + ch + 36, cw);
+        drawLabel(items[4], br.x + cw/2, bot + ch + 36, cw);
       }
 
-      // Bottom rule + CTA
-      const bottomY = tileCount <= 3 ? 1700 : tileCount === 4 ? gridTop + (W - PAD*2 - GAP) / 2 * 1.5 * 2 + GAP + 60 : 1750;
+      // Bottom CTA
+      const ctaY = 1760;
       ctx.strokeStyle = "rgba(17,16,8,0.2)"; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(PAD, bottomY); ctx.lineTo(W-PAD, bottomY); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(PAD, ctaY); ctx.lineTo(W - PAD, ctaY); ctx.stroke();
       ctx.fillStyle = "#555"; ctx.font = "italic 400 28px Georgia"; ctx.textAlign = "center";
-      ctx.fillText("What would you put your name behind right now?", 540, bottomY + 40);
-      ctx.fillStyle = "#111008"; ctx.font = "900 38px 'Times New Roman', serif";
-      ctx.fillText("vouch5.com/@" + shareUsername, 540, bottomY + 88);
+      ctx.fillText("What would you put your name behind right now?", 540, ctaY + 40);
+      ctx.fillStyle = "#111008"; ctx.font = "900 36px 'Times New Roman', serif";
+      ctx.fillText("vouch5.com/@" + shareUsername, 540, ctaY + 84);
       ctx.textAlign = "left";
     };
     const loadImg = async (url) => {
