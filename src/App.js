@@ -3167,7 +3167,6 @@ export default function Vouch() {
       ctx.fillStyle = "#111008"; ctx.font = "900 64px 'Times New Roman', serif";
       ctx.fillText(boardTheme.length > 22 ? boardTheme.slice(0,22) + "…" : boardTheme, 64, 378);
       ctx.fillStyle = "#7a7568"; ctx.font = "italic 400 32px Georgia";
-      const firstName = (shareName || shareUsername || "").split(" ")[0];
       ctx.fillText("@" + shareUsername, 64, 422);
 
       // Helper: draw poster with cover fit
