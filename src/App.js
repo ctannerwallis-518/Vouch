@@ -3169,7 +3169,7 @@ export default function Vouch() {
       ctx.textAlign = "left";
 
       // Draw poster helper
-      const dp = (img, x, y, w, h) => {
+      const dp = (img, x, y, w, h, item) => {
         ctx.fillStyle = "#111008"; ctx.fillRect(x, y, w, h);
         if (img && img.naturalWidth > 0) {
           const ir = img.naturalWidth/img.naturalHeight, cr = w/h;
@@ -3177,6 +3177,24 @@ export default function Vouch() {
           if (ir > cr) { sw = sh*cr; sx = (img.naturalWidth-sw)/2; }
           else { sh = sw/cr; sy = (img.naturalHeight-sh)/2; }
           ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+        }
+        // Overlay label at bottom of tile
+        if (item && item.title) {
+          const barH = h * 0.22;
+          const grad = ctx.createLinearGradient(x, y+h-barH, x, y+h);
+          grad.addColorStop(0, "rgba(0,0,0,0)");
+          grad.addColorStop(1, "rgba(0,0,0,0.72)");
+          ctx.fillStyle = grad; ctx.fillRect(x, y+h-barH, w, barH);
+          const fs = Math.max(16, Math.floor(w * 0.1));
+          ctx.fillStyle = "#fff"; ctx.font = "700 " + fs + "px 'Times New Roman', serif";
+          ctx.textAlign = "center";
+          const title = (item.title||"").slice(0, Math.floor(w/fs*1.4));
+          ctx.fillText(title, x+w/2, y+h - barH*0.42);
+          if (item.subtitle) {
+            ctx.fillStyle = "rgba(255,255,255,0.65)"; ctx.font = "italic 400 " + Math.max(13, Math.floor(w*0.075)) + "px Georgia";
+            ctx.fillText(item.subtitle.slice(0,6), x+w/2, y+h - barH*0.15);
+          }
+          ctx.textAlign = "left";
         }
       };
 
@@ -3202,7 +3220,7 @@ export default function Vouch() {
         const isSq = musicCats.includes(items[0]?.category);
         const pw = gridW * 0.72, ph = isSq ? pw : pw * 1.4;
         const px = (W-pw)/2;
-        dp(posterImgs[0], px, gridTop, pw, ph);
+        dp(posterImgs[0], px, gridTop, pw, ph, items[0]);
         ctx.fillStyle = "#111008"; ctx.font = "900 48px 'Times New Roman', serif"; ctx.textAlign = "center";
         ctx.fillText((items[0]?.title||"").slice(0,22), 540, gridTop+ph+58);
         if (items[0]?.subtitle) { ctx.fillStyle="#7a7568"; ctx.font="italic 400 32px Georgia"; ctx.fillText(items[0].subtitle, 540, gridTop+ph+100); }
@@ -3210,25 +3228,25 @@ export default function Vouch() {
 
       } else if (tileCount === 2) {
         const tw = (gridW-GAP)/2, th = tw*1.5;
-        dp(posterImgs[0], PAD, gridTop, tw, th);
-        dp(posterImgs[1], PAD+tw+GAP, gridTop, tw, th);
+        dp(posterImgs[0], PAD, gridTop, tw, th, items[0]);
+        dp(posterImgs[1], PAD+tw+GAP, gridTop, tw, th, items[1]);
 
 
       } else if (tileCount === 3) {
         const tw3 = (gridW-GAP*2)/3, th3 = tw3*1.5;
         for (let i=0;i<3;i++) {
-          dp(posterImgs[i], PAD+i*(tw3+GAP), gridTop, tw3, th3);
+          dp(posterImgs[i], PAD+i*(tw3+GAP), gridTop, tw3, th3, items[i]);
           dl(items[i], PAD+i*(tw3+GAP)+tw3/2, gridTop+th3+34);
         }
 
       } else if (tileCount === 4) {
         const tw4 = (gridW-GAP)/2, th4 = tw4*1.5;
-        dp(posterImgs[0], PAD, gridTop, tw4, th4);
-        dp(posterImgs[1], PAD+tw4+GAP, gridTop, tw4, th4);
+        dp(posterImgs[0], PAD, gridTop, tw4, th4, items[0]);
+        dp(posterImgs[1], PAD+tw4+GAP, gridTop, tw4, th4, items[1]);
 
         const r2 = gridTop+th4+70;
-        dp(posterImgs[2], PAD, r2, tw4, th4);
-        dp(posterImgs[3], PAD+tw4+GAP, r2, tw4, th4);
+        dp(posterImgs[2], PAD, r2, tw4, th4, items[2]);
+        dp(posterImgs[3], PAD+tw4+GAP, r2, tw4, th4, items[3]);
 
 
       } else {
@@ -3237,10 +3255,10 @@ export default function Vouch() {
         const row2 = gridTop + ch + GAP;
         const colOff = (gridW - cw*2 - GAP) / 2;
         // Draw 4 corner tiles first
-        dp(posterImgs[1], PAD+colOff, gridTop, cw, ch);
-        dp(posterImgs[2], PAD+colOff+cw+GAP, gridTop, cw, ch);
-        dp(posterImgs[3], PAD+colOff, row2, cw, ch);
-        dp(posterImgs[4], PAD+colOff+cw+GAP, row2, cw, ch);
+        dp(posterImgs[1], PAD+colOff, gridTop, cw, ch, items[1]);
+        dp(posterImgs[2], PAD+colOff+cw+GAP, gridTop, cw, ch, items[2]);
+        dp(posterImgs[3], PAD+colOff, row2, cw, ch, items[3]);
+        dp(posterImgs[4], PAD+colOff+cw+GAP, row2, cw, ch, items[4]);
         // Borders on corner tiles
         ctx.strokeStyle="rgba(17,16,8,0.15)"; ctx.lineWidth=1.5;
         ctx.strokeRect(PAD+colOff, gridTop, cw, ch);
@@ -3256,7 +3274,7 @@ export default function Vouch() {
         const hx = (W-hw)/2, hy = gridTop + (ch*2+GAP-hh)/2;
         // Shadow under hero
         ctx.save(); ctx.shadowColor="rgba(0,0,0,0.45)"; ctx.shadowBlur=36; ctx.shadowOffsetY=10;
-        dp(posterImgs[0], hx, hy, hw, hh);
+        dp(posterImgs[0], hx, hy, hw, hh, items[0]);
         ctx.restore();
         // Border on hero
         ctx.strokeStyle="rgba(17,16,8,0.2)"; ctx.lineWidth=2;
