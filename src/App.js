@@ -3168,8 +3168,8 @@ export default function Vouch() {
       ctx.fillText("@" + shareUsername, 540, 414);
       ctx.textAlign = "left";
 
-      // Draw poster helper
-      const dp = (img, x, y, w, h, item) => {
+      // Draw poster helper — labelPos: "top" or "bottom"
+      const dp = (img, x, y, w, h, item, labelPos="bottom") => {
         ctx.fillStyle = "#111008"; ctx.fillRect(x, y, w, h);
         if (img && img.naturalWidth > 0) {
           const ir = img.naturalWidth/img.naturalHeight, cr = w/h;
@@ -3181,11 +3181,11 @@ export default function Vouch() {
         // Overlay label at bottom of tile
         if (item && item.title) {
           const barH = h * 0.28;
-          const grad = ctx.createLinearGradient(x, y+h-barH, x, y+h);
-          grad.addColorStop(0, "rgba(0,0,0,0)");
-          grad.addColorStop(1, "rgba(0,0,0,0.88)");
-          ctx.fillStyle = grad; ctx.fillRect(x, y+h-barH, w, barH);
-          // Auto-scale font size so title fits within tile width
+          const isTop = labelPos === "top";
+          const grad = ctx.createLinearGradient(x, isTop ? y : y+h-barH, x, isTop ? y+barH : y+h);
+          grad.addColorStop(0, isTop ? "rgba(0,0,0,0.88)" : "rgba(0,0,0,0)");
+          grad.addColorStop(1, isTop ? "rgba(0,0,0,0)" : "rgba(0,0,0,0.88)");
+          ctx.fillStyle = grad; ctx.fillRect(x, isTop ? y : y+h-barH, w, barH);
           const maxTitleW = w - 16;
           let fs = Math.floor(w * 0.1);
           ctx.font = "700 " + fs + "px 'Times New Roman', serif";
@@ -3193,13 +3193,14 @@ export default function Vouch() {
             fs -= 1;
             ctx.font = "700 " + fs + "px 'Times New Roman', serif";
           }
-          ctx.fillStyle = "#fff";
-          ctx.textAlign = "left";
-          ctx.fillText(item.title||"", x+8, y+h - barH*0.38);
+          ctx.fillStyle = "#fff"; ctx.textAlign = "left";
+          const textY = isTop ? y + barH*0.45 : y+h - barH*0.38;
+          ctx.fillText(item.title||"", x+8, textY);
           if (item.subtitle) {
             const subFs = Math.max(11, Math.floor(fs * 0.75));
             ctx.fillStyle = "rgba(255,255,255,0.7)"; ctx.font = "italic 400 " + subFs + "px Georgia";
-            ctx.fillText(item.subtitle.slice(0,8), x+8, y+h - barH*0.12);
+            const subY = isTop ? y + barH*0.78 : y+h - barH*0.12;
+            ctx.fillText(item.subtitle.slice(0,8), x+8, subY);
           }
           ctx.textAlign = "left";
         }
@@ -3262,8 +3263,8 @@ export default function Vouch() {
         const row2 = gridTop + ch + GAP;
         const colOff = (gridW - cw*2 - GAP) / 2;
         // Draw 4 corner tiles first
-        dp(posterImgs[1], PAD+colOff, gridTop, cw, ch, items[1]);
-        dp(posterImgs[2], PAD+colOff+cw+GAP, gridTop, cw, ch, items[2]);
+        dp(posterImgs[1], PAD+colOff, gridTop, cw, ch, items[1], "top");
+        dp(posterImgs[2], PAD+colOff+cw+GAP, gridTop, cw, ch, items[2], "top");
         dp(posterImgs[3], PAD+colOff, row2, cw, ch, items[3]);
         dp(posterImgs[4], PAD+colOff+cw+GAP, row2, cw, ch, items[4]);
         // Borders on corner tiles
@@ -3286,14 +3287,7 @@ export default function Vouch() {
         // Border on hero
         ctx.strokeStyle="rgba(17,16,8,0.2)"; ctx.lineWidth=2;
         ctx.strokeRect(hx, hy, hw, hh);
-        // Hero label centered below grid
-        const heroLabelY = row2+ch+70;
-        ctx.fillStyle="#111008"; ctx.font="700 28px 'Times New Roman', serif"; ctx.textAlign="center";
-        const heroYr = items[0]?.subtitle ? " ("+items[0].subtitle.slice(0,4)+")" : "";
-        ctx.fillText(((items[0]?.title||"").slice(0,20)+((items[0]?.title||"").length>20?"…":""))+heroYr, 540, heroLabelY);
-        ctx.fillStyle="rgba(17,16,8,0.4)"; ctx.font="400 20px Georgia";
-        ctx.fillText((catLabels[items[0]?.category]||"").toUpperCase(), 540, heroLabelY+26);
-        ctx.textAlign="left";
+        // No standalone hero label — overlay is inside the tile
       }
 
       // CTA
