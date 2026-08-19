@@ -3182,7 +3182,6 @@ export default function Vouch() {
         if (item && item.title) {
           // Build label lines based on category
           const cat = item.category || "";
-          const musicCatsLocal = ["albums","artists","songs","podcasts"];
           let line1 = item.title || "";
           let line2 = "";
           if (cat === "movies" || cat === "shows") {
