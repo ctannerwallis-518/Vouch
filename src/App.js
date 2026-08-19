@@ -3178,29 +3178,49 @@ export default function Vouch() {
           else { sh = sw/cr; sy = (img.naturalHeight-sh)/2; }
           ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
         }
-        // Overlay label at bottom of tile
+        // Overlay label
         if (item && item.title) {
-          const barH = h * 0.28;
+          // Build label lines based on category
+          const cat = item.category || "";
+          const musicCatsLocal = ["albums","artists","songs","podcasts"];
+          let line1 = item.title || "";
+          let line2 = "";
+          if (cat === "movies" || cat === "shows") {
+            line2 = item.subtitle ? item.subtitle.slice(0,4) : "";
+          } else if (cat === "albums") {
+            line2 = item.subtitle || "";
+          } else if (cat === "songs") {
+            line2 = item.subtitle || "";
+          } else if (cat === "artists") {
+            line2 = "";
+          } else {
+            line2 = item.subtitle || "";
+          }
+
+          const barH = h * 0.3;
           const isTop = labelPos === "top";
           const grad = ctx.createLinearGradient(x, isTop ? y : y+h-barH, x, isTop ? y+barH : y+h);
-          grad.addColorStop(0, isTop ? "rgba(0,0,0,0.88)" : "rgba(0,0,0,0)");
-          grad.addColorStop(1, isTop ? "rgba(0,0,0,0)" : "rgba(0,0,0,0.88)");
+          grad.addColorStop(0, isTop ? "rgba(0,0,0,0.9)" : "rgba(0,0,0,0)");
+          grad.addColorStop(1, isTop ? "rgba(0,0,0,0)" : "rgba(0,0,0,0.9)");
           ctx.fillStyle = grad; ctx.fillRect(x, isTop ? y : y+h-barH, w, barH);
-          const maxTitleW = w - 16;
+
+          const maxW = w - 16;
+          // Auto-fit line1
           let fs = Math.floor(w * 0.1);
           ctx.font = "700 " + fs + "px 'Times New Roman', serif";
-          while (ctx.measureText(item.title||"").width > maxTitleW && fs > 12) {
-            fs -= 1;
-            ctx.font = "700 " + fs + "px 'Times New Roman', serif";
-          }
+          while (ctx.measureText(line1).width > maxW && fs > 10) { fs--; ctx.font = "700 " + fs + "px 'Times New Roman', serif"; }
+
           ctx.fillStyle = "#fff"; ctx.textAlign = "left";
-          const textY = isTop ? y + barH*0.45 : y+h - barH*0.38;
-          ctx.fillText(item.title||"", x+8, textY);
-          if (item.subtitle) {
-            const subFs = Math.max(11, Math.floor(fs * 0.75));
-            ctx.fillStyle = "rgba(255,255,255,0.7)"; ctx.font = "italic 400 " + subFs + "px Georgia";
-            const subY = isTop ? y + barH*0.78 : y+h - barH*0.12;
-            ctx.fillText(item.subtitle.slice(0,8), x+8, subY);
+          const textY = isTop ? y + barH*0.42 : y+h - barH*0.42;
+          ctx.fillText(line1, x+8, textY);
+
+          if (line2) {
+            let fs2 = Math.max(10, Math.floor(fs * 0.78));
+            ctx.font = "italic 400 " + fs2 + "px Georgia";
+            while (ctx.measureText(line2).width > maxW && fs2 > 9) { fs2--; ctx.font = "italic 400 " + fs2 + "px Georgia"; }
+            ctx.fillStyle = "rgba(255,255,255,0.75)";
+            const subY = isTop ? y + barH*0.76 : y+h - barH*0.1;
+            ctx.fillText(line2, x+8, subY);
           }
           ctx.textAlign = "left";
         }
