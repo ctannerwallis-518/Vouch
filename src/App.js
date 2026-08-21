@@ -245,7 +245,7 @@ function Auth({ inviteUserId }) {
   return (
     <div className="auth-wrap">
       <div className="auth-box">
-        <div className="auth-plate"><img src="/vouch5-logo.png" alt="Vouch5" style={{height:"clamp(80px,16vw,160px)",display:"block",margin:"0 auto"}} /></div>
+        <div className="auth-plate" style={{display:"flex",justifyContent:"center",width:"100%"}}><img src="/vouch5-logo.png" alt="Vouch5" style={{height:"clamp(80px,16vw,160px)"}} /></div>
         <div className="auth-tagline">Love it? Vouch for it.</div>
         <div style={{ marginBottom: 32, borderBottom: `1px solid ${T.paperDark}`, paddingBottom: 32 }}>
           <HowItWorks />
