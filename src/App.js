@@ -962,26 +962,50 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
   );
 }
 
+function RibbonBadge({ type, compact = false }) {
+  const ribbon = BADGE_RIBBONS[type];
+  if (!ribbon) return null;
+  const h = compact ? 15 : 19;
+  return (
+    <span title={ribbon.title} style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", flexShrink: 0, cursor: "default", filter: "drop-shadow(0 1px 1px rgba(17,16,8,0.35))" }}>
+      <span style={{
+        ...ribbon.style,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        minWidth: compact ? 24 : 30,
+        height: h,
+        padding: "0 7px",
+        fontFamily: "'Spectral SC',serif",
+        fontSize: compact ? "6px" : "7px",
+        fontWeight: 700,
+        letterSpacing: "0.18em",
+        lineHeight: 1,
+      }}>{ribbon.label}</span>
+      <span style={{
+        width: 0,
+        height: 0,
+        borderLeft: compact ? "12px solid transparent" : "15px solid transparent",
+        borderRight: compact ? "12px solid transparent" : "15px solid transparent",
+        borderTop: `${compact ? 4 : 5}px solid ${type === "first_global" ? "#9A7820" : "#909090"}`,
+        marginTop: -1,
+      }} />
+    </span>
+  );
+}
+
 function VouchRibbon({ badges, align = "right", compact = false }) {
   if (!badges?.length) return null;
   const ordered = ["first_global", "first_circle"].filter(t => badges.includes(t));
-  const pos = align === "left" ? { top: compact ? 4 : 8, left: compact ? 4 : 8 } : { top: compact ? 4 : 8, right: compact ? 4 : 8 };
+  const pos = align === "left" ? { top: compact ? 6 : 10, left: compact ? 6 : 10 } : { top: compact ? 6 : 10, right: compact ? 6 : 10 };
   return (
-    <div style={{ position: "absolute", ...pos, zIndex: 3, display: "flex", flexDirection: "column", gap: 4, alignItems: align === "left" ? "flex-start" : "flex-end" }}>
-      {ordered.map(type => {
-        const ribbon = BADGE_RIBBONS[type];
-        if (!ribbon) return null;
-        return (
-          <div key={type} title={type === "first_global" ? "First on Vouch globally" : "First in friend group"} style={{ ...ribbon.style, fontFamily: "'Spectral SC',serif", fontSize: compact ? "7px" : "8px", fontWeight: 700, letterSpacing: "0.12em", padding: compact ? "2px 6px" : "3px 8px", cursor: "default", whiteSpace: "nowrap" }}>
-            {ribbon.label}
-          </div>
-        );
-      })}
+    <div style={{ position: "absolute", ...pos, zIndex: 3, display: "flex", flexDirection: "row", gap: compact ? 4 : 5, alignItems: "flex-start" }}>
+      {ordered.map(type => <RibbonBadge key={type} type={type} compact={compact} />)}
     </div>
   );
 }
 
-function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, buddyCounts, hideHeader, hideEmptySlots, onAddToQueue, queue, ownerId, onMusicOpen, singleTile, itemBadges }) {
+function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, hideHeader, hideEmptySlots, onAddToQueue, queue, ownerId, onMusicOpen, singleTile, itemBadges }) {
   const [idx, setIdx]      = useState(0);
   const touchStartX        = useRef(null);
   const touchStartY        = useRef(null);
@@ -1070,9 +1094,6 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
         )}
       </div>
 
-      {buddyCounts?.[String(it.id)] > 0 && (
-        <div title="Total Buddy Vouches" style={{ position: "absolute", top: 8, left: 8, zIndex: 2, background: "rgba(17,16,8,0.82)", color: "rgba(200,194,180,0.95)", fontFamily: "'Spectral SC',serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "default" }}>{buddyCounts[String(it.id)]} {buddyCounts[String(it.id)] === 1 ? "Vouch" : "Vouches"}</div>
-      )}
     </div>
     );
   };
@@ -1145,7 +1166,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
   );
 }
 
-function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, buddyCounts, onAddToQueue, queue, onMusicOpen, itemBadges }) {
+function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, onAddToQueue, queue, onMusicOpen, itemBadges }) {
   const [open, setOpen] = useState(true);
   const isMobile = typeof window !== "undefined" && window.innerWidth <= 640; // eslint-disable-line
   const slots = Array(5).fill(null).map((_, i) => items[i] || null);
@@ -1661,7 +1682,7 @@ function EditMetaForm({ board, themes, onSave, onClose }) {
   );
 }
 
-function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame, onShowVouchers }) {
+function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame }) {
   const [idx, setIdx] = useState(0);
   const [titleBadgeMap, setTitleBadgeMap] = useState({});
   const touchStartX = useRef(null);
@@ -1711,12 +1732,10 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame,
       {item.poster
         ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: "1px solid rgba(200,194,180,0.2)", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")} onError={e => e.target.style.display = "none"} />
         : <div style={{ width: "100%", height: 340, background: "rgba(200,194,180,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")}>{item.title}</div>}
-      <div title="See who vouched" onClick={e => { e.stopPropagation(); onShowVouchers && onShowVouchers(item); }} style={{ position: "absolute", top: 8, left: 8, background: "rgba(17,16,8,0.82)", color: "rgba(200,194,180,0.95)", fontFamily: "'Spectral SC',serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "pointer" }}>{item.count} {item.count === 1 ? "Vouch" : "Vouches"}</div>
       <div style={{ padding: "10px 4px 4px" }}>
         <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 4 }}>{item.category}</div>
         <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: "#C8C2B4" }}>{item.title}</div>
         <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "rgba(200,194,180,0.7)" }}>{item.subtitle || ""}</div>
-        <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: "rgba(200,194,180,0.4)", marginTop: 4 }}>{item.vouchers?.length > 0 ? item.vouchers.join(", ") : ""}</div>
       </div>
     </div>
   );
@@ -1729,14 +1748,10 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame,
         {item.poster
           ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: "1px solid rgba(200,194,180,0.2)", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")} onError={e => e.target.style.display = "none"} />
           : <div style={{ width: "100%", height: 340, background: "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")}>{item.title}</div>}
-        <div title="See who vouched" onClick={e => { e.stopPropagation(); onShowVouchers && onShowVouchers(item); }} style={{ position: "absolute", top: 8, left: 8, background: "rgba(17,16,8,0.82)", color: "rgba(200,194,180,0.95)", fontFamily: "'Spectral SC',serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "pointer" }}>{item.count} {item.count === 1 ? "Vouch" : "Vouches"}</div>
         <div style={{ padding: "10px 4px 4px" }}>
           <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 4 }}>{item.category}</div>
           <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: "#C8C2B4" }}>{item.title}</div>
           <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "rgba(200,194,180,0.7)" }}>{item.subtitle || ""}</div>
-          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: "rgba(200,194,180,0.4)", marginTop: 4 }}>
-            {item.vouchers?.length > 0 ? item.vouchers.join(", ") : ""}
-          </div>
           <div style={{ display: "flex", marginTop: 10 }}>
             {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue(item); }} style={{ flex: 1, background: isQueued ? "rgba(200,194,180,0.25)" : "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", color: isQueued ? "rgba(200,194,180,0.95)" : "rgba(200,194,180,0.6)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700, transition: "all 0.15s" }}>{isQueued ? "✓ Queued" : "+ Queue"}</button>}
           </div>
@@ -2627,7 +2642,6 @@ export default function Vouch() {
   const [avatarPicker,   setAvatarPicker]   = useState(false);
   const [avatarLightbox, setAvatarLightbox] = useState(null);
   const [showContactModal, setShowContactModal] = useState(false);
-  const [voucherModal, setVoucherModal] = useState(null); // { title, names }
   const [musicPreference, setMusicPreference] = useState(null); // "spotify" | "apple_music" | null
   const musicPrefRef = useRef(null);
   const [musicPickerModal, setMusicPickerModal] = useState(null); // { url, title, sub, catKey }
@@ -3899,15 +3913,6 @@ export default function Vouch() {
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   })();
 
-  // Build a map of item_id -> unique user count across all buddy boards (for badges)
-  const buddyCounts = {};
-  const seenBadge = new Set();
-  allBuddyBoards.forEach(row => {
-    const key = row.user_id + ":" + row.item_id;
-    if (seenBadge.has(key)) return;
-    seenBadge.add(key);
-    buddyCounts[String(row.item_id)] = (buddyCounts[String(row.item_id)] || 0) + 1;
-  });
   const inviteParam  = new URLSearchParams(window.location.search).get("invite");
   // Support /@username clean URLs
   const pathUsername = window.location.pathname.startsWith("/@") ? window.location.pathname.slice(2) : null;
@@ -4191,7 +4196,7 @@ export default function Vouch() {
 
                 {/* GROUP VOUCH - top of page */}
                 {groupVouchItems.length > 0 && (
-                  <GroupVouchSlideshow items={groupVouchItems} isMobile={isMobileGlobal} onAddToQueue={addToQueue} queue={queue} onDudeSame={dudeSame} onShowVouchers={(item) => setVoucherModal({ title: item.title, names: item.vouchers || [] })} />
+                  <GroupVouchSlideshow items={groupVouchItems} isMobile={isMobileGlobal} onAddToQueue={addToQueue} queue={queue} onDudeSame={dudeSame} />
                 )}
 
                 <BuddiesBin allBuddyBoards={allBuddyBoards} buddies={buddies} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId, true); window.scrollTo(0,0); }} onAddToQueue={addToQueue} queue={queue} onDudeSame={dudeSame} myReactions={myReactions} userId={userId} />
@@ -4285,7 +4290,7 @@ export default function Vouch() {
                           if (b[item.category]) b[item.category].push({ id: item.item_id, title: item.title, sub: item.subtitle || "", poster: item.poster, comment: "", vouched: true, sourceUrl: item.source_url, _cat: item.category, _catLabel: CATEGORIES.find(c=>c.key===item.category)?.label || item.category });
                         });
                         return b;
-                      })()} isOwn={true} onCard={(k, i) => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => {}} myReactions={[]} buddyCounts={buddyCounts} hideHeader={true} onMusicOpen={openMusicUrl} itemBadges={ownItemBadges} />
+                      })()} isOwn={true} onCard={(k, i) => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => {}} myReactions={[]} hideHeader={true} onMusicOpen={openMusicUrl} itemBadges={ownItemBadges} />
                     ) : (
                       <div style={{ height: 220, border: "1px dashed rgba(200,194,180,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 10, cursor: "pointer" }} onClick={() => { setEditingBoard(null); setBoardEditor(true); }}>
                         <span style={{ fontSize: 28, color: "rgba(200,194,180,0.4)" }}>+</span>
@@ -4309,7 +4314,7 @@ export default function Vouch() {
                         if (brd[item.category]) brd[item.category].push({ id: item.item_id, title: item.title, sub: item.subtitle || "", poster: item.poster, comment: "", vouched: true, sourceUrl: item.source_url, _cat: item.category, _catLabel: CATEGORIES.find(c=>c.key===item.category)?.label || item.category });
                       });
                       return brd;
-                    })()} isOwn={false} onCard={(k,i)=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} hideHeader={true} onAddToQueue={addToQueue} queue={queue} ownerId={viewing?.userId} onMusicOpen={openMusicUrl} itemBadges={viewItemBadges} />
+                    })()} isOwn={false} onCard={(k,i)=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} hideHeader={true} onAddToQueue={addToQueue} queue={queue} ownerId={viewing?.userId} onMusicOpen={openMusicUrl} itemBadges={viewItemBadges} />
                   </div>
                 ) : null}
                 {viewing && !isOwn && (
@@ -4381,7 +4386,7 @@ export default function Vouch() {
                     ) : (
                       visibleCats.map(cat => {
                         const items = currBoard[cat.key] || [];
-                        return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={(key) => {  setAddModal(key); }} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} onAddToQueue={addToQueue} queue={queue} onMusicOpen={openMusicUrl} itemBadges={isOwn ? ownItemBadges : viewItemBadges} />;
+                        return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={(key) => {  setAddModal(key); }} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} onAddToQueue={addToQueue} queue={queue} onMusicOpen={openMusicUrl} itemBadges={isOwn ? ownItemBadges : viewItemBadges} />;
                       })
                     )}
                   </>;
@@ -4990,29 +4995,6 @@ export default function Vouch() {
                   </button>
                 </div>
                 <button onClick={() => setMusicPickerModal(null)} style={{ width: "100%", background: "transparent", border: "none", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkFaint, cursor: "pointer", padding: "8px 0" }}>Maybe later</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {voucherModal && (
-          <div className="modal-overlay" onClick={() => setVoucherModal(null)}>
-            <div className="modal" onClick={e => e.stopPropagation()}>
-              <div className="modal-head">
-                <div className="modal-title">Vouched by</div>
-                <button className="modal-x" onClick={() => setVoucherModal(null)}>×</button>
-              </div>
-              <div className="modal-body">
-                <div style={{ fontFamily: "'Spectral',serif", fontWeight: 700, fontSize: 16, marginBottom: 16 }}>{voucherModal.title}</div>
-                {voucherModal.names.length === 0
-                  ? <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight }}>No names available.</div>
-                  : voucherModal.names.map((name, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
-                      <Avatar name={name} size={36} />
-                      <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 15 }}>{name}</div>
-                    </div>
-                  ))
-                }
               </div>
             </div>
           </div>
