@@ -1,14 +1,14 @@
 import { supabase } from "./supabase";
 
 export const RIBBON_STYLES = {
-  gold:   { background: "#C9A820", color: "#111008", border: "1px solid #A07830" },
-  silver: { background: "#C0C0C0", color: "#111008", border: "1px solid #8A8A88" },
-  black:  { background: "#111008", color: "#C8C2B4", border: "1px solid #3a3830" },
+  gold:   { background: "linear-gradient(180deg, #D4B030 0%, #C9A820 60%, #9A7820 100%)", color: "#111008" },
+  silver: { background: "linear-gradient(180deg, #E0E0E0 0%, #C0C0C0 60%, #909090 100%)", color: "#111008" },
+  black:  { background: "#111008", color: "#C8C2B4" },
 };
 
 export const BADGE_RIBBONS = {
-  first_global: { label: "1st", style: RIBBON_STYLES.gold },
-  first_circle: { label: "Friend 1st", style: RIBBON_STYLES.silver },
+  first_global: { label: "1st", style: RIBBON_STYLES.gold, title: "First on Vouch globally" },
+  first_circle: { label: "1st", style: RIBBON_STYLES.silver, title: "First in friend group" },
 };
 
 export function badgeKey(category, itemId) {
