@@ -635,8 +635,6 @@ function HowItWorks() {
           <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>Buddies</div>
           <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Connect with friends and see what they are vouching for. Agree with anything that resonates, or add it to your Queue to revisit later.</div>
         </div>
-        <div style={{ borderTop: `1px solid ${T.paperDark}` }} />
-        <BadgeKeyLegend />
       </div>
     </div>
   );
@@ -965,35 +963,71 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
   );
 }
 
+function BadgeExplainModal({ type, onClose }) {
+  const ribbon = BADGE_RIBBONS[type];
+  if (!ribbon) return null;
+  const body = type === "first_global"
+    ? "The earliest person on all of Vouch to publish this title on their vouch board."
+    : "The earliest person in a friend group to publish this title on their vouch board.";
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 340 }}>
+        <div className="modal-head">
+          <div className="modal-title">{ribbon.title}</div>
+          <button className="modal-x" onClick={onClose}>×</button>
+        </div>
+        <div className="modal-body" style={{ textAlign: "center", paddingBottom: 24 }}>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}>
+            <RibbonBadge type={type} />
+          </div>
+          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, lineHeight: 1.7, color: T.inkMid }}>{body}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function RibbonBadge({ type, compact = false }) {
+  const [showExplain, setShowExplain] = useState(false);
   const ribbon = BADGE_RIBBONS[type];
   if (!ribbon) return null;
   const h = compact ? 15 : 19;
+  const open = e => { e.stopPropagation(); setShowExplain(true); };
   return (
-    <span title={ribbon.title} style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", flexShrink: 0, cursor: "default", filter: "drop-shadow(0 1px 1px rgba(17,16,8,0.35))" }}>
-      <span style={{
-        ...ribbon.style,
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        minWidth: compact ? 24 : 30,
-        height: h,
-        padding: "0 7px",
-        fontFamily: "'Spectral SC',serif",
-        fontSize: compact ? "6px" : "7px",
-        fontWeight: 700,
-        letterSpacing: "0.18em",
-        lineHeight: 1,
-      }}>{ribbon.label}</span>
-      <span style={{
-        width: 0,
-        height: 0,
-        borderLeft: compact ? "12px solid transparent" : "15px solid transparent",
-        borderRight: compact ? "12px solid transparent" : "15px solid transparent",
-        borderTop: `${compact ? 4 : 5}px solid ${type === "first_global" ? "#9A7820" : "#909090"}`,
-        marginTop: -1,
-      }} />
-    </span>
+    <>
+      <span
+        role="button"
+        tabIndex={0}
+        aria-label={ribbon.title}
+        onClick={open}
+        onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(e); } }}
+        style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", flexShrink: 0, cursor: "pointer", filter: "drop-shadow(0 1px 1px rgba(17,16,8,0.35))" }}
+      >
+        <span style={{
+          ...ribbon.style,
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minWidth: compact ? 24 : 30,
+          height: h,
+          padding: "0 7px",
+          fontFamily: "'Spectral SC',serif",
+          fontSize: compact ? "6px" : "7px",
+          fontWeight: 700,
+          letterSpacing: "0.18em",
+          lineHeight: 1,
+        }}>{ribbon.label}</span>
+        <span style={{
+          width: 0,
+          height: 0,
+          borderLeft: compact ? "12px solid transparent" : "15px solid transparent",
+          borderRight: compact ? "12px solid transparent" : "15px solid transparent",
+          borderTop: `${compact ? 4 : 5}px solid ${type === "first_global" ? "#9A7820" : "#909090"}`,
+          marginTop: -1,
+        }} />
+      </span>
+      {showExplain && <BadgeExplainModal type={type} onClose={() => setShowExplain(false)} />}
+    </>
   );
 }
 
@@ -1002,31 +1036,8 @@ function VouchRibbon({ badges, align = "right", compact = false }) {
   if (!primary.length) return null;
   const pos = align === "left" ? { top: compact ? 6 : 10, left: compact ? 6 : 10 } : { top: compact ? 6 : 10, right: compact ? 6 : 10 };
   return (
-    <div style={{ position: "absolute", ...pos, zIndex: 3, display: "flex", flexDirection: "row", alignItems: "flex-start" }}>
+    <div style={{ position: "absolute", ...pos, zIndex: 3, display: "flex", flexDirection: "row", alignItems: "flex-start" }} onClick={e => e.stopPropagation()}>
       <RibbonBadge type={primary[0]} compact={compact} />
-    </div>
-  );
-}
-
-function BadgeKeyLegend({ leftAlign = false }) {
-  const rowStyle = { display: "flex", alignItems: "flex-start", gap: 14, textAlign: "left" };
-  const descStyle = { fontSize: 13, lineHeight: 1.65, fontStyle: "italic", color: T.inkMid, flex: 1, paddingTop: 2 };
-  return (
-    <div style={{ textAlign: leftAlign ? "left" : "center" }}>
-      <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 14, textAlign: leftAlign ? "left" : "center" }}>Badge Ribbons</div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: leftAlign ? 480 : 380, margin: leftAlign ? 0 : "0 auto" }}>
-        <div style={rowStyle}>
-          <RibbonBadge type="first_global" />
-          <div style={descStyle}><strong style={{ fontStyle: "normal", fontWeight: 600, color: T.ink }}>Gold</strong> — First on Vouch globally to vouch for that title.</div>
-        </div>
-        <div style={rowStyle}>
-          <RibbonBadge type="first_circle" />
-          <div style={descStyle}><strong style={{ fontStyle: "normal", fontWeight: 600, color: T.ink }}>Silver</strong> — First in your friend group to vouch for that title.</div>
-        </div>
-      </div>
-      <div style={{ fontSize: 12, lineHeight: 1.65, fontStyle: "italic", color: T.inkLight, marginTop: 14, maxWidth: leftAlign ? 480 : 380, marginLeft: leftAlign ? 0 : "auto", marginRight: leftAlign ? 0 : "auto", textAlign: leftAlign ? "left" : "center" }}>
-        On profiles, you earn one ribbon per tile — gold if you were first globally, otherwise silver if you were first in your circle. On Group Vouch and Group Shelf, tiles show a silver ribbon and &ldquo;First vouched by&rdquo; — the global first when they&apos;re in your circle, otherwise the first buddy who vouched.
-      </div>
     </div>
   );
 }
@@ -2511,9 +2522,6 @@ function StartPage({ onSignUp }) {
                   </div>
                 </div>
               ))}
-              <div style={{ borderTop: `1px solid ${T.paperDark}`, paddingTop: 8 }}>
-                <BadgeKeyLegend leftAlign />
-              </div>
             </div>
           </div>
 
