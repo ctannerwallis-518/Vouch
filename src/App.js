@@ -2094,10 +2094,15 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
         setDiscoveryFeed(discoverGrouped);
 
         const badgeUserIds = new Set();
-        (boards || []).forEach(b => badgeUserIds.add(b.user_id));
+        grouped.forEach(item => {
+          if (item.type === "vouch") badgeUserIds.add(item.board.user_id);
+          else if (item.type === "shelf" && item.buddy?.userId) badgeUserIds.add(item.buddy.userId);
+          else if (item.type === "agree") {
+            (item.buddies || [item.buddy]).forEach(b => { if (b?.userId) badgeUserIds.add(b.userId); });
+            if (item.reaction?.item_owner_id) badgeUserIds.add(item.reaction.item_owner_id);
+          }
+        });
         discoverBoardsFiltered.forEach(b => badgeUserIds.add(b.user_id));
-        (reactions || []).forEach(r => { badgeUserIds.add(r.user_id); if (r.item_owner_id) badgeUserIds.add(r.item_owner_id); });
-        (shelfAdds || []).forEach(s => badgeUserIds.add(s.user_id));
         reactionsFiltered.forEach(r => { badgeUserIds.add(r.user_id); if (r.item_owner_id) badgeUserIds.add(r.item_owner_id); });
         shelfFiltered.forEach(s => badgeUserIds.add(s.user_id));
         loadBadgesForUsers([...badgeUserIds]).then(setFeedBadgeMap).catch(() => {});
