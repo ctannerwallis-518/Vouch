@@ -2043,7 +2043,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
     : { userId, displayName: "Someone", username: "", avatarUrl: null };
 
   const DiscoveryBadge = () => (
-    <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.14em", color: "#c9a820", border: "1px solid rgba(201,168,32,0.45)", padding: "2px 6px", marginLeft: 8, whiteSpace: "nowrap" }}>From Vouch</span>
+    <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.14em", color: T.ink, border: `1px solid ${T.ink}`, padding: "2px 6px", marginLeft: 8, whiteSpace: "nowrap" }}>From Vouch</span>
   );
 
   const renderFeedItem = (item, i, isDiscovery = false) => {
@@ -2191,16 +2191,6 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
   const showDiscovery = visibleCount >= totalFiltered;
   const discoveryActivity = discoveryFeed;
   const hasDiscoveryContent = feedTab === 'vouches' ? discoveryBoards.length > 0 : discoveryActivity.length > 0;
-  const discoveryTitle = feedTab === 'vouches'
-    ? (totalFiltered > 0 ? "More Vouches" : "From Others on Vouch")
-    : (totalFiltered > 0 ? "Discover" : "From Others on Vouch");
-  const discoverySubtitle = feedTab === 'vouches'
-    ? (totalFiltered > 0
-        ? "Your circle's current Vouches — now see what others on Vouch are into"
-        : "No Vouches from your circle right now — see what others are vouching for")
-    : (totalFiltered > 0
-        ? "You're caught up with your circle — here's what others are up to"
-        : "See what others on Vouch are into");
 
   return (
     <div>
@@ -2219,11 +2209,8 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
       {showDiscovery && hasDiscoveryContent && (
         <div style={{ marginTop: totalFiltered > 0 ? 40 : 8 }}>
           <div style={{ borderTop: totalFiltered > 0 ? `3px double ${T.ink}` : "none", paddingTop: totalFiltered > 0 ? 20 : 0, marginBottom: 20 }}>
-            <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.18em", color: T.inkMid, marginBottom: 4 }}>
-              {discoveryTitle}
-            </div>
-            <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkFaint, lineHeight: 1.5 }}>
-              {discoverySubtitle}
+            <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, lineHeight: 1.5 }}>
+              See what others on Vouch are into
             </div>
           </div>
           {feedTab === 'vouches'
