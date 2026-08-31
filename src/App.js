@@ -391,6 +391,10 @@ function PreviousVouches({ userId, onDudeSame, myReactions, queue, onAddToQueue,
   );
 }
 
+function countPublishedVouches(boards) {
+  return (boards || []).filter(b => b.published_at).length;
+}
+
 function PublicBoard({ inviteUserId, onSignUp }) {
   const [board, setBoard]           = useState(null);
   const [profile, setProfile]       = useState(null);
@@ -399,6 +403,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
   const [publicBuddies, setPublicBuddies] = useState([]);
   const [showPublicBuddies, setShowPublicBuddies] = useState(false);
   const [publicItemBadges, setPublicItemBadges] = useState({});
+  const [publicPublishCount, setPublicPublishCount] = useState(0);
 
   useEffect(() => {
     const load = async () => {
@@ -429,6 +434,12 @@ function PublicBoard({ inviteUserId, onSignUp }) {
           .limit(needed) : { data: [] };
         const combined = [...(buddyProfiles || []), ...(otherProfiles || [])];
         if (combined.length > 0) setPublicBuddies(combined);
+        const { count: publishCount } = await supabase
+          .from("vouch_boards")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", inviteUserId)
+          .not("published_at", "is", null);
+        setPublicPublishCount(publishCount || 0);
         const { data: activeVouchBoard } = await supabase
           .from("vouch_boards")
           .select("*, vouch_board_items(*)")
@@ -502,16 +513,10 @@ function PublicBoard({ inviteUserId, onSignUp }) {
               </div>
               <div className="board-sub" style={{ marginBottom: 8 }}>@{profile?.username || ""}</div>
               <div style={{ display: "flex", gap: 16 }}>
-                {(() => {
-                  const shelfCount = Object.values(board?.shelf || {}).flat().length;
-                  const vouchCount = (board?.activeVouchBoard?.vouch_board_items || []).length;
-                  const total = shelfCount + vouchCount;
-                  return total > 0 ? (
-                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.12em", color: T.inkLight }}>
-                      <span style={{ fontWeight: 700, color: T.ink, fontSize: "12px", fontFamily: "'Spectral',serif" }}>{total}</span>{" vouches"}
-                    </div>
-                  ) : null;
-                })()}
+                <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.12em", color: T.inkLight }}>
+                  <span style={{ fontWeight: 700, color: T.ink, fontSize: "12px", fontFamily: "'Spectral',serif" }}>{publicPublishCount}</span>
+                  {" "}{publicPublishCount === 1 ? "vouch" : "vouches"}
+                </div>
                 {publicBuddies.length > 0 && (
                   <div onClick={() => setShowPublicBuddies(true)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.12em", color: T.inkLight, cursor: "pointer" }}>
                     <span style={{ fontWeight: 700, color: T.ink, fontSize: "12px", fontFamily: "'Spectral',serif" }}>{publicBuddies.length}</span> {" buddies"}
@@ -2786,6 +2791,7 @@ export default function Vouch() {
   const [pastNotifications, setPastNotifications] = useState([]);
   const [viewerReactions,setViewerReactions]= useState([]);
   const [viewActiveBoard,setViewActiveBoard]= useState(null);
+  const [viewPublishCount, setViewPublishCount] = useState(0);
   const [ownItemBadges,    setOwnItemBadges]    = useState({});
   const [viewItemBadges,   setViewItemBadges]   = useState({});
   const [suggested, setSuggested] = useState([]); // eslint-disable-line no-unused-vars
@@ -2970,6 +2976,12 @@ export default function Vouch() {
       }
     });
     setViewBoard(b);
+    const { count: publishCount } = await supabase
+      .from("vouch_boards")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", uid)
+      .not("published_at", "is", null);
+    setViewPublishCount(publishCount || 0);
     const { data: activeBoardData } = await supabase.from("vouch_boards").select("*, vouch_board_items(*)").eq("user_id", uid).eq("is_active", true).maybeSingle();
     setViewActiveBoard(activeBoardData || null);
     // Always fetch fresh profile data including avatar
@@ -3964,6 +3976,7 @@ export default function Vouch() {
     await supabase.from("profiles").update({ queue_items: JSON.stringify(newQ) }).eq("id", userId);
   };
   const vouchedCount = Object.values(board).flat().filter(item => item.vouched).length;
+  const profileVouchCount = isOwn ? countPublishedVouches(boardArchive) : viewPublishCount;
 
   // PWA badge
   useEffect(() => {
@@ -4308,7 +4321,8 @@ export default function Vouch() {
                     <div className="board-sub" style={{ marginBottom: 10 }}>@{viewing ? viewing.username : user.username}</div>
                     <div style={{ display: "flex", gap: 8 }}>
                       <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.12em", color: T.inkLight }}>
-                        <span style={{ fontWeight: 700, color: T.ink, fontSize: "12px", fontFamily: "'Spectral',serif" }}>{Object.values(currBoard).flat().length}</span> {" vouches"}
+                        <span style={{ fontWeight: 700, color: T.ink, fontSize: "12px", fontFamily: "'Spectral',serif" }}>{profileVouchCount}</span>
+                        {" "}{profileVouchCount === 1 ? "vouch" : "vouches"}
                       </div>
                       {(isOwn ? buddies.length : viewBuddies.length) > 0 && (
                         <div onClick={() => setShowBuddyList(true)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.12em", color: T.inkLight, cursor: "pointer" }}>
