@@ -2498,6 +2498,11 @@ export default function Vouch() {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "instant" });
   const isMobileGlobal = typeof window !== "undefined" && window.innerWidth <= 640;
+  const isIOSDevice = typeof navigator !== "undefined" && (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+  );
+  const prefersPhotoSave = isIOSDevice || isMobileGlobal;
 
 
   // Save and restore scroll position when leaving/returning to page
@@ -3390,9 +3395,56 @@ export default function Vouch() {
     });
   };
 
-  const downloadShareCard = () => {
+  const blobToJpegBlob = (blob) => new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#E8E4DC";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+      canvas.toBlob(b => b ? resolve(b) : reject(new Error("jpeg conversion failed")), "image/jpeg", 0.92);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("image load failed")); };
+    img.src = url;
+  });
+
+  const getShareCardPhotoFile = async () => {
+    const blob = shareCardBlobRef.current;
+    if (!blob) return null;
+    const jpeg = await blobToJpegBlob(blob);
+    return new File([jpeg], "vouch-story.jpg", { type: "image/jpeg" });
+  };
+
+  const saveShareCardToPhotos = async () => {
+    try {
+      const file = await getShareCardPhotoFile();
+      if (!file) return;
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file] });
+        return;
+      }
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(file);
+      a.download = "vouch-story.jpg";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch (e) {
+      if (e.name !== "AbortError") throw e;
+    }
+  };
+
+  const downloadShareCard = async () => {
     const blob = shareCardBlobRef.current;
     if (!blob) return;
+    if (prefersPhotoSave) {
+      try { await saveShareCardToPhotos(); } catch {}
+      return;
+    }
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "vouch-board.png";
@@ -3405,17 +3457,20 @@ export default function Vouch() {
     if (!blob) return;
     const shareUrl = `${window.location.origin}/@${user.username}`;
     const shareName = user.displayName;
-    const file = new File([blob], "vouch-board.png", { type: "image/png" });
+    const file = prefersPhotoSave
+      ? await getShareCardPhotoFile()
+      : new File([blob], "vouch-board.png", { type: "image/png" });
+    if (!file) return;
     try { await navigator.clipboard.writeText(shareUrl); } catch(e) {}
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
         await navigator.share({ files: [file], title: `${shareName}'s Vouch Board`, text: shareUrl });
         setTimeout(() => { try { navigator.clipboard.writeText(shareUrl); } catch(e) {} }, 800);
       } catch (e) {
-        if (e.name !== "AbortError") downloadShareCard();
+        if (e.name !== "AbortError") await saveShareCardToPhotos();
       }
     } else {
-      downloadShareCard();
+      await downloadShareCard();
     }
   };
 
@@ -4677,14 +4732,21 @@ export default function Vouch() {
                   </div>
 
                   {hasShareContent && (
-                    <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
-                      <button className="btn btn-solid" style={{ flex: 1, padding: "12px", fontSize: 11, letterSpacing: "0.12em" }} disabled={shareCardGenerating || !shareCardUrl} onClick={shareCardNative}>
-                        Share to Story
-                      </button>
-                      <button className="btn btn-ghost" style={{ flex: 1, padding: "12px", fontSize: 11, letterSpacing: "0.12em" }} disabled={shareCardGenerating || !shareCardUrl} onClick={downloadShareCard}>
-                        Download
-                      </button>
-                    </div>
+                    <>
+                      <div style={{ display: "flex", gap: 8, marginBottom: prefersPhotoSave ? 8 : 24 }}>
+                        <button className="btn btn-solid" style={{ flex: 1, padding: "12px", fontSize: 11, letterSpacing: "0.12em" }} disabled={shareCardGenerating || !shareCardUrl} onClick={shareCardNative}>
+                          Share to Story
+                        </button>
+                        <button className="btn btn-ghost" style={{ flex: 1, padding: "12px", fontSize: 11, letterSpacing: "0.12em" }} disabled={shareCardGenerating || !shareCardUrl} onClick={saveShareCardToPhotos}>
+                          {prefersPhotoSave ? "Save to Photos" : "Download"}
+                        </button>
+                      </div>
+                      {prefersPhotoSave && (
+                        <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, textAlign: "center", marginBottom: 24, lineHeight: 1.5 }}>
+                          Tap Save to Photos, then choose <strong style={{ fontStyle: "normal" }}>Save Image</strong> in the menu.
+                        </div>
+                      )}
+                    </>
                   )}
 
                   <div style={{ borderBottom: `1px solid ${T.paperDark}`, marginBottom: 20 }} />
