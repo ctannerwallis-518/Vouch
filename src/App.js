@@ -1859,75 +1859,74 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
   const [loading, setLoading] = useState(true);
   const [feedTab, setFeedTab] = useState('vouches');
   const [discoveryBoards, setDiscoveryBoards] = useState([]);
+  const [discoveryFeed, setDiscoveryFeed] = useState([]);
   const [visibleCount, setVisibleCount] = useState(15);
 
   useEffect(() => {
-    if (!buddies.length) { setLoading(false); return; }
     const load = async () => {
       setLoading(true);
       try {
         const buddyIds = [...buddies.map(b => b.userId), selfId].filter(Boolean);
-        // Load buddy vouch boards
-        const { data: boards } = await supabase
-          .from("vouch_boards")
-          .select("*, vouch_board_items(*)")
-          .in("user_id", buddyIds)
-          .eq("is_active", true)
-          .order("published_at", { ascending: false })
-          .limit(100);
+        const excludeIds = new Set(buddyIds);
         const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
-        // Load buddy reactions
-        const { data: reactions } = await supabase
-          .from("reactions")
-          .select("*")
-          .in("user_id", buddyIds)
-          .gte("created_at", ninetyDaysAgo)
-          .order("created_at", { ascending: false })
-          .limit(200);
-        // Shelf additions from buddies
-        const { data: shelfAdds } = await supabase
-          .from("endorsements")
-          .select("*")
-          .in("user_id", buddyIds)
-          .gte("created_at", ninetyDaysAgo)
-          .order("created_at", { ascending: false })
-          .limit(200);
-        // Fetch owner profiles separately
-        const ownerIds = [...new Set((reactions || []).map(r => r.item_owner_id).filter(Boolean))];
-        const ownerProfiles = {};
-        if (ownerIds.length > 0) {
-          const { data: owners } = await supabase.from("profiles").select("id, display_name, username, avatar_url").in("id", ownerIds);
-          (owners || []).forEach(p => { ownerProfiles[p.id] = p; });
-        }
-        (reactions || []).forEach(r => { r.owner = ownerProfiles[r.item_owner_id] || null; });
-        const items = [];
         const allPeople = [...buddies, { userId: selfId, displayName: selfName || "You", avatarUrl: selfAvatar || null }];
-        (boards || []).forEach(b => {
-          if (!b.published_at) return;
-          const buddy = allPeople.find(x => x.userId === b.user_id);
-          items.push({ type: "vouch", date: new Date(b.published_at), board: b, buddy });
-        });
-        (reactions || []).forEach(r => {
-          const buddy = allPeople.find(x => x.userId === r.user_id);
-          items.push({ type: "agree", date: new Date(r.created_at), reaction: r, buddy });
-        });
-        // Group shelf adds by user within 20 minutes
-        const shelfGroups = {};
-        (shelfAdds || []).forEach(s => {
-          if (!s.created_at) return;
-          const buddy = allPeople.find(x => x.userId === s.user_id);
-          const date = new Date(s.created_at);
-          const key = s.user_id + ":" + Math.floor(date.getTime() / (20 * 60 * 1000));
-          if (!shelfGroups[key]) {
-            shelfGroups[key] = { type: "shelf", date, shelves: [s], buddy };
-            items.push(shelfGroups[key]);
-          } else {
-            shelfGroups[key].shelves.push(s);
-            if (date > shelfGroups[key].date) shelfGroups[key].date = date;
+        const items = [];
+
+        if (buddyIds.length > 0) {
+          const { data: boards } = await supabase
+            .from("vouch_boards")
+            .select("*, vouch_board_items(*)")
+            .in("user_id", buddyIds)
+            .eq("is_active", true)
+            .order("published_at", { ascending: false })
+            .limit(100);
+          const { data: reactions } = await supabase
+            .from("reactions")
+            .select("*")
+            .in("user_id", buddyIds)
+            .gte("created_at", ninetyDaysAgo)
+            .order("created_at", { ascending: false })
+            .limit(200);
+          const { data: shelfAdds } = await supabase
+            .from("endorsements")
+            .select("*")
+            .in("user_id", buddyIds)
+            .gte("created_at", ninetyDaysAgo)
+            .order("created_at", { ascending: false })
+            .limit(200);
+          const ownerIds = [...new Set((reactions || []).map(r => r.item_owner_id).filter(Boolean))];
+          const ownerProfiles = {};
+          if (ownerIds.length > 0) {
+            const { data: owners } = await supabase.from("profiles").select("id, display_name, username, avatar_url").in("id", ownerIds);
+            (owners || []).forEach(p => { ownerProfiles[p.id] = p; });
           }
-        });
+          (reactions || []).forEach(r => { r.owner = ownerProfiles[r.item_owner_id] || null; });
+          (boards || []).forEach(b => {
+            if (!b.published_at) return;
+            const buddy = allPeople.find(x => x.userId === b.user_id);
+            items.push({ type: "vouch", date: new Date(b.published_at), board: b, buddy });
+          });
+          (reactions || []).forEach(r => {
+            const buddy = allPeople.find(x => x.userId === r.user_id);
+            items.push({ type: "agree", date: new Date(r.created_at), reaction: r, buddy });
+          });
+          const shelfGroups = {};
+          (shelfAdds || []).forEach(s => {
+            if (!s.created_at) return;
+            const buddy = allPeople.find(x => x.userId === s.user_id);
+            const date = new Date(s.created_at);
+            const key = s.user_id + ":" + Math.floor(date.getTime() / (20 * 60 * 1000));
+            if (!shelfGroups[key]) {
+              shelfGroups[key] = { type: "shelf", date, shelves: [s], buddy };
+              items.push(shelfGroups[key]);
+            } else {
+              shelfGroups[key].shelves.push(s);
+              if (date > shelfGroups[key].date) shelfGroups[key].date = date;
+            }
+          });
+        }
+
         items.sort((a, b) => b.date - a.date);
-        // Group agrees by item_id + item_owner_id
         const grouped = [];
         const agreeGroups = {};
         items.forEach(item => {
@@ -1938,7 +1937,6 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
               grouped.push(agreeGroups[key]);
             } else {
               agreeGroups[key].buddies.push(item.buddy);
-              // Keep most recent date
               if (item.date > agreeGroups[key].date) agreeGroups[key].date = item.date;
             }
           } else {
@@ -1947,216 +1945,296 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
         });
         grouped.sort((a, b) => b.date - a.date);
         setFeed(grouped);
-        // Load discovery boards from non-buddies
-        try {
-          const { data: discover } = await supabase
-            .from('vouch_boards')
-            .select('*, vouch_board_items(*)')
-            .eq('is_active', true)
-            .order('published_at', { ascending: false })
-            .limit(30);
-          const discoverFiltered = (discover || []).filter(b => !buddyIds.includes(b.user_id)).slice(0, 10);
-          if (discoverFiltered && discoverFiltered.length > 0) {
-            const discoverUserIds = [...new Set(discoverFiltered.map(b => b.user_id))];
-            const { data: discoverProfiles } = await supabase.from('profiles').select('id, display_name, username, avatar_url').in('id', discoverUserIds);
-            const profileMap = {};
-            (discoverProfiles || []).forEach(p => { profileMap[p.id] = p; });
-            discoverFiltered.forEach(b => { b.profiles = profileMap[b.user_id] || null; });
+
+        // Discovery — activity from users outside your circle
+        const { data: discoverBoardsRaw } = await supabase
+          .from("vouch_boards")
+          .select("*, vouch_board_items(*)")
+          .eq("is_active", true)
+          .order("published_at", { ascending: false })
+          .limit(50);
+        const discoverBoardsFiltered = (discoverBoardsRaw || [])
+          .filter(b => b.published_at && !excludeIds.has(b.user_id))
+          .slice(0, 12);
+
+        const { data: discoverReactions } = await supabase
+          .from("reactions")
+          .select("*")
+          .gte("created_at", ninetyDaysAgo)
+          .order("created_at", { ascending: false })
+          .limit(200);
+        const { data: discoverShelf } = await supabase
+          .from("endorsements")
+          .select("*")
+          .gte("created_at", ninetyDaysAgo)
+          .order("created_at", { ascending: false })
+          .limit(200);
+
+        const reactionsFiltered = (discoverReactions || []).filter(r => !excludeIds.has(r.user_id));
+        const shelfFiltered = (discoverShelf || []).filter(s => !excludeIds.has(s.user_id));
+        const discoverProfileIds = [...new Set([
+          ...discoverBoardsFiltered.map(b => b.user_id),
+          ...reactionsFiltered.map(r => r.user_id),
+          ...shelfFiltered.map(s => s.user_id),
+          ...reactionsFiltered.map(r => r.item_owner_id).filter(Boolean),
+        ])];
+        const discoverProfileMap = {};
+        if (discoverProfileIds.length > 0) {
+          const { data: discoverProfiles } = await supabase.from("profiles").select("id, display_name, username, avatar_url").in("id", discoverProfileIds);
+          (discoverProfiles || []).forEach(p => { discoverProfileMap[p.id] = p; });
+        }
+        discoverBoardsFiltered.forEach(b => { b.profiles = discoverProfileMap[b.user_id] || null; });
+
+        const personFromProfile = (uid) => {
+          const p = discoverProfileMap[uid];
+          return p
+            ? { userId: p.id, displayName: p.display_name, username: p.username, avatarUrl: p.avatar_url }
+            : { userId: uid, displayName: "Someone", username: "", avatarUrl: null };
+        };
+
+        const discoverItems = [];
+        reactionsFiltered.forEach(r => {
+          r.owner = discoverProfileMap[r.item_owner_id] || null;
+          discoverItems.push({ type: "agree", date: new Date(r.created_at), reaction: r, buddy: personFromProfile(r.user_id), isDiscovery: true });
+        });
+        const discoverShelfGroups = {};
+        shelfFiltered.forEach(s => {
+          if (!s.created_at) return;
+          const buddy = personFromProfile(s.user_id);
+          const date = new Date(s.created_at);
+          const key = s.user_id + ":" + Math.floor(date.getTime() / (20 * 60 * 1000));
+          if (!discoverShelfGroups[key]) {
+            discoverShelfGroups[key] = { type: "shelf", date, shelves: [s], buddy, isDiscovery: true };
+            discoverItems.push(discoverShelfGroups[key]);
+          } else {
+            discoverShelfGroups[key].shelves.push(s);
+            if (date > discoverShelfGroups[key].date) discoverShelfGroups[key].date = date;
           }
-          console.log('discovery boards:', discoverFiltered?.length, discoverFiltered);
-          setDiscoveryBoards(discoverFiltered || []);
-        } catch(e) { console.error('discovery error', e); }
+        });
+        discoverItems.sort((a, b) => b.date - a.date);
+        const discoverGrouped = [];
+        const discoverAgreeGroups = {};
+        discoverItems.forEach(item => {
+          if (item.type === "agree") {
+            const key = item.reaction.item_id + ":" + item.reaction.item_owner_id;
+            if (!discoverAgreeGroups[key]) {
+              discoverAgreeGroups[key] = { ...item, buddies: [item.buddy], isDiscovery: true };
+              discoverGrouped.push(discoverAgreeGroups[key]);
+            } else {
+              discoverAgreeGroups[key].buddies.push(item.buddy);
+              if (item.date > discoverAgreeGroups[key].date) discoverAgreeGroups[key].date = item.date;
+            }
+          } else {
+            discoverGrouped.push(item);
+          }
+        });
+        discoverGrouped.sort((a, b) => b.date - a.date);
+
+        setDiscoveryBoards(discoverBoardsFiltered);
+        setDiscoveryFeed(discoverGrouped);
       } catch(e) { console.error(e); }
       setLoading(false);
     };
     load();
   }, [buddies, selfId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const profileBuddy = (profile, userId) => profile
+    ? { userId: profile.id || userId, displayName: profile.display_name, username: profile.username, avatarUrl: profile.avatar_url }
+    : { userId, displayName: "Someone", username: "", avatarUrl: null };
+
+  const DiscoveryBadge = () => (
+    <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.14em", color: "#c9a820", border: "1px solid rgba(201,168,32,0.45)", padding: "2px 6px", marginLeft: 8, whiteSpace: "nowrap" }}>From Vouch</span>
+  );
+
+  const renderFeedItem = (item, i, isDiscovery = false) => {
+    if (item.type === "vouch") {
+      const b = item.board;
+      const buddy = item.buddy || profileBuddy(b.profiles, b.user_id);
+      const theme = (b.theme && b.theme !== "Other") ? b.theme : (b.name || "Vouch");
+      const vouchItems = (b.vouch_board_items || []).sort((a,x) => a.position - x.position).slice(0,5);
+      return (
+        <div key={`${isDiscovery ? "d" : "b"}-vouch-${i}`} style={{ marginBottom: 32, opacity: isDiscovery ? 0.92 : 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <div onClick={() => buddy && onViewBuddy(buddy)} style={{ cursor: "pointer", flexShrink: 0 }}>
+              <Avatar name={buddy?.displayName || "?"} size={28} avatarUrl={buddy?.avatarUrl} />
+            </div>
+            <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: isDiscovery ? T.inkMid : "#3a3830", flex: 1 }}>
+              <span onClick={() => buddy && onViewBuddy(buddy)} style={{ fontWeight: 600, cursor: "pointer" }}>{buddy?.displayName}</span>
+              <span style={{ fontStyle: "italic", color: isDiscovery ? T.inkLight : "#7a7568" }}> published a Vouch</span>
+              {isDiscovery && <DiscoveryBadge />}
+              <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: "#a09890", marginLeft: 8 }}>{item.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+            </div>
+          </div>
+          <div className="vouch-section" style={{ marginBottom: 32 }}>
+            <div className="vouch-section-header">
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="vouch-section-label">{theme}</div>
+                <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginTop: 3 }}>Vouch</div>
+                {b.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 4 }}>{b.description}</div>}
+              </div>
+            </div>
+            {vouchItems.length > 0 && (() => {
+              const vbBoard = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [], podcasts: [] };
+              vouchItems.forEach(it => {
+                if (vbBoard[it.category]) vbBoard[it.category].push({ id: it.item_id, title: it.title, sub: it.subtitle || "", poster: it.poster, comment: "", vouched: true, sourceUrl: it.source_url, _cat: it.category, _catLabel: it.category });
+              });
+              const isSelfBoard = b.user_id === selfId;
+              return <VouchSection board={vbBoard} isOwn={isSelfBoard} onCard={()=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={onDudeSame || (()=>{})} myReactions={(myReactions || []).filter(r => r.item_owner_id === b.user_id).map(r => r.item_id)} hideHeader={true} hideEmptySlots={true} onAddToQueue={isSelfBoard ? null : (onAddToQueue || null)} queue={queue} ownerId={b.user_id} onMusicOpen={onMusicOpen} singleTile={true} />;
+            })()}
+          </div>
+        </div>
+      );
+    }
+    if (item.type === "shelf") {
+      const shelves = item.shelves || [item.shelf];
+      const primary = shelves[0];
+      const extras = shelves.slice(1);
+      const buddy = item.buddy;
+      if (!primary) return null;
+      return (
+        <div key={`${isDiscovery ? "d" : "b"}-shelf-${i}`} style={{ borderBottom: "1px solid #b3ada0", paddingBottom: 16, marginBottom: 16, opacity: isDiscovery ? 0.92 : 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <div onClick={() => buddy && onViewBuddy(buddy)} style={{ cursor: "pointer", flexShrink: 0 }}>
+              <Avatar name={buddy?.displayName || "?"} size={28} avatarUrl={buddy?.avatarUrl} />
+            </div>
+            <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: isDiscovery ? T.inkMid : "#3a3830", flex: 1 }}>
+              <span onClick={() => buddy && onViewBuddy(buddy)} style={{ fontWeight: 600, cursor: "pointer" }}>{buddy?.displayName}</span>
+              <span style={{ fontStyle: "italic", color: isDiscovery ? T.inkLight : "#7a7568" }}> added </span>
+              {extras.length > 0
+                ? <span><strong style={{ fontStyle: "normal" }}>{primary.title}</strong><span style={{ fontStyle: "italic", color: "#7a7568" }}> and </span><span style={{ fontWeight: 600, color: "#7a7568", cursor: "pointer", borderBottom: "1px dashed #7a7568" }} onClick={e => { e.stopPropagation(); onShelfExtras && onShelfExtras(extras); }}>{extras.length} other tile{extras.length > 1 ? "s" : ""}</span><span style={{ fontStyle: "italic", color: "#7a7568" }}> to their shelf</span></span>
+                : <span><strong style={{ fontStyle: "normal" }}>{primary.title}</strong><span style={{ fontStyle: "italic", color: "#7a7568" }}> to their shelf</span></span>
+              }
+              {isDiscovery && <DiscoveryBadge />}
+              <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: "#a09890", marginLeft: 8 }}>{item.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+            </div>
+          </div>
+          <div style={{ width: "100%", maxWidth: 300, margin: "0 auto", cursor: primary.source_url ? "pointer" : "default" }} onClick={() => { if (!primary.source_url) return; const isMusicUrl = primary.source_url.includes("open.spotify.com"); if (isMusicUrl && onMusicOpen) { onMusicOpen(primary.source_url, primary.title, primary.subtitle, primary.category); } else { window.open(primary.source_url, "_blank"); } }}>
+            {primary.poster && <img src={primary.poster} alt={primary.title} style={{ width: "100%", display: "block" }} onError={e => e.target.style.display = "none"} />}
+            <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{primary.title}</div>
+            {primary.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{primary.subtitle}</div>}
+            {onDudeSame && buddy && buddy.userId !== selfId && (
+              <div style={{ display: "flex", marginTop: 8 }}>
+                <button onClick={e => { e.stopPropagation(); onDudeSame({ id: primary.item_id, title: primary.title, poster: primary.poster, _cat: primary.category }, buddy.userId); }} style={{ flex: 1, background: (myReactions||[]).find(r => r.item_id === String(primary.item_id) && r.item_owner_id === buddy.userId) ? "#111008" : "transparent", border: "1px solid #b3ada0", color: (myReactions||[]).find(r => r.item_id === String(primary.item_id) && r.item_owner_id === buddy.userId) ? "#C8C2B4" : "#3a3830", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700 }}>{(myReactions||[]).find(r => r.item_id === String(primary.item_id) && r.item_owner_id === buddy.userId) ? "✓ Agreed" : "Agree"}</button>
+                {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue({ id: primary.item_id, title: primary.title, poster: primary.poster, source_url: primary.source_url, category: primary.category, user_id: buddy.userId }); }} style={{ flex: 1, background: (queue||[]).find(q => String(q.id) === String(primary.item_id)) ? "#111008" : "transparent", border: "1px solid #b3ada0", borderLeft: "none", color: (queue||[]).find(q => String(q.id) === String(primary.item_id)) ? "#C8C2B4" : "#3a3830", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700 }}>{(queue||[]).find(q => String(q.id) === String(primary.item_id)) ? "✓ Queued" : "+ Queue"}</button>}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+    if (item.type === "agree") {
+      const r = item.reaction;
+      const agreeBuddies = item.buddies || [item.buddy];
+      const shown = agreeBuddies.slice(0, 2).filter(Boolean);
+      const rest = agreeBuddies.slice(2).filter(Boolean);
+      return (
+        <div key={`${isDiscovery ? "d" : "b"}-agree-${i}`} style={{ borderBottom: "1px solid #b3ada0", paddingBottom: 24, marginBottom: 24, opacity: isDiscovery ? 0.92 : 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <div style={{ display: "flex", gap: -6, flexShrink: 0 }}>
+              {shown.map((b, j) => (
+                <div key={j} onClick={() => b && onViewBuddy(b)} style={{ cursor: "pointer", marginLeft: j > 0 ? -8 : 0 }}>
+                  <Avatar name={b?.displayName || "?"} size={28} avatarUrl={b?.avatarUrl} />
+                </div>
+              ))}
+            </div>
+            <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: isDiscovery ? T.inkMid : "#3a3830", flex: 1 }}>
+              {shown.map((b, j) => (
+                <span key={j}>
+                  {j > 0 && <span style={{ fontStyle: "italic", color: "#7a7568" }}> and </span>}
+                  <span onClick={() => b && onViewBuddy(b)} style={{ fontWeight: 600, cursor: "pointer" }}>{b?.displayName}</span>
+                </span>
+              ))}
+              {rest.length > 0 && (
+                <span>
+                  <span style={{ fontStyle: "italic", color: "#7a7568" }}> and </span>
+                  <span style={{ fontWeight: 600, color: "#7a7568" }}>{rest.map(b => b?.displayName).filter(Boolean).join(", ")}</span>
+                </span>
+              )}
+              <span style={{ fontStyle: "italic", color: "#7a7568" }}> agreed with </span>
+              {r.owner
+                ? <span onClick={() => r.owner && onViewBuddy({ userId: r.owner.id, displayName: r.owner.display_name, username: r.owner.username, avatarUrl: r.owner.avatar_url })} style={{ fontWeight: 600, cursor: "pointer" }}>{r.owner.display_name}</span>
+                : null}
+              {isDiscovery && <DiscoveryBadge />}
+              <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: "#a09890", marginLeft: 8 }}>{item.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+            </div>
+          </div>
+          {r.poster && (
+            <div style={{ width: "100%", maxWidth: 300, margin: "0 auto" }}>
+              <div style={{ cursor: r.source_url ? "pointer" : "default" }} onClick={() => { if (!r.source_url) return; const isMusicUrl = r.source_url.includes("open.spotify.com"); if (isMusicUrl && onMusicOpen) { onMusicOpen(r.source_url, r.title, r.subtitle, r.category); } else { window.open(r.source_url, "_blank"); } }}>
+                <img src={r.poster} alt={r.title} style={{ width: "100%", display: "block" }} onError={e => e.target.style.display = "none"} />
+                <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{r.title}</div>
+                {r.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{r.subtitle}</div>}
+              </div>
+              {onDudeSame && r.item_owner_id && r.item_owner_id !== selfId && (
+                <div style={{ display: "flex", marginTop: 8 }}>
+                  <button onClick={() => onDudeSame({ id: r.item_id, title: r.title, poster: r.poster, _cat: r.category }, r.item_owner_id)} style={{ flex: 1, background: (myReactions||[]).find(x => x.item_id === r.item_id && x.item_owner_id === r.item_owner_id) ? "#111008" : "transparent", border: "1px solid #b3ada0", color: (myReactions||[]).find(x => x.item_id === r.item_id && x.item_owner_id === r.item_owner_id) ? "#C8C2B4" : "#3a3830", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700 }}>
+                    {(myReactions||[]).find(x => x.item_id === r.item_id && x.item_owner_id === r.item_owner_id) ? "✓ Agreed" : "Agree"}
+                  </button>
+                  {onAddToQueue && <button onClick={() => onAddToQueue({ id: r.item_id, title: r.title, poster: r.poster, source_url: r.source_url, category: r.category })} style={{ flex: 1, background: (queue||[]).find(q => q.id === r.item_id) ? "#111008" : "transparent", border: "1px solid #b3ada0", borderLeft: "none", color: (queue||[]).find(q => q.id === r.item_id) ? "#C8C2B4" : "#3a3830", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700 }}>
+                    {(queue||[]).find(q => q.id === r.item_id) ? "✓ Queued" : "+ Queue"}
+                  </button>}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+    return null;
+  };
+
   if (loading) return <div className="loading">Loading…</div>;
-  if (!feed.length && buddies.length > 0) return <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: "#7a7568", padding: "24px 0" }}>No activity yet — check back soon.</div>;
 
   const allFiltered = feed.filter(item => feedTab === 'vouches' ? item.type === 'vouch' : item.type !== 'vouch');
   const filteredFeed = allFiltered.slice(0, visibleCount);
   const totalFiltered = allFiltered.length;
+  const showDiscovery = visibleCount >= totalFiltered;
+  const discoveryActivity = discoveryFeed;
+  const hasDiscoveryContent = feedTab === 'vouches' ? discoveryBoards.length > 0 : discoveryActivity.length > 0;
+  const discoveryTitle = feedTab === 'vouches'
+    ? (totalFiltered > 0 ? "More Vouches" : "From Others on Vouch")
+    : (totalFiltered > 0 ? "Discover" : "From Others on Vouch");
+  const discoverySubtitle = feedTab === 'vouches'
+    ? (totalFiltered > 0
+        ? "Your circle's current Vouches — now see what others on Vouch are into"
+        : "No Vouches from your circle right now — see what others are vouching for")
+    : (totalFiltered > 0
+        ? "You're caught up with your circle — here's what others are up to"
+        : "See what others on Vouch are into");
+
   return (
     <div>
       <div style={{ display: "flex", gap: 0, marginBottom: 24, borderBottom: `2px solid ${T.ink}` }}>
         {[['vouches', 'Vouches'], ['activity', 'Activity']].map(([key, label]) => (
-          <button key={key} onClick={() => setFeedTab(key)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", padding: "10px 20px", background: feedTab === key ? T.ink : "transparent", color: feedTab === key ? T.bg : T.inkMid, border: "none", cursor: "pointer", fontWeight: feedTab === key ? 700 : 400 }}>{label}</button>
+          <button key={key} onClick={() => { setFeedTab(key); setVisibleCount(15); }} style={{ fontFamily: "'Spectral SC',serif", fontSize: "10px", letterSpacing: "0.18em", padding: "10px 20px", background: feedTab === key ? T.ink : "transparent", color: feedTab === key ? T.bg : T.inkMid, border: "none", cursor: "pointer", fontWeight: feedTab === key ? 700 : 400 }}>{label}</button>
         ))}
       </div>
-      {filteredFeed.length === 0 && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: "#7a7568", padding: "24px 0" }}>{feedTab === 'vouches' ? 'No vouches yet — check back soon.' : 'No activity yet — check back soon.'}</div>}
-      {filteredFeed.map((item, i) => {
-        if (item.type === "vouch") {
-          const b = item.board;
-          const buddy = item.buddy;
-          const theme = (b.theme && b.theme !== "Other") ? b.theme : (b.name || "Vouch");
-          const items = (b.vouch_board_items || []).sort((a,x) => a.position - x.position).slice(0,5);
-          return (
-            <div key={i} style={{ marginBottom: 32 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <div onClick={() => buddy && onViewBuddy(buddy)} style={{ cursor: "pointer", flexShrink: 0 }}>
-                  <Avatar name={buddy?.displayName || "?"} size={28} avatarUrl={buddy?.avatarUrl} />
-                </div>
-                <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "#3a3830" }}>
-                  <span onClick={() => buddy && onViewBuddy(buddy)} style={{ fontWeight: 600, cursor: "pointer" }}>{buddy?.displayName}</span>
-                  <span style={{ fontStyle: "italic", color: "#7a7568" }}> published a Vouch</span>
-                  <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: "#a09890", marginLeft: 8 }}>{item.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
-                </div>
-              </div>
-              <div className="vouch-section" style={{ marginBottom: 32 }}>
-                <div className="vouch-section-header">
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className="vouch-section-label">{theme}</div>
-                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginTop: 3 }}>Vouch</div>
-                    {b.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 4 }}>{b.description}</div>}
-                  </div>
-                </div>
-                {items.length > 0 && (() => {
-                  const vbBoard = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [], podcasts: [] };
-                  items.forEach(it => {
-                    if (vbBoard[it.category]) vbBoard[it.category].push({ id: it.item_id, title: it.title, sub: it.subtitle || "", poster: it.poster, comment: "", vouched: true, sourceUrl: it.source_url, _cat: it.category, _catLabel: it.category });
-                  });
-                  const isSelfBoard = b.user_id === selfId; return <VouchSection board={vbBoard} isOwn={isSelfBoard} onCard={()=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={onDudeSame || (()=>{})} myReactions={(myReactions || []).filter(r => r.item_owner_id === b.user_id).map(r => r.item_id)} hideHeader={true} hideEmptySlots={true} onAddToQueue={isSelfBoard ? null : (onAddToQueue || null)} queue={queue} ownerId={b.user_id} onMusicOpen={onMusicOpen} singleTile={true} />;
-                })()}
-              </div>
-            </div>
-          );
-        }
-        if (item.type === "shelf") {
-          const shelves = item.shelves || [item.shelf];
-          const primary = shelves[0];
-          const extras = shelves.slice(1);
-          const buddy = item.buddy;
-          if (!primary) return null;
-          return (
-            <div key={i} style={{ borderBottom: "1px solid #b3ada0", paddingBottom: 16, marginBottom: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <div onClick={() => buddy && onViewBuddy(buddy)} style={{ cursor: "pointer", flexShrink: 0 }}>
-                  <Avatar name={buddy?.displayName || "?"} size={28} avatarUrl={buddy?.avatarUrl} />
-                </div>
-                <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "#3a3830" }}>
-                  <span onClick={() => buddy && onViewBuddy(buddy)} style={{ fontWeight: 600, cursor: "pointer" }}>{buddy?.displayName}</span>
-                  <span style={{ fontStyle: "italic", color: "#7a7568" }}> added </span>
-                  {extras.length > 0
-                    ? <span><strong style={{ fontStyle: "normal" }}>{primary.title}</strong><span style={{ fontStyle: "italic", color: "#7a7568" }}> and </span><span style={{ fontWeight: 600, color: "#7a7568", cursor: "pointer", borderBottom: "1px dashed #7a7568" }} onClick={e => { e.stopPropagation(); onShelfExtras && onShelfExtras(extras); }}>{extras.length} other tile{extras.length > 1 ? "s" : ""}</span><span style={{ fontStyle: "italic", color: "#7a7568" }}> to their shelf</span></span>
-                    : <span><span style={{ fontStyle: "italic", color: "#7a7568" }}></span><strong style={{ fontStyle: "normal" }}>{primary.title}</strong><span style={{ fontStyle: "italic", color: "#7a7568" }}> to their shelf</span></span>
-                  }
-                  <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: "#a09890", marginLeft: 8 }}>{item.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
-                </div>
-              </div>
-              <div style={{ width: "100%", maxWidth: 300, margin: "0 auto", cursor: primary.source_url ? "pointer" : "default" }} onClick={() => { if (!primary.source_url) return; const isMusicUrl = primary.source_url.includes("open.spotify.com"); if (isMusicUrl && onMusicOpen) { onMusicOpen(primary.source_url, primary.title, primary.subtitle, primary.category); } else { window.open(primary.source_url, "_blank"); } }}>
-                {primary.poster && <img src={primary.poster} alt={primary.title} style={{ width: "100%", display: "block" }} onError={e => e.target.style.display = "none"} />}
-                <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{primary.title}</div>
-                {primary.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{primary.subtitle}</div>}
-                {onDudeSame && buddy && buddy.userId !== selfId && (
-                  <div style={{ display: "flex", marginTop: 8 }}>
-                    <button onClick={e => { e.stopPropagation(); onDudeSame({ id: primary.item_id, title: primary.title, poster: primary.poster, _cat: primary.category }, buddy.userId); }} style={{ flex: 1, background: (myReactions||[]).find(r => r.item_id === String(primary.item_id) && r.item_owner_id === buddy.userId) ? "#111008" : "transparent", border: "1px solid #b3ada0", color: (myReactions||[]).find(r => r.item_id === String(primary.item_id) && r.item_owner_id === buddy.userId) ? "#C8C2B4" : "#3a3830", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700 }}>{(myReactions||[]).find(r => r.item_id === String(primary.item_id) && r.item_owner_id === buddy.userId) ? "✓ Agreed" : "Agree"}</button>
-                    {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue({ id: primary.item_id, title: primary.title, poster: primary.poster, source_url: primary.source_url, category: primary.category, user_id: buddy.userId }); }} style={{ flex: 1, background: (queue||[]).find(q => String(q.id) === String(primary.item_id)) ? "#111008" : "transparent", border: "1px solid #b3ada0", borderLeft: "none", color: (queue||[]).find(q => String(q.id) === String(primary.item_id)) ? "#C8C2B4" : "#3a3830", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700 }}>{(queue||[]).find(q => String(q.id) === String(primary.item_id)) ? "✓ Queued" : "+ Queue"}</button>}
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        }
-        if (item.type === "agree") {
-          const r = item.reaction;
-          const buddies = item.buddies || [item.buddy];
-          const shown = buddies.slice(0, 2).filter(Boolean);
-          const rest = buddies.slice(2).filter(Boolean);
-          return (
-            <div key={i} style={{ borderBottom: "1px solid #b3ada0", paddingBottom: 24, marginBottom: 24 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <div style={{ display: "flex", gap: -6, flexShrink: 0 }}>
-                  {shown.map((b, j) => (
-                    <div key={j} onClick={() => b && onViewBuddy(b)} style={{ cursor: "pointer", marginLeft: j > 0 ? -8 : 0 }}>
-                      <Avatar name={b?.displayName || "?"} size={28} avatarUrl={b?.avatarUrl} />
-                    </div>
-                  ))}
-                </div>
-                <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "#3a3830", flex: 1 }}>
-                  {shown.map((b, j) => (
-                    <span key={j}>
-                      {j > 0 && <span style={{ fontStyle: "italic", color: "#7a7568" }}> and </span>}
-                      <span onClick={() => b && onViewBuddy(b)} style={{ fontWeight: 600, cursor: "pointer" }}>{b?.displayName}</span>
-                    </span>
-                  ))}
-                  {rest.length > 0 && (
-                    <span>
-                      <span style={{ fontStyle: "italic", color: "#7a7568" }}> and </span>
-                      <span style={{ fontWeight: 600, color: "#7a7568" }}>{rest.map(b => b?.displayName).filter(Boolean).join(", ")}</span>
-                    </span>
-                  )}
-                  <span style={{ fontStyle: "italic", color: "#7a7568" }}> agreed with </span>
-                  {r.owner
-                    ? <span onClick={() => r.owner && onViewBuddy({ userId: r.owner.id, displayName: r.owner.display_name, username: r.owner.username, avatarUrl: r.owner.avatar_url })} style={{ fontWeight: 600, cursor: "pointer" }}>{r.owner.display_name}</span>
-                    : null}
-                  <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: "#a09890", marginLeft: 8 }}>{item.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
-                </div>
-              </div>
-              {r.poster && (
-                <div style={{ width: "100%", maxWidth: 300, margin: "0 auto" }}>
-                  <div style={{ cursor: r.source_url ? "pointer" : "default" }} onClick={() => { if (!r.source_url) return; const isMusicUrl = r.source_url.includes("open.spotify.com"); if (isMusicUrl && onMusicOpen) { onMusicOpen(r.source_url, r.title, r.subtitle, r.category); } else { window.open(r.source_url, "_blank"); } }}>
-                    <img src={r.poster} alt={r.title} style={{ width: "100%", display: "block" }} onError={e => e.target.style.display = "none"} />
-                    <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{r.title}</div>
-                    {r.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{r.subtitle}</div>}
-                  </div>
-                  {onDudeSame && r.item_owner_id && r.item_owner_id !== selfId && (
-                    <div style={{ display: "flex", marginTop: 8 }}>
-                      <button onClick={() => onDudeSame({ id: r.item_id, title: r.title, poster: r.poster, _cat: r.category }, r.item_owner_id)} style={{ flex: 1, background: (myReactions||[]).find(x => x.item_id === r.item_id && x.item_owner_id === r.item_owner_id) ? "#111008" : "transparent", border: "1px solid #b3ada0", color: (myReactions||[]).find(x => x.item_id === r.item_id && x.item_owner_id === r.item_owner_id) ? "#C8C2B4" : "#3a3830", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700 }}>
-                        {(myReactions||[]).find(x => x.item_id === r.item_id && x.item_owner_id === r.item_owner_id) ? "✓ Agreed" : "Agree"}
-                      </button>
-                      {onAddToQueue && <button onClick={() => onAddToQueue({ id: r.item_id, title: r.title, poster: r.poster, source_url: r.source_url, category: r.category })} style={{ flex: 1, background: (queue||[]).find(q => q.id === r.item_id) ? "#111008" : "transparent", border: "1px solid #b3ada0", borderLeft: "none", color: (queue||[]).find(q => q.id === r.item_id) ? "#C8C2B4" : "#3a3830", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700 }}>
-                        {(queue||[]).find(q => q.id === r.item_id) ? "✓ Queued" : "+ Queue"}
-                      </button>}
-                    </div>
-                  )}
-      {feedTab === 'vouches' && discoveryBoards.length > 0 && (
-        <div style={{ marginTop: 40 }}>
-          <div style={{ borderTop: `3px double ${T.ink}`, paddingTop: 20, marginBottom: 20 }}>
-            <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.18em", color: T.inkMid, marginBottom: 4 }}>Discover</div>
-            <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkFaint }}>What others are vouching for</div>
-          </div>
-          {discoveryBoards.map((b, i) => {
-            const profile = b.profiles;
-            const theme = (b.theme && b.theme !== "Other") ? b.theme : (b.name || "Vouch");
-            const items = (b.vouch_board_items || []).sort((a,x) => a.position - x.position).slice(0,5);
-            const dummyBuddy = { userId: b.user_id, displayName: profile?.display_name || "Someone", avatarUrl: null, username: profile?.username };
-            return (
-              <div key={i} style={{ marginBottom: 32, opacity: 0.85 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                  <Avatar name={dummyBuddy.displayName} size={28} avatarUrl={dummyBuddy.avatarUrl} />
-                  <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.inkMid }}>
-                    <span style={{ fontWeight: 600 }}>{dummyBuddy.displayName}</span>
-                    <span style={{ fontStyle: "italic", color: T.inkLight }}> vouched</span>
-                    <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: T.inkFaint, marginLeft: 8 }}>{new Date(b.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
-                  </div>
-                </div>
-                <div className="vouch-section" style={{ marginBottom: 8 }}>
-                  <div className="vouch-section-header">
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div className="vouch-section-label">{theme}</div>
-                      <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginTop: 3 }}>Vouch</div>
-                      {b.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: "rgba(200,194,180,0.4)", marginTop: 2 }}>{b.description}</div>}
-                    </div>
-                  </div>
-                  <VouchSection board={(() => { const brd = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [], podcasts: [] }; items.forEach(item => { if (brd[item.category]) brd[item.category].push({ id: item.item_id, title: item.title, sub: item.subtitle || "", poster: item.poster, comment: "", vouched: true, sourceUrl: item.source_url, _cat: item.category }); }); return brd; })()} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={(cat, item) => onDudeSame(cat, item)} myReactions={myReactions} hideHeader={true} onMusicOpen={onMusicOpen} />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-                </div>
-              )}
-            </div>
-          );
-        }
-        return null;
-      })}
+      {filteredFeed.length === 0 && !showDiscovery && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: "#7a7568", padding: "24px 0" }}>{feedTab === 'vouches' ? 'No vouches from your circle yet.' : 'No activity from your circle yet.'}</div>}
+      {filteredFeed.map((item, i) => renderFeedItem(item, i, false))}
       {totalFiltered > visibleCount && (
         <div style={{ textAlign: 'center', padding: '16px 0 8px' }}>
           <button onClick={() => setVisibleCount(v => v + 15)} style={{ fontFamily: "'Spectral SC',serif", fontSize: '9px', letterSpacing: '0.18em', padding: '10px 28px', background: 'transparent', border: `1px solid ${T.paperDark}`, color: T.inkMid, cursor: 'pointer' }}>Load More</button>
+        </div>
+      )}
+      {showDiscovery && hasDiscoveryContent && (
+        <div style={{ marginTop: totalFiltered > 0 ? 40 : 8 }}>
+          <div style={{ borderTop: totalFiltered > 0 ? `3px double ${T.ink}` : "none", paddingTop: totalFiltered > 0 ? 20 : 0, marginBottom: 20 }}>
+            <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.18em", color: T.inkMid, marginBottom: 4 }}>
+              {discoveryTitle}
+            </div>
+            <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkFaint, lineHeight: 1.5 }}>
+              {discoverySubtitle}
+            </div>
+          </div>
+          {feedTab === 'vouches'
+            ? discoveryBoards.map((b, i) => renderFeedItem({ type: "vouch", date: new Date(b.published_at), board: b, buddy: profileBuddy(b.profiles, b.user_id) }, i, true))
+            : discoveryActivity.slice(0, 15).map((item, i) => renderFeedItem(item, i, true))
+          }
+        </div>
+      )}
+      {showDiscovery && !hasDiscoveryContent && totalFiltered === 0 && (
+        <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: "#7a7568", padding: "24px 0" }}>
+          {feedTab === 'vouches' ? 'No vouches to discover yet — check back soon.' : 'No activity to discover yet — check back soon.'}
         </div>
       )}
     </div>
@@ -3853,10 +3931,7 @@ export default function Vouch() {
                 )}
               </div>
               <div className="board-sub" style={{ marginBottom: 28 }}>Recent activity from your circle</div>
-              {buddies.length === 0
-                ? <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: "#7a7568", padding: "24px 0" }}>Add some buddies to see their activity here.</div>
-                : <BuddyFeed buddies={buddies} selfId={userId} selfName={user?.displayName} selfAvatar={user?.avatarUrl} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId, true); window.scrollTo(0,0); }} onDudeSame={dudeSame} onAddToQueue={addToQueue} queue={queue} myReactions={myReactions} onShelfExtras={setShelfExtras} onMusicOpen={openMusicUrl} />
-              }
+              <BuddyFeed buddies={buddies} selfId={userId} selfName={user?.displayName} selfAvatar={user?.avatarUrl} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId, true); window.scrollTo(0,0); }} onDudeSame={dudeSame} onAddToQueue={addToQueue} queue={queue} myReactions={myReactions} onShelfExtras={setShelfExtras} onMusicOpen={openMusicUrl} />
             </div>
           )}
           {tab === "settings" && !viewing && (
