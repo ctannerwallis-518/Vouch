@@ -3,9 +3,13 @@ import { useState, useEffect, useRef, memo } from "react";
 import { supabase } from "./supabase";
 import {
   badgeKey,
+  badgesForOwner,
   BADGE_RIBBONS,
   backfillVouchBadges,
+  itemBadgesForOwner,
   loadBadgesForUser,
+  loadBadgesForUsers,
+  loadTitleBadges,
   revokeBoardItemClaims,
   revokeClaimsForBoard,
   syncClaimsAfterPublish,
@@ -555,7 +559,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
           {[...CATEGORIES].sort((a, b) => ((board?.shelf?.[b.key] || []).length - (board?.shelf?.[a.key] || []).length)).map(cat => {
             const items = board?.shelf?.[cat.key] || [];
             if (items.length === 0) return null;
-            return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} />;
+            return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={false} onCard={() => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} itemBadges={publicItemBadges} />;
           })}
 
           <div style={{ marginTop: 48, padding: "32px 0", borderTop: `3px double ${T.ink}`, textAlign: "center" }}>
@@ -958,16 +962,17 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
   );
 }
 
-function VouchRibbon({ badges }) {
+function VouchRibbon({ badges, align = "right", compact = false }) {
   if (!badges?.length) return null;
   const ordered = ["first_global", "first_circle"].filter(t => badges.includes(t));
+  const pos = align === "left" ? { top: compact ? 4 : 8, left: compact ? 4 : 8 } : { top: compact ? 4 : 8, right: compact ? 4 : 8 };
   return (
-    <div style={{ position: "absolute", top: 8, right: 8, zIndex: 3, display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-end" }}>
+    <div style={{ position: "absolute", ...pos, zIndex: 3, display: "flex", flexDirection: "column", gap: 4, alignItems: align === "left" ? "flex-start" : "flex-end" }}>
       {ordered.map(type => {
         const ribbon = BADGE_RIBBONS[type];
         if (!ribbon) return null;
         return (
-          <div key={type} title={type === "first_global" ? "First on Vouch" : "First in your circle"} style={{ ...ribbon.style, fontFamily: "'Spectral SC',serif", fontSize: "8px", fontWeight: 700, letterSpacing: "0.12em", padding: "3px 8px", cursor: "default", whiteSpace: "nowrap" }}>
+          <div key={type} title={type === "first_global" ? "First on Vouch globally" : "First in friend group"} style={{ ...ribbon.style, fontFamily: "'Spectral SC',serif", fontSize: compact ? "7px" : "8px", fontWeight: 700, letterSpacing: "0.12em", padding: compact ? "2px 6px" : "3px 8px", cursor: "default", whiteSpace: "nowrap" }}>
             {ribbon.label}
           </div>
         );
@@ -1140,7 +1145,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
   );
 }
 
-function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, buddyCounts, onAddToQueue, queue, onMusicOpen }) {
+function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, buddyCounts, onAddToQueue, queue, onMusicOpen, itemBadges }) {
   const [open, setOpen] = useState(true);
   const isMobile = typeof window !== "undefined" && window.innerWidth <= 640; // eslint-disable-line
   const slots = Array(5).fill(null).map((_, i) => items[i] || null);
@@ -1159,6 +1164,7 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
           {slots.map((item, idx) =>
             item
               ? <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => { if (!item.sourceUrl) { onCard(catKey, idx); return; } const isMusicCat = ["songs","albums","artists","podcasts"].includes(catKey); if (isMusicCat && onMusicOpen) { onMusicOpen(item.sourceUrl, item.title, item.sub, catKey); } else { window.open(item.sourceUrl, "_blank"); } }}>
+                  <VouchRibbon badges={itemBadges?.[badgeKey(catKey, item.id)] || []} align={isOwn ? "left" : "right"} compact />
                   {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx, false); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 26, height: 26, cursor: "pointer", fontSize: 15, lineHeight: "26px", textAlign: "center", borderRadius: 2 }}>×</button>}
                   {item.poster ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} /> : null}
                   <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
@@ -1657,9 +1663,17 @@ function EditMetaForm({ board, themes, onSave, onClose }) {
 
 function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame, onShowVouchers }) {
   const [idx, setIdx] = useState(0);
+  const [titleBadgeMap, setTitleBadgeMap] = useState({});
   const touchStartX = useRef(null);
   const currentOffsetX = useRef(0);
   const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!items?.length) return;
+    loadTitleBadges(items.map(i => ({ category: i.category, item_id: i.item_id }))).then(setTitleBadgeMap).catch(() => {});
+  }, [items]);
+
+  const itemBadges = (item) => titleBadgeMap[badgeKey(item.category, item.item_id)] || [];
 
   useEffect(() => {
     const el = containerRef.current;
@@ -1693,6 +1707,7 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame,
 
   const CardFaceNoButtons = ({ item }) => (
     <div style={{ position: "relative" }}>
+      <VouchRibbon badges={itemBadges(item)} />
       {item.poster
         ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: "1px solid rgba(200,194,180,0.2)", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")} onError={e => e.target.style.display = "none"} />
         : <div style={{ width: "100%", height: 340, background: "rgba(200,194,180,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")}>{item.title}</div>}
@@ -1710,6 +1725,7 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame,
     const isQueued = queue?.find(q => String(q.id) === String(item.item_id || item.id));
     return (
       <div style={{ position: "relative" }}>
+        <VouchRibbon badges={itemBadges(item)} />
         {item.poster
           ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: "1px solid rgba(200,194,180,0.2)", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")} onError={e => e.target.style.display = "none"} />
           : <div style={{ width: "100%", height: 340, background: "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")}>{item.title}</div>}
@@ -1780,6 +1796,7 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame,
 
 function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue, onDudeSame, myReactions, userId }) {
   const [modalCat, setModalCat] = useState(null);
+  const [titleBadgeMap, setTitleBadgeMap] = useState({});
   const isMobile = window.innerWidth <= 640;
 
   // Build per-category tile lists - stable, shuffled once
@@ -1814,12 +1831,21 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue,
   }
   const catItems = catItemsRef.current || {};
 
+  useEffect(() => {
+    const pairs = [];
+    CATEGORIES.forEach(cat => {
+      (catItems[cat.key] || []).forEach(item => pairs.push({ category: cat.key, item_id: item.item_id }));
+    });
+    if (pairs.length) loadTitleBadges(pairs).then(setTitleBadgeMap).catch(() => {});
+  }, [allBuddyBoards.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const visibleCats = CATEGORIES.filter(cat => catItems[cat.key]?.length > 0);
   if (visibleCats.length === 0) return null;
 
-  const TileCard = ({ item }) => (
-    <div style={{ flexShrink: 0, width: isMobile ? 95 : 150, cursor: item.source_url ? "pointer" : "default" }}
+  const TileCard = ({ item, catKey }) => (
+    <div style={{ flexShrink: 0, width: isMobile ? 95 : 150, cursor: item.source_url ? "pointer" : "default", position: "relative" }}
       onClick={() => item.source_url && window.open(item.source_url, "_blank")}>
+      <VouchRibbon badges={titleBadgeMap[badgeKey(catKey, item.item_id)] || []} compact />
       {item.poster
         ? <img src={item.poster} alt={item.title} style={{ width: "100%", display: "block" }} onError={e => e.target.style.display = "none"} />
         : <div style={{ width: "100%", aspectRatio: "2/3", background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 6 }}>{item.title}</div>}
@@ -1863,7 +1889,7 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue,
             )}
           </div>
           <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 4, scrollbarWidth: "none" }}>
-            {catItems[cat.key].slice(0, 5).map((item, i) => <TileCard key={i} item={item} />)}
+            {catItems[cat.key].slice(0, 5).map((item, i) => <TileCard key={i} item={item} catKey={cat.key} />)}
           </div>
         </div>
       ))}
@@ -1877,7 +1903,7 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue,
             </div>
             <div className="modal-body" style={{ overflowY: "auto", flex: 1 }}>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
-                {catItems[modalCat].map((item, i) => <TileCard key={i} item={item} />)}
+                {catItems[modalCat].map((item, i) => <TileCard key={i} item={item} catKey={modalCat} />)}
               </div>
             </div>
           </div>
@@ -1894,6 +1920,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
   const [discoveryBoards, setDiscoveryBoards] = useState([]);
   const [discoveryFeed, setDiscoveryFeed] = useState([]);
   const [visibleCount, setVisibleCount] = useState(15);
+  const [feedBadgeMap, setFeedBadgeMap] = useState({});
 
   useEffect(() => {
     const load = async () => {
@@ -2065,6 +2092,15 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
 
         setDiscoveryBoards(discoverBoardsFiltered);
         setDiscoveryFeed(discoverGrouped);
+
+        const badgeUserIds = new Set();
+        (boards || []).forEach(b => badgeUserIds.add(b.user_id));
+        discoverBoardsFiltered.forEach(b => badgeUserIds.add(b.user_id));
+        (reactions || []).forEach(r => { badgeUserIds.add(r.user_id); if (r.item_owner_id) badgeUserIds.add(r.item_owner_id); });
+        (shelfAdds || []).forEach(s => badgeUserIds.add(s.user_id));
+        reactionsFiltered.forEach(r => { badgeUserIds.add(r.user_id); if (r.item_owner_id) badgeUserIds.add(r.item_owner_id); });
+        shelfFiltered.forEach(s => badgeUserIds.add(s.user_id));
+        loadBadgesForUsers([...badgeUserIds]).then(setFeedBadgeMap).catch(() => {});
       } catch(e) { console.error(e); }
       setLoading(false);
     };
@@ -2112,7 +2148,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
                 if (vbBoard[it.category]) vbBoard[it.category].push({ id: it.item_id, title: it.title, sub: it.subtitle || "", poster: it.poster, comment: "", vouched: true, sourceUrl: it.source_url, _cat: it.category, _catLabel: it.category });
               });
               const isSelfBoard = b.user_id === selfId;
-              return <VouchSection board={vbBoard} isOwn={isSelfBoard} onCard={()=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={onDudeSame || (()=>{})} myReactions={(myReactions || []).filter(r => r.item_owner_id === b.user_id).map(r => r.item_id)} hideHeader={true} hideEmptySlots={true} onAddToQueue={isSelfBoard ? null : (onAddToQueue || null)} queue={queue} ownerId={b.user_id} onMusicOpen={onMusicOpen} singleTile={true} />;
+              return <VouchSection board={vbBoard} isOwn={isSelfBoard} onCard={()=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={onDudeSame || (()=>{})} myReactions={(myReactions || []).filter(r => r.item_owner_id === b.user_id).map(r => r.item_id)} hideHeader={true} hideEmptySlots={true} onAddToQueue={isSelfBoard ? null : (onAddToQueue || null)} queue={queue} ownerId={b.user_id} onMusicOpen={onMusicOpen} singleTile={true} itemBadges={itemBadgesForOwner(feedBadgeMap, b.user_id)} />;
             })()}
           </div>
         </div>
@@ -2141,7 +2177,8 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
               <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: "#a09890", marginLeft: 8 }}>{item.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
             </div>
           </div>
-          <div style={{ width: "100%", maxWidth: 300, margin: "0 auto", cursor: primary.source_url ? "pointer" : "default" }} onClick={() => { if (!primary.source_url) return; const isMusicUrl = primary.source_url.includes("open.spotify.com"); if (isMusicUrl && onMusicOpen) { onMusicOpen(primary.source_url, primary.title, primary.subtitle, primary.category); } else { window.open(primary.source_url, "_blank"); } }}>
+          <div style={{ width: "100%", maxWidth: 300, margin: "0 auto", cursor: primary.source_url ? "pointer" : "default", position: "relative" }} onClick={() => { if (!primary.source_url) return; const isMusicUrl = primary.source_url.includes("open.spotify.com"); if (isMusicUrl && onMusicOpen) { onMusicOpen(primary.source_url, primary.title, primary.subtitle, primary.category); } else { window.open(primary.source_url, "_blank"); } }}>
+            <VouchRibbon badges={badgesForOwner(feedBadgeMap, buddy?.userId, primary.category, primary.item_id)} />
             {primary.poster && <img src={primary.poster} alt={primary.title} style={{ width: "100%", display: "block" }} onError={e => e.target.style.display = "none"} />}
             <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{primary.title}</div>
             {primary.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{primary.subtitle}</div>}
@@ -2192,7 +2229,8 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
             </div>
           </div>
           {r.poster && (
-            <div style={{ width: "100%", maxWidth: 300, margin: "0 auto" }}>
+            <div style={{ width: "100%", maxWidth: 300, margin: "0 auto", position: "relative" }}>
+              <VouchRibbon badges={badgesForOwner(feedBadgeMap, r.item_owner_id, r.category, r.item_id)} />
               <div style={{ cursor: r.source_url ? "pointer" : "default" }} onClick={() => { if (!r.source_url) return; const isMusicUrl = r.source_url.includes("open.spotify.com"); if (isMusicUrl && onMusicOpen) { onMusicOpen(r.source_url, r.title, r.subtitle, r.category); } else { window.open(r.source_url, "_blank"); } }}>
                 <img src={r.poster} alt={r.title} style={{ width: "100%", display: "block" }} onError={e => e.target.style.display = "none"} />
                 <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{r.title}</div>
@@ -4338,7 +4376,7 @@ export default function Vouch() {
                     ) : (
                       visibleCats.map(cat => {
                         const items = currBoard[cat.key] || [];
-                        return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={(key) => {  setAddModal(key); }} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} onAddToQueue={addToQueue} queue={queue} onMusicOpen={openMusicUrl} />;
+                        return <CatSection key={cat.key} catKey={cat.key} label={cat.label} items={items} isOwn={isOwn} onCard={(k, i) => setLightbox({ catKey: k, idx: i })} onAdd={(key) => {  setAddModal(key); }} onRemove={removeItem} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} onAddToQueue={addToQueue} queue={queue} onMusicOpen={openMusicUrl} itemBadges={isOwn ? ownItemBadges : viewItemBadges} />;
                       })
                     )}
                   </>;
