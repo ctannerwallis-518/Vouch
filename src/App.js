@@ -1,6 +1,15 @@
 // build: 2026-04-05T16:17:10.789151
 import { useState, useEffect, useRef, memo } from "react";
 import { supabase } from "./supabase";
+import {
+  badgeKey,
+  BADGE_RIBBONS,
+  backfillVouchBadges,
+  loadBadgesForUser,
+  revokeBoardItemClaims,
+  revokeClaimsForBoard,
+  syncClaimsAfterPublish,
+} from "./badges";
 
 const AVATAR_OPTIONS = [
   { file: "book",               label: "Book" },
@@ -384,6 +393,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
   const [showSignupNudge, setShowSignupNudge] = useState(false);
   const [publicBuddies, setPublicBuddies] = useState([]);
   const [showPublicBuddies, setShowPublicBuddies] = useState(false);
+  const [publicItemBadges, setPublicItemBadges] = useState({});
 
   useEffect(() => {
     const load = async () => {
@@ -433,6 +443,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
           }
         });
         setBoard({ shelf: b, activeVouchBoard: activeVouchBoard || null });
+        loadBadgesForUser(inviteUserId).then(setPublicItemBadges).catch(() => {});
       } catch(e) { console.error(e); }
       setLoading(false);
     };
@@ -521,7 +532,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
                     {avb.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.3)", marginTop: 4 }}>Published {new Date(avb.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>}
                   </div>
                 </div>
-                <VouchSection board={vbBoard} isOwn={false} onCard={()=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} hideHeader={true} />
+                <VouchSection board={vbBoard} isOwn={false} onCard={()=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={() => setShowSignupNudge(true)} myReactions={[]} hideHeader={true} itemBadges={publicItemBadges} />
               </div>
             );
           })()}
@@ -947,7 +958,25 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
   );
 }
 
-function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, buddyCounts, hideHeader, hideEmptySlots, onAddToQueue, queue, ownerId, onMusicOpen, singleTile }) {
+function VouchRibbon({ badges }) {
+  if (!badges?.length) return null;
+  const ordered = ["first_global", "first_circle"].filter(t => badges.includes(t));
+  return (
+    <div style={{ position: "absolute", top: 8, right: 8, zIndex: 3, display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-end" }}>
+      {ordered.map(type => {
+        const ribbon = BADGE_RIBBONS[type];
+        if (!ribbon) return null;
+        return (
+          <div key={type} title={type === "first_global" ? "First on Vouch" : "First in your circle"} style={{ ...ribbon.style, fontFamily: "'Spectral SC',serif", fontSize: "8px", fontWeight: 700, letterSpacing: "0.12em", padding: "3px 8px", cursor: "default", whiteSpace: "nowrap" }}>
+            {ribbon.label}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, buddyCounts, hideHeader, hideEmptySlots, onAddToQueue, queue, ownerId, onMusicOpen, singleTile, itemBadges }) {
   const [idx, setIdx]      = useState(0);
   const touchStartX        = useRef(null);
   const touchStartY        = useRef(null);
@@ -1015,8 +1044,11 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
     setTimeout(() => { if (track) track.style.transition = ""; }, 350);
   }, [idx, isMobile]);
 
-  const CardFace = ({ it }) => (
+  const CardFace = ({ it }) => {
+    const badges = itemBadges?.[badgeKey(it._cat, it.id)] || [];
+    return (
     <div style={{ position: "relative" }}>
+      <VouchRibbon badges={badges} />
       {it.poster
         ? <img src={it.poster} alt={it.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: `1px solid ${T.paperDark}`, cursor: it.sourceUrl ? "pointer" : "default" }} onClick={() => { if (Math.abs(currentOffsetX.current) > 8) return; if (!it.sourceUrl) { onCard(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id)); return; } const isMusicCat = ["songs","albums","artists","podcasts"].includes(it._cat); if (isMusicCat && onMusicOpen) { onMusicOpen(it.sourceUrl, it.title, it.sub, it._cat); } else { window.open(it.sourceUrl, "_blank"); } }} onError={e => e.target.style.display = "none"} />
         : <div style={{ width: "100%", height: 340, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 18, color: T.inkLight, padding: 24, textAlign: "center", cursor: it.sourceUrl ? "pointer" : "default" }} onClick={() => { if (Math.abs(currentOffsetX.current) > 8) return; it.sourceUrl ? window.open(it.sourceUrl, "_blank") : onCard(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id)); }}>{it.title}</div>}
@@ -1037,7 +1069,8 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
         <div title="Total Buddy Vouches" style={{ position: "absolute", top: 8, left: 8, zIndex: 2, background: "rgba(17,16,8,0.82)", color: "rgba(200,194,180,0.95)", fontFamily: "'Spectral SC',serif", fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", padding: "3px 8px", cursor: "default" }}>{buddyCounts[String(it.id)]} {buddyCounts[String(it.id)] === 1 ? "Vouch" : "Vouches"}</div>
       )}
     </div>
-  );
+    );
+  };
 
   return (
     <div className="vouch-section">
@@ -2619,6 +2652,8 @@ export default function Vouch() {
   const [pastNotifications, setPastNotifications] = useState([]);
   const [viewerReactions,setViewerReactions]= useState([]);
   const [viewActiveBoard,setViewActiveBoard]= useState(null);
+  const [ownItemBadges,    setOwnItemBadges]    = useState({});
+  const [viewItemBadges,   setViewItemBadges]   = useState({});
   const [suggested, setSuggested] = useState([]); // eslint-disable-line no-unused-vars
   const [queue,          setQueue]          = useState([]);
   const queueRef = useRef([]);
@@ -2641,10 +2676,14 @@ export default function Vouch() {
       setActiveBoard(active);
       setBoardArchive(data);
     }
+    loadBadgesForUser(uid).then(map => {
+      setOwnItemBadges(map);
+    }).catch(() => {});
   };
 
   const publishBoard = async (boardData) => {
     const { name, theme, description, singleCategory, items, existingBoardId } = boardData;
+    let publishedBoardId = existingBoardId || null;
 
     if (existingBoardId) {
       // EDIT MODE: update existing board in place, no new row
@@ -2652,6 +2691,7 @@ export default function Vouch() {
         name, theme, description,
         single_category: singleCategory || null,
       }).eq("id", existingBoardId);
+      await revokeBoardItemClaims(existingBoardId, userId, items).catch(() => {});
       // Replace items
       await supabase.from("vouch_board_items").delete().eq("board_id", existingBoardId);
       if (items.length > 0) {
@@ -2679,6 +2719,7 @@ export default function Vouch() {
         is_active: true,
       }).select().single();
       if (!newBoard) return;
+      publishedBoardId = newBoard.id;
       if (items.length > 0) {
         await supabase.from("vouch_board_items").insert(
           items.map((item, i) => ({
@@ -2694,6 +2735,9 @@ export default function Vouch() {
         );
       }
     }
+    if (publishedBoardId) {
+      await syncClaimsAfterPublish(userId, publishedBoardId, items, new Date().toISOString()).catch(() => {});
+    }
     await loadVouchBoards(userId);
     setBoardEditor(false);
     setEditingBoard(null);
@@ -2703,6 +2747,7 @@ export default function Vouch() {
   const removeActiveVouch = async (mode) => {
     if (!activeBoard) return;
     if (mode === "delete") {
+      await revokeClaimsForBoard(activeBoard.id).catch(() => {});
       await supabase.from("vouch_board_items").delete().eq("board_id", activeBoard.id);
       await supabase.from("vouch_boards").delete().eq("id", activeBoard.id);
     } else {
@@ -2764,6 +2809,7 @@ export default function Vouch() {
       setViewActiveBoard(cached.activeBoard);
       setViewing(prev => ({ ...(prev || {}), ...cached.profile }));
       setViewBuddies(cached.buddies || []);
+      loadBadgesForUser(uid).then(setViewItemBadges).catch(() => {});
       return;
     }
     const { data, error } = await supabase
@@ -2800,6 +2846,7 @@ export default function Vouch() {
     } else {
       setViewBuddies([]);
     }
+    loadBadgesForUser(uid).then(setViewItemBadges).catch(() => {});
   };
 
   const [groupVouchItems, setGroupVouchItems] = useState([]);
@@ -3004,6 +3051,7 @@ export default function Vouch() {
         loadBuddies(uid);
         loadMyReactions(uid);
         loadVouchBoards(uid);
+        backfillVouchBadges().then(() => loadBadgesForUser(uid).then(setOwnItemBadges)).catch(() => {});
         // Check for new agreements since last visit
         const { data: visitProf } = await supabase.from("profiles").select("last_visit").eq("id", uid).maybeSingle();
         const lastVisit = visitProf?.last_visit || localStorage.getItem("vouch-last-visit") || new Date(0).toISOString();
@@ -4181,7 +4229,7 @@ export default function Vouch() {
                           if (b[item.category]) b[item.category].push({ id: item.item_id, title: item.title, sub: item.subtitle || "", poster: item.poster, comment: "", vouched: true, sourceUrl: item.source_url, _cat: item.category, _catLabel: CATEGORIES.find(c=>c.key===item.category)?.label || item.category });
                         });
                         return b;
-                      })()} isOwn={true} onCard={(k, i) => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => {}} myReactions={[]} buddyCounts={buddyCounts} hideHeader={true} onMusicOpen={openMusicUrl} />
+                      })()} isOwn={true} onCard={(k, i) => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => {}} myReactions={[]} buddyCounts={buddyCounts} hideHeader={true} onMusicOpen={openMusicUrl} itemBadges={ownItemBadges} />
                     ) : (
                       <div style={{ height: 220, border: "1px dashed rgba(200,194,180,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 10, cursor: "pointer" }} onClick={() => { setEditingBoard(null); setBoardEditor(true); }}>
                         <span style={{ fontSize: 28, color: "rgba(200,194,180,0.4)" }}>+</span>
@@ -4205,14 +4253,14 @@ export default function Vouch() {
                         if (brd[item.category]) brd[item.category].push({ id: item.item_id, title: item.title, sub: item.subtitle || "", poster: item.poster, comment: "", vouched: true, sourceUrl: item.source_url, _cat: item.category, _catLabel: CATEGORIES.find(c=>c.key===item.category)?.label || item.category });
                       });
                       return brd;
-                    })()} isOwn={false} onCard={(k,i)=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} hideHeader={true} onAddToQueue={addToQueue} queue={queue} ownerId={viewing?.userId} onMusicOpen={openMusicUrl} />
+                    })()} isOwn={false} onCard={(k,i)=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} buddyCounts={buddyCounts} hideHeader={true} onAddToQueue={addToQueue} queue={queue} ownerId={viewing?.userId} onMusicOpen={openMusicUrl} itemBadges={viewItemBadges} />
                   </div>
                 ) : null}
                 {viewing && !isOwn && (
                   <PreviousVouches userId={viewing.userId} onDudeSame={dudeSame} myReactions={myReactions} queue={queue} onAddToQueue={addToQueue} onMusicOpen={openMusicUrl} />
                 )}
                 {isOwn && boardArchive.filter(b => !b.is_active && b.published_at).length > 0 && (
-                  <OwnArchive boards={boardArchive} canPublish={canPublish} onRepublish={republishBoard} onDelete={async (b) => { await supabase.from("vouch_board_items").delete().eq("board_id", b.id); await supabase.from("vouch_boards").delete().eq("id", b.id); setBoardArchive(prev => prev.filter(x => x.id !== b.id)); }} />
+                  <OwnArchive boards={boardArchive} canPublish={canPublish} onRepublish={republishBoard} onDelete={async (b) => { await revokeClaimsForBoard(b.id).catch(() => {}); await supabase.from("vouch_board_items").delete().eq("board_id", b.id); await supabase.from("vouch_boards").delete().eq("id", b.id); setBoardArchive(prev => prev.filter(x => x.id !== b.id)); loadBadgesForUser(userId).then(setOwnItemBadges).catch(() => {}); }} />
                 )}
 
                 {(() => {
