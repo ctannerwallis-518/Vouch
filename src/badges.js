@@ -15,6 +15,11 @@ export function badgeKey(category, itemId) {
   return `${category}:${String(itemId)}`;
 }
 
+export async function badgesTablesReady() {
+  const { error } = await supabase.from("vouch_badges").select("id", { head: true, count: "exact" });
+  return !error;
+}
+
 export async function getBuddyIds(userId) {
   const { data } = await supabase.from("buddies")
     .select("requester_id, receiver_id")
@@ -34,6 +39,17 @@ async function getActiveClaimsForTitle(category, itemId) {
   return data || [];
 }
 
+export async function recomputeBadgesForTitle(category, itemId) {
+  const { error } = await supabase.rpc("recompute_badges_for_title", {
+    p_category: category,
+    p_item_id: String(itemId),
+  });
+  if (error) {
+    // Fallback for older schema without RPC
+    await recomputeBadgesForTitleClient(category, itemId);
+  }
+}
+
 async function revokeBadgesForTitle(category, itemId, badgeType) {
   await supabase.from("vouch_badges").update({ revoked_at: new Date().toISOString() })
     .eq("category", category)
@@ -42,7 +58,7 @@ async function revokeBadgesForTitle(category, itemId, badgeType) {
     .is("revoked_at", null);
 }
 
-export async function recomputeBadgesForTitle(category, itemId) {
+async function recomputeBadgesForTitleClient(category, itemId) {
   const claims = await getActiveClaimsForTitle(category, itemId);
   if (claims === null) return;
 
@@ -84,6 +100,8 @@ export async function recomputeBadgesForTitle(category, itemId) {
 }
 
 export async function syncClaimsAfterPublish(userId, boardId, items, vouchedAt) {
+  if (!(await badgesTablesReady())) return;
+
   const touched = new Set();
   for (const item of items) {
     const category = item.catKey || item.category;
@@ -112,12 +130,14 @@ export async function syncClaimsAfterPublish(userId, boardId, items, vouchedAt) 
   }
 
   for (const key of touched) {
-    const [category, itemId] = key.split(":");
-    await recomputeBadgesForTitle(category, itemId);
+    const sep = key.indexOf(":");
+    await recomputeBadgesForTitle(key.slice(0, sep), key.slice(sep + 1));
   }
 }
 
 export async function revokeBoardItemClaims(boardId, userId, keepItems) {
+  if (!(await badgesTablesReady())) return;
+
   const keepSet = new Set(
     keepItems.map(i => badgeKey(i.catKey || i.category, i.id || i.item_id))
   );
@@ -135,6 +155,8 @@ export async function revokeBoardItemClaims(boardId, userId, keepItems) {
 }
 
 export async function revokeClaimsForBoard(boardId) {
+  if (!(await badgesTablesReady())) return;
+
   const { data: claims } = await supabase.from("vouch_title_claims")
     .select("*")
     .eq("board_id", boardId)
@@ -167,20 +189,29 @@ export async function loadBadgesForUser(userId) {
 }
 
 export async function backfillVouchBadges() {
-  if (localStorage.getItem("vouch-badges-backfill-v1")) return;
-
-  const { count, error } = await supabase.from("vouch_title_claims").select("*", { count: "exact", head: true });
-  if (error) return;
-  if (count > 0) {
-    localStorage.setItem("vouch-badges-backfill-v1", "1");
-    return;
+  if (!(await badgesTablesReady())) {
+    console.warn("[Vouch badges] Database tables missing — run supabase/badges.sql in the Supabase SQL editor.");
+    return { ok: false, reason: "no_tables" };
   }
 
+  const { count: claimCount } = await supabase.from("vouch_title_claims").select("*", { count: "exact", head: true });
+  const { count: badgeCount } = await supabase.from("vouch_badges").select("*", { count: "exact", head: true }).is("revoked_at", null);
+
+  if ((claimCount || 0) > 0 && (badgeCount || 0) > 0) {
+    return { ok: true, reason: "already_done", claims: claimCount, badges: badgeCount };
+  }
+
+  const { data, error } = await supabase.rpc("backfill_vouch_badges");
+  if (!error && data?.ok) {
+    return { ok: true, reason: "rpc", ...data };
+  }
+
+  // Client fallback if RPC not deployed yet (tables exist but functions missing)
   const { data: boards, error: boardsErr } = await supabase.from("vouch_boards")
     .select("id, user_id, published_at, vouch_board_items(*)")
     .not("published_at", "is", null)
     .order("published_at", { ascending: true });
-  if (boardsErr) return;
+  if (boardsErr) return { ok: false, reason: "backfill_failed", error: boardsErr.message };
 
   for (const board of boards || []) {
     const items = (board.vouch_board_items || []).sort((a, b) => a.position - b.position);
@@ -214,5 +245,5 @@ export async function backfillVouchBadges() {
     await recomputeBadgesForTitle(c.category, c.item_id);
   }
 
-  localStorage.setItem("vouch-badges-backfill-v1", "1");
+  return { ok: true, reason: "client_fallback", titles: seen.size };
 }
