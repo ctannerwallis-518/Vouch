@@ -635,6 +635,8 @@ function HowItWorks() {
           <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 5 }}>Buddies</div>
           <div style={{ fontSize: 13, lineHeight: 1.7, fontStyle: "italic", color: T.inkMid }}>Connect with friends and see what they are vouching for. Agree with anything that resonates, or add it to your Queue to revisit later.</div>
         </div>
+        <div style={{ borderTop: `1px solid ${T.paperDark}` }} />
+        <BadgeKeyLegend />
       </div>
     </div>
   );
@@ -1002,6 +1004,29 @@ function VouchRibbon({ badges, align = "right", compact = false }) {
   return (
     <div style={{ position: "absolute", ...pos, zIndex: 3, display: "flex", flexDirection: "row", alignItems: "flex-start" }}>
       <RibbonBadge type={primary[0]} compact={compact} />
+    </div>
+  );
+}
+
+function BadgeKeyLegend({ leftAlign = false }) {
+  const rowStyle = { display: "flex", alignItems: "flex-start", gap: 14, textAlign: left };
+  const descStyle = { fontSize: 13, lineHeight: 1.65, fontStyle: "italic", color: T.inkMid, flex: 1, paddingTop: 2 };
+  return (
+    <div style={{ textAlign: leftAlign ? "left" : "center" }}>
+      <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.15em", color: T.ink, marginBottom: 14, textAlign: leftAlign ? "left" : "center" }}>Badge Ribbons</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: leftAlign ? 480 : 380, margin: leftAlign ? 0 : "0 auto" }}>
+        <div style={rowStyle}>
+          <RibbonBadge type="first_global" />
+          <div style={descStyle}><strong style={{ fontStyle: "normal", fontWeight: 600, color: T.ink }}>Gold</strong> — First on Vouch globally to vouch for that title.</div>
+        </div>
+        <div style={rowStyle}>
+          <RibbonBadge type="first_circle" />
+          <div style={descStyle}><strong style={{ fontStyle: "normal", fontWeight: 600, color: T.ink }}>Silver</strong> — First in your friend group to vouch for that title.</div>
+        </div>
+      </div>
+      <div style={{ fontSize: 12, lineHeight: 1.65, fontStyle: "italic", color: T.inkLight, marginTop: 14, maxWidth: leftAlign ? 480 : 380, marginLeft: leftAlign ? 0 : "auto", marginRight: leftAlign ? 0 : "auto", textAlign: leftAlign ? "left" : "center" }}>
+        On profiles, you earn one ribbon per tile — gold if you were first globally, otherwise silver if you were first in your circle. On Group Vouch and Group Shelf, tiles show a silver ribbon and &ldquo;First vouched by&rdquo; — the global first when they&apos;re in your circle, otherwise the first buddy who vouched.
+      </div>
     </div>
   );
 }
@@ -2486,6 +2511,9 @@ function StartPage({ onSignUp }) {
                   </div>
                 </div>
               ))}
+              <div style={{ borderTop: `1px solid ${T.paperDark}`, paddingTop: 8 }}>
+                <BadgeKeyLegend leftAlign />
+              </div>
             </div>
           </div>
 
