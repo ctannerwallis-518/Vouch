@@ -13,6 +13,7 @@ import {
   revokeBoardItemClaims,
   revokeClaimsForBoard,
   syncClaimsAfterPublish,
+  enrichGroupVouchItems,
 } from "./badges";
 
 const AVATAR_OPTIONS = [
@@ -1005,11 +1006,19 @@ function VouchRibbon({ badges, align = "right", compact = false }) {
   );
 }
 
-function VouchedByLine({ names, dark = false }) {
+function VouchedByLine({ names, name, first = false, dark = false }) {
+  const label = first ? "First vouched by" : "Vouched by";
+  if (name) {
+    return (
+      <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: dark ? 10 : 11, color: dark ? "rgba(200,194,180,0.45)" : T.inkLight, marginTop: 4, lineHeight: 1.4 }}>
+        {label} {name}
+      </div>
+    );
+  }
   if (!names?.length) return null;
   return (
     <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: dark ? 10 : 11, color: dark ? "rgba(200,194,180,0.45)" : T.inkLight, marginTop: 4, lineHeight: 1.4 }}>
-      Vouched by {names.join(", ")}
+      {label} {names.join(", ")}
     </div>
   );
 }
@@ -1693,22 +1702,9 @@ function EditMetaForm({ board, themes, onSave, onClose }) {
 
 function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame }) {
   const [idx, setIdx] = useState(0);
-  const [ownerBadgeMap, setOwnerBadgeMap] = useState({});
   const touchStartX = useRef(null);
   const currentOffsetX = useRef(0);
   const containerRef = useRef(null);
-
-  useEffect(() => {
-    if (!items?.length) return;
-    const userIds = items.map(i => i.primary_user).filter(Boolean);
-    loadBadgesForUsers(userIds).then(setOwnerBadgeMap).catch(() => {});
-  }, [items]);
-
-  const itemBadges = (item) => (
-    item.primary_user
-      ? badgesForOwner(ownerBadgeMap, item.primary_user, item.category, item.item_id)
-      : []
-  );
 
   useEffect(() => {
     const el = containerRef.current;
@@ -1742,7 +1738,7 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame 
 
   const CardFaceNoButtons = ({ item }) => (
     <div style={{ position: "relative" }}>
-      <VouchRibbon badges={itemBadges(item)} />
+      <VouchRibbon badges={item.groupBadge || []} />
       {item.poster
         ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: "1px solid rgba(200,194,180,0.2)", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")} onError={e => e.target.style.display = "none"} />
         : <div style={{ width: "100%", height: 340, background: "rgba(200,194,180,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")}>{item.title}</div>}
@@ -1750,7 +1746,7 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame 
         <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 4 }}>{item.category}</div>
         <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: "#C8C2B4" }}>{item.title}</div>
         <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "rgba(200,194,180,0.7)" }}>{item.subtitle || ""}</div>
-        <VouchedByLine names={item.vouchers} dark />
+        <VouchedByLine name={item.firstVouchedBy} first dark />
       </div>
     </div>
   );
@@ -1759,7 +1755,7 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame 
     const isQueued = queue?.find(q => String(q.id) === String(item.item_id || item.id));
     return (
       <div style={{ position: "relative" }}>
-        <VouchRibbon badges={itemBadges(item)} />
+        <VouchRibbon badges={item.groupBadge || []} />
         {item.poster
           ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: "1px solid rgba(200,194,180,0.2)", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")} onError={e => e.target.style.display = "none"} />
           : <div style={{ width: "100%", height: 340, background: "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")}>{item.title}</div>}
@@ -1767,7 +1763,7 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame 
           <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 4 }}>{item.category}</div>
           <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: "#C8C2B4" }}>{item.title}</div>
           <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "rgba(200,194,180,0.7)" }}>{item.subtitle || ""}</div>
-          <VouchedByLine names={item.vouchers} dark />
+          <VouchedByLine name={item.firstVouchedBy} first dark />
           <div style={{ display: "flex", marginTop: 10 }}>
             {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue(item); }} style={{ flex: 1, background: isQueued ? "rgba(200,194,180,0.25)" : "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", color: isQueued ? "rgba(200,194,180,0.95)" : "rgba(200,194,180,0.6)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700, transition: "all 0.15s" }}>{isQueued ? "✓ Queued" : "+ Queue"}</button>}
           </div>
@@ -1827,7 +1823,7 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame 
 
 function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue, onDudeSame, myReactions, userId }) {
   const [modalCat, setModalCat] = useState(null);
-  const [ownerBadgeMap, setOwnerBadgeMap] = useState({});
+  const [vouchMeta, setVouchMeta] = useState({});
   const isMobile = window.innerWidth <= 640;
 
   // Build per-category tile lists - stable, shuffled once
@@ -1863,30 +1859,40 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue,
   const catItems = catItemsRef.current || {};
 
   useEffect(() => {
-    const userIds = [];
+    const items = [];
     CATEGORIES.forEach(cat => {
       (catItems[cat.key] || []).forEach(item => {
-        if (item.user_id) userIds.push(item.user_id);
-        (item.owners || []).forEach(o => { if (o.userId) userIds.push(o.userId); });
+        items.push({ category: cat.key, item_id: item.item_id, title: item.title });
       });
     });
-    if (userIds.length) loadBadgesForUsers(userIds).then(setOwnerBadgeMap).catch(() => {});
-  }, [allBuddyBoards.length]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!items.length) return;
+    const circleIds = [userId, ...buddies.map(b => b.userId)].filter(Boolean);
+    enrichGroupVouchItems(circleIds, items).then(enriched => {
+      const map = {};
+      enriched.forEach(i => {
+        map[badgeKey(i.category, i.item_id)] = {
+          firstVouchedBy: i.firstVouchedBy,
+          groupBadge: i.groupBadge || [],
+        };
+      });
+      setVouchMeta(map);
+    }).catch(() => {});
+  }, [allBuddyBoards.length, userId, buddies.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const visibleCats = CATEGORIES.filter(cat => catItems[cat.key]?.length > 0);
   if (visibleCats.length === 0) return null;
 
-  const TileCard = ({ item, catKey }) => (
+  const TileCard = ({ item, catKey }) => {
+    const meta = vouchMeta[badgeKey(catKey, item.item_id)] || {};
+    return (
     <div style={{ flexShrink: 0, width: isMobile ? 95 : 150, cursor: item.source_url ? "pointer" : "default", position: "relative" }}
       onClick={() => item.source_url && window.open(item.source_url, "_blank")}>
-      <VouchRibbon badges={badgesForOwner(ownerBadgeMap, item.user_id, catKey, item.item_id)} compact />
+      <VouchRibbon badges={meta.groupBadge || []} compact />
       {item.poster
         ? <img src={item.poster} alt={item.title} style={{ width: "100%", display: "block" }} onError={e => e.target.style.display = "none"} />
         : <div style={{ width: "100%", aspectRatio: "2/3", background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 6 }}>{item.title}</div>}
       <div style={{ fontFamily: "'Spectral',serif", fontSize: 11, fontWeight: 600, color: T.ink, marginTop: 5, lineHeight: 1.3 }}>{item.title}</div>
-      {item.owners.length > 0 && (
-        <VouchedByLine names={item.owners.map(o => o.displayName).filter(Boolean)} />
-      )}
+      {meta.firstVouchedBy && <VouchedByLine name={meta.firstVouchedBy} first />}
       {item.owners.length > 0 && (
         <div style={{ marginTop: 4 }}>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: onAddToQueue ? 6 : 0 }}>
@@ -1911,7 +1917,8 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue,
         </div>
       )}
     </div>
-  );
+    );
+  };
 
   return (
     <div style={{ marginBottom: 48 }}>
@@ -3020,7 +3027,9 @@ export default function Vouch() {
         if (result.length < 5) result = pick5WithCap(items, 1);
       }
 
-      setGroupVouchItems(result.map(i => ({ ...i, vouchers: i.voucher_names })));
+      const circleIds = [...buddyIds, excludeId].filter(Boolean);
+      const enriched = await enrichGroupVouchItems(circleIds, result);
+      setGroupVouchItems(enriched);
     } catch(e) { console.error("loadGroupVouch error:", e); }
   };
 
