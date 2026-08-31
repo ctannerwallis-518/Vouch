@@ -2660,6 +2660,19 @@ export default function Vouch() {
   const [shelfView,      setShelfView]      = useState("shelf"); // "shelf" | "queue"
   useEffect(() => { queueRef.current = queue; }, [queue]);
 
+  useEffect(() => {
+    if (!userId) return;
+    backfillVouchBadges()
+      .then(() => loadBadgesForUser(userId))
+      .then(map => setOwnItemBadges(map))
+      .catch(() => {});
+  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!viewing?.userId) return;
+    loadBadgesForUser(viewing.userId).then(setViewItemBadges).catch(() => {});
+  }, [viewing?.userId, viewActiveBoard?.id]);
+
   const loadMyReactions = async (uid) => {
     const { data } = await supabase.from("reactions").select("*").eq("user_id", uid).order("created_at", { ascending: false });
     setMyReactions(data || []);

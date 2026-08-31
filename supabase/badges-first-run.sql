@@ -1,4 +1,5 @@
--- Vouch badge system — run this entire file once in Supabase SQL editor
+-- FIRST-TIME INSTALL ONLY — paste this in Supabase SQL editor and click Run
+-- No DROP statements, so Supabase won't show the scary warning
 -- https://supabase.com/dashboard/project/bkbpetcyyuyqudlvbojo/sql
 
 create table if not exists vouch_title_claims (
@@ -40,25 +41,20 @@ create index if not exists vouch_badges_title_idx
 alter table vouch_title_claims enable row level security;
 alter table vouch_badges enable row level security;
 
-drop policy if exists "vouch_claims_public_read" on vouch_title_claims;
 create policy "vouch_claims_public_read" on vouch_title_claims
   for select using (true);
 
-drop policy if exists "vouch_claims_auth_write" on vouch_title_claims;
 create policy "vouch_claims_auth_write" on vouch_title_claims
   for all using (auth.role() = 'authenticated')
   with check (auth.role() = 'authenticated');
 
-drop policy if exists "vouch_badges_public_read" on vouch_badges;
 create policy "vouch_badges_public_read" on vouch_badges
   for select using (true);
 
-drop policy if exists "vouch_badges_auth_write" on vouch_badges;
 create policy "vouch_badges_auth_write" on vouch_badges
   for all using (auth.role() = 'authenticated')
   with check (auth.role() = 'authenticated');
 
--- Server-side recompute (handles cross-user global badge transfers)
 create or replace function recompute_badges_for_title(p_category text, p_item_id text)
 returns void
 language plpgsql
@@ -124,7 +120,6 @@ begin
 end;
 $$;
 
--- Retroactive backfill from all published boards
 create or replace function backfill_vouch_badges()
 returns json
 language plpgsql
@@ -179,3 +174,6 @@ $$;
 
 grant execute on function recompute_badges_for_title(text, text) to authenticated;
 grant execute on function backfill_vouch_badges() to authenticated;
+
+-- Run backfill immediately (safe to re-run)
+select backfill_vouch_badges();
