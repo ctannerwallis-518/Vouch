@@ -1009,7 +1009,7 @@ function VouchRibbon({ badges, align = "right", compact = false }) {
 }
 
 function BadgeKeyLegend({ leftAlign = false }) {
-  const rowStyle = { display: "flex", alignItems: "flex-start", gap: 14, textAlign: left };
+  const rowStyle = { display: "flex", alignItems: "flex-start", gap: 14, textAlign: "left" };
   const descStyle = { fontSize: 13, lineHeight: 1.65, fontStyle: "italic", color: T.inkMid, flex: 1, paddingTop: 2 };
   return (
     <div style={{ textAlign: leftAlign ? "left" : "center" }}>
