@@ -2479,6 +2479,8 @@ export default function Vouch() {
   const [buddySearch,    setBuddySearch]    = useState("");
   const [shareModal,     setShareModal]     = useState(false);
   const [shareCardUrl,   setShareCardUrl]   = useState(null);
+  const [shareCardGenerating, setShareCardGenerating] = useState(false);
+  const shareCardBlobRef = useRef(null);
   const [isAdmin,        setIsAdmin]        = useState(false);
   const [sessionChecked, setSessionChecked] = useState(false);
   const [avatarPicker,   setAvatarPicker]   = useState(false);
@@ -3124,7 +3126,7 @@ export default function Vouch() {
     navigator.clipboard?.writeText(link);
   };
 
-  const shareBoard = async () => {
+  const generateShareCard = async (board = activeBoard) => {
     const shareUsername = viewing ? viewing.username : user.username;
     const shareName = viewing ? viewing.displayName : user.displayName;
     const shareUrl = `${window.location.origin}/@${shareUsername}`;
@@ -3135,8 +3137,8 @@ export default function Vouch() {
     const ctx = canvas.getContext("2d");
 
     const drawCard = async (posterImgs) => {
-      const boardTheme = activeBoard?.theme && activeBoard.theme !== "Other" ? activeBoard.theme : (activeBoard?.name || "Vouch");
-      const items = (activeBoard?.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0, 5);
+      const boardTheme = board?.theme && board.theme !== "Other" ? board.theme : (board?.name || "Vouch");
+      const items = (board?.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0, 5);
       const tileCount = items.length;
       const catLabels = { movies: "Film", shows: "Show", albums: "Album", artists: "Artist", songs: "Song", books: "Book", podcasts: "Podcast" };
       const musicCats = ["albums", "artists", "songs", "podcasts"];
@@ -3336,43 +3338,131 @@ export default function Vouch() {
       } catch { return null; }
     };
     try {
-      const activeBoardItems = (activeBoard?.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0, 5);
+      const activeBoardItems = (board?.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0, 5);
       const posterImgs = await Promise.all(activeBoardItems.map(item => loadImg(item.poster)));
       await drawCard(posterImgs);
-      await doShare(canvas, shareUrl, shareName);
     } catch {
       await drawCard([]);
-      await doShare(canvas, shareUrl, shareName);
+    }
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (!blob) { reject(new Error("Failed to generate share card")); return; }
+        resolve({ blob, previewUrl: URL.createObjectURL(blob), shareUrl, shareName });
+      }, "image/png");
+    });
+  };
+
+  const resolveShareBoard = () => {
+    if (activeBoard?.vouch_board_items?.length) return activeBoard;
+    try {
+      const draft = JSON.parse(localStorage.getItem("vouch-board-draft-v2") || "null");
+      if (draft?.items?.length) {
+        const finalName = draft.theme === "Other" ? draft.name : draft.theme;
+        return {
+          name: finalName || "Vouch",
+          theme: draft.theme || "",
+          description: draft.description || "",
+          vouch_board_items: draft.items.map((item, i) => ({
+            item_id: String(item.id || item.item_id || i),
+            title: item.title,
+            subtitle: item.sub || item.subtitle || "",
+            poster: item.poster || null,
+            source_url: item.sourceUrl || item.source_url || null,
+            category: item.catKey || item.category || "",
+            position: i,
+          })),
+        };
+      }
+    } catch {}
+    const archived = (boardArchive || [])
+      .filter(b => b.vouch_board_items?.length)
+      .sort((a, b) => new Date(b.published_at || b.created_at || 0) - new Date(a.published_at || a.created_at || 0));
+    return archived[0] || null;
+  };
+
+  const closeShareModal = () => {
+    setShareModal(false);
+    setShareCardGenerating(false);
+    shareCardBlobRef.current = null;
+    setShareCardUrl(prev => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+  };
+
+  const downloadShareCard = () => {
+    const blob = shareCardBlobRef.current;
+    if (!blob) return;
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "vouch-board.png";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  const shareCardNative = async () => {
+    const blob = shareCardBlobRef.current;
+    if (!blob) return;
+    const shareUrl = `${window.location.origin}/@${user.username}`;
+    const shareName = user.displayName;
+    const file = new File([blob], "vouch-board.png", { type: "image/png" });
+    try { await navigator.clipboard.writeText(shareUrl); } catch(e) {}
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: `${shareName}'s Vouch Board`, text: shareUrl });
+        setTimeout(() => { try { navigator.clipboard.writeText(shareUrl); } catch(e) {} }, 800);
+      } catch (e) {
+        if (e.name !== "AbortError") downloadShareCard();
+      }
+    } else {
+      downloadShareCard();
     }
   };
-  const doShare = async (canvas, shareUrl, shareName) => {
-    try { await navigator.clipboard.writeText(shareUrl); } catch(e) {}
-    canvas.toBlob(async (blob) => {
-      try { const previewUrl = URL.createObjectURL(blob); setShareCardUrl(previewUrl); } catch(e) {}
-      const file = new File([blob], "vouch-board.png", { type: "image/png" });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({ files: [file], title: `${shareName}'s Vouch Board`, text: shareUrl });
-          setTimeout(() => {
-            try { navigator.clipboard.writeText(shareUrl); } catch(e) {}
-          }, 800);
-        } catch (e) {
-          if (e.name !== "AbortError") {
-            const a = document.createElement("a");
-            a.href = canvas.toDataURL("image/png");
-            a.download = "vouch-board.png";
-            a.click();
-          }
-        }
-      } else {
-        const a = document.createElement("a");
-        a.href = canvas.toDataURL("image/png");
-        a.download = "vouch-board.png";
-        a.click();
-        try { navigator.clipboard.writeText(shareUrl); } catch(e) {}
+
+  const shareBoard = async () => {
+    try {
+      if (!shareCardBlobRef.current) {
+        const board = resolveShareBoard();
+        if (!board?.vouch_board_items?.length) return;
+        setShareCardGenerating(true);
+        const result = await generateShareCard(board);
+        setShareCardUrl(prev => {
+          if (prev) URL.revokeObjectURL(prev);
+          return result.previewUrl;
+        });
+        shareCardBlobRef.current = result.blob;
+        setShareCardGenerating(false);
       }
-    }, "image/png");
+      await shareCardNative();
+    } catch {
+      setShareCardGenerating(false);
+    }
   };
+
+  useEffect(() => {
+    if (!shareModal) return;
+    const board = resolveShareBoard();
+    if (!board?.vouch_board_items?.length) return;
+    let cancelled = false;
+    setShareCardGenerating(true);
+    setShareCardUrl(prev => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+    shareCardBlobRef.current = null;
+    generateShareCard(board).then((result) => {
+      if (cancelled) {
+        URL.revokeObjectURL(result.previewUrl);
+        return;
+      }
+      setShareCardUrl(result.previewUrl);
+      shareCardBlobRef.current = result.blob;
+      setShareCardGenerating(false);
+    }).catch(() => {
+      if (!cancelled) setShareCardGenerating(false);
+    });
+    return () => { cancelled = true; };
+  }, [shareModal, activeBoard?.id, boardArchive.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const saveCategories = async (cats) => {
     await supabase.from("profiles").update({ categories: cats }).eq("id", userId);
@@ -4554,36 +4644,61 @@ export default function Vouch() {
         {shareModal && (() => {
           const shareUsername = user.username;
           const shareUrl = `${window.location.origin}/@${shareUsername}`;
+          const shareBoardData = resolveShareBoard();
+          const hasShareContent = !!shareBoardData?.vouch_board_items?.length;
           return (
-            <div className="modal-overlay" onClick={() => { setShareModal(false); setShareCardUrl(null); }}>
-              <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-overlay" onClick={closeShareModal}>
+              <div className="modal" onClick={e => e.stopPropagation()} style={{ maxHeight: "90vh" }}>
                 <div className="modal-head">
-                  <div className="modal-title">Your Vouch is Live! Share it.</div>
-                  <button className="modal-x" onClick={() => { setShareModal(false); setShareCardUrl(null); }}>×</button>
+                  <div className="modal-title">{activeBoard?.published_at ? "Your Vouch is Live! Share it." : "Share Your Vouch"}</div>
+                  <button className="modal-x" onClick={closeShareModal}>×</button>
                 </div>
                 <div className="modal-body">
 
+                  {/* Story card preview — generated on open */}
+                  <div style={{ marginBottom: 20 }}>
+                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9.5px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 10 }}>Your Story Card</div>
+                    {!hasShareContent ? (
+                      <div style={{ padding: "24px 16px", textAlign: "center", background: T.paperDark, border: `1px solid ${T.paperDark}` }}>
+                        <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkMid, marginBottom: 12, lineHeight: 1.6 }}>Add tiles to a Vouch first — then your story card will appear here.</div>
+                        <button className="btn btn-solid" style={{ padding: "10px 16px", fontSize: 10 }} onClick={() => { closeShareModal(); setEditingBoard(null); setBoardEditor(true); }}>Create a Vouch</button>
+                      </div>
+                    ) : shareCardGenerating ? (
+                      <div style={{ height: 320, display: "flex", alignItems: "center", justifyContent: "center", background: T.paperDark, border: `1px solid ${T.paperDark}` }}>
+                        <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight }}>Generating preview…</div>
+                      </div>
+                    ) : shareCardUrl ? (
+                      <img src={shareCardUrl} alt="Story card preview" style={{ width: "100%", maxWidth: 280, border: `1px solid ${T.paperDark}`, display: "block", margin: "0 auto" }} />
+                    ) : (
+                      <div style={{ height: 120, display: "flex", alignItems: "center", justifyContent: "center", background: T.paperDark, border: `1px solid ${T.paperDark}` }}>
+                        <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight }}>Preview unavailable</div>
+                      </div>
+                    )}
+                  </div>
+
+                  {hasShareContent && (
+                    <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+                      <button className="btn btn-solid" style={{ flex: 1, padding: "12px", fontSize: 11, letterSpacing: "0.12em" }} disabled={shareCardGenerating || !shareCardUrl} onClick={shareCardNative}>
+                        Share to Story
+                      </button>
+                      <button className="btn btn-ghost" style={{ flex: 1, padding: "12px", fontSize: 11, letterSpacing: "0.12em" }} disabled={shareCardGenerating || !shareCardUrl} onClick={downloadShareCard}>
+                        Download
+                      </button>
+                    </div>
+                  )}
+
+                  <div style={{ borderBottom: `1px solid ${T.paperDark}`, marginBottom: 20 }} />
+
                   {/* Copy link section */}
-                  <div style={{ marginBottom: 24 }}>
+                  <div>
                     <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9.5px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 8 }}>Your Vouch Link</div>
                     <div style={{ display: "flex", gap: 8 }}>
                       <div style={{ flex: 1, fontFamily: "'Spectral',serif", fontSize: 13, background: T.paperDark, padding: "10px 12px", color: T.ink, letterSpacing: "0.02em" }}>{shareUrl}</div>
                       <button className="btn btn-solid" style={{ padding: "0 16px", whiteSpace: "nowrap" }} onClick={() => { navigator.clipboard.writeText(shareUrl); }}>Copy</button>
                     </div>
-                    <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: T.ink, marginTop: 10, lineHeight: 1.7, borderLeft: `3px solid ${T.ink}`, paddingLeft: 12 }}>
-                      <strong>Add this link to your Instagram bio.</strong> Your followers can tap straight to your Vouch board — it's the easiest way to grow your circle.
+                    <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 10, lineHeight: 1.6 }}>
+                      Post your story card, then add this link to your Instagram bio so followers can find your Vouch.
                     </div>
-                  </div>
-
-                  <div style={{ borderBottom: `1px solid ${T.paperDark}`, marginBottom: 20 }} />
-
-                  {/* Instagram story */}
-                  <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9.5px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 8 }}>Share to Instagram Story</div>
-                  <button className="btn btn-solid" style={{ width: "100%", padding: "12px", fontSize: 13 }} onClick={() => { shareBoard(); setShareModal(false); }}>
-                    Share Story Card →
-                  </button>
-                  <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginTop: 8, lineHeight: 1.6 }}>
-                    Generates a story card with your top vouch. Post it to your story, then add your Vouch link to your bio.
                   </div>
 
                 </div>
