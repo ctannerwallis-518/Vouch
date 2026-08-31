@@ -201,6 +201,20 @@ export async function backfillVouchBadges() {
     return { ok: true, reason: "already_done", claims: claimCount, badges: badgeCount };
   }
 
+  // Claims exist but badges missing (e.g. backfill RPC bug) — recompute only
+  if ((claimCount || 0) > 0 && (badgeCount || 0) === 0) {
+    const { data: allClaims } = await supabase.from("vouch_title_claims").select("category, item_id").is("revoked_at", null);
+    const seen = new Set();
+    for (const c of allClaims || []) {
+      const k = badgeKey(c.category, c.item_id);
+      if (seen.has(k)) continue;
+      seen.add(k);
+      await recomputeBadgesForTitle(c.category, c.item_id);
+    }
+    const { count: after } = await supabase.from("vouch_badges").select("*", { count: "exact", head: true }).is("revoked_at", null);
+    return { ok: true, reason: "recompute_only", titles: seen.size, badges: after };
+  }
+
   const { data, error } = await supabase.rpc("backfill_vouch_badges");
   if (!error && data?.ok) {
     return { ok: true, reason: "rpc", ...data };
