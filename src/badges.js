@@ -232,6 +232,49 @@ export async function revokeClaimsForBoard(boardId) {
   }
 }
 
+/** Group Vouch: one attribution + silver ribbon (circle context). */
+export async function enrichGroupVouchItems(circleIds, items) {
+  if (!items?.length) return items;
+  const circleSet = new Set((circleIds || []).filter(Boolean));
+  const unique = [...new Map(items.map(i => [badgeKey(i.category, i.item_id), i])).values()];
+  const meta = {};
+
+  await Promise.all(unique.map(async (item) => {
+    const key = badgeKey(item.category, item.item_id);
+    const claims = await getActiveClaimsForTitle(item.category, item.item_id);
+    if (!claims?.length) {
+      meta[key] = { firstVouchedBy: null, groupBadge: [] };
+      return;
+    }
+    const globalFirst = claims[0];
+    const circleFirst = claims.find(c => circleSet.has(c.user_id));
+    const pick =
+      globalFirst && circleSet.has(globalFirst.user_id)
+        ? globalFirst
+        : circleFirst || null;
+    meta[key] = {
+      firstVouchedByUserId: pick?.user_id || null,
+      groupBadge: pick ? ["first_circle"] : [],
+    };
+  }));
+
+  const nameIds = [...new Set(Object.values(meta).map(m => m.firstVouchedByUserId).filter(Boolean))];
+  const nameMap = {};
+  if (nameIds.length) {
+    const { data: profiles } = await supabase.from("profiles").select("id, display_name").in("id", nameIds);
+    (profiles || []).forEach(p => { nameMap[p.id] = p.display_name; });
+  }
+
+  return items.map(item => {
+    const m = meta[badgeKey(item.category, item.item_id)] || {};
+    return {
+      ...item,
+      groupBadge: m.groupBadge || [],
+      firstVouchedBy: m.firstVouchedByUserId ? (nameMap[m.firstVouchedByUserId] || null) : null,
+    };
+  });
+}
+
 export async function loadBadgesForUser(userId) {
   const { data, error } = await supabase.from("vouch_badges")
     .select("badge_type, category, item_id")
