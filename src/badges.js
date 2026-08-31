@@ -8,11 +8,63 @@ export const RIBBON_STYLES = {
 
 export const BADGE_RIBBONS = {
   first_global: { label: "1st", style: RIBBON_STYLES.gold },
-  first_circle: { label: "Circle 1st", style: RIBBON_STYLES.silver },
+  first_circle: { label: "Friend 1st", style: RIBBON_STYLES.silver },
 };
 
 export function badgeKey(category, itemId) {
   return `${category}:${String(itemId)}`;
+}
+
+export function ownerBadgeKey(userId, category, itemId) {
+  return `${userId}:${badgeKey(category, itemId)}`;
+}
+
+export function badgesForOwner(allMap, userId, category, itemId) {
+  if (!allMap || !userId) return [];
+  return allMap[ownerBadgeKey(userId, category, itemId)] || [];
+}
+
+export function itemBadgesForOwner(allMap, userId) {
+  if (!allMap || !userId) return {};
+  const prefix = `${userId}:`;
+  const out = {};
+  Object.entries(allMap).forEach(([k, v]) => {
+    if (k.startsWith(prefix)) out[k.slice(prefix.length)] = v;
+  });
+  return out;
+}
+
+export async function loadBadgesForUsers(userIds) {
+  const ids = [...new Set((userIds || []).filter(Boolean))];
+  if (!ids.length) return {};
+  const { data, error } = await supabase.from("vouch_badges")
+    .select("user_id, badge_type, category, item_id")
+    .in("user_id", ids)
+    .is("revoked_at", null);
+  if (error) return {};
+  const map = {};
+  for (const b of data || []) {
+    const k = ownerBadgeKey(b.user_id, b.category, b.item_id);
+    if (!map[k]) map[k] = [];
+    if (!map[k].includes(b.badge_type)) map[k].push(b.badge_type);
+  }
+  return map;
+}
+
+export async function loadTitleBadges(pairs) {
+  const unique = [...new Map((pairs || []).filter(p => p.category && p.item_id).map(p => [badgeKey(p.category, p.item_id), p])).values()];
+  if (!unique.length) return {};
+  const map = {};
+  await Promise.all(unique.map(async (p) => {
+    const { data } = await supabase.from("vouch_badges")
+      .select("badge_type")
+      .eq("category", p.category)
+      .eq("item_id", String(p.item_id))
+      .is("revoked_at", null);
+    const types = [...new Set((data || []).map(b => b.badge_type))];
+    if (types.length) map[badgeKey(p.category, p.item_id)] = types;
+  }));
+  return map;
 }
 
 export async function badgesTablesReady() {
