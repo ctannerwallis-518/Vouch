@@ -11,6 +11,13 @@ export const BADGE_RIBBONS = {
   first_circle: { label: "1st", style: RIBBON_STYLES.silver, title: "First in friend group" },
 };
 
+export function primaryBadge(badges) {
+  if (!badges?.length) return [];
+  if (badges.includes("first_global")) return ["first_global"];
+  if (badges.includes("first_circle")) return ["first_circle"];
+  return [];
+}
+
 export function badgeKey(category, itemId) {
   return `${category}:${String(itemId)}`;
 }
