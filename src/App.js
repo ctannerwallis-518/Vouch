@@ -3547,47 +3547,37 @@ export default function Vouch() {
           dl(items[i], PAD+i*(tw3+GAP)+tw3/2, gridTop+th3+34);
         }
 
-      } else if (tileCount === 4) {
-        const tw4 = (gridW-GAP)/2, th4 = tw4*1.5;
-        dp(posterImgs[0], PAD, gridTop, tw4, th4, items[0]);
-        dp(posterImgs[1], PAD+tw4+GAP, gridTop, tw4, th4, items[1]);
-
-        const r2 = gridTop+th4+70;
-        dp(posterImgs[2], PAD, r2, tw4, th4, items[2]);
-        dp(posterImgs[3], PAD+tw4+GAP, r2, tw4, th4, items[3]);
-
-
-      } else {
-        // 5 tiles: 2x2 grid of tiles 2-5, hero tile 1 overlaps center
+      } else if (tileCount === 4 || tileCount === 5) {
+        // 2x2 corner grid — 5-tile adds hero overlapping center
         const cw = (gridW-GAP)/2 * 0.82, ch = cw*1.5;
         const row2 = gridTop + ch + GAP;
         const colOff = (gridW - cw*2 - GAP) / 2;
-        // Draw 4 corner tiles first
-        dp(posterImgs[1], PAD+colOff, gridTop, cw, ch, items[1], "top");
-        dp(posterImgs[2], PAD+colOff+cw+GAP, gridTop, cw, ch, items[2], "top");
-        dp(posterImgs[3], PAD+colOff, row2, cw, ch, items[3]);
-        dp(posterImgs[4], PAD+colOff+cw+GAP, row2, cw, ch, items[4]);
-        // Borders on corner tiles
+        const cornerIdx = tileCount === 5 ? [1, 2, 3, 4] : [0, 1, 2, 3];
+        const cornerPos = [
+          [PAD+colOff, gridTop, "top"],
+          [PAD+colOff+cw+GAP, gridTop, "top"],
+          [PAD+colOff, row2, "bottom"],
+          [PAD+colOff+cw+GAP, row2, "bottom"],
+        ];
+        for (let i = 0; i < 4; i++) {
+          const idx = cornerIdx[i];
+          const [x, y, labelPos] = cornerPos[i];
+          dp(posterImgs[idx], x, y, cw, ch, items[idx], labelPos);
+        }
         ctx.strokeStyle="rgba(17,16,8,0.15)"; ctx.lineWidth=1.5;
         ctx.strokeRect(PAD+colOff, gridTop, cw, ch);
         ctx.strokeRect(PAD+colOff+cw+GAP, gridTop, cw, ch);
         ctx.strokeRect(PAD+colOff, row2, cw, ch);
         ctx.strokeRect(PAD+colOff+cw+GAP, row2, cw, ch);
-        // Corner labels
-
-
-
-        // Hero tile overlapping center
-        const hw = cw*0.88, hh = ch*0.88;
-        const hx = (W-hw)/2, hy = gridTop + (ch*2+GAP-hh)/2;
-        // Shadow under hero
-        ctx.save(); ctx.shadowColor="rgba(0,0,0,0.45)"; ctx.shadowBlur=36; ctx.shadowOffsetY=10;
-        dp(posterImgs[0], hx, hy, hw, hh, items[0]);
-        ctx.restore();
-        // Border on hero
-        ctx.strokeStyle="rgba(17,16,8,0.2)"; ctx.lineWidth=2;
-        ctx.strokeRect(hx, hy, hw, hh);
-        // No standalone hero label — overlay is inside the tile
+        if (tileCount === 5) {
+          const hw = cw*0.88, hh = ch*0.88;
+          const hx = (W-hw)/2, hy = gridTop + (ch*2+GAP-hh)/2;
+          ctx.save(); ctx.shadowColor="rgba(0,0,0,0.45)"; ctx.shadowBlur=36; ctx.shadowOffsetY=10;
+          dp(posterImgs[0], hx, hy, hw, hh, items[0]);
+          ctx.restore();
+          ctx.strokeStyle="rgba(17,16,8,0.2)"; ctx.lineWidth=2;
+          ctx.strokeRect(hx, hy, hw, hh);
+        }
       }
 
       // CTA
