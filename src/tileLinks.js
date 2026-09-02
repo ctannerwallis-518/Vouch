@@ -137,6 +137,14 @@ export function resolveTileLink(item, catKey) {
   return tile.sourceUrl;
 }
 
+export function tileActionHint(catKey) {
+  const cat = catKey || "";
+  if (cat === "movies" || cat === "shows") return "STREAM →";
+  if (cat === "books") return "BUY →";
+  if (isMusicCategory(cat)) return "LISTEN →";
+  return null;
+}
+
 export function tileIsClickable(item, catKey) {
   const tile = normalizeTileItem(item, catKey);
   if (!tile) return false;
