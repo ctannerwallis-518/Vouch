@@ -3,6 +3,7 @@ import { supabase } from "./supabase";
 export const RIBBON_STYLES = {
   gold:   { background: "linear-gradient(180deg, #D4B030 0%, #C9A820 60%, #9A7820 100%)", color: "#111008" },
   silver: { background: "linear-gradient(180deg, #E0E0E0 0%, #C0C0C0 60%, #909090 100%)", color: "#111008" },
+  cream:  { background: "linear-gradient(180deg, #E8E2D4 0%, #C8C2B4 60%, #A8A296 100%)", color: "#111008" },
   black:  { background: "#111008", color: "#C8C2B4" },
 };
 

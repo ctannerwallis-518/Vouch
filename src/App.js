@@ -16,6 +16,12 @@ import {
   enrichGroupVouchItems,
 } from "./badges";
 import {
+  loadUserBadges,
+  userBadgeExplain,
+  userBadgeRibbon,
+  userBadgeTailColor,
+} from "./userBadges";
+import {
   justWatchSearchUrl,
   pickBookIsbn,
   fetchJustWatchTitleUrl,
@@ -458,6 +464,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
   const [publicBuddies, setPublicBuddies] = useState([]);
   const [showPublicBuddies, setShowPublicBuddies] = useState(false);
   const [publicItemBadges, setPublicItemBadges] = useState({});
+  const [publicUserBadges, setPublicUserBadges] = useState([]);
   const [publicPublishCount, setPublicPublishCount] = useState(0);
 
   useEffect(() => {
@@ -465,7 +472,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
       setLoading(true);
       try {
         const { data: prof } = await supabase
-          .from("profiles").select("id, username, display_name, avatar_url").eq("id", inviteUserId).maybeSingle();
+          .from("profiles").select("id, username, display_name, avatar_url, created_at").eq("id", inviteUserId).maybeSingle();
         if (prof) setProfile(prof);
         // Load buddies for public display
         // Load actual buddies first, then fill to 20 with other users
@@ -514,7 +521,9 @@ function PublicBoard({ inviteUserId, onSignUp }) {
           }
         });
         setBoard({ shelf: b, activeVouchBoard: activeVouchBoard || null });
-        loadBadgesForUser(inviteUserId).then(setPublicItemBadges).catch(() => {});
+        const itemBadges = await loadBadgesForUser(inviteUserId).catch(() => ({}));
+        setPublicItemBadges(itemBadges);
+        loadUserBadges(inviteUserId, itemBadges).then(setPublicUserBadges).catch(() => {});
       } catch(e) { console.error(e); }
       setLoading(false);
     };
@@ -567,6 +576,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
                 <div className="board-name" style={{ fontSize: 28, marginBottom: 0 }}>{name}</div>
               </div>
               <div className="board-sub" style={{ marginBottom: 8 }}>@{profile?.username || ""}</div>
+              <ProfileBadgeBar badges={publicUserBadges} ownerName={name} />
               <div style={{ display: "flex", gap: 16 }}>
                 <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.12em", color: T.inkLight }}>
                   <span style={{ fontWeight: 700, color: T.ink, fontSize: "12px", fontFamily: "'Spectral',serif" }}>{publicPublishCount}</span>
@@ -1029,6 +1039,95 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
           }
         </div>
       </div>
+    </div>
+  );
+}
+
+function UserBadgeExplainModal({ badge, ownerName, onClose }) {
+  const ribbon = userBadgeRibbon(badge?.type, badge?.value);
+  if (!ribbon) return null;
+  const body = userBadgeExplain(badge.type, ownerName, badge.value);
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 340 }}>
+        <div style={{ display: "flex", justifyContent: "flex-end", padding: "10px 14px 0" }}>
+          <button className="modal-x" onClick={onClose}>×</button>
+        </div>
+        <div className="modal-body" style={{ textAlign: "center", paddingTop: 4, paddingBottom: 28 }}>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+            <ProfileRibbonBadge badge={badge} interactive={false} />
+          </div>
+          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, lineHeight: 1.7, color: T.inkMid }}>{body}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProfileRibbonBadge({ badge, interactive = true, ownerName }) {
+  const [showExplain, setShowExplain] = useState(false);
+  const ribbon = userBadgeRibbon(badge?.type, badge?.value);
+  if (!ribbon) return null;
+  const h = 19;
+  const open = e => { e.stopPropagation(); setShowExplain(true); };
+  const tailColor = userBadgeTailColor(badge.type, badge.value);
+  const visual = (
+    <>
+      <span style={{
+        ...ribbon.style,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        minWidth: 30,
+        height: h,
+        padding: "0 7px",
+        fontFamily: "'Spectral SC',serif",
+        fontSize: badge.type === "streak" || badge.type === "vouches" ? "9px" : "7px",
+        fontWeight: 700,
+        letterSpacing: badge.type === "streak" || badge.type === "vouches" ? "0.06em" : "0.18em",
+        lineHeight: 1,
+      }}>{ribbon.label}</span>
+      <span style={{
+        width: 0,
+        height: 0,
+        borderLeft: "15px solid transparent",
+        borderRight: "15px solid transparent",
+        borderTop: `5px solid ${tailColor}`,
+        marginTop: -1,
+      }} />
+    </>
+  );
+  if (!interactive) {
+    return (
+      <span style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", flexShrink: 0, filter: "drop-shadow(0 1px 1px rgba(17,16,8,0.35))" }}>
+        {visual}
+      </span>
+    );
+  }
+  return (
+    <>
+      <span
+        role="button"
+        tabIndex={0}
+        aria-label={ribbon.title}
+        onClick={open}
+        onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(e); } }}
+        style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", flexShrink: 0, cursor: "pointer", filter: "drop-shadow(0 1px 1px rgba(17,16,8,0.35))" }}
+      >
+        {visual}
+      </span>
+      {showExplain && <UserBadgeExplainModal badge={badge} ownerName={ownerName} onClose={() => setShowExplain(false)} />}
+    </>
+  );
+}
+
+function ProfileBadgeBar({ badges, ownerName }) {
+  if (!badges?.length) return null;
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 10, marginTop: 4 }}>
+      {badges.map(b => (
+        <ProfileRibbonBadge key={`${b.type}-${b.value || ""}`} badge={b} ownerName={ownerName} />
+      ))}
     </div>
   );
 }
@@ -2941,6 +3040,8 @@ export default function Vouch() {
   const [viewPublishCount, setViewPublishCount] = useState(0);
   const [ownItemBadges,    setOwnItemBadges]    = useState({});
   const [viewItemBadges,   setViewItemBadges]   = useState({});
+  const [ownUserBadges,    setOwnUserBadges]    = useState([]);
+  const [viewUserBadges,   setViewUserBadges]   = useState([]);
   const [suggested, setSuggested] = useState([]); // eslint-disable-line no-unused-vars
   const [queue,          setQueue]          = useState([]);
   const queueRef = useRef([]);
@@ -2951,14 +3052,32 @@ export default function Vouch() {
     if (!userId) return;
     backfillVouchBadges()
       .then(() => loadBadgesForUser(userId))
-      .then(map => setOwnItemBadges(map))
+      .then(map => {
+        setOwnItemBadges(map);
+        return loadUserBadges(userId, map);
+      })
+      .then(setOwnUserBadges)
       .catch(() => {});
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (!viewing?.userId) return;
-    loadBadgesForUser(viewing.userId).then(setViewItemBadges).catch(() => {});
+    if (!viewing?.userId) {
+      setViewUserBadges([]);
+      return;
+    }
+    loadBadgesForUser(viewing.userId)
+      .then(map => {
+        setViewItemBadges(map);
+        return loadUserBadges(viewing.userId, map);
+      })
+      .then(setViewUserBadges)
+      .catch(() => {});
   }, [viewing?.userId, viewActiveBoard?.id]);
+
+  useEffect(() => {
+    if (!userId) return;
+    loadUserBadges(userId, ownItemBadges).then(setOwnUserBadges).catch(() => {});
+  }, [userId, ownItemBadges, boardArchive.length]);
 
   const loadMyReactions = async (uid) => {
     const { data } = await supabase.from("reactions").select("*").eq("user_id", uid).order("created_at", { ascending: false });
@@ -2978,6 +3097,7 @@ export default function Vouch() {
     }
     loadBadgesForUser(uid).then(map => {
       setOwnItemBadges(map);
+      loadUserBadges(uid, map).then(setOwnUserBadges).catch(() => {});
     }).catch(() => {});
   };
 
@@ -4473,6 +4593,7 @@ export default function Vouch() {
                       <div className="board-name" style={{ fontSize: 28, marginBottom: 0 }}>{viewing ? currName : currName}</div>
                     </div>
                     <div className="board-sub" style={{ marginBottom: 10 }}>@{viewing ? viewing.username : user.username}</div>
+                    <ProfileBadgeBar badges={isOwn ? ownUserBadges : viewUserBadges} ownerName={isOwn ? "You" : currName} />
                     <div style={{ display: "flex", gap: 8 }}>
                       <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.12em", color: T.inkLight }}>
                         <span style={{ fontWeight: 700, color: T.ink, fontSize: "12px", fontFamily: "'Spectral',serif" }}>{profileVouchCount}</span>
@@ -4526,6 +4647,7 @@ export default function Vouch() {
                         {activeBoard?.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.3)", marginTop: 4 }}>Published {new Date(activeBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} · Current Vouch</div>}
                       </div>
                       {activeBoard && <div style={{ display: "flex", gap: 6, flexShrink: 0, alignSelf: "flex-start" }}>
+                        <button onClick={() => setShareModal(true)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.14em", padding: "4px 12px", border: "none", background: "linear-gradient(180deg, #D4B030 0%, #C9A820 60%, #9A7820 100%)", color: "#111008", cursor: "pointer", fontWeight: 700 }}>Share</button>
                         <button onClick={() => { setEditingBoard(activeBoard); setBoardEditor(true); }} style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.14em", padding: "4px 12px", border: "1px solid rgba(200,194,180,0.25)", background: "transparent", color: "rgba(200,194,180,0.5)", cursor: "pointer" }}>Edit</button>
                         <button onClick={() => setRemoveVouchModal(true)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.14em", padding: "4px 12px", border: "1px solid rgba(200,194,180,0.25)", background: "transparent", color: "rgba(200,194,180,0.5)", cursor: "pointer" }}>Remove</button>
                       </div>}
