@@ -18,6 +18,7 @@ import {
 import {
   justWatchSearchUrl,
   libbySearchUrl,
+  fetchJustWatchTitleUrl,
   openTileLink,
   tileIsClickable,
 } from "./tileLinks";
@@ -797,7 +798,15 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
     }, 350);
   }, [q, catKey]);
 
-  const confirm = () => { if (!picked) return; onAdd(catKey, { ...picked, comment: note }); onClose(); };
+  const confirm = async () => {
+    if (!picked) return;
+    let sourceUrl = picked.sourceUrl;
+    if (catKey === "movies" || catKey === "shows") {
+      sourceUrl = await fetchJustWatchTitleUrl(picked.title, picked.sub, catKey);
+    }
+    onAdd(catKey, { ...picked, sourceUrl, comment: note });
+    onClose();
+  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -1549,10 +1558,15 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
     }, 400);
   }, [q, singleCat]);
 
-  const addItem = (item) => {
+  const addItem = async (item) => {
     if (items.length >= 5) return;
     if (items.find(i => String(i.id) === String(item.id))) return;
-    setItems(prev => [...prev, item]);
+    let sourceUrl = item.sourceUrl;
+    const cat = item.catKey || item.category;
+    if (cat === "movies" || cat === "shows") {
+      sourceUrl = await fetchJustWatchTitleUrl(item.title, item.sub, cat);
+    }
+    setItems(prev => [...prev, { ...item, sourceUrl }]);
     setQ(""); setResults([]); setAddingItem(false);
   };
 
