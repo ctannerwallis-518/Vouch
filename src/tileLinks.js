@@ -27,12 +27,19 @@ export function justWatchSearchUrl(title, yearOrSub = "") {
   return `https://www.justwatch.com/${country}/search?q=${encodeURIComponent(q)}`;
 }
 
-export async function fetchJustWatchTitleUrl(title, yearOrSub, category) {
+function isDirectJustWatchUrl(url) {
+  return !!url && url.includes("justwatch.com/") && !url.includes("/search");
+}
+
+export async function fetchJustWatchTitleUrl(title, yearOrSub, category, sourceUrl) {
+  if (isDirectJustWatchUrl(sourceUrl)) return sourceUrl;
+
   const type = category === "shows" ? "show" : "movie";
   const year = String(yearOrSub || "").match(/^\d{4}$/) ? yearOrSub : "";
   const apiCountry = justWatchApiCountry();
   const cacheKey = `${apiCountry}:${type}:${title}:${year}`;
-  if (jwCache.has(cacheKey)) return jwCache.get(cacheKey);
+  const cached = jwCache.get(cacheKey);
+  if (cached && isDirectJustWatchUrl(cached)) return cached;
 
   const params = new URLSearchParams({
     title: String(title).trim(),
@@ -52,9 +59,7 @@ export async function fetchJustWatchTitleUrl(title, yearOrSub, category) {
     }
   } catch { /* fall through */ }
 
-  const fallback = justWatchSearchUrl(title, year);
-  jwCache.set(cacheKey, fallback);
-  return fallback;
+  return justWatchSearchUrl(title, year);
 }
 
 export function libbySearchUrl(title, author = "") {
@@ -79,9 +84,7 @@ export function resolveTileLink(item, catKey) {
   const cat = tile.category;
 
   if (cat === "movies" || cat === "shows") {
-    if (tile.sourceUrl && tile.sourceUrl.includes("justwatch.com/") && !tile.sourceUrl.includes("/search")) {
-      return tile.sourceUrl;
-    }
+    if (isDirectJustWatchUrl(tile.sourceUrl)) return tile.sourceUrl;
     return justWatchSearchUrl(tile.title, tile.sub);
   }
   if (cat === "books") {
@@ -107,7 +110,7 @@ export async function openTileLink(item, { catKey, onMusicOpen } = {}) {
   const cat = tile.category;
 
   if (cat === "movies" || cat === "shows") {
-    const url = await fetchJustWatchTitleUrl(tile.title, tile.sub, cat);
+    const url = await fetchJustWatchTitleUrl(tile.title, tile.sub, cat, tile.sourceUrl);
     window.open(url, "_blank");
     return true;
   }
