@@ -1340,7 +1340,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
         {!isOwn && (
           <div style={{ display: "flex", marginTop: 8 }}>
             <button onClick={e => { e.stopPropagation(); onDudeSame(it, ownerId); }} style={{ flex: 1, background: myReactions?.includes(String(it.id)) ? "rgba(200,194,180,0.25)" : "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", color: "rgba(200,194,180,0.7)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "5px 4px", fontWeight: 700 }}>{myReactions?.includes(String(it.id)) ? "✓ Agreed" : "Agree"}</button>
-            {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue(it); }} style={{ flex: 1, background: queue?.find(q => String(q.id) === String(it.id)) ? "rgba(200,194,180,0.25)" : "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", borderLeft: "none", color: "rgba(2,194,180,0.7)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "5px 4px", fontWeight: 700 }}>{queue?.find(q => String(q.id) === String(it.id)) ? "✓ Queue" : "+ Queue"}</button>}
+            {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue(it); }} style={{ flex: 1, background: queue?.find(q => String(q.id) === String(it.id)) ? "rgba(200,194,180,0.25)" : "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", borderLeft: "none", color: "rgba(200,194,180,0.7)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "5px 4px", fontWeight: 700 }}>{queue?.find(q => String(q.id) === String(it.id)) ? "✓ Queue" : "+ Queue"}</button>}
           </div>
         )}
       </div>
