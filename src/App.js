@@ -1,4 +1,4 @@
-// build: 2026-04-05T16:17:10.789151
+// build: 2026-09-02T14:40:00
 import { useState, useEffect, useRef, memo } from "react";
 import { supabase } from "./supabase";
 import {
@@ -26,9 +26,10 @@ import {
 } from "./tileLinks";
 
 const TILE_HINT_COLORS = {
-  light: "rgba(200,194,180,0.45)",
-  dark: "#a09890",
-  ink: "#7a7568",
+  light: "#C8C2B4",
+  dark: "#3a3830",
+  ink: "#3a3830",
+  compact: "#3a3830",
 };
 
 function TileActionHint({ item, catKey, variant = "ink" }) {
@@ -37,12 +38,13 @@ function TileActionHint({ item, catKey, variant = "ink" }) {
   const hint = tileActionHint(key);
   if (!hint) return null;
   return (
-    <div style={{
+    <div className="tile-action-hint" style={{
       fontFamily: "'Spectral SC',serif",
-      fontSize: variant === "compact" ? 7 : 7.5,
+      fontSize: variant === "compact" ? 8.5 : 9,
+      fontWeight: 700,
       letterSpacing: "0.14em",
       color: TILE_HINT_COLORS[variant] || TILE_HINT_COLORS.ink,
-      marginTop: variant === "compact" ? 2 : 4,
+      marginTop: variant === "compact" ? 4 : 5,
     }}>
       {hint}
     </div>
@@ -200,6 +202,7 @@ const Styles = () => (
     .card-poster-placeholder { width: 180px; height: 248px; background: ${T.paperDark}; border: 1px solid ${T.paperDark}; display: flex; align-items: center; justify-content: center; font-family: 'Spectral', serif; font-style: italic; font-size: 11px; color: ${T.inkLight}; text-align: center; padding: 10px; }
     .card-title   { font-family: 'Spectral', serif; font-weight: 600; font-size: 12.5px; line-height: 1.35; margin-top: 7px; }
     .card-sub     { font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.06em; color: ${T.inkLight}; margin-top: 2px; }
+    .tile-action-hint { line-height: 1.2; opacity: 0.92; }
     .card-comment { font-family: 'Spectral', serif; font-style: italic; font-size: 10.5px; line-height: 1.5; color: ${T.inkMid}; margin-top: 4px; white-space: normal; word-break: break-word; }
     .slot-empty-sm { width: 180px; height: 248px; border: 2px dashed ${T.inkLight}; background: rgba(17,16,8,0.06); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.14s, background 0.14s; flex-shrink: 0; }
     .slot-empty-sm:hover { border-color: ${T.ink}; background: rgba(17,16,8,0.12); }
