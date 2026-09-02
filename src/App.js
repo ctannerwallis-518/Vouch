@@ -15,6 +15,12 @@ import {
   syncClaimsAfterPublish,
   enrichGroupVouchItems,
 } from "./badges";
+import {
+  justWatchSearchUrl,
+  libbySearchUrl,
+  openTileLink,
+  tileIsClickable,
+} from "./tileLinks";
 
 const AVATAR_OPTIONS = [
   { file: "book",               label: "Book" },
@@ -744,25 +750,23 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
         if (catKey === "movies") {
           const res  = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB}&query=${encodeURIComponent(q)}&language=en-US`);
           const data = await res.json();
-          const list = (data.results || []).slice(0, 8);
-          const withImdb = await Promise.all(list.map(async r => {
-            try {
-              const ext = await fetch(`https://api.themoviedb.org/3/movie/${r.id}/external_ids?api_key=${TMDB}`).then(x => x.json());
-              return { id: r.id, title: r.title, sub: r.release_date ? r.release_date.slice(0, 4) : "", poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null, sourceUrl: ext.imdb_id ? `https://www.imdb.com/title/${ext.imdb_id}/` : `https://www.imdb.com/find?q=${encodeURIComponent(r.title)}` };
-            } catch { return { id: r.id, title: r.title, sub: r.release_date ? r.release_date.slice(0, 4) : "", poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null, sourceUrl: `https://www.imdb.com/find?q=${encodeURIComponent(r.title)}` }; }
-          }));
-          setResults(withImdb);
+          setResults((data.results || []).slice(0, 8).map(r => ({
+            id: r.id,
+            title: r.title,
+            sub: r.release_date ? r.release_date.slice(0, 4) : "",
+            poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null,
+            sourceUrl: justWatchSearchUrl(r.title, r.release_date?.slice(0, 4)),
+          })));
         } else if (catKey === "shows") {
           const res  = await fetch(`https://api.themoviedb.org/3/search/tv?api_key=${TMDB}&query=${encodeURIComponent(q)}&language=en-US`);
           const data = await res.json();
-          const list = (data.results || []).slice(0, 8);
-          const withImdb = await Promise.all(list.map(async r => {
-            try {
-              const ext = await fetch(`https://api.themoviedb.org/3/tv/${r.id}/external_ids?api_key=${TMDB}`).then(x => x.json());
-              return { id: r.id, title: r.name, sub: r.first_air_date ? r.first_air_date.slice(0, 4) : "", poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null, sourceUrl: ext.imdb_id ? `https://www.imdb.com/title/${ext.imdb_id}/` : `https://www.imdb.com/find?q=${encodeURIComponent(r.name)}` };
-            } catch { return { id: r.id, title: r.name, sub: r.first_air_date ? r.first_air_date.slice(0, 4) : "", poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null, sourceUrl: `https://www.imdb.com/find?q=${encodeURIComponent(r.name)}` }; }
-          }));
-          setResults(withImdb);
+          setResults((data.results || []).slice(0, 8).map(r => ({
+            id: r.id,
+            title: r.name,
+            sub: r.first_air_date ? r.first_air_date.slice(0, 4) : "",
+            poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null,
+            sourceUrl: justWatchSearchUrl(r.name, r.first_air_date?.slice(0, 4)),
+          })));
         } else if (catKey === "songs" || catKey === "albums" || catKey === "artists" || catKey === "podcasts") {
           const typeMap = { songs: "track", albums: "album", artists: "artist", podcasts: "show" };
           const res = await fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=${typeMap[catKey]}`);
@@ -783,7 +787,7 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
             const coverId = r.cover_i;
             const isbn = (r.isbn || [])[0];
             const poster = coverId ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg` : isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg` : null;
-            return { id: r.key || r.title, title: r.title, sub: (r.author_name || []).join(", "), poster, sourceUrl: `https://openlibrary.org${r.key}` };
+            return { id: r.key || r.title, title: r.title, sub: (r.author_name || []).join(", "), poster, sourceUrl: libbySearchUrl(r.title, (r.author_name || []).join(", ")) };
           }));
         } else {
           setResults([]);
@@ -885,12 +889,8 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
         const mixed = [];
         const movieResults = (movieRes.results || []).slice(0, 3);
         const tvResults    = (tvRes.results || []).slice(0, 2);
-        const [movieIds, tvIds] = await Promise.all([
-          Promise.all(movieResults.map(r => fetch(`https://api.themoviedb.org/3/movie/${r.id}/external_ids?api_key=${TMDB}`).then(x => x.json()).catch(() => ({})))),
-          Promise.all(tvResults.map(r => fetch(`https://api.themoviedb.org/3/tv/${r.id}/external_ids?api_key=${TMDB}`).then(x => x.json()).catch(() => ({})))),
-        ]);
-        movieResults.forEach((r, i) => mixed.push({ id: r.id, title: r.title, catKey: "movies", catLabel: "Film", sub: r.release_date ? r.release_date.slice(0, 4) : "", poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null, sourceUrl: movieIds[i]?.imdb_id ? `https://www.imdb.com/title/${movieIds[i].imdb_id}/` : `https://www.imdb.com/find?q=${encodeURIComponent(r.title)}` }));
-        tvResults.forEach((r, i) => mixed.push({ id: r.id, title: r.name, catKey: "shows", catLabel: "Television", sub: r.first_air_date ? r.first_air_date.slice(0, 4) : "", poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null, sourceUrl: tvIds[i]?.imdb_id ? `https://www.imdb.com/title/${tvIds[i].imdb_id}/` : `https://www.imdb.com/find?q=${encodeURIComponent(r.name)}` }));
+        movieResults.forEach(r => mixed.push({ id: r.id, title: r.title, catKey: "movies", catLabel: "Film", sub: r.release_date ? r.release_date.slice(0, 4) : "", poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null, sourceUrl: justWatchSearchUrl(r.title, r.release_date?.slice(0, 4)) }));
+        tvResults.forEach(r => mixed.push({ id: r.id, title: r.name, catKey: "shows", catLabel: "Television", sub: r.first_air_date ? r.first_air_date.slice(0, 4) : "", poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null, sourceUrl: justWatchSearchUrl(r.name, r.first_air_date?.slice(0, 4)) }));
         (trackRes.tracks?.items || []).slice(0, 3).forEach(r => mixed.push({ id: r.id, title: r.name, catKey: "songs", catLabel: "Songs", sub: r.artists?.[0]?.name || "", poster: r.album?.images?.[0]?.url || null, sourceUrl: `https://open.spotify.com/track/${r.id}` }));
         (albumRes.albums?.items || []).slice(0, 2).forEach(r => mixed.push({ id: r.id, title: r.name, catKey: "albums", catLabel: "Albums", sub: r.artists?.[0]?.name || "", poster: r.images?.[0]?.url || null, sourceUrl: `https://open.spotify.com/album/${r.id}` }));
         (artistRes.artists?.items || []).slice(0, 2).forEach(r => mixed.push({ id: r.id, title: r.name, catKey: "artists", catLabel: "Artists", sub: r.genres?.[0] || "", poster: r.images?.[0]?.url || null, sourceUrl: `https://open.spotify.com/artist/${r.id}` }));
@@ -899,7 +899,7 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
           const coverId = r.cover_i;
           const isbn = (r.isbn || [])[0];
           const poster = coverId ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg` : isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg` : null;
-          mixed.push({ id: r.key || r.title, title: r.title, catKey: "books", catLabel: "Book", sub: (r.author_name || []).join(", "), poster, sourceUrl: `https://openlibrary.org${r.key}` });
+          mixed.push({ id: r.key || r.title, title: r.title, catKey: "books", catLabel: "Book", sub: (r.author_name || []).join(", "), poster, sourceUrl: libbySearchUrl(r.title, (r.author_name || []).join(", ")) });
         });
         setResults(mixed);
       } catch(e) { console.error(e); }
@@ -1146,12 +1146,18 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
 
   const CardFace = ({ it }) => {
     const badges = itemBadges?.[badgeKey(it._cat, it.id)] || [];
+    const clickable = tileIsClickable(it, it._cat);
+    const clickTile = () => {
+      if (Math.abs(currentOffsetX.current) > 8) return;
+      if (!clickable) { onCard(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id)); return; }
+      openTileLink(it, { catKey: it._cat, onMusicOpen });
+    };
     return (
     <div style={{ position: "relative" }}>
       <VouchRibbon badges={badges} ownerName={badgeOwnerName} circlePhrase={badgeCirclePhrase || (isOwn ? "your" : "their")} />
       {it.poster
-        ? <img src={it.poster} alt={it.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: `1px solid ${T.paperDark}`, cursor: it.sourceUrl ? "pointer" : "default" }} onClick={() => { if (Math.abs(currentOffsetX.current) > 8) return; if (!it.sourceUrl) { onCard(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id)); return; } const isMusicCat = ["songs","albums","artists","podcasts"].includes(it._cat); if (isMusicCat && onMusicOpen) { onMusicOpen(it.sourceUrl, it.title, it.sub, it._cat); } else { window.open(it.sourceUrl, "_blank"); } }} onError={e => e.target.style.display = "none"} />
-        : <div style={{ width: "100%", height: 340, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 18, color: T.inkLight, padding: 24, textAlign: "center", cursor: it.sourceUrl ? "pointer" : "default" }} onClick={() => { if (Math.abs(currentOffsetX.current) > 8) return; it.sourceUrl ? window.open(it.sourceUrl, "_blank") : onCard(it._cat, (board[it._cat] || []).findIndex(x => x.id === it.id)); }}>{it.title}</div>}
+        ? <img src={it.poster} alt={it.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: `1px solid ${T.paperDark}`, cursor: clickable ? "pointer" : "default" }} onClick={clickTile} onError={e => e.target.style.display = "none"} />
+        : <div style={{ width: "100%", height: 340, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 18, color: T.inkLight, padding: 24, textAlign: "center", cursor: clickable ? "pointer" : "default" }} onClick={clickTile}>{it.title}</div>}
       <div style={{ padding: "14px 4px 4px" }}>
         <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 4 }}>{it._catLabel}</div>
         <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: T.bg }}>{it.title}</div>
@@ -1255,7 +1261,7 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
         <div className="cards-row">
           {slots.map((item, idx) =>
             item
-              ? <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => { if (!item.sourceUrl) { onCard(catKey, idx); return; } const isMusicCat = ["songs","albums","artists","podcasts"].includes(catKey); if (isMusicCat && onMusicOpen) { onMusicOpen(item.sourceUrl, item.title, item.sub, catKey); } else { window.open(item.sourceUrl, "_blank"); } }}>
+              ? <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => { if (!tileIsClickable(item, catKey)) { onCard(catKey, idx); return; } openTileLink(item, { catKey, onMusicOpen }); }}>
                   <VouchRibbon badges={itemBadges?.[badgeKey(catKey, item.id)] || []} align={isOwn ? "left" : "right"} compact ownerName={badgeOwnerName} circlePhrase={badgeCirclePhrase || (isOwn ? "your" : "their")} />
                   {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx, false); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 26, height: 26, cursor: "pointer", fontSize: 15, lineHeight: "26px", textAlign: "center", borderRadius: 2 }}>×</button>}
                   {item.poster ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} /> : null}
@@ -1305,11 +1311,11 @@ function MutualMentions({ reactions, myReactions, isOwn, boardOwnerName, buddies
       </div>
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
         {preview.map((item, i) => {
-          const url = item.source_url || item.sourceUrl;
+          const clickable = tileIsClickable(item, item.category);
           const sourceBuddy = isOwn && buddies ? buddies.find(b => b.userId === item.item_owner_id) : null;
           return (
             <div key={(item.id || item.item_id) + i} style={{ width: 100, flexShrink: 0 }}>
-              <div style={{ cursor: url ? "pointer" : "default" }} onClick={() => url && window.open(url, "_blank")}>
+              <div style={{ cursor: clickable ? "pointer" : "default" }} onClick={() => openTileLink(item, { catKey: item.category })}>
                 {item.poster
                   ? <img src={item.poster} alt={item.title} style={{ width: 100, height: 138, objectFit: "contain", background: "#000", border: `1px solid ${T.paperDark}`, display: "block" }} onError={e => e.target.style.display = "none"} />
                   : <div style={{ width: 100, height: 138, background: T.paperDark, border: `1px solid ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 6 }}>{item.title}</div>}
@@ -1522,8 +1528,8 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
       setBusy(true);
       try {
         const fetches = [];
-        if (!singleCat || singleCat === "movies") fetches.push(fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`).then(r=>r.json()).then(d=>(d.results||[]).slice(0,3).map(r=>({ id:r.id, title:r.title, sub:r.release_date?.slice(0,4)||"", poster:r.poster_path?`https://image.tmdb.org/t/p/w500${r.poster_path}`:null, catKey:"movies", sourceUrl:`https://www.imdb.com/find?q=${encodeURIComponent(r.title)}` }))));
-        if (!singleCat || singleCat === "shows") fetches.push(fetch(`https://api.themoviedb.org/3/search/tv?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`).then(r=>r.json()).then(d=>(d.results||[]).slice(0,2).map(r=>({ id:r.id, title:r.name, sub:r.first_air_date?.slice(0,4)||"", poster:r.poster_path?`https://image.tmdb.org/t/p/w500${r.poster_path}`:null, catKey:"shows", sourceUrl:`https://www.imdb.com/find?q=${encodeURIComponent(r.name)}` }))));
+        if (!singleCat || singleCat === "movies") fetches.push(fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`).then(r=>r.json()).then(d=>(d.results||[]).slice(0,3).map(r=>({ id:r.id, title:r.title, sub:r.release_date?.slice(0,4)||"", poster:r.poster_path?`https://image.tmdb.org/t/p/w500${r.poster_path}`:null, catKey:"movies", sourceUrl:justWatchSearchUrl(r.title, r.release_date?.slice(0,4)) }))));
+        if (!singleCat || singleCat === "shows") fetches.push(fetch(`https://api.themoviedb.org/3/search/tv?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`).then(r=>r.json()).then(d=>(d.results||[]).slice(0,2).map(r=>({ id:r.id, title:r.name, sub:r.first_air_date?.slice(0,4)||"", poster:r.poster_path?`https://image.tmdb.org/t/p/w500${r.poster_path}`:null, catKey:"shows", sourceUrl:justWatchSearchUrl(r.name, r.first_air_date?.slice(0,4)) }))));
         if (!singleCat || ["albums","songs","artists","podcasts"].includes(singleCat)) {
           const type = singleCat === "albums" ? "album" : singleCat === "songs" ? "track" : singleCat === "artists" ? "artist" : singleCat === "podcasts" ? "show" : "track,album,artist,show";
           fetches.push(fetch(`/api/spotify?q=${encodeURIComponent(q)}&type=${type}`).then(r=>r.json()).then(d=>{
@@ -1535,7 +1541,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
             return res;
           }));
         }
-        if (!singleCat || singleCat === "books") fetches.push(fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=3`).then(r=>r.json()).then(d=>(d.docs||[]).slice(0,2).map(r=>({ id:r.key||r.title, title:r.title, sub:(r.author_name||[]).join(", "), poster:r.cover_i?`https://covers.openlibrary.org/b/id/${r.cover_i}-L.jpg`:null, catKey:"books", sourceUrl:`https://openlibrary.org${r.key}` }))));
+        if (!singleCat || singleCat === "books") fetches.push(fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=3`).then(r=>r.json()).then(d=>(d.docs||[]).slice(0,2).map(r=>({ id:r.key||r.title, title:r.title, sub:(r.author_name||[]).join(", "), poster:r.cover_i?`https://covers.openlibrary.org/b/id/${r.cover_i}-L.jpg`:null, catKey:"books", sourceUrl:libbySearchUrl(r.title, (r.author_name||[]).join(", ")) }))));
         const all = (await Promise.all(fetches)).flat();
         setResults(all);
       } catch(e) { console.error(e); }
@@ -1753,7 +1759,7 @@ function EditMetaForm({ board, themes, onSave, onClose }) {
   );
 }
 
-function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame }) {
+function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame, onMusicOpen }) {
   const [idx, setIdx] = useState(0);
   const touchStartX = useRef(null);
   const currentOffsetX = useRef(0);
@@ -1789,12 +1795,15 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame 
     return () => { el.removeEventListener("touchstart", handleStart); el.removeEventListener("touchmove", handleMove); el.removeEventListener("touchend", handleEnd); };
   }, [idx, items.length, isMobile]);
 
-  const CardFaceNoButtons = ({ item }) => (
+  const CardFaceNoButtons = ({ item }) => {
+    const clickable = tileIsClickable(item, item.category);
+    const clickItem = () => openTileLink({ ...item, sub: item.subtitle }, { catKey: item.category, onMusicOpen });
+    return (
     <div style={{ position: "relative" }}>
       <VouchRibbon badges={item.groupBadge || []} ownerName={item.firstVouchedBy} circlePhrase="your" />
       {item.poster
-        ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: "1px solid rgba(200,194,180,0.2)", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")} onError={e => e.target.style.display = "none"} />
-        : <div style={{ width: "100%", height: 340, background: "rgba(200,194,180,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")}>{item.title}</div>}
+        ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: "1px solid rgba(200,194,180,0.2)", cursor: clickable ? "pointer" : "default" }} onClick={() => clickable && clickItem()} onError={e => e.target.style.display = "none"} />
+        : <div style={{ width: "100%", height: 340, background: "rgba(200,194,180,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center", cursor: clickable ? "pointer" : "default" }} onClick={() => clickable && clickItem()}>{item.title}</div>}
       <div style={{ padding: "10px 4px 4px" }}>
         <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 4 }}>{item.category}</div>
         <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: "#C8C2B4" }}>{item.title}</div>
@@ -1802,16 +1811,19 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame 
         <VouchedByLine name={item.firstVouchedBy} first dark />
       </div>
     </div>
-  );
+    );
+  };
 
   const CardFace = ({ item }) => {
     const isQueued = queue?.find(q => String(q.id) === String(item.item_id || item.id));
+    const clickable = tileIsClickable(item, item.category);
+    const clickItem = () => openTileLink({ ...item, sub: item.subtitle }, { catKey: item.category, onMusicOpen });
     return (
       <div style={{ position: "relative" }}>
         <VouchRibbon badges={item.groupBadge || []} ownerName={item.firstVouchedBy} circlePhrase="your" />
         {item.poster
-          ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: "1px solid rgba(200,194,180,0.2)", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")} onError={e => e.target.style.display = "none"} />
-          : <div style={{ width: "100%", height: 340, background: "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center", cursor: item.source_url ? "pointer" : "default" }} onClick={() => item.source_url && window.open(item.source_url, "_blank")}>{item.title}</div>}
+          ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: "1px solid rgba(200,194,180,0.2)", cursor: clickable ? "pointer" : "default" }} onClick={() => clickable && clickItem()} onError={e => e.target.style.display = "none"} />
+          : <div style={{ width: "100%", height: 340, background: "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center", cursor: clickable ? "pointer" : "default" }} onClick={() => clickable && clickItem()}>{item.title}</div>}
         <div style={{ padding: "10px 4px 4px" }}>
           <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 4 }}>{item.category}</div>
           <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: "#C8C2B4" }}>{item.title}</div>
@@ -1874,7 +1886,7 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame 
   );
 }
 
-function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue, onDudeSame, myReactions, userId }) {
+function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue, onDudeSame, myReactions, userId, onMusicOpen }) {
   const [modalCat, setModalCat] = useState(null);
   const [vouchMeta, setVouchMeta] = useState({});
   const isMobile = window.innerWidth <= 640;
@@ -1938,8 +1950,8 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue,
   const TileCard = ({ item, catKey }) => {
     const meta = vouchMeta[badgeKey(catKey, item.item_id)] || {};
     return (
-    <div style={{ flexShrink: 0, width: isMobile ? 95 : 150, cursor: item.source_url ? "pointer" : "default", position: "relative" }}
-      onClick={() => item.source_url && window.open(item.source_url, "_blank")}>
+    <div style={{ flexShrink: 0, width: isMobile ? 95 : 150, cursor: tileIsClickable(item, catKey) ? "pointer" : "default", position: "relative" }}
+      onClick={() => openTileLink(item, { catKey, onMusicOpen })}>
       <VouchRibbon badges={meta.groupBadge || []} compact ownerName={meta.firstVouchedBy} circlePhrase="your" />
       {item.poster
         ? <img src={item.poster} alt={item.title} style={{ width: "100%", display: "block" }} onError={e => e.target.style.display = "none"} />
@@ -2279,7 +2291,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
               <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: "#a09890", marginLeft: 8 }}>{item.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
             </div>
           </div>
-          <div style={{ width: "100%", maxWidth: 300, margin: "0 auto", cursor: primary.source_url ? "pointer" : "default", position: "relative" }} onClick={() => { if (!primary.source_url) return; const isMusicUrl = primary.source_url.includes("open.spotify.com"); if (isMusicUrl && onMusicOpen) { onMusicOpen(primary.source_url, primary.title, primary.subtitle, primary.category); } else { window.open(primary.source_url, "_blank"); } }}>
+          <div style={{ width: "100%", maxWidth: 300, margin: "0 auto", cursor: tileIsClickable(primary, primary.category) ? "pointer" : "default", position: "relative" }} onClick={() => openTileLink(primary, { catKey: primary.category, onMusicOpen })}>
             <VouchRibbon badges={badgesForOwner(feedBadgeMap, buddy?.userId, primary.category, primary.item_id)} ownerName={buddy?.displayName} circlePhrase="their" />
             {primary.poster && <img src={primary.poster} alt={primary.title} style={{ width: "100%", display: "block" }} onError={e => e.target.style.display = "none"} />}
             <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{primary.title}</div>
@@ -2333,7 +2345,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
           {r.poster && (
             <div style={{ width: "100%", maxWidth: 300, margin: "0 auto", position: "relative" }}>
               <VouchRibbon badges={badgesForOwner(feedBadgeMap, r.item_owner_id, r.category, r.item_id)} ownerName={r.owner?.display_name} circlePhrase="their" />
-              <div style={{ cursor: r.source_url ? "pointer" : "default" }} onClick={() => { if (!r.source_url) return; const isMusicUrl = r.source_url.includes("open.spotify.com"); if (isMusicUrl && onMusicOpen) { onMusicOpen(r.source_url, r.title, r.subtitle, r.category); } else { window.open(r.source_url, "_blank"); } }}>
+              <div style={{ cursor: tileIsClickable(r, r.category) ? "pointer" : "default" }} onClick={() => openTileLink(r, { catKey: r.category, onMusicOpen })}>
                 <img src={r.poster} alt={r.title} style={{ width: "100%", display: "block" }} onError={e => e.target.style.display = "none"} />
                 <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{r.title}</div>
                 {r.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{r.subtitle}</div>}
@@ -4278,10 +4290,10 @@ export default function Vouch() {
 
                 {/* GROUP VOUCH - top of page */}
                 {groupVouchItems.length > 0 && (
-                  <GroupVouchSlideshow items={groupVouchItems} isMobile={isMobileGlobal} onAddToQueue={addToQueue} queue={queue} onDudeSame={dudeSame} />
+                  <GroupVouchSlideshow items={groupVouchItems} isMobile={isMobileGlobal} onAddToQueue={addToQueue} queue={queue} onDudeSame={dudeSame} onMusicOpen={openMusicUrl} />
                 )}
 
-                <BuddiesBin allBuddyBoards={allBuddyBoards} buddies={buddies} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId, true); window.scrollTo(0,0); }} onAddToQueue={addToQueue} queue={queue} onDudeSame={dudeSame} myReactions={myReactions} userId={userId} />
+                <BuddiesBin allBuddyBoards={allBuddyBoards} buddies={buddies} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId, true); window.scrollTo(0,0); }} onAddToQueue={addToQueue} queue={queue} onDudeSame={dudeSame} myReactions={myReactions} userId={userId} onMusicOpen={openMusicUrl} />
 
 
 
@@ -4452,7 +4464,7 @@ export default function Vouch() {
                                   </div>
                                   <div className="cards-row">
                                     {catItems.map(item => (
-                                      <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => item.sourceUrl && window.open(item.sourceUrl, "_blank")}>
+                                      <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => openTileLink(item, { catKey: item.category, onMusicOpen: openMusicUrl })}>
                                         <button onClick={e => { e.stopPropagation(); removeFromQueue(item.id); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 26, height: 26, cursor: "pointer", fontSize: 15, lineHeight: "26px", textAlign: "center", borderRadius: 2 }}>×</button>
                                         {item.poster
                                           ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => e.target.style.display = "none"} />
@@ -4826,7 +4838,7 @@ export default function Vouch() {
               </div>
               <div className="modal-body">
                 {shelfExtras.map((s, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: `1px solid ${T.paperDark}`, cursor: s.source_url ? "pointer" : "default" }} onClick={() => s.source_url && window.open(s.source_url, "_blank")}>
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: `1px solid ${T.paperDark}`, cursor: tileIsClickable(s, s.category) ? "pointer" : "default" }} onClick={() => openTileLink(s, { catKey: s.category, onMusicOpen: openMusicUrl })}>
                     {s.poster
                       ? <img src={s.poster} alt={s.title} style={{ width: 48, height: 66, objectFit: "cover", border: `1px solid ${T.paperDark}`, flexShrink: 0 }} onError={e => e.target.style.display="none"} />
                       : <div style={{ width: 48, height: 66, background: T.paperDark, flexShrink: 0 }} />
