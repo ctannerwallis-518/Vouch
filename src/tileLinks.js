@@ -3,6 +3,7 @@
 const MUSIC_CATS = new Set(["songs", "albums", "artists", "podcasts"]);
 const jwCache = new Map();
 const bookCache = new Map();
+const amCache = new Map();
 
 export function isMusicCategory(cat) {
   return MUSIC_CATS.has(cat);
@@ -135,6 +136,68 @@ export function resolveTileLink(item, catKey) {
     return tile.sourceUrl;
   }
   return tile.sourceUrl;
+}
+
+function appleMusicCountry() {
+  if (typeof navigator === "undefined") return "us";
+  const code = (navigator.language || "en-US").split("-")[1]?.toLowerCase();
+  const map = { us: "us", gb: "uk", uk: "uk", ca: "ca", au: "au", de: "de", fr: "fr", es: "es", it: "it", nl: "nl", br: "br", mx: "mx" };
+  return map[code] || "us";
+}
+
+function itunesApiCountry() {
+  const web = appleMusicCountry();
+  return web === "uk" ? "GB" : web.toUpperCase();
+}
+
+function appleMusicLookupType(catKey) {
+  if (catKey === "albums") return "album";
+  if (catKey === "artists") return "artist";
+  if (catKey === "podcasts") return "podcast";
+  return "song";
+}
+
+export function appleMusicSearchUrl(title, sub, catKey) {
+  const cc = appleMusicCountry();
+  const type = appleMusicLookupType(catKey);
+  if (type === "podcast") {
+    return `https://podcasts.apple.com/${cc}/search?term=${encodeURIComponent(title)}`;
+  }
+  const term = type === "song" && sub ? `${sub} ${title}` : [title, sub].filter(Boolean).join(" ");
+  return `https://music.apple.com/${cc}/search?term=${encodeURIComponent(term)}`;
+}
+
+function isDirectAppleMusicUrl(url) {
+  return !!url && (url.includes("music.apple.com/") || url.includes("podcasts.apple.com/")) && !url.includes("/search");
+}
+
+export async function fetchAppleMusicUrl(title, sub, catKey) {
+  const type = appleMusicLookupType(catKey);
+  const apiCountry = itunesApiCountry();
+  const cacheKey = `${apiCountry}:${type}:${title}:${sub || ""}`;
+  const cached = amCache.get(cacheKey);
+  if (cached && isDirectAppleMusicUrl(cached)) return cached;
+
+  const params = new URLSearchParams({
+    title: String(title).trim(),
+    type,
+    country: apiCountry,
+  });
+  if (sub) params.set("sub", String(sub).trim());
+
+  try {
+    const res = await fetch(`/api/applemusic?${params}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.url && isDirectAppleMusicUrl(data.url)) {
+        amCache.set(cacheKey, data.url);
+        return data.url;
+      }
+      if (data.url) return data.url;
+    }
+  } catch { /* fall through */ }
+
+  return appleMusicSearchUrl(title, sub, catKey);
 }
 
 export function tileActionHint(catKey) {
