@@ -22,7 +22,32 @@ import {
   fetchBookStoreUrl,
   openTileLink,
   tileIsClickable,
+  tileActionHint,
 } from "./tileLinks";
+
+const TILE_HINT_COLORS = {
+  light: "rgba(200,194,180,0.45)",
+  dark: "#a09890",
+  ink: "#7a7568",
+};
+
+function TileActionHint({ item, catKey, variant = "ink" }) {
+  const key = catKey || item?.category || item?._cat;
+  if (!tileIsClickable(item, key)) return null;
+  const hint = tileActionHint(key);
+  if (!hint) return null;
+  return (
+    <div style={{
+      fontFamily: "'Spectral SC',serif",
+      fontSize: variant === "compact" ? 7 : 7.5,
+      letterSpacing: "0.14em",
+      color: TILE_HINT_COLORS[variant] || TILE_HINT_COLORS.ink,
+      marginTop: variant === "compact" ? 2 : 4,
+    }}>
+      {hint}
+    </div>
+  );
+}
 
 const AVATAR_OPTIONS = [
   { file: "book",               label: "Book" },
@@ -1180,6 +1205,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
         <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 4 }}>{it._catLabel}</div>
         <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: T.bg }}>{it.title}</div>
         <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "rgba(200,194,180,0.7)" }}>{it.artist || it.author || it.sub || ""}</div>
+        <TileActionHint item={it} catKey={it._cat} variant="light" />
         {it.comment && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: "rgba(200,194,180,0.55)", marginTop: 6 }}>"{it.comment}"</div>}
         {!isOwn && (
           <div style={{ display: "flex", marginTop: 8 }}>
@@ -1287,6 +1313,7 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
                   <div style={{ flex: 1 }}>
                     <div className="card-title">{item.title}</div>
                     <div className="card-sub">{item.artist || item.author || item.year || item.sub || ""}</div>
+                    <TileActionHint item={item} catKey={catKey} variant="compact" />
                     {item.comment && <div className="card-comment" style={{ fontSize: item.comment.length > 80 ? "9px" : item.comment.length > 40 ? "10px" : "10.5px" }}>"{item.comment}"</div>}
                     {!isOwn && (
                       <div style={{ display: "flex", marginTop: 6, gap: 0 }}>
@@ -1339,6 +1366,7 @@ function MutualMentions({ reactions, myReactions, isOwn, boardOwnerName, buddies
                   : <div style={{ width: 100, height: 138, background: T.paperDark, border: `1px solid ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 6 }}>{item.title}</div>}
                 <div style={{ fontFamily: "'Spectral',serif", fontSize: 11, fontWeight: 600, lineHeight: 1.3, marginTop: 5 }}>{item.title}</div>
                 <div style={{ fontFamily: "'Spectral SC',serif", fontSize: 8.5, color: T.inkFaint, marginTop: 1 }}>{item.subtitle || ""}</div>
+                <TileActionHint item={item} catKey={item.category} variant="compact" />
               </div>
               {sourceBuddy && (
                 <div onClick={() => onViewBuddy && onViewBuddy(sourceBuddy)} style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 9.5, color: T.inkLight, marginTop: 3, cursor: "pointer" }}>
@@ -1833,6 +1861,7 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame,
         <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 4 }}>{item.category}</div>
         <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: "#C8C2B4" }}>{item.title}</div>
         <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "rgba(200,194,180,0.7)" }}>{item.subtitle || ""}</div>
+        <TileActionHint item={item} catKey={item.category} variant="light" />
         <VouchedByLine name={item.firstVouchedBy} first dark />
       </div>
     </div>
@@ -1853,6 +1882,7 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame,
           <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 4 }}>{item.category}</div>
           <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: "#C8C2B4" }}>{item.title}</div>
           <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "rgba(200,194,180,0.7)" }}>{item.subtitle || ""}</div>
+          <TileActionHint item={item} catKey={item.category} variant="light" />
           <VouchedByLine name={item.firstVouchedBy} first dark />
           <div style={{ display: "flex", marginTop: 10 }}>
             {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue(item); }} style={{ flex: 1, background: isQueued ? "rgba(200,194,180,0.25)" : "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", color: isQueued ? "rgba(200,194,180,0.95)" : "rgba(200,194,180,0.6)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700, transition: "all 0.15s" }}>{isQueued ? "✓ Queued" : "+ Queue"}</button>}
@@ -1982,6 +2012,7 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue,
         ? <img src={item.poster} alt={item.title} style={{ width: "100%", display: "block" }} onError={e => e.target.style.display = "none"} />
         : <div style={{ width: "100%", aspectRatio: "2/3", background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 6 }}>{item.title}</div>}
       <div style={{ fontFamily: "'Spectral',serif", fontSize: 11, fontWeight: 600, color: T.ink, marginTop: 5, lineHeight: 1.3 }}>{item.title}</div>
+      <TileActionHint item={item} catKey={catKey} variant="compact" />
       {meta.firstVouchedBy && <VouchedByLine name={meta.firstVouchedBy} first />}
       {item.owners.length > 0 && (
         <div style={{ marginTop: 4 }}>
@@ -2321,6 +2352,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
             {primary.poster && <img src={primary.poster} alt={primary.title} style={{ width: "100%", display: "block" }} onError={e => e.target.style.display = "none"} />}
             <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{primary.title}</div>
             {primary.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{primary.subtitle}</div>}
+            <TileActionHint item={primary} catKey={primary.category} variant="dark" />
             {onDudeSame && buddy && buddy.userId !== selfId && (
               <div style={{ display: "flex", marginTop: 8 }}>
                 <button onClick={e => { e.stopPropagation(); onDudeSame({ id: primary.item_id, title: primary.title, poster: primary.poster, _cat: primary.category }, buddy.userId); }} style={{ flex: 1, background: (myReactions||[]).find(r => r.item_id === String(primary.item_id) && r.item_owner_id === buddy.userId) ? "#111008" : "transparent", border: "1px solid #b3ada0", color: (myReactions||[]).find(r => r.item_id === String(primary.item_id) && r.item_owner_id === buddy.userId) ? "#C8C2B4" : "#3a3830", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700 }}>{(myReactions||[]).find(r => r.item_id === String(primary.item_id) && r.item_owner_id === buddy.userId) ? "✓ Agreed" : "Agree"}</button>
@@ -2374,6 +2406,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
                 <img src={r.poster} alt={r.title} style={{ width: "100%", display: "block" }} onError={e => e.target.style.display = "none"} />
                 <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{r.title}</div>
                 {r.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{r.subtitle}</div>}
+                <TileActionHint item={r} catKey={r.category} variant="dark" />
               </div>
               {onDudeSame && r.item_owner_id && r.item_owner_id !== selfId && (
                 <div style={{ display: "flex", marginTop: 8 }}>
@@ -4496,6 +4529,7 @@ export default function Vouch() {
                                           : <div className="card-poster-placeholder">{item.title}</div>}
                                         <div className="card-title">{item.title}</div>
                                         {item.sub && <div className="card-sub">{item.sub}</div>}
+                                        <TileActionHint item={item} catKey={item.category} variant="compact" />
                                       </div>
                                     ))}
                                   </div>
@@ -4871,6 +4905,7 @@ export default function Vouch() {
                     <div>
                       <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 14 }}>{s.title}</div>
                       {s.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: T.inkLight, marginTop: 2 }}>{s.subtitle}</div>}
+                      <TileActionHint item={s} catKey={s.category} variant="compact" />
                     </div>
                   </div>
                 ))}
