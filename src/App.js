@@ -20,6 +20,7 @@ import {
   pickBookIsbn,
   fetchJustWatchTitleUrl,
   fetchBookStoreUrl,
+  fetchAppleMusicUrl,
   openTileLink,
   tileIsClickable,
   tileActionHint,
@@ -3486,24 +3487,15 @@ export default function Vouch() {
 
   const isMusicUrl = (url) => url && url.includes("open.spotify.com");
 
-  const appleUrl = (url, title, sub, catKey) => {
-    const isPodcast = catKey === "podcasts" || (url && url.includes("spotify.com/show/"));
-    const term = encodeURIComponent([title, sub].filter(Boolean).join(" "));
-    if (isPodcast) return `https://podcasts.apple.com/search?term=${encodeURIComponent(title)}`;
-    // For songs, put artist (sub) first for better matching
-    const musicTerm = catKey === "songs" && sub
-      ? encodeURIComponent(`${sub} ${title}`)
-      : term;
-    return `https://music.apple.com/search?term=${musicTerm}`;
-  };
-
-  const openMusicUrl = (url, title, sub, catKey) => {
-    console.log("openMusicUrl called", { url, pref: musicPrefRef.current, catKey });
+  const openMusicUrl = async (url, title, sub, catKey) => {
     if (!isMusicUrl(url)) { window.open(url, "_blank"); return; }
     const pref = musicPrefRef.current;
     if (pref === "spotify") { window.open(url, "_blank"); return; }
-    if (pref === "apple_music") { window.open(appleUrl(url, title, sub, catKey), "_blank"); return; }
-    // No preference set — show picker
+    if (pref === "apple_music") {
+      const amUrl = await fetchAppleMusicUrl(title, sub, catKey);
+      window.open(amUrl, "_blank");
+      return;
+    }
     setMusicPickerModal({ url, title, sub, catKey });
   };
 
@@ -3513,7 +3505,10 @@ export default function Vouch() {
     await supabase.from("profiles").update({ music_preference: pref }).eq("id", userId);
     setMusicPickerModal(null);
     if (pref === "spotify") window.open(url, "_blank");
-    else window.open(appleUrl(url, title, sub, musicPickerModal?.catKey), "_blank");
+    else {
+      const amUrl = await fetchAppleMusicUrl(title, sub, musicPickerModal?.catKey);
+      window.open(amUrl, "_blank");
+    }
   };
 
   const saveExpandPreviousVouches = async (enabled) => {
