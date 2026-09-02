@@ -4639,18 +4639,18 @@ export default function Vouch() {
 
                 {isOwn ? (
                   <div className="vouch-section" style={{ marginBottom: 52 }}>
-                    <div className="vouch-section-header">
-                      <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="vouch-section-header" style={{ flexDirection: "column", alignItems: "stretch", flexWrap: "wrap" }}>
+                      <div style={{ flex: 1, minWidth: 0, width: "100%" }}>
                         <div className="vouch-section-label">{(activeBoard?.theme && activeBoard.theme !== "Other") ? activeBoard.theme : (activeBoard?.name || "Vouch")}</div>
-                        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginTop: 3 }}>Vouch</div>
+                        {activeBoard && <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10 }}>
+                          <button onClick={() => setShareModal(true)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.14em", padding: "4px 12px", border: "none", background: "linear-gradient(180deg, #D4B030 0%, #C9A820 60%, #9A7820 100%)", color: "#111008", cursor: "pointer", fontWeight: 700 }}>Share</button>
+                          <button onClick={() => { setEditingBoard(activeBoard); setBoardEditor(true); }} style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.14em", padding: "4px 12px", border: "1px solid rgba(200,194,180,0.25)", background: "transparent", color: "rgba(200,194,180,0.5)", cursor: "pointer" }}>Edit</button>
+                          <button onClick={() => setRemoveVouchModal(true)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.14em", padding: "4px 12px", border: "1px solid rgba(200,194,180,0.25)", background: "transparent", color: "rgba(200,194,180,0.5)", cursor: "pointer" }}>Remove</button>
+                        </div>}
+                        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginTop: activeBoard ? 10 : 3 }}>Vouch</div>
                         {activeBoard?.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 10, color: "rgba(200,194,180,0.4)", marginTop: 2 }}>{activeBoard.description}</div>}
                         {activeBoard?.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.3)", marginTop: 4 }}>Published {new Date(activeBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} · Current Vouch</div>}
                       </div>
-                      {activeBoard && <div style={{ display: "flex", gap: 6, flexShrink: 0, alignSelf: "flex-start" }}>
-                        <button onClick={() => setShareModal(true)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.14em", padding: "4px 12px", border: "none", background: "linear-gradient(180deg, #D4B030 0%, #C9A820 60%, #9A7820 100%)", color: "#111008", cursor: "pointer", fontWeight: 700 }}>Share</button>
-                        <button onClick={() => { setEditingBoard(activeBoard); setBoardEditor(true); }} style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.14em", padding: "4px 12px", border: "1px solid rgba(200,194,180,0.25)", background: "transparent", color: "rgba(200,194,180,0.5)", cursor: "pointer" }}>Edit</button>
-                        <button onClick={() => setRemoveVouchModal(true)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.14em", padding: "4px 12px", border: "1px solid rgba(200,194,180,0.25)", background: "transparent", color: "rgba(200,194,180,0.5)", cursor: "pointer" }}>Remove</button>
-                      </div>}
                     </div>
                     {activeBoard?.vouch_board_items?.length > 0 ? (
                       <VouchSection board={(() => {
