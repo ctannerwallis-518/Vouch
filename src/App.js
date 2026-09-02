@@ -320,8 +320,8 @@ function Auth({ inviteUserId }) {
   );
 }
 
-function OwnArchive({ boards, canPublish, onRepublish, onDelete }) {
-  const [open, setOpen] = useState(false);
+function OwnArchive({ boards, canPublish, onRepublish, onDelete, defaultOpen = false }) {
+  const [open, setOpen] = useState(defaultOpen);
   const inactive = boards.filter(b => !b.is_active && b.published_at);
   if (!inactive.length) return null;
   return (
@@ -379,16 +379,20 @@ function OwnArchive({ boards, canPublish, onRepublish, onDelete }) {
   );
 }
 
-function PreviousVouches({ userId, onDudeSame, myReactions, queue, onAddToQueue, onMusicOpen }) {
+function PreviousVouches({ userId, onDudeSame, myReactions, queue, onAddToQueue, onMusicOpen, defaultOpen = false }) {
   const [boards, setBoards] = useState([]);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [loading, setLoading] = useState(false);
   useEffect(() => {
-    if (!open || boards.length > 0) return;
+    setBoards([]);
+    setOpen(defaultOpen);
+  }, [userId, defaultOpen]);
+  useEffect(() => {
+    if ((!open && !defaultOpen) || boards.length > 0) return;
     setLoading(true);
     supabase.from("vouch_boards").select("*, vouch_board_items(*)").eq("user_id", userId).eq("is_active", false).order("published_at", { ascending: false })
       .then(({ data }) => { setBoards((data || []).filter(b => b.published_at && b.vouch_board_items?.length > 0)); setLoading(false); });
-  }, [open, userId, boards.length]);
+  }, [open, defaultOpen, userId, boards.length]);
   if (!userId) return null;
   return (
     <div style={{ marginBottom: 32 }}>
@@ -2923,6 +2927,8 @@ export default function Vouch() {
   const [editingMeta,    setEditingMeta]    = useState(false);
   const [newAgreements,  setNewAgreements]  = useState([]);
   const [archiveBannerDismissed, setArchiveBannerDismissed] = useState(!!localStorage.getItem('vouch-archive-public-announce'));
+  const [expandPreviousVouches, setExpandPreviousVouches] = useState(true);
+  const [showExpandVouchesPrompt, setShowExpandVouchesPrompt] = useState(false);
   const [newBuddies,     setNewBuddies]     = useState([]);
   const [showAgreements, setShowAgreements] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -3395,8 +3401,10 @@ export default function Vouch() {
         localStorage.setItem("vouch-last-visit", nowVisit);
         await supabase.from("profiles").update({ last_visit: nowVisit }).eq("id", uid);
         // Load category preferences
-        const { data: prof } = await supabase.from("profiles").select("categories, music_preference, queue_items").eq("id", uid).maybeSingle();
+        const { data: prof } = await supabase.from("profiles").select("categories, music_preference, queue_items, expand_previous_vouches").eq("id", uid).maybeSingle();
         if (prof?.music_preference) { setMusicPreference(prof.music_preference); musicPrefRef.current = prof.music_preference; }
+        setExpandPreviousVouches(prof?.expand_previous_vouches !== false);
+        if (!localStorage.getItem("vouch-expand-vouches-prompted")) setShowExpandVouchesPrompt(true);
         if (prof?.categories && prof.categories.length > 0) {
           setUserCategories(prof.categories);
         } else if (prof && !prof.categories) {
@@ -3506,6 +3514,17 @@ export default function Vouch() {
     setMusicPickerModal(null);
     if (pref === "spotify") window.open(url, "_blank");
     else window.open(appleUrl(url, title, sub, musicPickerModal?.catKey), "_blank");
+  };
+
+  const saveExpandPreviousVouches = async (enabled) => {
+    setExpandPreviousVouches(enabled);
+    if (userId) await supabase.from("profiles").update({ expand_previous_vouches: enabled }).eq("id", userId);
+  };
+
+  const dismissExpandVouchesPrompt = async (enabled) => {
+    localStorage.setItem("vouch-expand-vouches-prompted", "1");
+    setShowExpandVouchesPrompt(false);
+    await saveExpandPreviousVouches(enabled);
   };
 
   const isOwn     = !viewing;
@@ -4315,6 +4334,16 @@ export default function Vouch() {
                 )}
               </div>
               <div style={{ marginBottom: 40, borderBottom: `1px solid ${T.paperDark}`, paddingBottom: 32 }}>
+                <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 8 }}>Profile Pages</div>
+                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 16, lineHeight: 1.6 }}>
+                  When you visit someone's board, show their previous Vouches expanded by default.
+                </div>
+                <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer" }}>
+                  <input type="checkbox" checked={expandPreviousVouches} onChange={e => saveExpandPreviousVouches(e.target.checked)} style={{ marginTop: 3, accentColor: T.ink, width: 16, height: 16, flexShrink: 0 }} />
+                  <span style={{ fontFamily: "'Spectral',serif", fontSize: 14, lineHeight: 1.5 }}>Always expand previous Vouches</span>
+                </label>
+              </div>
+              <div style={{ marginBottom: 40, borderBottom: `1px solid ${T.paperDark}`, paddingBottom: 32 }}>
                 <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 8 }}>Music App</div>
                 <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 16, lineHeight: 1.6 }}>Choose where music tiles open.</div>
                 <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
@@ -4541,10 +4570,10 @@ export default function Vouch() {
                   </div>
                 ) : null}
                 {viewing && !isOwn && (
-                  <PreviousVouches userId={viewing.userId} onDudeSame={dudeSame} myReactions={myReactions} queue={queue} onAddToQueue={addToQueue} onMusicOpen={openMusicUrl} />
+                  <PreviousVouches key={viewing.userId} userId={viewing.userId} onDudeSame={dudeSame} myReactions={myReactions} queue={queue} onAddToQueue={addToQueue} onMusicOpen={openMusicUrl} defaultOpen={expandPreviousVouches} />
                 )}
                 {isOwn && boardArchive.filter(b => !b.is_active && b.published_at).length > 0 && (
-                  <OwnArchive boards={boardArchive} canPublish={canPublish} onRepublish={republishBoard} onDelete={async (b) => { await revokeClaimsForBoard(b.id).catch(() => {}); await supabase.from("vouch_board_items").delete().eq("board_id", b.id); await supabase.from("vouch_boards").delete().eq("id", b.id); setBoardArchive(prev => prev.filter(x => x.id !== b.id)); loadBadgesForUser(userId).then(setOwnItemBadges).catch(() => {}); }} />
+                  <OwnArchive boards={boardArchive} canPublish={canPublish} onRepublish={republishBoard} defaultOpen={expandPreviousVouches} onDelete={async (b) => { await revokeClaimsForBoard(b.id).catch(() => {}); await supabase.from("vouch_board_items").delete().eq("board_id", b.id); await supabase.from("vouch_boards").delete().eq("id", b.id); setBoardArchive(prev => prev.filter(x => x.id !== b.id)); loadBadgesForUser(userId).then(setOwnItemBadges).catch(() => {}); }} />
                 )}
 
                 {(() => {
@@ -5203,6 +5232,29 @@ export default function Vouch() {
                     <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontWeight: 300, fontSize: 11, letterSpacing: 0, textTransform: "none", marginTop: 3, opacity: 0.7 }}>Removes it completely. This cannot be undone.</div>
                   </button>
                   <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, textAlign: "center", marginTop: 4 }}>Either option resets your publish timer so you can post a new Vouch right away.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showExpandVouchesPrompt && (
+          <div className="modal-overlay">
+            <div className="modal" onClick={e => e.stopPropagation()}>
+              <div className="modal-head">
+                <div className="modal-title">Previous Vouches</div>
+              </div>
+              <div className="modal-body">
+                <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkMid, marginBottom: 20, lineHeight: 1.6 }}>
+                  Would you like previous Vouches to stay <strong style={{ fontStyle: "normal" }}>expanded</strong> when you visit someone's page? You can change this anytime in Settings.
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <button className="btn btn-solid" style={{ padding: "14px" }} onClick={() => dismissExpandVouchesPrompt(true)}>
+                    Yes — keep them expanded
+                  </button>
+                  <button className="btn btn-ghost" style={{ padding: "14px" }} onClick={() => dismissExpandVouchesPrompt(false)}>
+                    No — collapse by default
+                  </button>
                 </div>
               </div>
             </div>
