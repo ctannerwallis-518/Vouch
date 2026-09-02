@@ -1,0 +1,8 @@
+-- Profile badges (founding member, publish streak, scout) are computed in the app
+-- from existing tables — no new columns or tables required.
+--
+-- Data sources:
+--   founding  → profiles.created_at (year 2026)
+--   vouches   → vouch_boards.published_at count (5+ required, gold at 10+)
+--   streak    → vouch_boards.published_at (14-day consecutive window)
+--   scout     → vouch_badges where badge_type = 'first_global' (3+ required)
