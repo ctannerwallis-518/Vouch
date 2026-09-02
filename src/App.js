@@ -17,8 +17,10 @@ import {
 } from "./badges";
 import {
   justWatchSearchUrl,
-  libbySearchUrl,
+  bnBookUrl,
+  pickBookIsbn,
   fetchJustWatchTitleUrl,
+  fetchBookStoreUrl,
   openTileLink,
   tileIsClickable,
 } from "./tileLinks";
@@ -786,9 +788,9 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
           const data = await res.json();
           setResults((data.docs || []).slice(0, 8).map(r => {
             const coverId = r.cover_i;
-            const isbn = (r.isbn || [])[0];
+            const isbn = pickBookIsbn(r.isbn);
             const poster = coverId ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg` : isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg` : null;
-            return { id: r.key || r.title, title: r.title, sub: (r.author_name || []).join(", "), poster, sourceUrl: libbySearchUrl(r.title, (r.author_name || []).join(", ")) };
+            return { id: r.key || r.title, title: r.title, sub: (r.author_name || []).join(", "), poster, isbn, sourceUrl: isbn ? bnBookUrl(isbn) : null };
           }));
         } else {
           setResults([]);
@@ -803,6 +805,8 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
     let sourceUrl = picked.sourceUrl;
     if (catKey === "movies" || catKey === "shows") {
       sourceUrl = await fetchJustWatchTitleUrl(picked.title, picked.sub, catKey);
+    } else if (catKey === "books") {
+      sourceUrl = await fetchBookStoreUrl(picked.title, picked.sub, picked.isbn, picked.sourceUrl);
     }
     onAdd(catKey, { ...picked, sourceUrl, comment: note });
     onClose();
@@ -906,9 +910,9 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
         (podcastRes?.shows?.items || []).slice(0, 2).forEach(r => mixed.push({ id: r.id, title: r.name, catKey: "podcasts", catLabel: "Podcasts", sub: r.publisher || "", poster: r.images?.[0]?.url || null, sourceUrl: `https://open.spotify.com/show/${r.id}` }));
         (booksRes.docs || []).slice(0, 2).forEach(r => {
           const coverId = r.cover_i;
-          const isbn = (r.isbn || [])[0];
+          const isbn = pickBookIsbn(r.isbn);
           const poster = coverId ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg` : isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg` : null;
-          mixed.push({ id: r.key || r.title, title: r.title, catKey: "books", catLabel: "Book", sub: (r.author_name || []).join(", "), poster, sourceUrl: libbySearchUrl(r.title, (r.author_name || []).join(", ")) });
+          mixed.push({ id: r.key || r.title, title: r.title, catKey: "books", catLabel: "Book", sub: (r.author_name || []).join(", "), poster, isbn, sourceUrl: isbn ? bnBookUrl(isbn) : null });
         });
         setResults(mixed);
       } catch(e) { console.error(e); }
@@ -918,7 +922,13 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
 
   const confirm = async () => {
     if (!picked) return;
-    await onAdd(picked.catKey, { ...picked, comment: note });
+    let sourceUrl = picked.sourceUrl;
+    if (picked.catKey === "movies" || picked.catKey === "shows") {
+      sourceUrl = await fetchJustWatchTitleUrl(picked.title, picked.sub, picked.catKey);
+    } else if (picked.catKey === "books") {
+      sourceUrl = await fetchBookStoreUrl(picked.title, picked.sub, picked.isbn, picked.sourceUrl);
+    }
+    await onAdd(picked.catKey, { ...picked, sourceUrl, comment: note });
     onClose();
   };
 
@@ -1550,7 +1560,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
             return res;
           }));
         }
-        if (!singleCat || singleCat === "books") fetches.push(fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=3`).then(r=>r.json()).then(d=>(d.docs||[]).slice(0,2).map(r=>({ id:r.key||r.title, title:r.title, sub:(r.author_name||[]).join(", "), poster:r.cover_i?`https://covers.openlibrary.org/b/id/${r.cover_i}-L.jpg`:null, catKey:"books", sourceUrl:libbySearchUrl(r.title, (r.author_name||[]).join(", ")) }))));
+        if (!singleCat || singleCat === "books") fetches.push(fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=3`).then(r=>r.json()).then(d=>(d.docs||[]).slice(0,2).map(r=>{ const isbn = pickBookIsbn(r.isbn); return { id:r.key||r.title, title:r.title, sub:(r.author_name||[]).join(", "), poster:r.cover_i?`https://covers.openlibrary.org/b/id/${r.cover_i}-L.jpg`:null, catKey:"books", isbn, sourceUrl: isbn ? bnBookUrl(isbn) : null }; })));
         const all = (await Promise.all(fetches)).flat();
         setResults(all);
       } catch(e) { console.error(e); }
@@ -1565,6 +1575,8 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
     const cat = item.catKey || item.category;
     if (cat === "movies" || cat === "shows") {
       sourceUrl = await fetchJustWatchTitleUrl(item.title, item.sub, cat);
+    } else if (cat === "books") {
+      sourceUrl = await fetchBookStoreUrl(item.title, item.sub, item.isbn, item.sourceUrl);
     }
     setItems(prev => [...prev, { ...item, sourceUrl }]);
     setQ(""); setResults([]); setAddingItem(false);
