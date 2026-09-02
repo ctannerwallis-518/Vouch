@@ -1,4 +1,4 @@
-// build: 2026-09-02T14:40:00
+// build: 2026-09-02T14:48:00
 import { useState, useEffect, useRef, memo } from "react";
 import { supabase } from "./supabase";
 import {
@@ -25,28 +25,33 @@ import {
   tileActionHint,
 } from "./tileLinks";
 
-const TILE_HINT_COLORS = {
-  light: "#C8C2B4",
-  dark: "#3a3830",
-  ink: "#3a3830",
-  compact: "#3a3830",
-};
-
-function TileActionHint({ item, catKey, variant = "ink" }) {
+function TileActionBadge({ item, catKey, onClick, size = "md" }) {
   const key = catKey || item?.category || item?._cat;
   if (!tileIsClickable(item, key)) return null;
   const hint = tileActionHint(key);
   if (!hint) return null;
   return (
-    <div className="tile-action-hint" style={{
-      fontFamily: "'Spectral SC',serif",
-      fontSize: variant === "compact" ? 8.5 : 9,
-      fontWeight: 700,
-      letterSpacing: "0.14em",
-      color: TILE_HINT_COLORS[variant] || TILE_HINT_COLORS.ink,
-      marginTop: variant === "compact" ? 4 : 5,
-    }}>
+    <button
+      type="button"
+      className="tile-action-badge"
+      onClick={(e) => { e.stopPropagation(); onClick?.(); }}
+      style={{ fontSize: size === "sm" ? 7.5 : size === "lg" ? 8.5 : 8, padding: size === "sm" ? "3px 4px" : "5px 6px" }}
+    >
       {hint}
+    </button>
+  );
+}
+
+function TileMedia({ item, catKey, onOpen, poster, title, className, style, placeholderStyle, badgeSize = "md", children }) {
+  const key = catKey || item?.category || item?._cat;
+  const clickable = tileIsClickable(item, key);
+  const open = () => { if (clickable) onOpen?.(); };
+  return (
+    <div className="tile-media" style={style} onClick={() => open()}>
+      {children || (poster
+        ? <img src={poster} alt={title || ""} className={className} style={{ cursor: clickable ? "pointer" : "default" }} onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} />
+        : <div className={className || "card-poster-placeholder"} style={{ display: "flex", cursor: clickable ? "pointer" : "default", ...placeholderStyle }}>{title}</div>)}
+      <TileActionBadge item={item} catKey={key} onClick={open} size={badgeSize} />
     </div>
   );
 }
@@ -202,7 +207,16 @@ const Styles = () => (
     .card-poster-placeholder { width: 180px; height: 248px; background: ${T.paperDark}; border: 1px solid ${T.paperDark}; display: flex; align-items: center; justify-content: center; font-family: 'Spectral', serif; font-style: italic; font-size: 11px; color: ${T.inkLight}; text-align: center; padding: 10px; }
     .card-title   { font-family: 'Spectral', serif; font-weight: 600; font-size: 12.5px; line-height: 1.35; margin-top: 7px; }
     .card-sub     { font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.06em; color: ${T.inkLight}; margin-top: 2px; }
-    .tile-action-hint { line-height: 1.2; opacity: 0.92; }
+    .tile-media { position: relative; display: block; }
+    .tile-action-badge {
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
+      width: 100%; margin: 0; padding: 5px 6px;
+      background: rgba(17,16,8,0.88); border: none; border-top: 1px solid rgba(200,194,180,0.22);
+      color: #C8C2B4; font-family: 'Spectral SC', serif; font-weight: 700;
+      letter-spacing: 0.14em; text-align: center; cursor: pointer;
+      transition: background 0.14s, color 0.14s;
+    }
+    .tile-action-badge:hover { background: rgba(17,16,8,0.96); color: #fff; text-decoration: underline; text-underline-offset: 2px; }
     .card-comment { font-family: 'Spectral', serif; font-style: italic; font-size: 10.5px; line-height: 1.5; color: ${T.inkMid}; margin-top: 4px; white-space: normal; word-break: break-word; }
     .slot-empty-sm { width: 180px; height: 248px; border: 2px dashed ${T.inkLight}; background: rgba(17,16,8,0.06); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.14s, background 0.14s; flex-shrink: 0; }
     .slot-empty-sm:hover { border-color: ${T.ink}; background: rgba(17,16,8,0.12); }
@@ -1201,14 +1215,23 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
     return (
     <div style={{ position: "relative" }}>
       <VouchRibbon badges={badges} ownerName={badgeOwnerName} circlePhrase={badgeCirclePhrase || (isOwn ? "your" : "their")} />
-      {it.poster
-        ? <img src={it.poster} alt={it.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: `1px solid ${T.paperDark}`, cursor: clickable ? "pointer" : "default" }} onClick={clickTile} onError={e => e.target.style.display = "none"} />
-        : <div style={{ width: "100%", height: 340, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 18, color: T.inkLight, padding: 24, textAlign: "center", cursor: clickable ? "pointer" : "default" }} onClick={clickTile}>{it.title}</div>}
+      <TileMedia
+        item={it}
+        catKey={it._cat}
+        onOpen={clickTile}
+        poster={it.poster}
+        title={it.title}
+        badgeSize="lg"
+        style={{ cursor: clickable ? "pointer" : "default" }}
+      >
+        {it.poster
+          ? <img src={it.poster} alt={it.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: `1px solid ${T.paperDark}`, cursor: clickable ? "pointer" : "default" }} onError={e => e.target.style.display = "none"} />
+          : <div style={{ width: "100%", height: 340, background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 18, color: T.inkLight, padding: 24, textAlign: "center", cursor: clickable ? "pointer" : "default" }}>{it.title}</div>}
+      </TileMedia>
       <div style={{ padding: "14px 4px 4px" }}>
         <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 4 }}>{it._catLabel}</div>
         <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: T.bg }}>{it.title}</div>
         <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "rgba(200,194,180,0.7)" }}>{it.artist || it.author || it.sub || ""}</div>
-        <TileActionHint item={it} catKey={it._cat} variant="light" />
         {it.comment && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: "rgba(200,194,180,0.55)", marginTop: 6 }}>"{it.comment}"</div>}
         {!isOwn && (
           <div style={{ display: "flex", marginTop: 8 }}>
@@ -1311,12 +1334,21 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
               ? <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => { if (!tileIsClickable(item, catKey)) { onCard(catKey, idx); return; } openTileLink(item, { catKey, onMusicOpen }); }}>
                   <VouchRibbon badges={itemBadges?.[badgeKey(catKey, item.id)] || []} align={isOwn ? "left" : "right"} compact ownerName={badgeOwnerName} circlePhrase={badgeCirclePhrase || (isOwn ? "your" : "their")} />
                   {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx, false); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 26, height: 26, cursor: "pointer", fontSize: 15, lineHeight: "26px", textAlign: "center", borderRadius: 2 }}>×</button>}
-                  {item.poster ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} /> : null}
-                  <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
+                  <TileMedia
+                    item={item}
+                    catKey={catKey}
+                    onOpen={() => openTileLink(item, { catKey, onMusicOpen })}
+                    poster={item.poster}
+                    title={item.title}
+                    className="card-poster"
+                    badgeSize="sm"
+                  >
+                    {item.poster ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} /> : null}
+                    <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
+                  </TileMedia>
                   <div style={{ flex: 1 }}>
                     <div className="card-title">{item.title}</div>
                     <div className="card-sub">{item.artist || item.author || item.year || item.sub || ""}</div>
-                    <TileActionHint item={item} catKey={catKey} variant="compact" />
                     {item.comment && <div className="card-comment" style={{ fontSize: item.comment.length > 80 ? "9px" : item.comment.length > 40 ? "10px" : "10.5px" }}>"{item.comment}"</div>}
                     {!isOwn && (
                       <div style={{ display: "flex", marginTop: 6, gap: 0 }}>
@@ -1364,12 +1396,21 @@ function MutualMentions({ reactions, myReactions, isOwn, boardOwnerName, buddies
           return (
             <div key={(item.id || item.item_id) + i} style={{ width: 100, flexShrink: 0 }}>
               <div style={{ cursor: clickable ? "pointer" : "default" }} onClick={() => openTileLink(item, { catKey: item.category })}>
-                {item.poster
-                  ? <img src={item.poster} alt={item.title} style={{ width: 100, height: 138, objectFit: "contain", background: "#000", border: `1px solid ${T.paperDark}`, display: "block" }} onError={e => e.target.style.display = "none"} />
-                  : <div style={{ width: 100, height: 138, background: T.paperDark, border: `1px solid ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 6 }}>{item.title}</div>}
+                <TileMedia
+                  item={item}
+                  catKey={item.category}
+                  onOpen={() => openTileLink(item, { catKey: item.category })}
+                  poster={item.poster}
+                  title={item.title}
+                  badgeSize="sm"
+                  style={{ width: 100 }}
+                >
+                  {item.poster
+                    ? <img src={item.poster} alt={item.title} style={{ width: 100, height: 138, objectFit: "contain", background: "#000", border: `1px solid ${T.paperDark}`, display: "block" }} onError={e => e.target.style.display = "none"} />
+                    : <div style={{ width: 100, height: 138, background: T.paperDark, border: `1px solid ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 6 }}>{item.title}</div>}
+                </TileMedia>
                 <div style={{ fontFamily: "'Spectral',serif", fontSize: 11, fontWeight: 600, lineHeight: 1.3, marginTop: 5 }}>{item.title}</div>
                 <div style={{ fontFamily: "'Spectral SC',serif", fontSize: 8.5, color: T.inkFaint, marginTop: 1 }}>{item.subtitle || ""}</div>
-                <TileActionHint item={item} catKey={item.category} variant="compact" />
               </div>
               {sourceBuddy && (
                 <div onClick={() => onViewBuddy && onViewBuddy(sourceBuddy)} style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 9.5, color: T.inkLight, marginTop: 3, cursor: "pointer" }}>
@@ -1857,14 +1898,15 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame,
     return (
     <div style={{ position: "relative" }}>
       <VouchRibbon badges={item.groupBadge || []} ownerName={item.firstVouchedBy} circlePhrase="your" />
-      {item.poster
-        ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: "1px solid rgba(200,194,180,0.2)", cursor: clickable ? "pointer" : "default" }} onClick={() => clickable && clickItem()} onError={e => e.target.style.display = "none"} />
-        : <div style={{ width: "100%", height: 340, background: "rgba(200,194,180,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center", cursor: clickable ? "pointer" : "default" }} onClick={() => clickable && clickItem()}>{item.title}</div>}
+      <TileMedia item={item} catKey={item.category} onOpen={clickItem} poster={item.poster} title={item.title} badgeSize="lg">
+        {item.poster
+          ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: "1px solid rgba(200,194,180,0.2)", cursor: clickable ? "pointer" : "default" }} onError={e => e.target.style.display = "none"} />
+          : <div style={{ width: "100%", height: 340, background: "rgba(200,194,180,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center", cursor: clickable ? "pointer" : "default" }}>{item.title}</div>}
+      </TileMedia>
       <div style={{ padding: "10px 4px 4px" }}>
         <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 4 }}>{item.category}</div>
         <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: "#C8C2B4" }}>{item.title}</div>
         <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "rgba(200,194,180,0.7)" }}>{item.subtitle || ""}</div>
-        <TileActionHint item={item} catKey={item.category} variant="light" />
         <VouchedByLine name={item.firstVouchedBy} first dark />
       </div>
     </div>
@@ -1878,14 +1920,15 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame,
     return (
       <div style={{ position: "relative" }}>
         <VouchRibbon badges={item.groupBadge || []} ownerName={item.firstVouchedBy} circlePhrase="your" />
-        {item.poster
-          ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: "1px solid rgba(200,194,180,0.2)", cursor: clickable ? "pointer" : "default" }} onClick={() => clickable && clickItem()} onError={e => e.target.style.display = "none"} />
-          : <div style={{ width: "100%", height: 340, background: "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center", cursor: clickable ? "pointer" : "default" }} onClick={() => clickable && clickItem()}>{item.title}</div>}
+        <TileMedia item={item} catKey={item.category} onOpen={clickItem} poster={item.poster} title={item.title} badgeSize="lg">
+          {item.poster
+            ? <img src={item.poster} alt={item.title} style={{ width: "100%", height: 340, objectFit: "contain", background: "#000", display: "block", border: "1px solid rgba(200,194,180,0.2)", cursor: clickable ? "pointer" : "default" }} onError={e => e.target.style.display = "none"} />
+            : <div style={{ width: "100%", height: 340, background: "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Spectral',serif", fontSize: 14, color: "rgba(200,194,180,0.5)", padding: 12, textAlign: "center", cursor: clickable ? "pointer" : "default" }}>{item.title}</div>}
+        </TileMedia>
         <div style={{ padding: "10px 4px 4px" }}>
           <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 4 }}>{item.category}</div>
           <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: "#C8C2B4" }}>{item.title}</div>
           <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "rgba(200,194,180,0.7)" }}>{item.subtitle || ""}</div>
-          <TileActionHint item={item} catKey={item.category} variant="light" />
           <VouchedByLine name={item.firstVouchedBy} first dark />
           <div style={{ display: "flex", marginTop: 10 }}>
             {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue(item); }} style={{ flex: 1, background: isQueued ? "rgba(200,194,180,0.25)" : "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", color: isQueued ? "rgba(200,194,180,0.95)" : "rgba(200,194,180,0.6)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700, transition: "all 0.15s" }}>{isQueued ? "✓ Queued" : "+ Queue"}</button>}
@@ -2011,11 +2054,19 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue,
     <div style={{ flexShrink: 0, width: isMobile ? 95 : 150, cursor: tileIsClickable(item, catKey) ? "pointer" : "default", position: "relative" }}
       onClick={() => openTileLink(item, { catKey, onMusicOpen })}>
       <VouchRibbon badges={meta.groupBadge || []} compact ownerName={meta.firstVouchedBy} circlePhrase="your" />
-      {item.poster
-        ? <img src={item.poster} alt={item.title} style={{ width: "100%", display: "block" }} onError={e => e.target.style.display = "none"} />
-        : <div style={{ width: "100%", aspectRatio: "2/3", background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 6 }}>{item.title}</div>}
+      <TileMedia
+        item={item}
+        catKey={catKey}
+        onOpen={() => openTileLink(item, { catKey, onMusicOpen })}
+        poster={item.poster}
+        title={item.title}
+        badgeSize="sm"
+      >
+        {item.poster
+          ? <img src={item.poster} alt={item.title} style={{ width: "100%", display: "block" }} onError={e => e.target.style.display = "none"} />
+          : <div style={{ width: "100%", aspectRatio: "2/3", background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 6 }}>{item.title}</div>}
+      </TileMedia>
       <div style={{ fontFamily: "'Spectral',serif", fontSize: 11, fontWeight: 600, color: T.ink, marginTop: 5, lineHeight: 1.3 }}>{item.title}</div>
-      <TileActionHint item={item} catKey={catKey} variant="compact" />
       {meta.firstVouchedBy && <VouchedByLine name={meta.firstVouchedBy} first />}
       {item.owners.length > 0 && (
         <div style={{ marginTop: 4 }}>
@@ -2352,10 +2403,18 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
           </div>
           <div style={{ width: "100%", maxWidth: 300, margin: "0 auto", cursor: tileIsClickable(primary, primary.category) ? "pointer" : "default", position: "relative" }} onClick={() => openTileLink(primary, { catKey: primary.category, onMusicOpen })}>
             <VouchRibbon badges={badgesForOwner(feedBadgeMap, buddy?.userId, primary.category, primary.item_id)} ownerName={buddy?.displayName} circlePhrase="their" />
-            {primary.poster && <img src={primary.poster} alt={primary.title} style={{ width: "100%", display: "block" }} onError={e => e.target.style.display = "none"} />}
+            <TileMedia
+              item={primary}
+              catKey={primary.category}
+              onOpen={() => openTileLink(primary, { catKey: primary.category, onMusicOpen })}
+              poster={primary.poster}
+              title={primary.title}
+              badgeSize="md"
+            >
+              {primary.poster && <img src={primary.poster} alt={primary.title} style={{ width: "100%", display: "block" }} onError={e => e.target.style.display = "none"} />}
+            </TileMedia>
             <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{primary.title}</div>
             {primary.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{primary.subtitle}</div>}
-            <TileActionHint item={primary} catKey={primary.category} variant="dark" />
             {onDudeSame && buddy && buddy.userId !== selfId && (
               <div style={{ display: "flex", marginTop: 8 }}>
                 <button onClick={e => { e.stopPropagation(); onDudeSame({ id: primary.item_id, title: primary.title, poster: primary.poster, _cat: primary.category }, buddy.userId); }} style={{ flex: 1, background: (myReactions||[]).find(r => r.item_id === String(primary.item_id) && r.item_owner_id === buddy.userId) ? "#111008" : "transparent", border: "1px solid #b3ada0", color: (myReactions||[]).find(r => r.item_id === String(primary.item_id) && r.item_owner_id === buddy.userId) ? "#C8C2B4" : "#3a3830", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700 }}>{(myReactions||[]).find(r => r.item_id === String(primary.item_id) && r.item_owner_id === buddy.userId) ? "✓ Agreed" : "Agree"}</button>
@@ -2406,10 +2465,18 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
             <div style={{ width: "100%", maxWidth: 300, margin: "0 auto", position: "relative" }}>
               <VouchRibbon badges={badgesForOwner(feedBadgeMap, r.item_owner_id, r.category, r.item_id)} ownerName={r.owner?.display_name} circlePhrase="their" />
               <div style={{ cursor: tileIsClickable(r, r.category) ? "pointer" : "default" }} onClick={() => openTileLink(r, { catKey: r.category, onMusicOpen })}>
-                <img src={r.poster} alt={r.title} style={{ width: "100%", display: "block" }} onError={e => e.target.style.display = "none"} />
+                <TileMedia
+                  item={r}
+                  catKey={r.category}
+                  onOpen={() => openTileLink(r, { catKey: r.category, onMusicOpen })}
+                  poster={r.poster}
+                  title={r.title}
+                  badgeSize="md"
+                >
+                  <img src={r.poster} alt={r.title} style={{ width: "100%", display: "block" }} onError={e => e.target.style.display = "none"} />
+                </TileMedia>
                 <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{r.title}</div>
                 {r.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{r.subtitle}</div>}
-                <TileActionHint item={r} catKey={r.category} variant="dark" />
               </div>
               {onDudeSame && r.item_owner_id && r.item_owner_id !== selfId && (
                 <div style={{ display: "flex", marginTop: 8 }}>
@@ -4526,13 +4593,22 @@ export default function Vouch() {
                                   <div className="cards-row">
                                     {catItems.map(item => (
                                       <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => openTileLink(item, { catKey: item.category, onMusicOpen: openMusicUrl })}>
-                                        <button onClick={e => { e.stopPropagation(); removeFromQueue(item.id); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 26, height: 26, cursor: "pointer", fontSize: 15, lineHeight: "26px", textAlign: "center", borderRadius: 2 }}>×</button>
-                                        {item.poster
-                                          ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => e.target.style.display = "none"} />
-                                          : <div className="card-poster-placeholder">{item.title}</div>}
+                                        <button onClick={e => { e.stopPropagation(); removeFromQueue(item.id); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 3, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 26, height: 26, cursor: "pointer", fontSize: 15, lineHeight: "26px", textAlign: "center", borderRadius: 2 }}>×</button>
+                                        <TileMedia
+                                          item={item}
+                                          catKey={item.category}
+                                          onOpen={() => openTileLink(item, { catKey: item.category, onMusicOpen: openMusicUrl })}
+                                          poster={item.poster}
+                                          title={item.title}
+                                          className="card-poster"
+                                          badgeSize="sm"
+                                        >
+                                          {item.poster
+                                            ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => e.target.style.display = "none"} />
+                                            : <div className="card-poster-placeholder">{item.title}</div>}
+                                        </TileMedia>
                                         <div className="card-title">{item.title}</div>
                                         {item.sub && <div className="card-sub">{item.sub}</div>}
-                                        <TileActionHint item={item} catKey={item.category} variant="compact" />
                                       </div>
                                     ))}
                                   </div>
@@ -4901,14 +4977,22 @@ export default function Vouch() {
               <div className="modal-body">
                 {shelfExtras.map((s, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: `1px solid ${T.paperDark}`, cursor: tileIsClickable(s, s.category) ? "pointer" : "default" }} onClick={() => openTileLink(s, { catKey: s.category, onMusicOpen: openMusicUrl })}>
-                    {s.poster
-                      ? <img src={s.poster} alt={s.title} style={{ width: 48, height: 66, objectFit: "cover", border: `1px solid ${T.paperDark}`, flexShrink: 0 }} onError={e => e.target.style.display="none"} />
-                      : <div style={{ width: 48, height: 66, background: T.paperDark, flexShrink: 0 }} />
-                    }
+                    <TileMedia
+                      item={s}
+                      catKey={s.category}
+                      onOpen={() => openTileLink(s, { catKey: s.category, onMusicOpen: openMusicUrl })}
+                      poster={s.poster}
+                      title={s.title}
+                      badgeSize="sm"
+                      style={{ width: 48, flexShrink: 0 }}
+                    >
+                      {s.poster
+                        ? <img src={s.poster} alt={s.title} style={{ width: 48, height: 66, objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block" }} onError={e => e.target.style.display="none"} />
+                        : <div style={{ width: 48, height: 66, background: T.paperDark, flexShrink: 0 }} />}
+                    </TileMedia>
                     <div>
                       <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 14 }}>{s.title}</div>
                       {s.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: T.inkLight, marginTop: 2 }}>{s.subtitle}</div>}
-                      <TileActionHint item={s} catKey={s.category} variant="compact" />
                     </div>
                   </div>
                 ))}
