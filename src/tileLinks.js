@@ -72,37 +72,25 @@ export function pickBookIsbn(isbns) {
     || null;
 }
 
-export function bnBookUrl(isbn) {
-  const clean = String(isbn || "").replace(/-/g, "");
-  if (!clean || !/^\d{13}$/.test(clean)) return null;
-  return `https://www.barnesandnoble.com/w/?ean=${clean}`;
-}
-
 export function bnBookSearchUrl(title, author = "") {
   const q = [title, author].filter(Boolean).join(" ");
   return `https://www.barnesandnoble.com/search?q=${encodeURIComponent(q)}`;
 }
 
 function isDirectBookStoreUrl(url) {
-  return !!url && url.includes("barnesandnoble.com/w/");
+  return !!url && /barnesandnoble\.com\/w\/[^/]+\/\d+/.test(url);
 }
 
 export async function fetchBookStoreUrl(title, author, isbn, sourceUrl) {
   if (isDirectBookStoreUrl(sourceUrl)) return sourceUrl;
 
-  const directIsbn = pickBookIsbn(isbn ? [isbn] : []);
-  if (directIsbn) {
-    const url = bnBookUrl(directIsbn);
-    if (url) return url;
-  }
-
-  const cacheKey = `${title}:${author || ""}:${directIsbn || ""}`;
+  const cacheKey = `${title}:${author || ""}:${isbn || ""}`;
   const cached = bookCache.get(cacheKey);
   if (cached && isDirectBookStoreUrl(cached)) return cached;
 
   const params = new URLSearchParams({ title: String(title).trim() });
   if (author) params.set("author", String(author).trim());
-  if (directIsbn) params.set("isbn", directIsbn);
+  if (isbn) params.set("isbn", String(isbn).trim());
 
   try {
     const res = await fetch(`/api/booklink?${params}`);
@@ -141,8 +129,6 @@ export function resolveTileLink(item, catKey) {
   }
   if (cat === "books") {
     if (isDirectBookStoreUrl(tile.sourceUrl)) return tile.sourceUrl;
-    const isbn = pickBookIsbn(tile.isbn ? [tile.isbn] : []);
-    if (isbn) return bnBookUrl(isbn) || bnBookSearchUrl(tile.title, tile.sub);
     return bnBookSearchUrl(tile.title, tile.sub);
   }
   if (isMusicCategory(cat)) {
