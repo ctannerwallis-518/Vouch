@@ -2,6 +2,7 @@
 
 const MUSIC_CATS = new Set(["songs", "albums", "artists", "podcasts"]);
 const jwCache = new Map();
+const bookCache = new Map();
 
 export function isMusicCategory(cat) {
   return MUSIC_CATS.has(cat);
@@ -62,9 +63,60 @@ export async function fetchJustWatchTitleUrl(title, yearOrSub, category, sourceU
   return justWatchSearchUrl(title, year);
 }
 
-export function libbySearchUrl(title, author = "") {
+export function pickBookIsbn(isbns) {
+  const list = (isbns || []).map(String).map(s => s.replace(/-/g, "")).filter(Boolean);
+  return list.find(i => /^978\d{10}$/.test(i))
+    || list.find(i => /^979\d{10}$/.test(i))
+    || list.find(i => /^\d{13}$/.test(i))
+    || list.find(i => /^\d{10}$/.test(i))
+    || null;
+}
+
+export function bnBookUrl(isbn) {
+  const clean = String(isbn || "").replace(/-/g, "");
+  if (!clean || !/^\d{13}$/.test(clean)) return null;
+  return `https://www.barnesandnoble.com/w/?ean=${clean}`;
+}
+
+export function bnBookSearchUrl(title, author = "") {
   const q = [title, author].filter(Boolean).join(" ");
-  return `https://libbyapp.com/search/query-${encodeURIComponent(q)}`;
+  return `https://www.barnesandnoble.com/search?q=${encodeURIComponent(q)}`;
+}
+
+function isDirectBookStoreUrl(url) {
+  return !!url && url.includes("barnesandnoble.com/w/");
+}
+
+export async function fetchBookStoreUrl(title, author, isbn, sourceUrl) {
+  if (isDirectBookStoreUrl(sourceUrl)) return sourceUrl;
+
+  const directIsbn = pickBookIsbn(isbn ? [isbn] : []);
+  if (directIsbn) {
+    const url = bnBookUrl(directIsbn);
+    if (url) return url;
+  }
+
+  const cacheKey = `${title}:${author || ""}:${directIsbn || ""}`;
+  const cached = bookCache.get(cacheKey);
+  if (cached && isDirectBookStoreUrl(cached)) return cached;
+
+  const params = new URLSearchParams({ title: String(title).trim() });
+  if (author) params.set("author", String(author).trim());
+  if (directIsbn) params.set("isbn", directIsbn);
+
+  try {
+    const res = await fetch(`/api/booklink?${params}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.url && isDirectBookStoreUrl(data.url)) {
+        bookCache.set(cacheKey, data.url);
+        return data.url;
+      }
+      if (data.url) return data.url;
+    }
+  } catch { /* fall through */ }
+
+  return bnBookSearchUrl(title, author);
 }
 
 export function normalizeTileItem(item, catKey) {
@@ -88,7 +140,10 @@ export function resolveTileLink(item, catKey) {
     return justWatchSearchUrl(tile.title, tile.sub);
   }
   if (cat === "books") {
-    return libbySearchUrl(tile.title, tile.sub);
+    if (isDirectBookStoreUrl(tile.sourceUrl)) return tile.sourceUrl;
+    const isbn = pickBookIsbn(tile.isbn ? [tile.isbn] : []);
+    if (isbn) return bnBookUrl(isbn) || bnBookSearchUrl(tile.title, tile.sub);
+    return bnBookSearchUrl(tile.title, tile.sub);
   }
   if (isMusicCategory(cat)) {
     return tile.sourceUrl;
@@ -100,7 +155,7 @@ export function tileIsClickable(item, catKey) {
   const tile = normalizeTileItem(item, catKey);
   if (!tile) return false;
   const cat = tile.category;
-  if (cat === "movies" || cat === "shows") return !!tile.title;
+  if (cat === "movies" || cat === "shows" || cat === "books") return !!tile.title;
   return !!resolveTileLink(tile, catKey);
 }
 
@@ -111,6 +166,12 @@ export async function openTileLink(item, { catKey, onMusicOpen } = {}) {
 
   if (cat === "movies" || cat === "shows") {
     const url = await fetchJustWatchTitleUrl(tile.title, tile.sub, cat, tile.sourceUrl);
+    window.open(url, "_blank");
+    return true;
+  }
+
+  if (cat === "books") {
+    const url = await fetchBookStoreUrl(tile.title, tile.sub, tile.isbn, tile.sourceUrl);
     window.open(url, "_blank");
     return true;
   }
