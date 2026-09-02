@@ -17,7 +17,6 @@ import {
 } from "./badges";
 import {
   justWatchSearchUrl,
-  bnBookUrl,
   pickBookIsbn,
   fetchJustWatchTitleUrl,
   fetchBookStoreUrl,
@@ -790,7 +789,7 @@ function AddModal({ catKey, catLabel, used, onClose, onAdd }) {
             const coverId = r.cover_i;
             const isbn = pickBookIsbn(r.isbn);
             const poster = coverId ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg` : isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg` : null;
-            return { id: r.key || r.title, title: r.title, sub: (r.author_name || []).join(", "), poster, isbn, sourceUrl: isbn ? bnBookUrl(isbn) : null };
+            return { id: r.key || r.title, title: r.title, sub: (r.author_name || []).join(", "), poster, isbn, sourceUrl: null };
           }));
         } else {
           setResults([]);
@@ -912,7 +911,7 @@ function UniversalSearchModal({ used, onClose, onAdd }) {
           const coverId = r.cover_i;
           const isbn = pickBookIsbn(r.isbn);
           const poster = coverId ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg` : isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg` : null;
-          mixed.push({ id: r.key || r.title, title: r.title, catKey: "books", catLabel: "Book", sub: (r.author_name || []).join(", "), poster, isbn, sourceUrl: isbn ? bnBookUrl(isbn) : null });
+          mixed.push({ id: r.key || r.title, title: r.title, catKey: "books", catLabel: "Book", sub: (r.author_name || []).join(", "), poster, isbn, sourceUrl: null });
         });
         setResults(mixed);
       } catch(e) { console.error(e); }
@@ -1560,7 +1559,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
             return res;
           }));
         }
-        if (!singleCat || singleCat === "books") fetches.push(fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=3`).then(r=>r.json()).then(d=>(d.docs||[]).slice(0,2).map(r=>{ const isbn = pickBookIsbn(r.isbn); return { id:r.key||r.title, title:r.title, sub:(r.author_name||[]).join(", "), poster:r.cover_i?`https://covers.openlibrary.org/b/id/${r.cover_i}-L.jpg`:null, catKey:"books", isbn, sourceUrl: isbn ? bnBookUrl(isbn) : null }; })));
+        if (!singleCat || singleCat === "books") fetches.push(fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=3`).then(r=>r.json()).then(d=>(d.docs||[]).slice(0,2).map(r=>{ const isbn = pickBookIsbn(r.isbn); return { id:r.key||r.title, title:r.title, sub:(r.author_name||[]).join(", "), poster:r.cover_i?`https://covers.openlibrary.org/b/id/${r.cover_i}-L.jpg`:null, catKey:"books", isbn, sourceUrl: null }; })));
         const all = (await Promise.all(fetches)).flat();
         setResults(all);
       } catch(e) { console.error(e); }
