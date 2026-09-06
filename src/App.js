@@ -1,5 +1,6 @@
 // build: 2026-09-02T14:48:00
 import { useState, useEffect, useRef, memo } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "./supabase";
 import {
   badgeKey,
@@ -1047,7 +1048,7 @@ function UserBadgeExplainModal({ badge, ownerName, onClose }) {
   const ribbon = userBadgeRibbon(badge?.type, badge?.value);
   if (!ribbon) return null;
   const body = userBadgeExplain(badge.type, ownerName, badge.value);
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 340 }}>
         <div style={{ display: "flex", justifyContent: "flex-end", padding: "10px 14px 0" }}>
@@ -1060,7 +1061,8 @@ function UserBadgeExplainModal({ badge, ownerName, onClose }) {
           <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, lineHeight: 1.7, color: T.inkMid }}>{body}</div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -1139,7 +1141,7 @@ function BadgeExplainModal({ type, ownerName, circlePhrase = "your", onClose }) 
   const body = type === "first_global"
     ? `${who} was the first person to Vouch for this globally.`
     : `${who} was the first person to Vouch for this in ${circlePhrase} circle.`;
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 340 }}>
         <div style={{ display: "flex", justifyContent: "flex-end", padding: "10px 14px 0" }}>
@@ -1152,7 +1154,8 @@ function BadgeExplainModal({ type, ownerName, circlePhrase = "your", onClose }) 
           <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, lineHeight: 1.7, color: T.inkMid }}>{body}</div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -1161,7 +1164,7 @@ function RibbonBadge({ type, compact = false, interactive = true, ownerName, cir
   const ribbon = BADGE_RIBBONS[type];
   if (!ribbon) return null;
   const h = compact ? 15 : 19;
-  const open = e => { e.stopPropagation(); setShowExplain(true); };
+  const open = e => { e.preventDefault(); e.stopPropagation(); setShowExplain(true); };
   const visual = (
     <>
       <span style={{
@@ -1202,8 +1205,11 @@ function RibbonBadge({ type, compact = false, interactive = true, ownerName, cir
         tabIndex={0}
         aria-label={ribbon.title}
         onClick={open}
+        onMouseDown={e => { e.preventDefault(); e.stopPropagation(); }}
+        onTouchStart={e => { e.stopPropagation(); }}
+        onTouchEnd={open}
         onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(e); } }}
-        style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", flexShrink: 0, cursor: "pointer", filter: "drop-shadow(0 1px 1px rgba(17,16,8,0.35))", position: "relative", zIndex: 1 }}
+        style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", flexShrink: 0, cursor: "pointer", filter: "drop-shadow(0 1px 1px rgba(17,16,8,0.35))", position: "relative", zIndex: 51, padding: compact ? 4 : 6, margin: compact ? -4 : -6 }}
       >
         {visual}
       </span>
@@ -1217,7 +1223,7 @@ function VouchRibbon({ badges, align = "right", compact = false, ownerName, circ
   if (!primary.length) return null;
   const pos = align === "left" ? { top: compact ? 6 : 10, left: compact ? 6 : 10 } : { top: compact ? 6 : 10, right: compact ? 6 : 10 };
   return (
-    <div style={{ position: "absolute", ...pos, zIndex: 20, display: "flex", flexDirection: "row", alignItems: "flex-start", pointerEvents: "auto" }} onClick={e => e.stopPropagation()} onTouchStart={e => e.stopPropagation()}>
+    <div style={{ position: "absolute", ...pos, zIndex: 50, display: "flex", flexDirection: "row", alignItems: "flex-start", pointerEvents: "auto" }} onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} onTouchStart={e => e.stopPropagation()}>
       <RibbonBadge type={primary[0]} compact={compact} ownerName={ownerName} circlePhrase={circlePhrase} />
     </div>
   );
@@ -1317,7 +1323,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
       openTileLink(it, { catKey: it._cat, onMusicOpen });
     };
     return (
-    <div style={{ position: "relative" }}>
+    <div style={{ position: "relative", isolation: "isolate" }}>
       <VouchRibbon badges={badges} ownerName={badgeOwnerName} circlePhrase={badgeCirclePhrase || (isOwn ? "your" : "their")} />
       <TileMedia
         item={it}
@@ -1400,9 +1406,9 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
           )}
         </div>
       ) : (
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", overflow: "hidden" }}>
+        <div style={{ display: "flex", gap: 12, justifyContent: "center", overflow: "visible" }}>
           {allItems.map((it, i) => (
-            <div key={it.id + it._cat} className="card-large" style={{ position: "relative", flex: "1", maxWidth: 280 }}>
+            <div key={it.id + it._cat} className="card-large" style={{ position: "relative", flex: "1", maxWidth: 280, zIndex: total - i }}>
               <CardFace it={it} />
             </div>
           ))}
@@ -1435,31 +1441,33 @@ function CatSection({ catKey, label, items, isOwn, onCard, onAdd, onRemove, onDu
         <div className="cards-row">
           {slots.map((item, idx) =>
             item
-              ? <div key={item.id} className="card" style={{ position: "relative" }} onClick={() => { if (!tileIsClickable(item, catKey)) { onCard(catKey, idx); return; } openTileLink(item, { catKey, onMusicOpen }); }}>
+              ? <div key={item.id} className="card" style={{ position: "relative", isolation: "isolate", zIndex: 5 - idx }}>
                   <VouchRibbon badges={itemBadges?.[badgeKey(catKey, item.id)] || []} align={isOwn ? "left" : "right"} compact ownerName={badgeOwnerName} circlePhrase={badgeCirclePhrase || (isOwn ? "your" : "their")} />
-                  {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx, false); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 26, height: 26, cursor: "pointer", fontSize: 15, lineHeight: "26px", textAlign: "center", borderRadius: 2 }}>×</button>}
-                  <TileMedia
-                    item={item}
-                    catKey={catKey}
-                    onOpen={() => openTileLink(item, { catKey, onMusicOpen })}
-                    poster={item.poster}
-                    title={item.title}
-                    className="card-poster"
-                    badgeSize="sm"
-                  >
-                    {item.poster ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} /> : null}
-                    <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
-                  </TileMedia>
-                  <div style={{ flex: 1 }}>
-                    <div className="card-title">{item.title}</div>
-                    <div className="card-sub">{item.artist || item.author || item.year || item.sub || ""}</div>
-                    {item.comment && <div className="card-comment" style={{ fontSize: item.comment.length > 80 ? "9px" : item.comment.length > 40 ? "10px" : "10.5px" }}>"{item.comment}"</div>}
-                    {!isOwn && (
-                      <div style={{ display: "flex", marginTop: 6, gap: 0 }}>
-                        <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ flex: 1, background: myReactions?.includes(String(item.id)) ? T.ink : "transparent", border: `1px solid ${T.paperDark}`, color: myReactions?.includes(String(item.id)) ? T.bg : T.inkMid, cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 2px", fontWeight: 700 }}>{myReactions?.includes(String(item.id)) ? "✓ Agreed" : "Agree"}</button>
-                        {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue({ ...item, _cat: catKey }); }} style={{ flex: 1, background: queue?.find(q => String(q.id) === String(item.id)) ? T.ink : "transparent", border: `1px solid ${T.paperDark}`, borderLeft: "none", color: queue?.find(q => String(q.id) === String(item.id)) ? T.bg : T.inkMid, cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 2px", fontWeight: 700 }}>{queue?.find(q => String(q.id) === String(item.id)) ? "✓ Queue" : "+ Queue"}</button>}
-                      </div>
-                    )}
+                  {isOwn && <button onClick={e => { e.stopPropagation(); onRemove(catKey, idx, false); }} style={{ position: "absolute", top: 4, right: 4, zIndex: 52, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 26, height: 26, cursor: "pointer", fontSize: 15, lineHeight: "26px", textAlign: "center", borderRadius: 2 }}>×</button>}
+                  <div onClick={() => { if (!tileIsClickable(item, catKey)) { onCard(catKey, idx); return; } openTileLink(item, { catKey, onMusicOpen }); }} style={{ cursor: tileIsClickable(item, catKey) ? "pointer" : "default" }}>
+                    <TileMedia
+                      item={item}
+                      catKey={catKey}
+                      onOpen={() => openTileLink(item, { catKey, onMusicOpen })}
+                      poster={item.poster}
+                      title={item.title}
+                      className="card-poster"
+                      badgeSize="sm"
+                    >
+                      {item.poster ? <img src={item.poster} alt={item.title} className="card-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} /> : null}
+                      <div className="card-poster-placeholder" style={{ display: item.poster ? "none" : "flex" }}>{item.title}</div>
+                    </TileMedia>
+                    <div style={{ flex: 1 }}>
+                      <div className="card-title">{item.title}</div>
+                      <div className="card-sub">{item.artist || item.author || item.year || item.sub || ""}</div>
+                      {item.comment && <div className="card-comment" style={{ fontSize: item.comment.length > 80 ? "9px" : item.comment.length > 40 ? "10px" : "10.5px" }}>"{item.comment}"</div>}
+                      {!isOwn && (
+                        <div style={{ display: "flex", marginTop: 6, gap: 0 }}>
+                          <button onClick={e => { e.stopPropagation(); onDudeSame(item); }} style={{ flex: 1, background: myReactions?.includes(String(item.id)) ? T.ink : "transparent", border: `1px solid ${T.paperDark}`, color: myReactions?.includes(String(item.id)) ? T.bg : T.inkMid, cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 2px", fontWeight: 700 }}>{myReactions?.includes(String(item.id)) ? "✓ Agreed" : "Agree"}</button>
+                          {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue({ ...item, _cat: catKey }); }} style={{ flex: 1, background: queue?.find(q => String(q.id) === String(item.id)) ? T.ink : "transparent", border: `1px solid ${T.paperDark}`, borderLeft: "none", color: queue?.find(q => String(q.id) === String(item.id)) ? T.bg : T.inkMid, cursor: "pointer", fontSize: "7px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.08em", padding: "3px 2px", fontWeight: 700 }}>{queue?.find(q => String(q.id) === String(item.id)) ? "✓ Queue" : "+ Queue"}</button>}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               : isOwn
@@ -2000,7 +2008,7 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame,
     const clickable = tileIsClickable(item, item.category);
     const clickItem = () => openTileLink({ ...item, sub: item.subtitle }, { catKey: item.category, onMusicOpen });
     return (
-    <div style={{ position: "relative" }}>
+    <div style={{ position: "relative", isolation: "isolate" }}>
       <VouchRibbon badges={item.groupBadge || []} ownerName={item.firstVouchedBy} circlePhrase="your" />
       <TileMedia item={item} catKey={item.category} onOpen={clickItem} poster={item.poster} title={item.title} badgeSize="lg">
         {item.poster
@@ -2022,7 +2030,7 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame,
     const clickable = tileIsClickable(item, item.category);
     const clickItem = () => openTileLink({ ...item, sub: item.subtitle }, { catKey: item.category, onMusicOpen });
     return (
-      <div style={{ position: "relative" }}>
+      <div style={{ position: "relative", isolation: "isolate" }}>
         <VouchRibbon badges={item.groupBadge || []} ownerName={item.firstVouchedBy} circlePhrase="your" />
         <TileMedia item={item} catKey={item.category} onOpen={clickItem} poster={item.poster} title={item.title} badgeSize="lg">
           {item.poster
@@ -2081,7 +2089,7 @@ function GroupVouchSlideshow({ items, isMobile, onAddToQueue, queue, onDudeSame,
       ) : (
         <div style={{ display: "flex", gap: 12, flexWrap: "nowrap" }}>
           {items.map((item, i) => (
-            <div key={i} style={{ flex: 1, minWidth: 0 }}>
+            <div key={i} style={{ flex: 1, minWidth: 0, position: "relative", zIndex: items.length - i }}>
               <CardFace item={item} />
             </div>
           ))}
@@ -2155,9 +2163,9 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue,
   const TileCard = ({ item, catKey }) => {
     const meta = vouchMeta[badgeKey(catKey, item.item_id)] || {};
     return (
-    <div style={{ flexShrink: 0, width: isMobile ? 95 : 150, cursor: tileIsClickable(item, catKey) ? "pointer" : "default", position: "relative" }}
-      onClick={() => openTileLink(item, { catKey, onMusicOpen })}>
+    <div style={{ flexShrink: 0, width: isMobile ? 95 : 150, position: "relative", isolation: "isolate" }}>
       <VouchRibbon badges={meta.groupBadge || []} compact ownerName={meta.firstVouchedBy} circlePhrase="your" />
+      <div style={{ cursor: tileIsClickable(item, catKey) ? "pointer" : "default" }} onClick={() => openTileLink(item, { catKey, onMusicOpen })}>
       <TileMedia
         item={item}
         catKey={catKey}
@@ -2172,6 +2180,7 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue,
       </TileMedia>
       <div style={{ fontFamily: "'Spectral',serif", fontSize: 11, fontWeight: 600, color: T.ink, marginTop: 5, lineHeight: 1.3 }}>{item.title}</div>
       {meta.firstVouchedBy && <VouchedByLine name={meta.firstVouchedBy} first />}
+      </div>
       {item.owners.length > 0 && (
         <div style={{ marginTop: 4 }}>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: onAddToQueue ? 6 : 0 }}>
@@ -2505,8 +2514,9 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
               <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: "#a09890", marginLeft: 8 }}>{item.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
             </div>
           </div>
-          <div style={{ width: "100%", maxWidth: 300, margin: "0 auto", cursor: tileIsClickable(primary, primary.category) ? "pointer" : "default", position: "relative" }} onClick={() => openTileLink(primary, { catKey: primary.category, onMusicOpen })}>
+          <div style={{ width: "100%", maxWidth: 300, margin: "0 auto", position: "relative" }}>
             <VouchRibbon badges={badgesForOwner(feedBadgeMap, buddy?.userId, primary.category, primary.item_id)} ownerName={buddy?.displayName} circlePhrase="their" />
+            <div style={{ cursor: tileIsClickable(primary, primary.category) ? "pointer" : "default" }} onClick={() => openTileLink(primary, { catKey: primary.category, onMusicOpen })}>
             <TileMedia
               item={primary}
               catKey={primary.category}
@@ -2519,6 +2529,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
             </TileMedia>
             <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{primary.title}</div>
             {primary.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{primary.subtitle}</div>}
+            </div>
             {onDudeSame && buddy && buddy.userId !== selfId && (
               <div style={{ display: "flex", marginTop: 8 }}>
                 <button onClick={e => { e.stopPropagation(); onDudeSame({ id: primary.item_id, title: primary.title, poster: primary.poster, _cat: primary.category }, buddy.userId); }} style={{ flex: 1, background: (myReactions||[]).find(r => r.item_id === String(primary.item_id) && r.item_owner_id === buddy.userId) ? "#111008" : "transparent", border: "1px solid #b3ada0", color: (myReactions||[]).find(r => r.item_id === String(primary.item_id) && r.item_owner_id === buddy.userId) ? "#C8C2B4" : "#3a3830", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700 }}>{(myReactions||[]).find(r => r.item_id === String(primary.item_id) && r.item_owner_id === buddy.userId) ? "✓ Agreed" : "Agree"}</button>
