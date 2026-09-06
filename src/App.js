@@ -3708,8 +3708,8 @@ export default function Vouch() {
       const musicCats = ["albums", "artists", "songs", "podcasts"];
       const W = 1080, H = 1920;
 
-      // Background
-      ctx.fillStyle = "#E8E4DC"; ctx.fillRect(0, 0, W, H);
+      // Background — match site paper (T.bg)
+      ctx.fillStyle = T.bg; ctx.fillRect(0, 0, W, H);
 
       // Vouch5 logo — full width at top
       const vLogo = new Image(); vLogo.crossOrigin = "anonymous";
@@ -3953,7 +3953,7 @@ export default function Vouch() {
       canvas.width = img.width;
       canvas.height = img.height;
       const ctx = canvas.getContext("2d");
-      ctx.fillStyle = "#E8E4DC";
+      ctx.fillStyle = T.bg;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0);
       canvas.toBlob(b => b ? resolve(b) : reject(new Error("jpeg conversion failed")), "image/jpeg", 0.92);
