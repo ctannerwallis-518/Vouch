@@ -655,6 +655,70 @@ async function loadTileCommentsMap(boardItems) {
   return map;
 }
 
+async function loadNewCommentNotifications(uid, lastVisit) {
+  const { data: rows, error } = await supabase
+    .from("vouch_tile_buddy_comments")
+    .select("id, user_id, body, created_at, board_item_id")
+    .gt("created_at", lastVisit)
+    .neq("user_id", uid)
+    .order("created_at", { ascending: false })
+    .limit(30);
+  if (error || !rows?.length) return [];
+
+  const itemIds = [...new Set(rows.map(r => r.board_item_id))];
+  const { data: items } = await supabase
+    .from("vouch_board_items")
+    .select("id, title, board_id")
+    .in("id", itemIds);
+  const itemMap = Object.fromEntries((items || []).map(i => [i.id, i]));
+  const boardIds = [...new Set((items || []).map(i => i.board_id).filter(Boolean))];
+  const { data: boards } = boardIds.length
+    ? await supabase.from("vouch_boards").select("id, user_id, name, theme").in("id", boardIds)
+    : { data: [] };
+  const boardMap = Object.fromEntries((boards || []).map(b => [b.id, b]));
+
+  const { data: myComments } = await supabase
+    .from("vouch_tile_buddy_comments")
+    .select("board_item_id")
+    .eq("user_id", uid)
+    .in("board_item_id", itemIds);
+  const participated = new Set((myComments || []).map(r => r.board_item_id));
+
+  const ownerIds = [...new Set((boards || []).map(b => b.user_id).filter(Boolean))];
+  const commenterIds = [...new Set(rows.map(r => r.user_id))];
+  const profileIds = [...new Set([...ownerIds, ...commenterIds])];
+  const { data: profs } = profileIds.length
+    ? await supabase.from("profiles").select("id, display_name, username").in("id", profileIds)
+    : { data: [] };
+  const nameMap = Object.fromEntries((profs || []).map(p => [p.id, p.display_name || p.username || "Someone"]));
+
+  return rows
+    .filter(r => {
+      const item = itemMap[r.board_item_id];
+      const board = item ? boardMap[item.board_id] : null;
+      if (!item || !board) return false;
+      if (board.user_id === uid) return true;
+      return participated.has(r.board_item_id);
+    })
+    .slice(0, 10)
+    .map(r => {
+      const item = itemMap[r.board_item_id];
+      const board = boardMap[item.board_id];
+      return {
+        id: r.id,
+        user_id: r.user_id,
+        display_name: nameMap[r.user_id] || "Someone",
+        title: item.title,
+        body: r.body,
+        board_owner_id: board.user_id,
+        board_owner_name: nameMap[board.user_id] || "Someone",
+        board_item_id: r.board_item_id,
+        on_own_vouch: board.user_id === uid,
+        created_at: r.created_at,
+      };
+    });
+}
+
 function TileBuddyComments({ comments = [], canComment, boardItemId, currentUserId, onPost, onDelete, dark = true }) {
   const [body, setBody] = useState("");
   const [posting, setPosting] = useState(false);
@@ -3547,6 +3611,7 @@ export default function Vouch() {
   const [editingBoard,   setEditingBoard]   = useState(null);
   const [editingMeta,    setEditingMeta]    = useState(false);
   const [newAgreements,  setNewAgreements]  = useState([]);
+  const [newCommentNotifs, setNewCommentNotifs] = useState([]);
   const [archiveBannerDismissed, setArchiveBannerDismissed] = useState(!!localStorage.getItem('vouch-archive-public-announce'));
   const [expandPreviousVouches, setExpandPreviousVouches] = useState(true);
   const [viewExpandPreviousVouches, setViewExpandPreviousVouches] = useState(true);
@@ -4032,6 +4097,8 @@ export default function Vouch() {
           newAgrees.forEach(r => { r.display_name = profs?.find(p => p.id === r.user_id)?.display_name || "Someone"; });
           setNewAgreements(newAgrees);
         }
+        const commentNotifs = await loadNewCommentNotifications(uid, lastVisit);
+        if (commentNotifs.length > 0) setNewCommentNotifs(commentNotifs);
         // Check for new buddy requests since last visit
         const { data: newBuddyReqs } = await supabase.from("buddies")
           .select("requester_id, profiles!buddies_requester_id_fkey(display_name)")
@@ -4203,6 +4270,52 @@ export default function Vouch() {
     currentUserId: userId,
     onPostTileComment: postTileComment,
     onDeleteTileComment: deleteTileComment,
+  };
+
+  const notifBadgeCount = newAgreements.length + pendingIn.length + newBuddies.length + newCommentNotifs.length;
+
+  const dismissAllNotifications = () => {
+    const toSave = [
+      ...newAgreements.map(r => ({ type: "agree", display_name: r.display_name, title: r.title, date: new Date().toISOString() })),
+      ...newCommentNotifs.map(r => ({
+        type: "comment",
+        display_name: r.display_name,
+        title: r.title,
+        body: r.body,
+        board_owner_name: r.board_owner_name,
+        on_own_vouch: r.on_own_vouch,
+        date: r.created_at || new Date().toISOString(),
+      })),
+      ...newBuddies.map(name => ({ type: "buddy", display_name: name, date: new Date().toISOString() })),
+    ];
+    const updated = [...toSave, ...pastNotifications].slice(0, 50);
+    setPastNotifications(updated);
+    localStorage.setItem("vouch-past-notifs-" + userId, JSON.stringify(updated));
+    setShowNotifications(false);
+    setNewAgreements([]);
+    setNewCommentNotifs([]);
+    setNewBuddies([]);
+    const now = new Date().toISOString();
+    localStorage.setItem("vouch-last-visit", now);
+    supabase.from("profiles").update({ last_visit: now }).eq("id", userId);
+  };
+
+  const openCommentNotification = (n) => {
+    if (!n?.board_owner_id) return;
+    if (n.board_owner_id === userId) {
+      setViewing(null);
+      setTab("board");
+      window.history.pushState({ tab: "board" }, "", "/");
+    } else {
+      const buddy = buddies.find(b => b.userId === n.board_owner_id);
+      setViewing(buddy || { userId: n.board_owner_id, displayName: n.board_owner_name, username: "", avatarUrl: null });
+      setTab("board");
+      loadViewBoard(n.board_owner_id);
+      loadBoardReactions(n.board_owner_id, true);
+    }
+    setShowNotifications(false);
+    setShowAgreements(false);
+    window.scrollTo(0, 0);
   };
 
   useEffect(() => {
@@ -4821,12 +4934,12 @@ export default function Vouch() {
 
   // PWA badge
   useEffect(() => {
-    const count = (newAgreements || []).length + (pendingIn || []).length + (newBuddies || []).length;
+    const count = notifBadgeCount;
     if (navigator.setAppBadge) {
       if (count > 0) navigator.setAppBadge(count);
       else navigator.clearAppBadge();
     }
-  }, [newAgreements.length, pendingIn.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [newAgreements.length, newCommentNotifs.length, pendingIn.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const canPublish = (() => {
     if (isAdmin) return true;
@@ -4914,6 +5027,7 @@ export default function Vouch() {
             <button className={`nav-btn${tab === "home" ? " active" : ""}`} onClick={() => { setTab("home"); setViewing(null); window.history.pushState({tab:"home"}, "", "/"); scrollToTop(); }} style={{ position: "relative" }}>
               Home
               {newAgreements.length > 0 && tab !== "home" && <span style={{ position: "absolute", top: 4, right: 4, width: 6, height: 6, borderRadius: "50%", background: T.ink }} />}
+              {newAgreements.length === 0 && newCommentNotifs.length > 0 && tab !== "home" && <span style={{ position: "absolute", top: 4, right: 4, width: 6, height: 6, borderRadius: "50%", background: T.ink }} />}
             </button>
             <button className={`nav-btn${tab === "board" && !viewing ? " active" : ""}`} onClick={() => { setTab("board"); setViewing(null); window.history.pushState({tab:"board"}, "", "/"); scrollToTop(); }}>My Board</button>
             <button className={`nav-btn${tab === "friends" ? " active" : ""}`} onClick={() => { setTab("friends"); setViewing(null); window.history.pushState({tab:"friends"}, "", "/"); scrollToTop(); }} style={{ position: "relative" }}>
@@ -4951,11 +5065,25 @@ export default function Vouch() {
                   <button onClick={e => { e.stopPropagation(); setNewAgreements([]); const now = new Date().toISOString(); localStorage.setItem("vouch-last-visit", now); supabase.from("profiles").update({ last_visit: now }).eq("id", userId); }} style={{ background: "transparent", border: "none", color: "rgba(200,194,180,0.5)", fontSize: 20, cursor: "pointer", padding: 0, flexShrink: 0 }}>×</button>
                 </div>
               )}
+              {newCommentNotifs.length > 0 && (
+                <div style={{ background: T.ink, color: T.bg, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }} onClick={() => setShowNotifications(true)}>
+                  <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13 }}>
+                    {newCommentNotifs.length === 1 ? (
+                      newCommentNotifs[0].on_own_vouch
+                        ? <><strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11 }}>{newCommentNotifs[0].display_name}</strong> commented on <strong style={{ fontStyle: "normal" }}>{newCommentNotifs[0].title}</strong> →</>
+                        : <><strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11 }}>{newCommentNotifs[0].display_name}</strong> replied on <strong style={{ fontStyle: "normal" }}>{newCommentNotifs[0].title}</strong> →</>
+                    ) : (
+                      <><strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11 }}>{newCommentNotifs.length} new comments</strong> on your vouches — tap to see →</>
+                    )}
+                  </div>
+                  <button onClick={e => { e.stopPropagation(); setNewCommentNotifs([]); }} style={{ background: "transparent", border: "none", color: "rgba(200,194,180,0.5)", fontSize: 20, cursor: "pointer", padding: 0, flexShrink: 0 }}>×</button>
+                </div>
+              )}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
                 <div className="board-name" style={{ fontSize: 28 }}>Home</div>
-                {(newAgreements.length + pendingIn.length + newBuddies.length) > 0 && (
+                {notifBadgeCount > 0 && (
                   <button onClick={() => setShowNotifications(true)} style={{ background: tab === "home" ? T.bg : T.ink, border: "none", borderRadius: "50%", width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontFamily: "'Spectral SC',serif", fontSize: 9, fontWeight: 700, color: tab === "home" ? T.ink : T.bg, flexShrink: 0 }}>
-                    {newAgreements.length + pendingIn.length + newBuddies.length}
+                    {notifBadgeCount}
                   </button>
                 )}
               </div>
@@ -5555,7 +5683,7 @@ export default function Vouch() {
                 <button className="modal-x" onClick={() => setShowNotifications(false)}>×</button>
               </div>
               <div className="modal-body">
-                {newAgreements.length === 0 && pendingIn.length === 0 && (
+                {newAgreements.length === 0 && pendingIn.length === 0 && newCommentNotifs.length === 0 && newBuddies.filter(n => n !== "Christian Wallis").length === 0 && (
                   <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight }}>No new notifications.</div>
                 )}
                 {newBuddies.filter(n => n !== "Christian Wallis").length > 0 && (
@@ -5592,8 +5720,29 @@ export default function Vouch() {
                     ))}
                   </div>
                 )}
+                {newCommentNotifs.length > 0 && (
+                  <div style={{ marginBottom: 20 }}>
+                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 10 }}>Comments</div>
+                    {newCommentNotifs.map((r, i) => (
+                      <div key={r.id || i} onClick={() => openCommentNotification(r)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: `1px solid ${T.paperDark}`, cursor: "pointer" }}>
+                        <div style={{ width: 36, height: 36, background: T.ink, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <span style={{ fontFamily: "'Times New Roman',serif", fontWeight: 900, fontSize: 13, color: T.bg }}>{(r.display_name || "?").split(" ").map(w => w[0]).join("").slice(0,2).toUpperCase()}</span>
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 14 }}>{r.display_name}</div>
+                          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkMid, lineHeight: 1.45 }}>
+                            {r.on_own_vouch
+                              ? <>commented on <strong style={{ fontStyle: "normal" }}>{r.title}</strong></>
+                              : <>replied on <strong style={{ fontStyle: "normal" }}>{r.title}</strong> on {r.board_owner_name?.split(" ")[0]}'s vouch</>}
+                          </div>
+                          {r.body && <div style={{ fontFamily: "'Spectral',serif", fontSize: 11, color: T.inkLight, marginTop: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>"{r.body}"</div>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 {newAgreements.length > 0 && (
-                  <div>
+                  <div style={{ marginBottom: 20 }}>
                     <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 10 }}>New Agrees</div>
                     {newAgreements.map((r, i) => (
                       <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: `1px solid ${T.paperDark}` }}>
@@ -5606,19 +5755,10 @@ export default function Vouch() {
                         </div>
                       </div>
                     ))}
-                    <button className="btn btn-ghost" style={{ width: "100%", marginTop: 12 }} onClick={() => {
-                      const toSave = [
-                        ...newAgreements.map(r => ({ type: "agree", display_name: r.display_name, title: r.title, date: new Date().toISOString() })),
-                        ...newBuddies.map(name => ({ type: "buddy", display_name: name, date: new Date().toISOString() })),
-                      ];
-                      const updated = [...toSave, ...pastNotifications].slice(0, 50);
-                      setPastNotifications(updated);
-                      localStorage.setItem("vouch-past-notifs-" + userId, JSON.stringify(updated));
-                      setShowNotifications(false);
-                      setNewAgreements([]); const now = new Date().toISOString(); localStorage.setItem("vouch-last-visit", now); supabase.from("profiles").update({ last_visit: now }).eq("id", userId);
-                      setNewBuddies([]);
-                    }}>Dismiss All</button>
                   </div>
+                )}
+                {(newAgreements.length > 0 || newCommentNotifs.length > 0 || newBuddies.filter(n => n !== "Christian Wallis").length > 0) && (
+                  <button className="btn btn-ghost" style={{ width: "100%", marginTop: 12 }} onClick={dismissAllNotifications}>Dismiss All</button>
                 )}
                 {pastNotifications.length > 0 && (
                   <div style={{ marginTop: 24 }}>
@@ -5628,6 +5768,14 @@ export default function Vouch() {
                         <div style={{ fontFamily: "'Spectral',serif", fontSize: 12, color: T.inkMid }}>
                           <strong style={{ color: T.ink }}>{n.display_name}</strong>
                           {n.type === "agree" && <span style={{ fontStyle: "italic" }}> agreed with <strong style={{ fontStyle: "normal" }}>{n.title}</strong></span>}
+                          {n.type === "comment" && (
+                            <span style={{ fontStyle: "italic" }}>
+                              {n.on_own_vouch
+                                ? <> commented on <strong style={{ fontStyle: "normal" }}>{n.title}</strong></>
+                                : <> replied on <strong style={{ fontStyle: "normal" }}>{n.title}</strong> on {n.board_owner_name?.split(" ")[0]}'s vouch</>}
+                              {n.body && <span style={{ color: T.inkLight }}> — "{String(n.body).slice(0, 60)}{String(n.body).length > 60 ? "…" : ""}"</span>}
+                            </span>
+                          )}
                           {n.type === "buddy" && <span style={{ fontStyle: "italic" }}> added you as a buddy</span>}
                         </div>
                       </div>
