@@ -529,18 +529,17 @@ const Styles = () => (
     .comment-label { display: block; font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.18em; color: ${T.inkMid}; margin-bottom: 7px; }
     .comment-area  { width: 100%; font-family: 'Spectral', serif; font-style: italic; font-size: 13.5px; line-height: 1.6; padding: 11px 13px; border: 1px solid ${T.ink}; background: transparent; color: ${T.ink}; resize: none; height: 78px; outline: none; }
     .comment-area::placeholder { color: ${T.inkFaint}; }
-    .vouch-tile-comment {
-      font-family: 'Spectral', serif; font-style: italic; font-size: 13px; line-height: 1.55;
-      color: rgba(200,194,180,0.88); margin-top: 8px; padding-top: 8px;
-      border-top: 1px solid rgba(200,194,180,0.18); white-space: pre-wrap; word-break: break-word;
+    .tile-buddy-comments { margin-top: 8px; }
+    .tile-buddy-comment-row { font-size: 11px; line-height: 1.45; margin-bottom: 5px; word-break: break-word; }
+    .tile-buddy-comment-name { font-family: 'Spectral SC', serif; font-size: 8px; letter-spacing: 0.08em; margin-right: 6px; }
+    .tile-buddy-comment-input {
+      flex: 1; min-width: 0; font-family: 'Spectral', serif; font-style: italic; font-size: 11px;
+      padding: 6px 8px; border: 1px solid rgba(200,194,180,0.25); background: rgba(0,0,0,0.15); color: #C8C2B4; outline: none;
     }
+    .tile-buddy-comment-input::placeholder { color: rgba(200,194,180,0.35); }
     .editor-tile-row {
       display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px;
       padding-bottom: 16px; border-bottom: 1px solid ${T.paperDark};
-    }
-    .editor-tile-comment {
-      width: 100%; min-height: 64px; height: auto; font-size: 12px; line-height: 1.5;
-      padding: 8px 10px; margin-top: 6px;
     }
     .char-count { font-family: 'Spectral SC', serif; font-size: 9.5px; color: ${T.inkFaint}; text-align: right; margin: 4px 0 12px; }
 
@@ -620,10 +619,10 @@ function boardItemToTile(item) {
 function vouchItemToDisplay(item) {
   return {
     id: item.item_id,
+    boardItemId: item.id,
     title: item.title,
     sub: item.subtitle || "",
     poster: item.poster,
-    comment: item.comment || "",
     vouched: true,
     sourceUrl: item.source_url,
     _cat: item.category,
@@ -631,7 +630,91 @@ function vouchItemToDisplay(item) {
   };
 }
 
-function ArchiveTile({ item, onMusicOpen, itemCount = 5, badgeSize = "sm", style, titleBelow = true, compact = false }) {
+async function loadTileCommentsMap(boardItems) {
+  const ids = (boardItems || []).map(i => i.id).filter(Boolean);
+  if (!ids.length) return {};
+  const { data, error } = await supabase
+    .from("vouch_tile_buddy_comments")
+    .select("id, board_item_id, user_id, body, created_at")
+    .in("board_item_id", ids)
+    .order("created_at", { ascending: true });
+  if (error) {
+    console.error("loadTileCommentsMap:", error);
+    return {};
+  }
+  const userIds = [...new Set((data || []).map(r => r.user_id))];
+  const { data: profiles } = userIds.length
+    ? await supabase.from("profiles").select("id, display_name").in("id", userIds)
+    : { data: [] };
+  const nameMap = Object.fromEntries((profiles || []).map(p => [p.id, p.display_name]));
+  const map = {};
+  (data || []).forEach(row => {
+    if (!map[row.board_item_id]) map[row.board_item_id] = [];
+    map[row.board_item_id].push({ ...row, displayName: nameMap[row.user_id] || "Buddy" });
+  });
+  return map;
+}
+
+function TileBuddyComments({ comments = [], canComment, boardItemId, currentUserId, onPost, onDelete, dark = true }) {
+  const [body, setBody] = useState("");
+  const [posting, setPosting] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  if (!comments.length && !canComment) return null;
+
+  const visible = expanded ? comments : comments.slice(-3);
+  const hiddenCount = comments.length - visible.length;
+  const nameColor = dark ? "rgba(200,194,180,0.55)" : T.inkLight;
+  const textColor = dark ? "rgba(200,194,180,0.88)" : T.inkMid;
+
+  const submit = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const text = body.trim();
+    if (!text || posting || !boardItemId) return;
+    setPosting(true);
+    await onPost(boardItemId, text);
+    setBody("");
+    setPosting(false);
+  };
+
+  return (
+    <div className="tile-buddy-comments" onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
+      {comments.length > 0 && (
+        <div style={{ marginBottom: canComment ? 8 : 0, paddingTop: 6, borderTop: `1px solid ${dark ? "rgba(200,194,180,0.15)" : T.paperDark}` }}>
+          {hiddenCount > 0 && !expanded && (
+            <button type="button" onClick={e => { e.stopPropagation(); setExpanded(true); }} style={{ background: "transparent", border: "none", padding: 0, marginBottom: 4, cursor: "pointer", fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: nameColor }}>
+              +{hiddenCount} earlier
+            </button>
+          )}
+          {visible.map(c => (
+            <div key={c.id} className="tile-buddy-comment-row">
+              <span className="tile-buddy-comment-name" style={{ color: nameColor }}>{(c.displayName || "Buddy").split(" ")[0]}</span>
+              <span style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", color: textColor }}>{c.body}</span>
+              {currentUserId && c.user_id === currentUserId && onDelete && (
+                <button type="button" onClick={e => { e.stopPropagation(); onDelete(c.id, boardItemId); }} style={{ background: "transparent", border: "none", color: nameColor, cursor: "pointer", fontSize: 10, marginLeft: 4, padding: "0 2px" }} aria-label="Delete comment">×</button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      {canComment && (
+        <form onSubmit={submit} style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <input
+            className="tile-buddy-comment-input"
+            type="text"
+            value={body}
+            onChange={e => setBody(e.target.value.slice(0, 200))}
+            placeholder="Add a comment…"
+            maxLength={200}
+          />
+          <button type="submit" disabled={posting || !body.trim()} style={{ flexShrink: 0, background: body.trim() ? "rgba(200,194,180,0.2)" : "rgba(200,194,180,0.08)", border: "1px solid rgba(200,194,180,0.2)", color: "rgba(200,194,180,0.7)", cursor: body.trim() ? "pointer" : "default", fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", padding: "6px 8px" }}>Post</button>
+        </form>
+      )}
+    </div>
+  );
+}
+
+function ArchiveTile({ item, onMusicOpen, itemCount = 5, badgeSize = "sm", style, titleBelow = true, compact = false, tileComments = [], canComment = false, currentUserId, onPostTileComment, onDeleteTileComment }) {
   const tile = boardItemToTile(item);
   const catKey = item.category;
   const open = () => openTileLink(tile, { catKey, onMusicOpen });
@@ -694,18 +777,24 @@ function ArchiveTile({ item, onMusicOpen, itemCount = 5, badgeSize = "sm", style
       </div>
       <ArchiveTileActions item={tile} catKey={catKey} onOpen={open} size={badgeSize} />
       {titleBelow && (
-        <>
-          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: T.inkFaint, marginTop: 3, lineHeight: 1.3, maxWidth: isSingle ? 200 : fixedWidth || 180, textAlign: isSingle ? "center" : undefined }}>{item.title}</div>
-          {item.comment && (
-            <div className="vouch-tile-comment" style={{ color: T.inkLight, borderTopColor: T.paperDark, fontSize: 11, marginTop: 6, paddingTop: 6 }}>"{item.comment}"</div>
-          )}
-        </>
+        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: T.inkFaint, marginTop: 3, lineHeight: 1.3, maxWidth: isSingle ? 200 : fixedWidth || 180, textAlign: isSingle ? "center" : undefined }}>{item.title}</div>
+      )}
+      {item.id && (tileComments.length > 0 || canComment) && (
+        <TileBuddyComments
+          comments={tileComments}
+          canComment={canComment}
+          boardItemId={item.id}
+          currentUserId={currentUserId}
+          onPost={onPostTileComment}
+          onDelete={onDeleteTileComment}
+          dark={false}
+        />
       )}
     </div>
   );
 }
 
-function OwnArchive({ boards, canPublish, onRepublish, onDelete, onMusicOpen, defaultOpen = false }) {
+function OwnArchive({ boards, canPublish, onRepublish, onDelete, onMusicOpen, defaultOpen = false, tileComments = {}, canComment = false, currentUserId, onPostTileComment, onDeleteTileComment }) {
   const [open, setOpen] = useState(defaultOpen);
   const inactive = boards.filter(b => !b.is_active && b.published_at);
   if (!inactive.length) return null;
@@ -746,7 +835,17 @@ function OwnArchive({ boards, canPublish, onRepublish, onDelete, onMusicOpen, de
                     </div>
                     <div className={`archive-tiles-row${items.length === 1 ? " archive-tiles-row-single" : ""}`}>
                       {items.map((item, idx) => (
-                        <ArchiveTile key={idx} item={item} onMusicOpen={onMusicOpen} itemCount={items.length} />
+                        <ArchiveTile
+                          key={idx}
+                          item={item}
+                          onMusicOpen={onMusicOpen}
+                          itemCount={items.length}
+                          tileComments={tileComments[item.id] || []}
+                          canComment={canComment}
+                          currentUserId={currentUserId}
+                          onPostTileComment={onPostTileComment}
+                          onDeleteTileComment={onDeleteTileComment}
+                        />
                       ))}
                     </div>
                   </div>
@@ -760,20 +859,30 @@ function OwnArchive({ boards, canPublish, onRepublish, onDelete, onMusicOpen, de
   );
 }
 
-function PreviousVouches({ userId, onDudeSame, myReactions, queue, onAddToQueue, onMusicOpen, defaultOpen = false }) {
+function PreviousVouches({ userId, onDudeSame, myReactions, queue, onAddToQueue, onMusicOpen, defaultOpen = false, tileComments = {}, canComment = false, currentUserId, onPostTileComment, onDeleteTileComment }) {
   const [boards, setBoards] = useState([]);
   const [open, setOpen] = useState(defaultOpen);
   const [loading, setLoading] = useState(false);
+  const [localTileComments, setLocalTileComments] = useState({});
   useEffect(() => {
     setBoards([]);
     setOpen(defaultOpen);
+    setLocalTileComments({});
   }, [userId, defaultOpen]);
   useEffect(() => {
     if ((!open && !defaultOpen) || boards.length > 0) return;
     setLoading(true);
     supabase.from("vouch_boards").select("*, vouch_board_items(*)").eq("user_id", userId).eq("is_active", false).order("published_at", { ascending: false })
-      .then(({ data }) => { setBoards((data || []).filter(b => b.published_at && b.vouch_board_items?.length > 0)); setLoading(false); });
+      .then(async ({ data }) => {
+        const list = (data || []).filter(b => b.published_at && b.vouch_board_items?.length > 0);
+        setBoards(list);
+        const allItems = list.flatMap(b => b.vouch_board_items || []);
+        const map = await loadTileCommentsMap(allItems);
+        setLocalTileComments(map);
+        setLoading(false);
+      });
   }, [open, defaultOpen, userId, boards.length]);
+  const commentsMap = { ...localTileComments, ...tileComments };
   if (!userId) return null;
   return (
     <div style={{ marginBottom: 32 }}>
@@ -808,7 +917,17 @@ function PreviousVouches({ userId, onDudeSame, myReactions, queue, onAddToQueue,
                     </div>
                     <div className={`archive-tiles-row${items.length === 1 ? " archive-tiles-row-single" : ""}`}>
                       {items.map((item, idx) => (
-                        <ArchiveTile key={idx} item={item} onMusicOpen={onMusicOpen} itemCount={items.length} />
+                        <ArchiveTile
+                          key={idx}
+                          item={item}
+                          onMusicOpen={onMusicOpen}
+                          itemCount={items.length}
+                          tileComments={commentsMap[item.id] || []}
+                          canComment={canComment}
+                          currentUserId={currentUserId}
+                          onPostTileComment={onPostTileComment}
+                          onDeleteTileComment={onDeleteTileComment}
+                        />
                       ))}
                     </div>
                   </div>
@@ -1616,7 +1735,7 @@ function VouchedByLine({ names, name, first = false, dark = false }) {
   );
 }
 
-function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, hideHeader, hideEmptySlots, onAddToQueue, queue, ownerId, onMusicOpen, singleTile, itemBadges, badgeOwnerName, badgeCirclePhrase }) {
+function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myReactions, hideHeader, hideEmptySlots, onAddToQueue, queue, ownerId, onMusicOpen, singleTile, itemBadges, badgeOwnerName, badgeCirclePhrase, tileCommentsByItemId, canCommentTiles, currentUserId, onPostTileComment, onDeleteTileComment }) {
   const [idx, setIdx]      = useState(0);
   const touchStartX        = useRef(null);
   const touchStartY        = useRef(null);
@@ -1712,7 +1831,15 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
         <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 4 }}>{it._catLabel}</div>
         <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: T.bg }}>{it.title}</div>
         <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "rgba(200,194,180,0.7)" }}>{it.artist || it.author || it.sub || ""}</div>
-        {it.comment && <div className="vouch-tile-comment">"{it.comment}"</div>}
+        <TileBuddyComments
+          comments={tileCommentsByItemId?.[it.boardItemId] || []}
+          canComment={!!canCommentTiles && !isOwn}
+          boardItemId={it.boardItemId}
+          currentUserId={currentUserId}
+          onPost={onPostTileComment}
+          onDelete={onDeleteTileComment}
+          dark
+        />
         {!isOwn && (
           <div style={{ display: "flex", marginTop: 8 }}>
             <button onClick={e => { e.stopPropagation(); onDudeSame(it, ownerId); }} style={{ flex: 1, background: myReactions?.includes(String(it.id)) ? "rgba(200,194,180,0.25)" : "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", color: "rgba(200,194,180,0.7)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "5px 4px", fontWeight: 700 }}>{myReactions?.includes(String(it.id)) ? "✓ Agreed" : "Agree"}</button>
@@ -2078,7 +2205,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
   const [theme, setTheme]             = useState(savedDraft?.theme ?? existing?.theme ?? "");
   const [description, setDescription] = useState(savedDraft?.description ?? existing?.description ?? "");
   const [singleCat, setSingleCat]     = useState(savedDraft?.singleCat ?? existing?.single_category ?? "");
-  const [items, setItems]             = useState(savedDraft?.items ?? existing?.vouch_board_items?.sort((a,b)=>a.position-b.position).map(i => ({ ...i, id: i.item_id, sub: i.subtitle, catKey: i.category, comment: i.comment || "" })) ?? []);
+  const [items, setItems]             = useState(savedDraft?.items ?? existing?.vouch_board_items?.sort((a,b)=>a.position-b.position).map(i => ({ ...i, id: i.item_id, sub: i.subtitle, catKey: i.category })) ?? []);
   const [addingItem, setAddingItem]   = useState(false);
   const [q, setQ]                     = useState("");
   const [results, setResults]         = useState([]);
@@ -2143,7 +2270,6 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
     [next[idx], next[target]] = [next[target], next[idx]];
     return next;
   });
-  const updateItemComment = (idx, comment) => setItems(prev => prev.map((item, i) => i === idx ? { ...item, comment: comment.slice(0, 200) } : item));
 
   const [publishing, setPublishing] = useState(false);
   const handlePublish = async () => {
@@ -2189,9 +2315,6 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
           <div style={{ marginBottom: 16 }}>
             <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 8 }}>Tiles ({items.length}/5)</div>
             {items.length > 0 && (
-              <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginBottom: 10 }}>Add a note under each tile — it appears on your published vouch.</div>
-            )}
-            {items.length > 0 && (
               <div style={{ marginBottom: 10 }}>
                 {items.map((item, i) => (
                   <div key={i} className="editor-tile-row">
@@ -2204,15 +2327,6 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 14, lineHeight: 1.3 }}>{item.title}</div>
                       <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.12em", color: T.inkLight, marginTop: 2 }}>{catLabel(item.catKey || item.category)}</div>
-                      <span className="comment-label" style={{ marginTop: 8 }}>Your note <span style={{ fontStyle: "italic", fontFamily: "'Spectral',serif", textTransform: "none", letterSpacing: 0, fontWeight: 300 }}>(optional)</span></span>
-                      <textarea
-                        className="comment-area editor-tile-comment"
-                        placeholder="Why this one? Say something about it…"
-                        value={item.comment || ""}
-                        onChange={e => updateItemComment(i, e.target.value)}
-                        maxLength={200}
-                        rows={3}
-                      />
                       <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
                         <button onClick={() => moveItem(i, -1)} disabled={i === 0} style={{ background: "transparent", border: `1px solid ${i === 0 ? T.paperDark : T.inkMid}`, color: i === 0 ? T.inkFaint : T.inkMid, cursor: i === 0 ? "default" : "pointer", padding: "4px 10px", fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.12em" }}>Move left</button>
                         <button onClick={() => moveItem(i, 1)} disabled={i === items.length - 1} style={{ background: "transparent", border: `1px solid ${i === items.length - 1 ? T.paperDark : T.inkMid}`, color: i === items.length - 1 ? T.inkFaint : T.inkMid, cursor: i === items.length - 1 ? "default" : "pointer", padding: "4px 10px", fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.12em" }}>Move right</button>
@@ -2632,7 +2746,7 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue,
   );
 }
 
-const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeSame, onAddToQueue, queue, myReactions, onShelfExtras, onMusicOpen }) {
+const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeSame, onAddToQueue, queue, myReactions, onShelfExtras, onMusicOpen, tileCommentProps, isBuddyWithUser }) {
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
   const [feedTab, setFeedTab] = useState('vouches');
@@ -2640,6 +2754,16 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
   const [discoveryFeed, setDiscoveryFeed] = useState([]);
   const [visibleCount, setVisibleCount] = useState(15);
   const [feedBadgeMap, setFeedBadgeMap] = useState({});
+  const [feedTileComments, setFeedTileComments] = useState({});
+
+  useEffect(() => {
+    const vouchItems = feed.filter(x => x.type === "vouch").flatMap(x => x.board?.vouch_board_items || []);
+    if (!vouchItems.length) {
+      setFeedTileComments({});
+      return;
+    }
+    loadTileCommentsMap(vouchItems).then(setFeedTileComments);
+  }, [feed]);
 
   useEffect(() => {
     const load = async () => {
@@ -2872,7 +2996,8 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
                 if (vbBoard[it.category]) vbBoard[it.category].push(vouchItemToDisplay(it));
               });
               const isSelfBoard = b.user_id === selfId;
-              return <VouchSection board={vbBoard} isOwn={isSelfBoard} onCard={()=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={onDudeSame || (()=>{})} myReactions={(myReactions || []).filter(r => r.item_owner_id === b.user_id).map(r => r.item_id)} hideHeader={true} hideEmptySlots={true} onAddToQueue={isSelfBoard ? null : (onAddToQueue || null)} queue={queue} ownerId={b.user_id} onMusicOpen={onMusicOpen} singleTile={true} itemBadges={itemBadgesForOwner(feedBadgeMap, b.user_id)} badgeOwnerName={buddy?.displayName} />;
+              const mergedComments = { ...feedTileComments, ...(tileCommentProps?.tileCommentsByItemId || {}) };
+              return <VouchSection board={vbBoard} isOwn={isSelfBoard} onCard={()=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={onDudeSame || (()=>{})} myReactions={(myReactions || []).filter(r => r.item_owner_id === b.user_id).map(r => r.item_id)} hideHeader={true} hideEmptySlots={true} onAddToQueue={isSelfBoard ? null : (onAddToQueue || null)} queue={queue} ownerId={b.user_id} onMusicOpen={onMusicOpen} singleTile={true} itemBadges={itemBadgesForOwner(feedBadgeMap, b.user_id)} badgeOwnerName={buddy?.displayName} canCommentTiles={!isDiscovery && !isSelfBoard && !!isBuddyWithUser?.(b.user_id)} {...(tileCommentProps || {})} tileCommentsByItemId={mergedComments} />;
             })()}
           </div>
         </div>
@@ -3434,6 +3559,7 @@ export default function Vouch() {
   const [pastNotifications, setPastNotifications] = useState([]);
   const [viewerReactions,setViewerReactions]= useState([]);
   const [viewActiveBoard,setViewActiveBoard]= useState(null);
+  const [vouchTileComments, setVouchTileComments] = useState({});
   const [viewPublishCount, setViewPublishCount] = useState(0);
   const [ownItemBadges,    setOwnItemBadges]    = useState({});
   const [viewItemBadges,   setViewItemBadges]   = useState({});
@@ -3518,12 +3644,11 @@ export default function Vouch() {
           source_url: item.sourceUrl || item.source_url || null,
           category: item.catKey || item.category || "",
           position: i,
-          comment: (item.comment || "").trim(),
         }))
       );
       if (error) {
         console.error("vouch_board_items insert failed:", error);
-        alert(`Could not save your vouch tiles${error.message ? `: ${error.message}` : "."} If you just added comments, reload and try again.`);
+        alert(`Could not save your vouch tiles${error.message ? `: ${error.message}` : "."}`);
         return false;
       }
       return true;
@@ -4044,6 +4169,59 @@ export default function Vouch() {
   const isOwn     = !viewing;
   const currBoard = isOwn ? board : viewBoard;
   const currName  = isOwn ? user?.displayName : viewing?.displayName || viewing?.username;
+  const isBuddyWith = (otherUserId) => !!otherUserId && buddies.some(b => b.userId === otherUserId);
+
+  const postTileComment = async (boardItemId, body) => {
+    if (!userId || !boardItemId) return;
+    const { data, error } = await supabase
+      .from("vouch_tile_buddy_comments")
+      .insert({ board_item_id: boardItemId, user_id: userId, body: body.trim() })
+      .select("id, board_item_id, user_id, body, created_at")
+      .single();
+    if (error) {
+      alert(error.message || "Could not post comment.");
+      return;
+    }
+    setVouchTileComments(prev => ({
+      ...prev,
+      [boardItemId]: [...(prev[boardItemId] || []), { ...data, displayName: user?.displayName || "You" }],
+    }));
+  };
+
+  const deleteTileComment = async (commentId, boardItemId) => {
+    if (!userId) return;
+    const { error } = await supabase.from("vouch_tile_buddy_comments").delete().eq("id", commentId).eq("user_id", userId);
+    if (error) return;
+    setVouchTileComments(prev => ({
+      ...prev,
+      [boardItemId]: (prev[boardItemId] || []).filter(c => c.id !== commentId),
+    }));
+  };
+
+  const tileCommentProps = {
+    tileCommentsByItemId: vouchTileComments,
+    currentUserId: userId,
+    onPostTileComment: postTileComment,
+    onDeleteTileComment: deleteTileComment,
+  };
+
+  useEffect(() => {
+    const items = [];
+    if (!viewing && activeBoard?.vouch_board_items?.length) items.push(...activeBoard.vouch_board_items);
+    if (viewing && viewActiveBoard?.vouch_board_items?.length) items.push(...viewActiveBoard.vouch_board_items);
+    if (!items.length) {
+      setVouchTileComments({});
+      return;
+    }
+    loadTileCommentsMap(items).then(setVouchTileComments);
+  }, [activeBoard?.id, viewActiveBoard?.id, viewing?.userId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (viewing || !boardArchive.length) return;
+    const archiveItems = boardArchive.filter(b => !b.is_active && b.published_at).flatMap(b => b.vouch_board_items || []);
+    if (!archiveItems.length) return;
+    loadTileCommentsMap(archiveItems).then(map => setVouchTileComments(prev => ({ ...prev, ...map })));
+  }, [boardArchive, viewing?.userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const dudeSame = async (item, overrideOwnerId) => {
     if (!userId) return;
@@ -4312,7 +4490,6 @@ export default function Vouch() {
             source_url: item.sourceUrl || item.source_url || null,
             category: item.catKey || item.category || "",
             position: i,
-            comment: item.comment || "",
           })),
         };
       }
@@ -4783,7 +4960,7 @@ export default function Vouch() {
                 )}
               </div>
               <div className="board-sub" style={{ marginBottom: 28 }}>Recent activity from your circle</div>
-              <BuddyFeed buddies={buddies} selfId={userId} selfName={user?.displayName} selfAvatar={user?.avatarUrl} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId, true); window.scrollTo(0,0); }} onDudeSame={dudeSame} onAddToQueue={addToQueue} queue={queue} myReactions={myReactions} onShelfExtras={setShelfExtras} onMusicOpen={openMusicUrl} />
+              <BuddyFeed buddies={buddies} selfId={userId} selfName={user?.displayName} selfAvatar={user?.avatarUrl} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId, true); window.scrollTo(0,0); }} onDudeSame={dudeSame} onAddToQueue={addToQueue} queue={queue} myReactions={myReactions} onShelfExtras={setShelfExtras} onMusicOpen={openMusicUrl} tileCommentProps={tileCommentProps} isBuddyWithUser={isBuddyWith} />
             </div>
           )}
           {tab === "settings" && !viewing && (
@@ -5059,7 +5236,7 @@ export default function Vouch() {
                           if (b[item.category]) b[item.category].push(vouchItemToDisplay(item));
                         });
                         return b;
-                      })()} isOwn={true} onCard={(k, i) => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => {}} myReactions={[]} hideHeader={true} onMusicOpen={openMusicUrl} itemBadges={ownItemBadges} badgeOwnerName={user.displayName} />
+                      })()} isOwn={true} onCard={(k, i) => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => {}} myReactions={[]} hideHeader={true} onMusicOpen={openMusicUrl} itemBadges={ownItemBadges} badgeOwnerName={user.displayName} canCommentTiles={false} {...tileCommentProps} />
                     ) : (
                       <div style={{ height: 220, border: "1px dashed rgba(200,194,180,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 10, cursor: "pointer" }} onClick={() => { setEditingBoard(null); setBoardEditor(true); }}>
                         <span style={{ fontSize: 28, color: "rgba(200,194,180,0.4)" }}>+</span>
@@ -5083,14 +5260,14 @@ export default function Vouch() {
                         if (brd[item.category]) brd[item.category].push(vouchItemToDisplay(item));
                       });
                       return brd;
-                    })()} isOwn={false} onCard={(k,i)=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} hideHeader={true} onAddToQueue={addToQueue} queue={queue} ownerId={viewing?.userId} onMusicOpen={openMusicUrl} itemBadges={viewItemBadges} badgeOwnerName={viewing?.displayName} />
+                    })()} isOwn={false} onCard={(k,i)=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} hideHeader={true} onAddToQueue={addToQueue} queue={queue} ownerId={viewing?.userId} onMusicOpen={openMusicUrl} itemBadges={viewItemBadges} badgeOwnerName={viewing?.displayName} canCommentTiles={isBuddyWith(viewing?.userId)} {...tileCommentProps} />
                   </div>
                 ) : null}
                 {viewing && !isOwn && (
-                  <PreviousVouches key={viewing.userId} userId={viewing.userId} onDudeSame={dudeSame} myReactions={myReactions} queue={queue} onAddToQueue={addToQueue} onMusicOpen={openMusicUrl} defaultOpen={viewExpandPreviousVouches} />
+                  <PreviousVouches key={viewing.userId} userId={viewing.userId} onDudeSame={dudeSame} myReactions={myReactions} queue={queue} onAddToQueue={addToQueue} onMusicOpen={openMusicUrl} defaultOpen={viewExpandPreviousVouches} tileComments={vouchTileComments} canComment={isBuddyWith(viewing?.userId)} currentUserId={userId} onPostTileComment={postTileComment} onDeleteTileComment={deleteTileComment} />
                 )}
                 {isOwn && boardArchive.filter(b => !b.is_active && b.published_at).length > 0 && (
-                  <OwnArchive boards={boardArchive} canPublish={canPublish} onRepublish={republishBoard} onMusicOpen={openMusicUrl} defaultOpen={expandPreviousVouches} onDelete={async (b) => { await revokeClaimsForBoard(b.id).catch(() => {}); await supabase.from("vouch_board_items").delete().eq("board_id", b.id); await supabase.from("vouch_boards").delete().eq("id", b.id); setBoardArchive(prev => prev.filter(x => x.id !== b.id)); loadBadgesForUser(userId).then(setOwnItemBadges).catch(() => {}); }} />
+                  <OwnArchive boards={boardArchive} canPublish={canPublish} onRepublish={republishBoard} onMusicOpen={openMusicUrl} defaultOpen={expandPreviousVouches} tileComments={vouchTileComments} canComment={false} currentUserId={userId} onPostTileComment={postTileComment} onDeleteTileComment={deleteTileComment} onDelete={async (b) => { await revokeClaimsForBoard(b.id).catch(() => {}); await supabase.from("vouch_board_items").delete().eq("board_id", b.id); await supabase.from("vouch_boards").delete().eq("id", b.id); setBoardArchive(prev => prev.filter(x => x.id !== b.id)); loadBadgesForUser(userId).then(setOwnItemBadges).catch(() => {}); }} />
                 )}
 
                 {(() => {
