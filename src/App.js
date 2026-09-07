@@ -42,6 +42,22 @@ import {
   toggleMusicPreview,
 } from "./musicPreview";
 
+function PreviewIcon({ playing, size = 8 }) {
+  if (playing) {
+    return (
+      <svg width={size} height={size} viewBox="0 0 8 8" fill="currentColor" aria-hidden style={{ flexShrink: 0 }}>
+        <rect x="1" y="0.5" width="2" height="7" />
+        <rect x="5" y="0.5" width="2" height="7" />
+      </svg>
+    );
+  }
+  return (
+    <svg width={size} height={size} viewBox="0 0 8 8" fill="currentColor" aria-hidden style={{ flexShrink: 0 }}>
+      <path d="M1.5 0.5 L7 4 L1.5 7.5 Z" />
+    </svg>
+  );
+}
+
 function TilePlayButton({ item, catKey, size = "md" }) {
   const key = catKey || item?.category || item?._cat;
   const itemKey = previewItemKey(item, catKey);
@@ -70,24 +86,27 @@ function TilePlayButton({ item, catKey, size = "md" }) {
   const { currentKey, loadingKey, playing } = getMusicPreviewState();
   const isLoading = loadingKey === itemKey;
   const isPlaying = playing && currentKey === itemKey;
-  const dim = size === "sm" ? 24 : size === "lg" ? 32 : 28;
-  const fontSize = size === "sm" ? 9 : size === "lg" ? 11 : 10;
   const inset = size === "sm" ? 4 : 6;
   const bottom = size === "sm" ? 26 : size === "lg" ? 36 : 30;
+  const fontSize = size === "sm" ? 6.5 : size === "lg" ? 8.5 : 7.5;
+  const iconSize = size === "sm" ? 7 : size === "lg" ? 9 : 8;
+  const padY = size === "sm" ? 3 : size === "lg" ? 5 : 4;
+  const padX = size === "sm" ? 5 : size === "lg" ? 8 : 6;
 
   return (
     <button
       type="button"
-      className={`tile-play-btn${isPlaying ? " is-playing" : ""}`}
+      className={`tile-preview-btn${isPlaying ? " is-playing" : ""}`}
       aria-label={isPlaying ? "Pause preview" : "Play 30-second preview"}
       title={isPlaying ? "Pause preview" : "Play preview"}
       onClick={async (e) => {
         e.stopPropagation();
         await toggleMusicPreview(item, catKey);
       }}
-      style={{ width: dim, height: dim, fontSize, bottom, left: inset }}
+      style={{ bottom, left: inset, fontSize, padding: `${padY}px ${padX}px` }}
     >
-      {isLoading ? "…" : isPlaying ? "❚❚" : "▶"}
+      {isLoading ? "…" : <PreviewIcon playing={isPlaying} size={iconSize} />}
+      <span>Preview</span>
     </button>
   );
 }
@@ -285,17 +304,17 @@ const Styles = () => (
       transition: background 0.14s, color 0.14s;
     }
     .tile-action-badge:hover { background: rgba(17,16,8,0.96); color: #fff; text-decoration: underline; text-underline-offset: 2px; }
-    .tile-play-btn {
+    .tile-preview-btn {
       position: absolute; z-index: 49;
-      display: flex; align-items: center; justify-content: center;
-      background: rgba(17,16,8,0.82); border: 1px solid rgba(200,194,180,0.35);
-      color: #C8C2B4; border-radius: 50%; cursor: pointer;
-      font-family: 'Spectral SC', serif; font-weight: 700; line-height: 1;
-      transition: background 0.14s, color 0.14s, transform 0.14s;
-      padding: 0; padding-left: 1px;
+      display: inline-flex; align-items: center; gap: 4px;
+      background: #111008; border: 1px solid #fff;
+      color: #fff; cursor: pointer;
+      font-family: 'Spectral SC', serif; font-weight: 700;
+      letter-spacing: 0.14em; text-transform: uppercase; line-height: 1;
+      transition: background 0.14s, color 0.14s, border-color 0.14s;
     }
-    .tile-play-btn:hover { background: rgba(17,16,8,0.96); color: #fff; transform: scale(1.05); }
-    .tile-play-btn.is-playing { background: #111008; color: #fff; border-color: rgba(200,194,180,0.5); }
+    .tile-preview-btn:hover { background: #fff; color: #111008; }
+    .tile-preview-btn.is-playing { background: #fff; color: #111008; border-color: #111008; }
     .card-comment { font-family: 'Spectral', serif; font-style: italic; font-size: 10.5px; line-height: 1.5; color: ${T.inkMid}; margin-top: 4px; white-space: normal; word-break: break-word; }
     .slot-empty-sm { width: 180px; height: 248px; border: 2px dashed ${T.inkLight}; background: rgba(17,16,8,0.06); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.14s, background 0.14s; flex-shrink: 0; }
     .slot-empty-sm:hover { border-color: ${T.ink}; background: rgba(17,16,8,0.12); }
