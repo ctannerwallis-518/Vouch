@@ -2710,9 +2710,9 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
                       <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.12em", color: T.inkLight, marginTop: 2 }}>{catLabel(item.catKey || item.category)}</div>
                     </div>
                     <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-                      <button onClick={() => moveItem(i, -1)} disabled={i === 0} style={{ background: "transparent", border: `1px solid ${T.paperDark}`, cursor: i === 0 ? "default" : "pointer", opacity: i === 0 ? 0.3 : 1, width: 28, height: 28, fontFamily: "monospace", fontSize: 14 }}>↑</button>
-                      <button onClick={() => moveItem(i, 1)} disabled={i === items.length - 1} style={{ background: "transparent", border: `1px solid ${T.paperDark}`, cursor: i === items.length - 1 ? "default" : "pointer", opacity: i === items.length - 1 ? 0.3 : 1, width: 28, height: 28, fontFamily: "monospace", fontSize: 14 }}>↓</button>
-                      <button onClick={() => removeItem(i)} style={{ background: T.ink, border: "none", color: T.bg, cursor: "pointer", width: 28, height: 28, fontSize: 16 }}>×</button>
+                      <button type="button" onClick={() => moveItem(i, -1)} disabled={i === 0} style={{ background: "transparent", border: `1px solid ${T.paperDark}`, color: T.ink, cursor: i === 0 ? "default" : "pointer", opacity: i === 0 ? 0.3 : 1, width: 28, height: 28, fontFamily: "monospace", fontSize: 14 }}>↑</button>
+                      <button type="button" onClick={() => moveItem(i, 1)} disabled={i === items.length - 1} style={{ background: "transparent", border: `1px solid ${T.paperDark}`, color: T.ink, cursor: i === items.length - 1 ? "default" : "pointer", opacity: i === items.length - 1 ? 0.3 : 1, width: 28, height: 28, fontFamily: "monospace", fontSize: 14 }}>↓</button>
+                      <button type="button" onClick={() => removeItem(i)} style={{ background: T.ink, border: "none", color: T.bg, cursor: "pointer", width: 28, height: 28, fontSize: 16 }}>×</button>
                     </div>
                   </div>
                 ))}
@@ -2789,9 +2789,9 @@ function CategoryPicker({ selected, all, onSave, isOnboarding }) {
             <div key={key} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0", borderBottom: `1px solid ${T.paperDark}` }}>
               <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 15, flex: 1 }}>{cat.label}</div>
               <div style={{ display: "flex", gap: 4 }}>
-                <button onClick={() => moveUp(i)} disabled={i === 0} style={{ background: "transparent", border: `1px solid ${T.paperDark}`, cursor: i === 0 ? "default" : "pointer", opacity: i === 0 ? 0.3 : 1, width: 28, height: 28, fontFamily: "monospace", fontSize: 14 }}>↑</button>
-                <button onClick={() => moveDown(i)} disabled={i === cats.length - 1} style={{ background: "transparent", border: `1px solid ${T.paperDark}`, cursor: i === cats.length - 1 ? "default" : "pointer", opacity: i === cats.length - 1 ? 0.3 : 1, width: 28, height: 28, fontFamily: "monospace", fontSize: 14 }}>↓</button>
-                <button onClick={() => toggle(key)} style={{ background: T.ink, border: "none", color: T.bg, cursor: "pointer", width: 28, height: 28, fontSize: 16 }}>×</button>
+                <button type="button" onClick={() => moveUp(i)} disabled={i === 0} style={{ background: "transparent", border: `1px solid ${T.paperDark}`, color: T.ink, cursor: i === 0 ? "default" : "pointer", opacity: i === 0 ? 0.3 : 1, width: 28, height: 28, fontFamily: "monospace", fontSize: 14 }}>↑</button>
+                <button type="button" onClick={() => moveDown(i)} disabled={i === cats.length - 1} style={{ background: "transparent", border: `1px solid ${T.paperDark}`, color: T.ink, cursor: i === cats.length - 1 ? "default" : "pointer", opacity: i === cats.length - 1 ? 0.3 : 1, width: 28, height: 28, fontFamily: "monospace", fontSize: 14 }}>↓</button>
+                <button type="button" onClick={() => toggle(key)} style={{ background: T.ink, border: "none", color: T.bg, cursor: "pointer", width: 28, height: 28, fontSize: 16 }}>×</button>
               </div>
             </div>
           );
