@@ -435,6 +435,23 @@ const Styles = () => (
       display: flex; flex-direction: column; align-items: flex-start;
       gap: 4px; margin-top: 6px;
     }
+    .archive-tiles-row {
+      display: flex; flex-direction: row; flex-wrap: nowrap;
+      overflow-x: auto; gap: 14px; padding-bottom: 8px;
+      -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .archive-tiles-row::-webkit-scrollbar { display: none; }
+    .archive-tile-card { width: 180px; flex-shrink: 0; }
+    .archive-tile-poster {
+      width: 180px; height: 248px; object-fit: cover; display: block;
+      border: 1px solid ${T.paperDark};
+    }
+    .archive-tile-poster-placeholder {
+      width: 180px; height: 248px; background: ${T.paperDark};
+      border: 1px solid ${T.paperDark}; display: flex; align-items: center;
+      justify-content: center; font-family: 'Spectral', serif; font-style: italic;
+      font-size: 11px; color: ${T.inkLight}; text-align: center; padding: 10px;
+    }
     .tile-inline-btn:hover { background: rgba(17,16,8,0.96); color: #fff; border-color: rgba(179,173,160,0.75); }
     .tile-inline-btn.is-playing { background: rgba(17,16,8,0.96); color: #fff; border-color: rgba(179,173,160,0.75); }
     .trailer-overlay {
@@ -541,6 +558,9 @@ const Styles = () => (
       .card-poster-placeholder { width: 95px; height: 130px; flex-shrink: 0; font-size: 9px; }
       .card:hover .card-poster { transform: none; box-shadow: none; }
       .slot-empty-sm { width: 95px; height: 130px; flex-shrink: 0; border: 2px dashed rgba(17,16,8,0.3); background: rgba(17,16,8,0.06); }
+      .archive-tile-card { width: 95px; }
+      .archive-tile-poster { width: 95px; height: 130px; }
+      .archive-tile-poster-placeholder { width: 95px; height: 130px; font-size: 9px; padding: 4px; }
       .page { padding: 0 16px 60px; }
       .masthead-meta { padding: 7px 16px; }
       .vouch-section { padding: 16px 14px 20px; }
@@ -581,64 +601,67 @@ function boardItemToTile(item) {
   }, item.category);
 }
 
-function ArchiveTile({ item, onMusicOpen, itemCount = 5, badgeSize = "sm", style, titleBelow = true }) {
+function ArchiveTile({ item, onMusicOpen, itemCount = 5, badgeSize = "sm", style, titleBelow = true, compact = false }) {
   const tile = boardItemToTile(item);
   const catKey = item.category;
   const open = () => openTileLink(tile, { catKey, onMusicOpen });
-  const isSingle = itemCount === 1;
+  const isSingle = itemCount === 1 && !compact;
   const fixedWidth = style?.width;
-  const singleWidth = fixedWidth || 200;
   const isMusic = isMusicCategory(catKey);
 
+  let containerClass = "archive-tile-card";
   let posterStyle;
-  if (isSingle) {
+  let placeholderClass = "archive-tile-poster-placeholder";
+
+  if (compact || fixedWidth) {
+    const w = fixedWidth || 70;
     posterStyle = {
-      width: singleWidth,
+      width: w,
+      height: Math.round(w * 1.5),
+      objectFit: "cover",
+      border: `1px solid ${T.paperDark}`,
+      display: "block",
+    };
+    containerClass = "";
+  } else if (isSingle) {
+    const w = 200;
+    posterStyle = {
+      width: w,
       aspectRatio: isMusic ? "1/1" : "2/3",
       objectFit: "contain",
       background: "#000",
       border: `1px solid ${T.paperDark}`,
       display: "block",
     };
-  } else if (fixedWidth) {
-    posterStyle = {
-      width: fixedWidth,
-      height: Math.round(fixedWidth * 1.5),
-      objectFit: "cover",
-      border: `1px solid ${T.paperDark}`,
-      display: "block",
-    };
+    containerClass = "";
   } else {
-    posterStyle = {
-      width: "100%",
-      aspectRatio: "2/3",
-      objectFit: "cover",
-      border: `1px solid ${T.paperDark}`,
-      display: "block",
-    };
+    posterStyle = null;
   }
 
   const containerStyle = {
     flexShrink: 0,
-    flex: isSingle || fixedWidth ? "0 0 auto" : 1,
-    maxWidth: isSingle && !fixedWidth ? singleWidth : undefined,
-    ...style,
+    ...(isSingle ? { width: 200 } : {}),
+    ...(compact || fixedWidth ? style : {}),
   };
 
   return (
-    <div style={containerStyle}>
+    <div className={containerClass || undefined} style={Object.keys(containerStyle).length ? containerStyle : undefined}>
       <div
         className="tile-media"
         onClick={open}
         style={{ cursor: tileIsClickable(tile, catKey) ? "pointer" : "default" }}
       >
         {tile.poster
-          ? <img src={tile.poster} alt={tile.title} style={posterStyle} onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} />
-          : <div style={{ ...posterStyle, background: T.paperDark, alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 4 }}>{tile.title}</div>}
+          ? posterStyle
+            ? <img src={tile.poster} alt={tile.title} style={posterStyle} className={posterStyle ? undefined : "archive-tile-poster"} onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} />
+            : <img src={tile.poster} alt={tile.title} className="archive-tile-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} />
+          : posterStyle
+            ? <div style={{ ...posterStyle, background: T.paperDark, alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 4, display: "flex" }}>{tile.title}</div>
+            : <div className={placeholderClass}>{tile.title}</div>}
       </div>
       <ArchiveTileActions item={tile} catKey={catKey} onOpen={open} size={badgeSize} />
       {titleBelow && (
-        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: T.inkFaint, marginTop: 3, textAlign: "center", lineHeight: 1.3, maxWidth: typeof posterStyle.width === "number" ? posterStyle.width : undefined }}>{item.title}</div>
+        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: T.inkFaint, marginTop: 3, lineHeight: 1.3, maxWidth: isSingle ? 200 : fixedWidth || 180 }}>{item.title}</div>
       )}
     </div>
   );
@@ -683,7 +706,7 @@ function OwnArchive({ boards, canPublish, onRepublish, onDelete, onMusicOpen, de
                         <button onClick={() => { if (window.confirm("Delete this Vouch permanently?")) onDelete(b); }} style={{ padding: "4px 12px", fontSize: 10, fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", background: "transparent", border: "1px solid " + T.paperDark, color: T.inkMid, cursor: "pointer" }}>Delete</button>
                       </div>
                     </div>
-                    <div style={{ display: "flex", gap: 6 }}>
+                    <div className="archive-tiles-row">
                       {items.map((item, idx) => (
                         <ArchiveTile key={idx} item={item} onMusicOpen={onMusicOpen} itemCount={items.length} />
                       ))}
@@ -745,7 +768,7 @@ function PreviousVouches({ userId, onDudeSame, myReactions, queue, onAddToQueue,
                       <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.12em", color: T.inkLight, marginTop: 2 }}>{new Date(b.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
                       {b.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkMid, marginTop: 3 }}>{b.description}</div>}
                     </div>
-                    <div style={{ display: "flex", gap: 6 }}>
+                    <div className="archive-tiles-row">
                       {items.map((item, idx) => (
                         <ArchiveTile key={idx} item={item} onMusicOpen={onMusicOpen} itemCount={items.length} />
                       ))}
@@ -5269,7 +5292,7 @@ export default function Vouch() {
                           {b.vouch_board_items?.length > 0 && (
                             <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
                               {b.vouch_board_items.sort((a,x) => a.position - x.position).slice(0,5).map((item, i, arr) => (
-                                <ArchiveTile key={i} item={item} onMusicOpen={openMusicUrl} itemCount={arr.length} style={{ width: 70 }} />
+                                <ArchiveTile key={i} item={item} onMusicOpen={openMusicUrl} itemCount={arr.length} compact style={{ width: 70 }} />
                               ))}
                             </div>
                           )}
@@ -5549,7 +5572,7 @@ export default function Vouch() {
                     {b.vouch_board_items?.length > 0 && (
                       <div style={{ display: "flex", gap: 6 }}>
                         {b.vouch_board_items.sort((a,b) => a.position - b.position).slice(0,5).map((item, i, arr) => (
-                          <ArchiveTile key={i} item={item} onMusicOpen={openMusicUrl} itemCount={arr.length} style={{ width: 70 }} titleBelow={false} />
+                          <ArchiveTile key={i} item={item} onMusicOpen={openMusicUrl} itemCount={arr.length} compact style={{ width: 70 }} titleBelow={false} />
                         ))}
                       </div>
                     )}
