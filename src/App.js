@@ -529,6 +529,19 @@ const Styles = () => (
     .comment-label { display: block; font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.18em; color: ${T.inkMid}; margin-bottom: 7px; }
     .comment-area  { width: 100%; font-family: 'Spectral', serif; font-style: italic; font-size: 13.5px; line-height: 1.6; padding: 11px 13px; border: 1px solid ${T.ink}; background: transparent; color: ${T.ink}; resize: none; height: 78px; outline: none; }
     .comment-area::placeholder { color: ${T.inkFaint}; }
+    .vouch-tile-comment {
+      font-family: 'Spectral', serif; font-style: italic; font-size: 13px; line-height: 1.55;
+      color: rgba(200,194,180,0.88); margin-top: 8px; padding-top: 8px;
+      border-top: 1px solid rgba(200,194,180,0.18); white-space: pre-wrap; word-break: break-word;
+    }
+    .editor-tile-row {
+      display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px;
+      padding-bottom: 16px; border-bottom: 1px solid ${T.paperDark};
+    }
+    .editor-tile-comment {
+      width: 100%; min-height: 64px; height: auto; font-size: 12px; line-height: 1.5;
+      padding: 8px 10px; margin-top: 6px;
+    }
     .char-count { font-family: 'Spectral SC', serif; font-size: 9.5px; color: ${T.inkFaint}; text-align: right; margin: 4px 0 12px; }
 
     .friend-row { display: flex; align-items: center; justify-content: space-between; padding: 13px 0; border-bottom: 1px solid ${T.paperDark}; cursor: pointer; }
@@ -684,7 +697,7 @@ function ArchiveTile({ item, onMusicOpen, itemCount = 5, badgeSize = "sm", style
         <>
           <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: T.inkFaint, marginTop: 3, lineHeight: 1.3, maxWidth: isSingle ? 200 : fixedWidth || 180, textAlign: isSingle ? "center" : undefined }}>{item.title}</div>
           {item.comment && (
-            <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 9, color: T.inkLight, marginTop: 3, lineHeight: 1.35, maxWidth: isSingle ? 200 : fixedWidth || 180, textAlign: isSingle ? "center" : undefined }}>"{item.comment}"</div>
+            <div className="vouch-tile-comment" style={{ color: T.inkLight, borderTopColor: T.paperDark, fontSize: 11, marginTop: 6, paddingTop: 6 }}>"{item.comment}"</div>
           )}
         </>
       )}
@@ -1699,7 +1712,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
         <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.45)", marginBottom: 4 }}>{it._catLabel}</div>
         <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 18, lineHeight: 1.2, marginBottom: 4, color: T.bg }}>{it.title}</div>
         <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "rgba(200,194,180,0.7)" }}>{it.artist || it.author || it.sub || ""}</div>
-        {it.comment && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: "rgba(200,194,180,0.55)", marginTop: 6 }}>"{it.comment}"</div>}
+        {it.comment && <div className="vouch-tile-comment">"{it.comment}"</div>}
         {!isOwn && (
           <div style={{ display: "flex", marginTop: 8 }}>
             <button onClick={e => { e.stopPropagation(); onDudeSame(it, ownerId); }} style={{ flex: 1, background: myReactions?.includes(String(it.id)) ? "rgba(200,194,180,0.25)" : "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", color: "rgba(200,194,180,0.7)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "5px 4px", fontWeight: 700 }}>{myReactions?.includes(String(it.id)) ? "✓ Agreed" : "Agree"}</button>
@@ -2133,15 +2146,16 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
   const updateItemComment = (idx, comment) => setItems(prev => prev.map((item, i) => i === idx ? { ...item, comment: comment.slice(0, 200) } : item));
 
   const [publishing, setPublishing] = useState(false);
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (publishing) return;
-    setPublishing(true);
     if (!theme) { alert("Pick a title for your Vouch."); return; }
     if (theme === "Other" && !name.trim()) { alert("Give your custom Vouch a name — like 'Summer of 2009' or 'Scorsese’s Best'"); return; }
     if (items.length === 0) { alert("Add at least one title to your Vouch."); return; }
+    setPublishing(true);
     const finalName = theme === "Other" ? name : theme;
     localStorage.removeItem(DRAFT_KEY);
-    onPublish({ name: finalName, theme, description, singleCategory: singleCat, items, existingBoardId: existing?.id || null, existingPublishedAt: existing?.published_at || null });
+    const ok = await onPublish({ name: finalName, theme, description, singleCategory: singleCat, items, existingBoardId: existing?.id || null, existingPublishedAt: existing?.published_at || null });
+    if (!ok) setPublishing(false);
   };
 
   const catLabel = (key) => categories.find(c => c.key === key)?.label || key;
@@ -2150,7 +2164,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()} style={{ maxHeight: "88vh" }}>
         <div className="modal-head">
-          <div className="modal-title">Create Your Vouch</div>
+          <div className="modal-title">{existing?.id ? "Edit Your Vouch" : "Create Your Vouch"}</div>
           <button className="modal-x" onClick={onClose}>×</button>
         </div>
         <div className="modal-body">
@@ -2175,28 +2189,34 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
           <div style={{ marginBottom: 16 }}>
             <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 8 }}>Tiles ({items.length}/5)</div>
             {items.length > 0 && (
-              <div style={{ display: "flex", alignItems: "flex-start", gap: 6, marginBottom: 10 }}>
+              <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: T.inkLight, marginBottom: 10 }}>Add a note under each tile — it appears on your published vouch.</div>
+            )}
+            {items.length > 0 && (
+              <div style={{ marginBottom: 10 }}>
                 {items.map((item, i) => (
-                  <div key={i} style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "center" }}>
-                    <div style={{ position: "relative", width: "100%" }}>
+                  <div key={i} className="editor-tile-row">
+                    <div style={{ width: 72, flexShrink: 0, position: "relative" }}>
                       {item.poster
-                        ? <img src={item.poster} alt={item.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block" }} onError={e => e.target.style.display="none"} />
-                        : <div style={{ width: "100%", aspectRatio: "2/3", background: T.paperDark, border: `1px solid ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 2 }}>{item.title}</div>}
+                        ? <img src={item.poster} alt={item.title} style={{ width: 72, height: 96, objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block" }} onError={e => e.target.style.display="none"} />
+                        : <div style={{ width: 72, height: 96, background: T.paperDark, border: `1px solid ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 4 }}>{item.title}</div>}
                       <button onClick={() => removeItem(i)} style={{ position: "absolute", top: 2, right: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 18, height: 18, cursor: "pointer", fontSize: 12, lineHeight: "18px", textAlign: "center" }}>×</button>
                     </div>
-                    <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "6px", color: T.inkFaint, marginTop: 2, textAlign: "center", lineHeight: 1.2 }}>{catLabel(item.catKey || item.category)}</div>
-                    <textarea
-                      className="comment-area"
-                      placeholder="Optional note…"
-                      value={item.comment || ""}
-                      onChange={e => updateItemComment(i, e.target.value)}
-                      maxLength={200}
-                      rows={2}
-                      style={{ marginTop: 4, height: 44, fontSize: 10, width: "100%", padding: "6px 8px" }}
-                    />
-                    <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
-                      <button onClick={() => moveItem(i, -1)} disabled={i === 0} style={{ background: "transparent", border: `1px solid ${i === 0 ? T.paperDark : T.inkMid}`, color: i === 0 ? T.inkFaint : T.inkMid, cursor: i === 0 ? "default" : "pointer", width: 24, height: 24, fontSize: 12, lineHeight: "22px", textAlign: "center" }}>←</button>
-                      <button onClick={() => moveItem(i, 1)} disabled={i === items.length - 1} style={{ background: "transparent", border: `1px solid ${i === items.length - 1 ? T.paperDark : T.inkMid}`, color: i === items.length - 1 ? T.inkFaint : T.inkMid, cursor: i === items.length - 1 ? "default" : "pointer", width: 24, height: 24, fontSize: 12, lineHeight: "22px", textAlign: "center" }}>→</button>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 14, lineHeight: 1.3 }}>{item.title}</div>
+                      <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.12em", color: T.inkLight, marginTop: 2 }}>{catLabel(item.catKey || item.category)}</div>
+                      <span className="comment-label" style={{ marginTop: 8 }}>Your note <span style={{ fontStyle: "italic", fontFamily: "'Spectral',serif", textTransform: "none", letterSpacing: 0, fontWeight: 300 }}>(optional)</span></span>
+                      <textarea
+                        className="comment-area editor-tile-comment"
+                        placeholder="Why this one? Say something about it…"
+                        value={item.comment || ""}
+                        onChange={e => updateItemComment(i, e.target.value)}
+                        maxLength={200}
+                        rows={3}
+                      />
+                      <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+                        <button onClick={() => moveItem(i, -1)} disabled={i === 0} style={{ background: "transparent", border: `1px solid ${i === 0 ? T.paperDark : T.inkMid}`, color: i === 0 ? T.inkFaint : T.inkMid, cursor: i === 0 ? "default" : "pointer", padding: "4px 10px", fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.12em" }}>Move left</button>
+                        <button onClick={() => moveItem(i, 1)} disabled={i === items.length - 1} style={{ background: "transparent", border: `1px solid ${i === items.length - 1 ? T.paperDark : T.inkMid}`, color: i === items.length - 1 ? T.inkFaint : T.inkMid, cursor: i === items.length - 1 ? "default" : "pointer", padding: "4px 10px", fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.12em" }}>Move right</button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -3486,32 +3506,41 @@ export default function Vouch() {
     const { name, theme, description, singleCategory, items, existingBoardId } = boardData;
     let publishedBoardId = existingBoardId || null;
 
+    const insertItems = async (boardId) => {
+      if (!items.length) return true;
+      const { error } = await supabase.from("vouch_board_items").insert(
+        items.map((item, i) => ({
+          board_id: boardId,
+          item_id: String(item.id || item.item_id),
+          title: item.title,
+          subtitle: item.sub || item.subtitle || "",
+          poster: item.poster || null,
+          source_url: item.sourceUrl || item.source_url || null,
+          category: item.catKey || item.category || "",
+          position: i,
+          comment: (item.comment || "").trim(),
+        }))
+      );
+      if (error) {
+        console.error("vouch_board_items insert failed:", error);
+        alert(`Could not save your vouch tiles${error.message ? `: ${error.message}` : "."} If you just added comments, reload and try again.`);
+        return false;
+      }
+      return true;
+    };
+
     if (existingBoardId) {
-      // EDIT MODE: update existing board in place, no new row
       await supabase.from("vouch_boards").update({
         name, theme, description,
         single_category: singleCategory || null,
       }).eq("id", existingBoardId);
       await revokeBoardItemClaims(existingBoardId, userId, items).catch(() => {});
-      // Replace items
       await supabase.from("vouch_board_items").delete().eq("board_id", existingBoardId);
-      if (items.length > 0) {
-        await supabase.from("vouch_board_items").insert(
-          items.map((item, i) => ({
-            board_id: existingBoardId,
-            item_id: String(item.id || item.item_id),
-            title: item.title,
-            subtitle: item.sub || item.subtitle || "",
-            poster: item.poster || null,
-            source_url: item.sourceUrl || item.source_url || null,
-            category: item.catKey || item.category || "",
-            position: i,
-            comment: item.comment || "",
-          }))
-        );
+      if (!(await insertItems(existingBoardId))) {
+        await loadVouchBoards(userId);
+        return false;
       }
     } else {
-      // NEW PUBLISH: deactivate current, create new board
       await supabase.from("vouch_boards").update({ is_active: false }).eq("user_id", userId).eq("is_active", true);
       const { data: newBoard, error: insertError } = await supabase.from("vouch_boards").insert({
         user_id: userId,
@@ -3522,23 +3551,12 @@ export default function Vouch() {
       }).select().single();
       if (insertError || !newBoard) {
         console.error("publishBoard insert failed:", insertError);
-        return;
+        return false;
       }
       publishedBoardId = newBoard.id;
-      if (items.length > 0) {
-        await supabase.from("vouch_board_items").insert(
-          items.map((item, i) => ({
-            board_id: newBoard.id,
-            item_id: String(item.id || item.item_id),
-            title: item.title,
-            subtitle: item.sub || item.subtitle || "",
-            poster: item.poster || null,
-            source_url: item.sourceUrl || item.source_url || null,
-            category: item.catKey || item.category || "",
-            position: i,
-            comment: item.comment || "",
-          }))
-        );
+      if (!(await insertItems(newBoard.id))) {
+        await loadVouchBoards(userId);
+        return false;
       }
     }
     if (publishedBoardId) {
@@ -3548,6 +3566,7 @@ export default function Vouch() {
     setBoardEditor(false);
     setEditingBoard(null);
     setTimeout(() => setShareModal(true), 300);
+    return true;
   };
 
   const removeActiveVouch = async (mode) => {
