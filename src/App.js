@@ -98,23 +98,24 @@ function PreviewIcon({ playing, size = 8 }) {
   );
 }
 
-function TileInlineButton({ size = "md", className = "", icon, label, onClick, ...props }) {
+function TileInlineButton({ size = "md", className = "", icon, label, onClick, stacked = false, ...props }) {
   const { fontSize, iconSize, padY, padX, gap } = tileMediaActionStyle(size);
   return (
     <button
       type="button"
-      className={`tile-inline-btn${className ? ` ${className}` : ""}`}
+      className={`tile-inline-btn${stacked ? " tile-inline-btn-stacked" : ""}${className ? ` ${className}` : ""}`}
       style={{ fontSize, padding: `${padY}px ${padX}px`, gap }}
       onClick={onClick}
       {...props}
     >
-      {icon ?? <span className="tile-inline-btn-spacer" style={{ width: iconSize, height: iconSize }} aria-hidden />}
+      {icon}
+      {!icon && !stacked && <span className="tile-inline-btn-spacer" style={{ width: iconSize, height: iconSize }} aria-hidden />}
       <span>{label}</span>
     </button>
   );
 }
 
-function TilePlayButton({ item, catKey, size = "md" }) {
+function TilePlayButton({ item, catKey, size = "md", stacked = false }) {
   const key = catKey || item?.category || item?._cat;
   const itemKey = previewItemKey(item, catKey);
   const cached = getCachedMusicPreview(item, catKey);
@@ -156,11 +157,12 @@ function TilePlayButton({ item, catKey, size = "md" }) {
         e.stopPropagation();
         await toggleMusicPreview(item, catKey);
       }}
+      stacked={stacked}
     />
   );
 }
 
-function TileTrailerButton({ item, catKey, size = "md" }) {
+function TileTrailerButton({ item, catKey, size = "md", stacked = false }) {
   const key = catKey || item?.category || item?._cat;
   const itemKey = trailerItemKey(item, catKey);
   const cached = getCachedTrailer(item, catKey);
@@ -203,13 +205,14 @@ function TileTrailerButton({ item, catKey, size = "md" }) {
           stopMusicPreview();
           setOpen(true);
         }}
+        stacked={stacked}
       />
       {open && <TrailerModal youtubeKey={youtubeKey} title={item.title} onClose={() => setOpen(false)} />}
     </>
   );
 }
 
-function TileActionBadge({ item, catKey, onClick, size = "md" }) {
+function TileActionBadge({ item, catKey, onClick, size = "md", stacked = false }) {
   const key = catKey || item?.category || item?._cat;
   if (!tileIsClickable(item, key)) return null;
   const hint = tileActionHint(key);
@@ -218,8 +221,20 @@ function TileActionBadge({ item, catKey, onClick, size = "md" }) {
     <TileInlineButton
       size={size}
       label={hint}
+      stacked={stacked}
       onClick={(e) => { e.stopPropagation(); onClick?.(); }}
     />
+  );
+}
+
+function ArchiveTileActions({ item, catKey, onOpen, size = "sm" }) {
+  const key = catKey || item?.category || item?._cat;
+  return (
+    <div className="tile-archive-actions">
+      <TilePlayButton item={item} catKey={key} size={size} stacked />
+      <TileTrailerButton item={item} catKey={key} size={size} stacked />
+      <TileActionBadge item={item} catKey={key} onClick={onOpen} size={size} stacked />
+    </div>
   );
 }
 
@@ -415,6 +430,11 @@ const Styles = () => (
       transition: background 0.14s, color 0.14s, border-color 0.14s;
     }
     .tile-inline-btn-spacer { flex-shrink: 0; display: block; }
+    .tile-inline-btn-stacked { width: auto; white-space: nowrap; }
+    .tile-archive-actions {
+      display: flex; flex-direction: column; align-items: flex-start;
+      gap: 4px; margin-top: 6px;
+    }
     .tile-inline-btn:hover { background: rgba(17,16,8,0.96); color: #fff; border-color: rgba(179,173,160,0.75); }
     .tile-inline-btn.is-playing { background: rgba(17,16,8,0.96); color: #fff; border-color: rgba(179,173,160,0.75); }
     .trailer-overlay {
@@ -561,30 +581,64 @@ function boardItemToTile(item) {
   }, item.category);
 }
 
-function ArchiveTile({ item, onMusicOpen, badgeSize = "sm", style, titleBelow = true }) {
+function ArchiveTile({ item, onMusicOpen, itemCount = 5, badgeSize = "sm", style, titleBelow = true }) {
   const tile = boardItemToTile(item);
   const catKey = item.category;
   const open = () => openTileLink(tile, { catKey, onMusicOpen });
+  const isSingle = itemCount === 1;
   const fixedWidth = style?.width;
-  const posterStyle = fixedWidth
-    ? { width: fixedWidth, height: Math.round(fixedWidth * 1.5), objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block" }
-    : { width: "100%", aspectRatio: "2/3", objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block" };
+  const singleWidth = fixedWidth || 200;
+  const isMusic = isMusicCategory(catKey);
+
+  let posterStyle;
+  if (isSingle) {
+    posterStyle = {
+      width: singleWidth,
+      aspectRatio: isMusic ? "1/1" : "2/3",
+      objectFit: "contain",
+      background: "#000",
+      border: `1px solid ${T.paperDark}`,
+      display: "block",
+    };
+  } else if (fixedWidth) {
+    posterStyle = {
+      width: fixedWidth,
+      height: Math.round(fixedWidth * 1.5),
+      objectFit: "cover",
+      border: `1px solid ${T.paperDark}`,
+      display: "block",
+    };
+  } else {
+    posterStyle = {
+      width: "100%",
+      aspectRatio: "2/3",
+      objectFit: "cover",
+      border: `1px solid ${T.paperDark}`,
+      display: "block",
+    };
+  }
+
+  const containerStyle = {
+    flexShrink: 0,
+    flex: isSingle || fixedWidth ? "0 0 auto" : 1,
+    maxWidth: isSingle && !fixedWidth ? singleWidth : undefined,
+    ...style,
+  };
+
   return (
-    <div style={{ flexShrink: 0, flex: fixedWidth ? undefined : 1, ...style }}>
-      <TileMedia
-        item={tile}
-        catKey={catKey}
-        onOpen={open}
-        poster={tile.poster}
-        title={tile.title}
-        badgeSize={badgeSize}
+    <div style={containerStyle}>
+      <div
+        className="tile-media"
+        onClick={open}
+        style={{ cursor: tileIsClickable(tile, catKey) ? "pointer" : "default" }}
       >
         {tile.poster
           ? <img src={tile.poster} alt={tile.title} style={posterStyle} onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} />
           : <div style={{ ...posterStyle, background: T.paperDark, alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 4 }}>{tile.title}</div>}
-      </TileMedia>
+      </div>
+      <ArchiveTileActions item={tile} catKey={catKey} onOpen={open} size={badgeSize} />
       {titleBelow && (
-        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: T.inkFaint, marginTop: 3, textAlign: "center", lineHeight: 1.3 }}>{item.title}</div>
+        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: T.inkFaint, marginTop: 3, textAlign: "center", lineHeight: 1.3, maxWidth: typeof posterStyle.width === "number" ? posterStyle.width : undefined }}>{item.title}</div>
       )}
     </div>
   );
@@ -631,7 +685,7 @@ function OwnArchive({ boards, canPublish, onRepublish, onDelete, onMusicOpen, de
                     </div>
                     <div style={{ display: "flex", gap: 6 }}>
                       {items.map((item, idx) => (
-                        <ArchiveTile key={idx} item={item} onMusicOpen={onMusicOpen} />
+                        <ArchiveTile key={idx} item={item} onMusicOpen={onMusicOpen} itemCount={items.length} />
                       ))}
                     </div>
                   </div>
@@ -693,7 +747,7 @@ function PreviousVouches({ userId, onDudeSame, myReactions, queue, onAddToQueue,
                     </div>
                     <div style={{ display: "flex", gap: 6 }}>
                       {items.map((item, idx) => (
-                        <ArchiveTile key={idx} item={item} onMusicOpen={onMusicOpen} />
+                        <ArchiveTile key={idx} item={item} onMusicOpen={onMusicOpen} itemCount={items.length} />
                       ))}
                     </div>
                   </div>
@@ -5214,8 +5268,8 @@ export default function Vouch() {
                           </div>
                           {b.vouch_board_items?.length > 0 && (
                             <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
-                              {b.vouch_board_items.sort((a,x) => a.position - x.position).slice(0,5).map((item, i) => (
-                                <ArchiveTile key={i} item={item} onMusicOpen={openMusicUrl} style={{ width: 70 }} />
+                              {b.vouch_board_items.sort((a,x) => a.position - x.position).slice(0,5).map((item, i, arr) => (
+                                <ArchiveTile key={i} item={item} onMusicOpen={openMusicUrl} itemCount={arr.length} style={{ width: 70 }} />
                               ))}
                             </div>
                           )}
@@ -5494,8 +5548,8 @@ export default function Vouch() {
                     </div>
                     {b.vouch_board_items?.length > 0 && (
                       <div style={{ display: "flex", gap: 6 }}>
-                        {b.vouch_board_items.sort((a,b) => a.position - b.position).slice(0,5).map((item, i) => (
-                          <ArchiveTile key={i} item={item} onMusicOpen={openMusicUrl} style={{ width: 70 }} titleBelow={false} />
+                        {b.vouch_board_items.sort((a,b) => a.position - b.position).slice(0,5).map((item, i, arr) => (
+                          <ArchiveTile key={i} item={item} onMusicOpen={openMusicUrl} itemCount={arr.length} style={{ width: 70 }} titleBelow={false} />
                         ))}
                       </div>
                     )}
