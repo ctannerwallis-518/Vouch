@@ -357,16 +357,13 @@ function activityPillStyle(active = false, extra = {}) {
   };
 }
 
-const FEATURES_ANNOUNCE_KEY = "vouch-features-announce-2026-03";
+const FEATURES_ANNOUNCE_KEY = "vouch-features-announce-2026-03-v2";
 
 function FeaturesAnnounceModal({ onDismiss }) {
   const items = [
-    "30-second previews on songs, albums, and artists — right on the tile",
-    "Trailers for films and TV",
-    "Comments on vouch tiles — buddies can comment, you can reply",
-    "Notifications when someone comments on your vouch",
-    "Comments and agrees show up in your Activity feed",
-    "Previous vouches are now visible on profiles",
+    "You can now comment on buddies' Vouches",
+    "You can now listen to samples of songs, artists, and albums that have been Vouched for",
+    "You can now watch the trailer for any film or TV show",
   ];
   return (
     <div className="modal-overlay" onClick={onDismiss}>
@@ -376,9 +373,6 @@ function FeaturesAnnounceModal({ onDismiss }) {
           <button className="modal-x" onClick={onDismiss}>×</button>
         </div>
         <div className="modal-body">
-          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkMid, marginBottom: 18, lineHeight: 1.6 }}>
-            I've added some features:
-          </div>
           <ul style={{ listStyle: "none", margin: "0 0 20px", padding: 0, display: "flex", flexDirection: "column", gap: 12 }}>
             {items.map(text => (
               <li key={text} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontFamily: "'Spectral',serif", fontSize: 14, lineHeight: 1.5, color: T.ink }}>
