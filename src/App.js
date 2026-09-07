@@ -34,6 +34,7 @@ import {
   tileActionHint,
 } from "./tileLinks";
 import {
+  stopMusicPreview,
   fetchMusicPreview,
   getCachedMusicPreview,
   getMusicPreviewState,
@@ -41,6 +42,39 @@ import {
   subscribeMusicPreview,
   toggleMusicPreview,
 } from "./musicPreview";
+import {
+  fetchTrailer,
+  getCachedTrailer,
+  isFilmCategory,
+  tileMediaActionStyle,
+  trailerItemKey,
+} from "./trailerPreview";
+
+function TrailerModal({ youtubeKey, title, onClose }) {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return createPortal(
+    <div className="trailer-overlay" onClick={onClose}>
+      <div className="trailer-modal" onClick={(e) => e.stopPropagation()}>
+        <button type="button" className="trailer-close" onClick={onClose} aria-label="Close trailer">×</button>
+        <div className="trailer-frame-wrap">
+          <iframe
+            title={`${title || "Film"} trailer`}
+            src={`https://www.youtube-nocookie.com/embed/${youtubeKey}?autoplay=1&rel=0&modestbranding=1`}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+        {title && <div className="trailer-caption">{title}</div>}
+      </div>
+    </div>,
+    document.body
+  );
+}
 
 function PreviewIcon({ playing, size = 8 }) {
   if (playing) {
@@ -86,12 +120,7 @@ function TilePlayButton({ item, catKey, size = "md" }) {
   const { currentKey, loadingKey, playing } = getMusicPreviewState();
   const isLoading = loadingKey === itemKey;
   const isPlaying = playing && currentKey === itemKey;
-  const inset = size === "sm" ? 4 : 6;
-  const bottom = size === "sm" ? 26 : size === "lg" ? 36 : 30;
-  const fontSize = size === "sm" ? 6.5 : size === "lg" ? 8.5 : 7.5;
-  const iconSize = size === "sm" ? 7 : size === "lg" ? 9 : 8;
-  const padY = size === "sm" ? 3 : size === "lg" ? 5 : 4;
-  const padX = size === "sm" ? 5 : size === "lg" ? 8 : 6;
+  const { inset, bottom, fontSize, iconSize, padY, padX, gap } = tileMediaActionStyle(size, "preview");
 
   return (
     <button
@@ -103,11 +132,63 @@ function TilePlayButton({ item, catKey, size = "md" }) {
         e.stopPropagation();
         await toggleMusicPreview(item, catKey);
       }}
-      style={{ bottom, left: inset, fontSize, padding: `${padY}px ${padX}px` }}
+      style={{ bottom, left: inset, fontSize, padding: `${padY}px ${padX}px`, gap }}
     >
       {isLoading ? "…" : <PreviewIcon playing={isPlaying} size={iconSize} />}
       <span>Preview</span>
     </button>
+  );
+}
+
+function TileTrailerButton({ item, catKey, size = "md" }) {
+  const key = catKey || item?.category || item?._cat;
+  const itemKey = trailerItemKey(item, catKey);
+  const cached = getCachedTrailer(item, catKey);
+  const [hasTrailer, setHasTrailer] = useState(cached === undefined ? null : !!cached);
+  const [open, setOpen] = useState(false);
+  const [youtubeKey, setYoutubeKey] = useState(cached || null);
+
+  useEffect(() => {
+    if (!isFilmCategory(key) || !item?.title) return;
+    const hit = getCachedTrailer(item, catKey);
+    if (hit !== undefined) {
+      setHasTrailer(!!hit);
+      setYoutubeKey(hit);
+      return;
+    }
+    let cancelled = false;
+    fetchTrailer(item, catKey).then((key) => {
+      if (!cancelled) {
+        setHasTrailer(!!key);
+        setYoutubeKey(key);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [item, catKey, key, itemKey]);
+
+  if (!isFilmCategory(key) || !item?.title || hasTrailer !== true || !youtubeKey) return null;
+
+  const { inset, bottom, fontSize, iconSize, padY, padX, gap } = tileMediaActionStyle(size, "trailer");
+
+  return (
+    <>
+      <button
+        type="button"
+        className="tile-preview-btn"
+        aria-label="Watch trailer"
+        title="Watch trailer"
+        onClick={(e) => {
+          e.stopPropagation();
+          stopMusicPreview();
+          setOpen(true);
+        }}
+        style={{ bottom, left: inset, fontSize, padding: `${padY}px ${padX}px`, gap }}
+      >
+        <PreviewIcon playing={false} size={iconSize} />
+        <span>Watch Trailer</span>
+      </button>
+      {open && <TrailerModal youtubeKey={youtubeKey} title={item.title} onClose={() => setOpen(false)} />}
+    </>
   );
 }
 
@@ -138,6 +219,7 @@ function TileMedia({ item, catKey, onOpen, poster, title, className, style, plac
         ? <img src={poster} alt={title || ""} className={className} style={{ cursor: clickable ? "pointer" : "default" }} onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} />
         : <div className={className || "card-poster-placeholder"} style={{ display: "flex", cursor: clickable ? "pointer" : "default", ...placeholderStyle }}>{title}</div>)}
       <TilePlayButton item={item} catKey={key} size={badgeSize} />
+      <TileTrailerButton item={item} catKey={key} size={badgeSize} />
       <TileActionBadge item={item} catKey={key} onClick={open} size={badgeSize} />
     </div>
   );
@@ -315,6 +397,35 @@ const Styles = () => (
     }
     .tile-preview-btn:hover { background: #fff; color: #111008; }
     .tile-preview-btn.is-playing { background: #fff; color: #111008; border-color: #111008; }
+    .trailer-overlay {
+      position: fixed; inset: 0; z-index: 2000;
+      background: rgba(17,16,8,0.92);
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px 16px;
+    }
+    .trailer-modal {
+      position: relative; width: min(920px, 100%);
+      background: #111008; border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.55);
+    }
+    .trailer-close {
+      position: absolute; top: 8px; right: 10px; z-index: 2;
+      background: transparent; border: none; color: #fff;
+      font-family: 'Spectral', serif; font-size: 28px; line-height: 1;
+      cursor: pointer; opacity: 0.7; padding: 4px 8px;
+    }
+    .trailer-close:hover { opacity: 1; }
+    .trailer-frame-wrap {
+      position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000;
+    }
+    .trailer-frame-wrap iframe {
+      position: absolute; inset: 0; width: 100%; height: 100%; border: 0;
+    }
+    .trailer-caption {
+      padding: 10px 14px 12px;
+      font-family: 'Spectral SC', serif; font-size: 10px; letter-spacing: 0.12em;
+      color: rgba(255,255,255,0.75); text-transform: uppercase; text-align: center;
+    }
     .card-comment { font-family: 'Spectral', serif; font-style: italic; font-size: 10.5px; line-height: 1.5; color: ${T.inkMid}; margin-top: 4px; white-space: normal; word-break: break-word; }
     .slot-empty-sm { width: 180px; height: 248px; border: 2px dashed ${T.inkLight}; background: rgba(17,16,8,0.06); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.14s, background 0.14s; flex-shrink: 0; }
     .slot-empty-sm:hover { border-color: ${T.ink}; background: rgba(17,16,8,0.12); }
