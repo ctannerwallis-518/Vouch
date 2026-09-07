@@ -1466,13 +1466,19 @@ function ProfileBadgeBar({ badges, ownerName }) {
   );
 }
 
+function badgeWhoWas(ownerName) {
+  const who = ownerName || "They";
+  const verb = who === "You" || who === "They" ? "were" : "was";
+  return `${who} ${verb}`;
+}
+
 function BadgeExplainModal({ type, ownerName, circlePhrase = "your", onClose }) {
   const ribbon = BADGE_RIBBONS[type];
   if (!ribbon) return null;
-  const who = ownerName || "They";
+  const whoWas = badgeWhoWas(ownerName);
   const body = type === "first_global"
-    ? `${who} was the first person to Vouch for this globally.`
-    : `${who} was the first person to Vouch for this in ${circlePhrase} circle.`;
+    ? `${whoWas} the first person to Vouch for this globally.`
+    : `${whoWas} the first person to Vouch for this in ${circlePhrase} circle.`;
   return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 340 }}>
@@ -3369,6 +3375,7 @@ export default function Vouch() {
   const [newAgreements,  setNewAgreements]  = useState([]);
   const [archiveBannerDismissed, setArchiveBannerDismissed] = useState(!!localStorage.getItem('vouch-archive-public-announce'));
   const [expandPreviousVouches, setExpandPreviousVouches] = useState(true);
+  const [viewExpandPreviousVouches, setViewExpandPreviousVouches] = useState(true);
   const [showExpandVouchesPrompt, setShowExpandVouchesPrompt] = useState(false);
   const [newBuddies,     setNewBuddies]     = useState([]);
   const [showAgreements, setShowAgreements] = useState(false);
@@ -3593,8 +3600,9 @@ export default function Vouch() {
       .not("published_at", "is", null);
     setViewPublishCount(publishCount || 0);
     // Always fetch fresh profile data including avatar
-    const { data: profile } = await supabase.from("profiles").select("id, display_name, avatar_url, username").eq("id", uid).maybeSingle();
+    const { data: profile } = await supabase.from("profiles").select("id, display_name, avatar_url, username, expand_previous_vouches").eq("id", uid).maybeSingle();
     if (profile) {
+      setViewExpandPreviousVouches(profile.expand_previous_vouches !== false);
       setViewing(prev => ({ ...(prev || {}), userId: uid, avatarUrl: profile.avatar_url, displayName: profile.display_name, username: profile.username }));
       if (profile.username !== user?.username) {
         window.history.replaceState({}, "", `/@${profile.username}`);
@@ -4792,11 +4800,11 @@ export default function Vouch() {
               <div style={{ marginBottom: 40, borderBottom: `1px solid ${T.paperDark}`, paddingBottom: 32 }}>
                 <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", marginBottom: 8 }}>Profile Pages</div>
                 <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkLight, marginBottom: 16, lineHeight: 1.6 }}>
-                  When you visit someone's board, show their previous Vouches expanded by default.
+                  When others visit your profile, show your previous Vouches expanded by default.
                 </div>
                 <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer" }}>
                   <input type="checkbox" checked={expandPreviousVouches} onChange={e => saveExpandPreviousVouches(e.target.checked)} style={{ marginTop: 3, accentColor: T.ink, width: 16, height: 16, flexShrink: 0 }} />
-                  <span style={{ fontFamily: "'Spectral',serif", fontSize: 14, lineHeight: 1.5 }}>Always expand previous Vouches</span>
+                  <span style={{ fontFamily: "'Spectral',serif", fontSize: 14, lineHeight: 1.5 }}>Expand previous Vouches on my profile</span>
                 </label>
               </div>
               <div style={{ marginBottom: 40, borderBottom: `1px solid ${T.paperDark}`, paddingBottom: 32 }}>
@@ -5028,7 +5036,7 @@ export default function Vouch() {
                   </div>
                 ) : null}
                 {viewing && !isOwn && (
-                  <PreviousVouches key={viewing.userId} userId={viewing.userId} onDudeSame={dudeSame} myReactions={myReactions} queue={queue} onAddToQueue={addToQueue} onMusicOpen={openMusicUrl} defaultOpen={expandPreviousVouches} />
+                  <PreviousVouches key={viewing.userId} userId={viewing.userId} onDudeSame={dudeSame} myReactions={myReactions} queue={queue} onAddToQueue={addToQueue} onMusicOpen={openMusicUrl} defaultOpen={viewExpandPreviousVouches} />
                 )}
                 {isOwn && boardArchive.filter(b => !b.is_active && b.published_at).length > 0 && (
                   <OwnArchive boards={boardArchive} canPublish={canPublish} onRepublish={republishBoard} onMusicOpen={openMusicUrl} defaultOpen={expandPreviousVouches} onDelete={async (b) => { await revokeClaimsForBoard(b.id).catch(() => {}); await supabase.from("vouch_board_items").delete().eq("board_id", b.id); await supabase.from("vouch_boards").delete().eq("id", b.id); setBoardArchive(prev => prev.filter(x => x.id !== b.id)); loadBadgesForUser(userId).then(setOwnItemBadges).catch(() => {}); }} />
@@ -5697,14 +5705,14 @@ export default function Vouch() {
               </div>
               <div className="modal-body">
                 <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkMid, marginBottom: 20, lineHeight: 1.6 }}>
-                  Would you like previous Vouches to stay <strong style={{ fontStyle: "normal" }}>expanded</strong> when you visit someone's page? You can change this anytime in Settings.
+                  Would you like previous Vouches on <strong style={{ fontStyle: "normal" }}>your profile</strong> to stay expanded when others visit? You can change this anytime in Settings.
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   <button className="btn btn-solid" style={{ padding: "14px" }} onClick={() => dismissExpandVouchesPrompt(true)}>
-                    Yes — keep them expanded
+                    Yes — expand on my profile
                   </button>
                   <button className="btn btn-ghost" style={{ padding: "14px" }} onClick={() => dismissExpandVouchesPrompt(false)}>
-                    No — collapse by default
+                    No — collapse on my profile
                   </button>
                 </div>
               </div>
