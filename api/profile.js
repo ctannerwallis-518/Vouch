@@ -1,5 +1,10 @@
 const { createClient } = require("@supabase/supabase-js");
-const { fetchProfileOgMeta, buildOgHtml } = require("./_ogHelpers");
+const {
+  fetchProfileOgMeta,
+  readAppIndexHtml,
+  injectOgMeta,
+  buildOgHtml,
+} = require("./_ogHelpers");
 
 const supabase = createClient(
   process.env.REACT_APP_SUPABASE_URL || "https://bkbpetcyyuyqudlvbojo.supabase.co",
@@ -16,11 +21,14 @@ module.exports = async (req, res) => {
     const meta = await fetchProfileOgMeta(supabase, username);
     if (!meta) return res.status(404).send("Not found");
 
+    const indexHtml = readAppIndexHtml();
+    const html = indexHtml ? injectOgMeta(indexHtml, meta) : buildOgHtml(meta);
+
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=600");
-    res.status(200).send(buildOgHtml(meta));
+    return res.status(200).send(html);
   } catch (e) {
-    console.error(e);
-    res.status(500).send("Error");
+    console.error("profile og error:", e);
+    return res.status(500).send("Error");
   }
 };
