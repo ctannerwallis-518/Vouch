@@ -365,9 +365,9 @@ function FeaturesAnnounceModal({ onDismiss }) {
         </div>
         <div className="modal-body">
           <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkMid, marginBottom: 18, lineHeight: 1.6 }}>
-            A lot has landed since your last visit:
+            I've added some features:
           </div>
-          <ul style={{ listStyle: "none", margin: "0 0 24px", padding: 0, display: "flex", flexDirection: "column", gap: 12 }}>
+          <ul style={{ listStyle: "none", margin: "0 0 20px", padding: 0, display: "flex", flexDirection: "column", gap: 12 }}>
             {items.map(text => (
               <li key={text} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontFamily: "'Spectral',serif", fontSize: 14, lineHeight: 1.5, color: T.ink }}>
                 <span style={{ fontFamily: "'Spectral SC',serif", fontSize: 10, letterSpacing: "0.08em", color: T.inkMid, marginTop: 3, flexShrink: 0 }}>→</span>
@@ -375,6 +375,9 @@ function FeaturesAnnounceModal({ onDismiss }) {
               </li>
             ))}
           </ul>
+          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkMid, marginBottom: 20, lineHeight: 1.6 }}>
+            Hope you like it — Christian
+          </div>
           <button className="btn btn-solid" style={{ width: "100%", padding: "14px" }} onClick={onDismiss}>Got it</button>
         </div>
       </div>
