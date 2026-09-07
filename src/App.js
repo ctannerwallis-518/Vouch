@@ -72,6 +72,8 @@ function TilePlayButton({ item, catKey, size = "md" }) {
   const isPlaying = playing && currentKey === itemKey;
   const dim = size === "sm" ? 24 : size === "lg" ? 32 : 28;
   const fontSize = size === "sm" ? 9 : size === "lg" ? 11 : 10;
+  const inset = size === "sm" ? 4 : 6;
+  const bottom = size === "sm" ? 26 : size === "lg" ? 36 : 30;
 
   return (
     <button
@@ -83,7 +85,7 @@ function TilePlayButton({ item, catKey, size = "md" }) {
         e.stopPropagation();
         await toggleMusicPreview(item, catKey);
       }}
-      style={{ width: dim, height: dim, fontSize }}
+      style={{ width: dim, height: dim, fontSize, bottom, left: inset }}
     >
       {isLoading ? "…" : isPlaying ? "❚❚" : "▶"}
     </button>
@@ -284,7 +286,7 @@ const Styles = () => (
     }
     .tile-action-badge:hover { background: rgba(17,16,8,0.96); color: #fff; text-decoration: underline; text-underline-offset: 2px; }
     .tile-play-btn {
-      position: absolute; top: 6px; right: 6px; z-index: 3;
+      position: absolute; z-index: 49;
       display: flex; align-items: center; justify-content: center;
       background: rgba(17,16,8,0.82); border: 1px solid rgba(200,194,180,0.35);
       color: #C8C2B4; border-radius: 50%; cursor: pointer;
