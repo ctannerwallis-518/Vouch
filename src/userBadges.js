@@ -8,18 +8,18 @@ export const REGULAR_GOLD_MIN = 10;
 const FOUNDING_YEAR = 2026;
 
 export const USER_BADGE_RIBBONS = {
-  founding: { label: "2026", style: RIBBON_STYLES.cream, title: "Founding Voucher" },
-  scout: { label: "SCOUT", style: RIBBON_STYLES.gold, title: "Scout" },
+  founding: { label: "2026", style: RIBBON_STYLES.silver, title: "Founding Voucher" },
+  scout: { label: "SCOUT", style: RIBBON_STYLES.black, title: "Scout" },
 };
 
 export function vouchCountRibbonStyle(count) {
-  if (count >= REGULAR_GOLD_MIN) return RIBBON_STYLES.gold;
-  return RIBBON_STYLES.cream;
+  if (count >= REGULAR_GOLD_MIN) return RIBBON_STYLES.black;
+  return RIBBON_STYLES.silver;
 }
 
 export function streakRibbonStyle(streak) {
-  if (streak >= 8) return RIBBON_STYLES.gold;
-  if (streak >= 4) return RIBBON_STYLES.cream;
+  if (streak >= 8) return RIBBON_STYLES.black;
+  if (streak >= 4) return RIBBON_STYLES.silver;
   return RIBBON_STYLES.black;
 }
 
@@ -101,15 +101,15 @@ export function userBadgeRibbon(type, value) {
 }
 
 export function userBadgeTailColor(type, value) {
-  if (type === "founding") return "#A8A296";
-  if (type === "scout") return "#9A7820";
+  if (type === "founding") return "#909090";
+  if (type === "scout") return "#111008";
   if (type === "streak") {
-    if ((value || 0) >= 8) return "#9A7820";
-    if ((value || 0) >= 4) return "#A8A296";
+    if ((value || 0) >= 8) return "#111008";
+    if ((value || 0) >= 4) return "#909090";
     return "#111008";
   }
   if (type === "vouches") {
-    return (value || 0) >= REGULAR_GOLD_MIN ? "#9A7820" : "#A8A296";
+    return (value || 0) >= REGULAR_GOLD_MIN ? "#111008" : "#909090";
   }
   return "#111008";
 }
