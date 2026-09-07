@@ -97,13 +97,6 @@ function PreviewIcon({ playing, size = 8 }) {
   );
 }
 
-function tileActionBadgeStyle(size = "md") {
-  return {
-    fontSize: size === "sm" ? 7.5 : size === "lg" ? 8.5 : 8,
-    padding: size === "sm" ? "3px 4px" : "5px 6px",
-  };
-}
-
 function TilePlayButton({ item, catKey, size = "md" }) {
   const key = catKey || item?.category || item?._cat;
   const itemKey = previewItemKey(item, catKey);
@@ -132,7 +125,7 @@ function TilePlayButton({ item, catKey, size = "md" }) {
   const { currentKey, loadingKey, playing } = getMusicPreviewState();
   const isLoading = loadingKey === itemKey;
   const isPlaying = playing && currentKey === itemKey;
-  const { inset, bottom, fontSize, iconSize, padY, padX, gap } = tileMediaActionStyle(size);
+  const { fontSize, iconSize, padY, padX, gap } = tileMediaActionStyle(size);
 
   return (
     <button
@@ -144,7 +137,7 @@ function TilePlayButton({ item, catKey, size = "md" }) {
         e.stopPropagation();
         await toggleMusicPreview(item, catKey);
       }}
-      style={{ bottom, left: inset, fontSize, padding: `${padY}px ${padX}px`, gap }}
+      style={{ fontSize, padding: `${padY}px ${padX}px`, gap }}
     >
       {isLoading ? "…" : <PreviewIcon playing={isPlaying} size={iconSize} />}
       <span>Preview</span>
@@ -180,7 +173,7 @@ function TileTrailerButton({ item, catKey, size = "md" }) {
 
   if (!isFilmCategory(key) || !item?.title || hasTrailer !== true || !youtubeKey) return null;
 
-  const { inset, bottom, fontSize, iconSize, padY, padX, gap } = tileMediaActionStyle(size);
+  const { fontSize, iconSize, padY, padX, gap } = tileMediaActionStyle(size);
 
   return (
     <>
@@ -194,7 +187,7 @@ function TileTrailerButton({ item, catKey, size = "md" }) {
           stopMusicPreview();
           setOpen(true);
         }}
-        style={{ bottom, left: inset, fontSize, padding: `${padY}px ${padX}px`, gap }}
+        style={{ fontSize, padding: `${padY}px ${padX}px`, gap }}
       >
         <PreviewIcon playing={false} size={iconSize} />
         <span>Trailer</span>
@@ -209,15 +202,28 @@ function TileActionBadge({ item, catKey, onClick, size = "md" }) {
   if (!tileIsClickable(item, key)) return null;
   const hint = tileActionHint(key);
   if (!hint) return null;
+  const { fontSize, padY, padX, gap } = tileMediaActionStyle(size);
   return (
     <button
       type="button"
-      className="tile-action-badge"
+      className="tile-inline-btn"
       onClick={(e) => { e.stopPropagation(); onClick?.(); }}
-      style={tileActionBadgeStyle(size)}
+      style={{ fontSize, padding: `${padY}px ${padX}px`, gap }}
     >
-      {hint}
+      <span>{hint}</span>
     </button>
+  );
+}
+
+function TileMediaActions({ item, catKey, onOpen, badgeSize = "md" }) {
+  const key = catKey || item?.category || item?._cat;
+  const { inset, gap } = tileMediaActionStyle(badgeSize);
+  return (
+    <div className="tile-media-actions" style={{ bottom: inset, left: inset, gap }}>
+      <TilePlayButton item={item} catKey={key} size={badgeSize} />
+      <TileTrailerButton item={item} catKey={key} size={badgeSize} />
+      <TileActionBadge item={item} catKey={key} onClick={onOpen} size={badgeSize} />
+    </div>
   );
 }
 
@@ -230,9 +236,7 @@ function TileMedia({ item, catKey, onOpen, poster, title, className, style, plac
       {children || (poster
         ? <img src={poster} alt={title || ""} className={className} style={{ cursor: clickable ? "pointer" : "default" }} onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} />
         : <div className={className || "card-poster-placeholder"} style={{ display: "flex", cursor: clickable ? "pointer" : "default", ...placeholderStyle }}>{title}</div>)}
-      <TilePlayButton item={item} catKey={key} size={badgeSize} />
-      <TileTrailerButton item={item} catKey={key} size={badgeSize} />
-      <TileActionBadge item={item} catKey={key} onClick={open} size={badgeSize} />
+      <TileMediaActions item={item} catKey={key} onOpen={open} badgeSize={badgeSize} />
     </div>
   );
 }
@@ -389,17 +393,11 @@ const Styles = () => (
     .card-title   { font-family: 'Spectral', serif; font-weight: 600; font-size: 12.5px; line-height: 1.35; margin-top: 7px; }
     .card-sub     { font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.06em; color: ${T.inkLight}; margin-top: 2px; }
     .tile-media { position: relative; display: block; }
-    .tile-action-badge {
-      position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
-      width: 100%; margin: 0; padding: 5px 6px;
-      background: rgba(17,16,8,0.88); border: none; border-top: 1px solid rgba(200,194,180,0.22);
-      color: #C8C2B4; font-family: 'Spectral SC', serif; font-weight: 700;
-      letter-spacing: 0.14em; text-align: center; cursor: pointer;
-      transition: background 0.14s, color 0.14s;
-    }
-    .tile-action-badge:hover { background: rgba(17,16,8,0.96); color: #fff; text-decoration: underline; text-underline-offset: 2px; }
-    .tile-inline-btn {
+    .tile-media-actions {
       position: absolute; z-index: 49;
+      display: flex; flex-direction: column; align-items: flex-start;
+    }
+    .tile-inline-btn {
       display: inline-flex; align-items: center;
       background: rgba(17,16,8,0.88); border: 1px solid rgba(179,173,160,0.55);
       color: #C8C2B4; cursor: pointer;
