@@ -2709,9 +2709,9 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontFamily: "'Spectral',serif", fontWeight: 600, fontSize: 14, lineHeight: 1.3 }}>{item.title}</div>
                       <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.12em", color: T.inkLight, marginTop: 2 }}>{catLabel(item.catKey || item.category)}</div>
-                      <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-                        <button onClick={() => moveItem(i, -1)} disabled={i === 0} style={{ background: "transparent", border: `1px solid ${i === 0 ? T.paperDark : T.inkMid}`, color: i === 0 ? T.inkFaint : T.inkMid, cursor: i === 0 ? "default" : "pointer", padding: "4px 10px", fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.12em" }}>Move left</button>
-                        <button onClick={() => moveItem(i, 1)} disabled={i === items.length - 1} style={{ background: "transparent", border: `1px solid ${i === items.length - 1 ? T.paperDark : T.inkMid}`, color: i === items.length - 1 ? T.inkFaint : T.inkMid, cursor: i === items.length - 1 ? "default" : "pointer", padding: "4px 10px", fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.12em" }}>Move right</button>
+                      <div style={{ display: "flex", gap: 4, marginTop: 8 }}>
+                        <button onClick={() => moveItem(i, -1)} disabled={i === 0} style={{ background: "transparent", border: `1px solid ${T.paperDark}`, cursor: i === 0 ? "default" : "pointer", opacity: i === 0 ? 0.3 : 1, width: 28, height: 28, fontFamily: "monospace", fontSize: 14 }} aria-label="Move up">↑</button>
+                        <button onClick={() => moveItem(i, 1)} disabled={i === items.length - 1} style={{ background: "transparent", border: `1px solid ${T.paperDark}`, cursor: i === items.length - 1 ? "default" : "pointer", opacity: i === items.length - 1 ? 0.3 : 1, width: 28, height: 28, fontFamily: "monospace", fontSize: 14 }} aria-label="Move down">↓</button>
                       </div>
                     </div>
                   </div>
