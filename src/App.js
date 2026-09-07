@@ -28,10 +28,67 @@ import {
   fetchJustWatchTitleUrl,
   fetchBookStoreUrl,
   fetchAppleMusicUrl,
+  isMusicCategory,
   openTileLink,
   tileIsClickable,
   tileActionHint,
 } from "./tileLinks";
+import {
+  fetchMusicPreview,
+  getCachedMusicPreview,
+  getMusicPreviewState,
+  previewItemKey,
+  subscribeMusicPreview,
+  toggleMusicPreview,
+} from "./musicPreview";
+
+function TilePlayButton({ item, catKey, size = "md" }) {
+  const key = catKey || item?.category || item?._cat;
+  const itemKey = previewItemKey(item, catKey);
+  const cached = getCachedMusicPreview(item, catKey);
+  const [hasPreview, setHasPreview] = useState(cached === undefined ? null : !!cached);
+  const [, tick] = useState(0);
+
+  useEffect(() => subscribeMusicPreview(() => tick((n) => n + 1)), []);
+
+  useEffect(() => {
+    if (!isMusicCategory(key) || !item?.title) return;
+    const hit = getCachedMusicPreview(item, catKey);
+    if (hit !== undefined) {
+      setHasPreview(!!hit);
+      return;
+    }
+    let cancelled = false;
+    fetchMusicPreview(item, catKey).then((url) => {
+      if (!cancelled) setHasPreview(!!url);
+    });
+    return () => { cancelled = true; };
+  }, [item, catKey, key, itemKey]);
+
+  if (!isMusicCategory(key) || !item?.title || hasPreview !== true) return null;
+
+  const { currentKey, loadingKey, playing } = getMusicPreviewState();
+  const isLoading = loadingKey === itemKey;
+  const isPlaying = playing && currentKey === itemKey;
+  const dim = size === "sm" ? 24 : size === "lg" ? 32 : 28;
+  const fontSize = size === "sm" ? 9 : size === "lg" ? 11 : 10;
+
+  return (
+    <button
+      type="button"
+      className={`tile-play-btn${isPlaying ? " is-playing" : ""}`}
+      aria-label={isPlaying ? "Pause preview" : "Play 30-second preview"}
+      title={isPlaying ? "Pause preview" : "Play preview"}
+      onClick={async (e) => {
+        e.stopPropagation();
+        await toggleMusicPreview(item, catKey);
+      }}
+      style={{ width: dim, height: dim, fontSize }}
+    >
+      {isLoading ? "…" : isPlaying ? "❚❚" : "▶"}
+    </button>
+  );
+}
 
 function TileActionBadge({ item, catKey, onClick, size = "md" }) {
   const key = catKey || item?.category || item?._cat;
@@ -59,6 +116,7 @@ function TileMedia({ item, catKey, onOpen, poster, title, className, style, plac
       {children || (poster
         ? <img src={poster} alt={title || ""} className={className} style={{ cursor: clickable ? "pointer" : "default" }} onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} />
         : <div className={className || "card-poster-placeholder"} style={{ display: "flex", cursor: clickable ? "pointer" : "default", ...placeholderStyle }}>{title}</div>)}
+      <TilePlayButton item={item} catKey={key} size={badgeSize} />
       <TileActionBadge item={item} catKey={key} onClick={open} size={badgeSize} />
     </div>
   );
@@ -225,6 +283,17 @@ const Styles = () => (
       transition: background 0.14s, color 0.14s;
     }
     .tile-action-badge:hover { background: rgba(17,16,8,0.96); color: #fff; text-decoration: underline; text-underline-offset: 2px; }
+    .tile-play-btn {
+      position: absolute; top: 6px; right: 6px; z-index: 3;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(17,16,8,0.82); border: 1px solid rgba(200,194,180,0.35);
+      color: #C8C2B4; border-radius: 50%; cursor: pointer;
+      font-family: 'Spectral SC', serif; font-weight: 700; line-height: 1;
+      transition: background 0.14s, color 0.14s, transform 0.14s;
+      padding: 0; padding-left: 1px;
+    }
+    .tile-play-btn:hover { background: rgba(17,16,8,0.96); color: #fff; transform: scale(1.05); }
+    .tile-play-btn.is-playing { background: #111008; color: #fff; border-color: rgba(200,194,180,0.5); }
     .card-comment { font-family: 'Spectral', serif; font-style: italic; font-size: 10.5px; line-height: 1.5; color: ${T.inkMid}; margin-top: 4px; white-space: normal; word-break: break-word; }
     .slot-empty-sm { width: 180px; height: 248px; border: 2px dashed ${T.inkLight}; background: rgba(17,16,8,0.06); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.14s, background 0.14s; flex-shrink: 0; }
     .slot-empty-sm:hover { border-color: ${T.ink}; background: rgba(17,16,8,0.12); }

@@ -112,6 +112,7 @@ export function normalizeTileItem(item, catKey) {
   if (!item) return null;
   return {
     ...item,
+    id: item.id || item.item_id,
     category: item.category || item._cat || catKey || "",
     title: item.title || "",
     sub: item.sub || item.subtitle || "",
