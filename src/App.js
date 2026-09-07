@@ -227,30 +227,22 @@ function TileActionBadge({ item, catKey, onClick, size = "md", stacked = false }
   );
 }
 
-function ArchiveTileActions({ item, catKey, onOpen, size = "sm" }) {
-  const key = catKey || item?.category || item?._cat;
-  return (
-    <div className="tile-archive-actions">
-      <TilePlayButton item={item} catKey={key} size={size} stacked />
-      <TileTrailerButton item={item} catKey={key} size={size} stacked />
-      <TileActionBadge item={item} catKey={key} onClick={onOpen} size={size} stacked />
-    </div>
-  );
-}
-
-function TileMediaActions({ item, catKey, onOpen, badgeSize = "md" }) {
+function TileMediaActions({ item, catKey, onOpen, badgeSize = "md", horizontal = false }) {
   const key = catKey || item?.category || item?._cat;
   const { inset, gap } = tileMediaActionStyle(badgeSize);
   return (
-    <div className="tile-media-actions" style={{ bottom: inset, left: inset, gap }}>
-      <TilePlayButton item={item} catKey={key} size={badgeSize} />
-      <TileTrailerButton item={item} catKey={key} size={badgeSize} />
-      <TileActionBadge item={item} catKey={key} onClick={onOpen} size={badgeSize} />
+    <div
+      className={`tile-media-actions${horizontal ? " tile-media-actions-row" : ""}`}
+      style={{ bottom: inset, left: inset, ...(horizontal ? { right: inset } : {}), gap }}
+    >
+      <TilePlayButton item={item} catKey={key} size={badgeSize} stacked={!horizontal} />
+      <TileTrailerButton item={item} catKey={key} size={badgeSize} stacked={!horizontal} />
+      <TileActionBadge item={item} catKey={key} onClick={onOpen} size={badgeSize} stacked={!horizontal} />
     </div>
   );
 }
 
-function TileMedia({ item, catKey, onOpen, poster, title, className, style, placeholderStyle, badgeSize = "md", children }) {
+function TileMedia({ item, catKey, onOpen, poster, title, className, style, placeholderStyle, badgeSize = "md", actionsHorizontal = false, children }) {
   const key = catKey || item?.category || item?._cat;
   const clickable = tileIsClickable(item, key);
   const open = () => { if (clickable) onOpen?.(); };
@@ -259,7 +251,7 @@ function TileMedia({ item, catKey, onOpen, poster, title, className, style, plac
       {children || (poster
         ? <img src={poster} alt={title || ""} className={className} style={{ cursor: clickable ? "pointer" : "default" }} onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} />
         : <div className={className || "card-poster-placeholder"} style={{ display: "flex", cursor: clickable ? "pointer" : "default", ...placeholderStyle }}>{title}</div>)}
-      <TileMediaActions item={item} catKey={key} onOpen={open} badgeSize={badgeSize} />
+      <TileMediaActions item={item} catKey={key} onOpen={open} badgeSize={badgeSize} horizontal={actionsHorizontal} />
     </div>
   );
 }
@@ -435,6 +427,12 @@ const Styles = () => (
       position: absolute; z-index: 49;
       display: flex; flex-direction: column; align-items: stretch;
     }
+    .tile-media-actions-row {
+      flex-direction: row; flex-wrap: wrap; align-items: stretch;
+    }
+    .tile-media-actions-row .tile-inline-btn {
+      width: auto; flex: 1 1 auto; min-width: 0; justify-content: center;
+    }
     .tile-inline-btn {
       display: flex; align-items: center; justify-content: flex-start;
       width: 100%; box-sizing: border-box;
@@ -446,10 +444,6 @@ const Styles = () => (
     }
     .tile-inline-btn-spacer { flex-shrink: 0; display: block; }
     .tile-inline-btn-stacked { width: auto; white-space: nowrap; }
-    .tile-archive-actions {
-      display: flex; flex-direction: column; align-items: flex-start;
-      gap: 4px; margin-top: 6px;
-    }
     .archive-tiles-row {
       display: flex; flex-direction: row; flex-wrap: nowrap;
       overflow-x: auto; gap: 14px; padding-bottom: 8px;
@@ -457,15 +451,14 @@ const Styles = () => (
     }
     .archive-tiles-row::-webkit-scrollbar { display: none; }
     .archive-tiles-row-single { justify-content: center; overflow-x: visible; }
-    .archive-tile-single { display: flex; flex-direction: column; align-items: center; }
-    .archive-tile-single .tile-archive-actions { align-items: center; }
-    .archive-tile-card { width: 180px; flex-shrink: 0; }
+    .archive-tile-single { display: flex; flex-direction: column; align-items: center; width: 240px; }
+    .archive-tile-card { width: 220px; flex-shrink: 0; }
     .archive-tile-poster {
-      width: 180px; height: 248px; object-fit: cover; display: block;
+      width: 100%; height: 304px; object-fit: cover; display: block;
       border: 1px solid ${T.paperDark};
     }
     .archive-tile-poster-placeholder {
-      width: 180px; height: 248px; background: ${T.paperDark};
+      width: 100%; height: 304px; background: ${T.paperDark};
       border: 1px solid ${T.paperDark}; display: flex; align-items: center;
       justify-content: center; font-family: 'Spectral', serif; font-style: italic;
       font-size: 11px; color: ${T.inkLight}; text-align: center; padding: 10px;
@@ -588,9 +581,10 @@ const Styles = () => (
       .card-poster-placeholder { width: 95px; height: 130px; flex-shrink: 0; font-size: 9px; }
       .card:hover .card-poster { transform: none; box-shadow: none; }
       .slot-empty-sm { width: 95px; height: 130px; flex-shrink: 0; border: 2px dashed rgba(17,16,8,0.3); background: rgba(17,16,8,0.06); }
-      .archive-tile-card { width: 95px; }
-      .archive-tile-poster { width: 95px; height: 130px; }
-      .archive-tile-poster-placeholder { width: 95px; height: 130px; font-size: 9px; padding: 4px; }
+      .archive-tile-card { width: 120px; }
+      .archive-tile-single { width: 200px; }
+      .archive-tile-poster { height: 166px; }
+      .archive-tile-poster-placeholder { height: 166px; font-size: 9px; padding: 4px; }
       .page { padding: 0 16px 60px; }
       .masthead-meta { padding: 7px 16px; }
       .vouch-section { padding: 16px 14px 20px; }
@@ -785,10 +779,11 @@ async function enrichCommentsForFeed(commentRows, allPeople) {
   }).filter(Boolean);
 }
 
-function TileBuddyComments({ comments = [], canComment, boardItemId, currentUserId, onPost, onDelete, dark = true }) {
+function TileBuddyComments({ comments = [], canComment, boardItemId, currentUserId, onPost, onDelete, dark = true, compact = false }) {
   const [body, setBody] = useState("");
   const [posting, setPosting] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(!compact);
   if (!comments.length && !canComment) return null;
 
   const visible = expanded ? comments : comments.slice(-3);
@@ -807,10 +802,31 @@ function TileBuddyComments({ comments = [], canComment, boardItemId, currentUser
     setPosting(false);
   };
 
+  if (compact && !panelOpen) {
+    return (
+      <button
+        type="button"
+        onClick={e => { e.stopPropagation(); setPanelOpen(true); }}
+        style={grayPillStyle(false, { marginTop: 6, width: "100%", fontSize: "7px", letterSpacing: "0.1em", padding: "5px 8px" })}
+      >
+        Comments{comments.length > 0 ? ` · ${comments.length}` : ""}
+      </button>
+    );
+  }
+
   return (
     <div className="tile-buddy-comments" onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
+      {compact && (
+        <button
+          type="button"
+          onClick={e => { e.stopPropagation(); setPanelOpen(false); }}
+          style={{ background: "transparent", border: "none", padding: 0, marginBottom: 6, cursor: "pointer", fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: nameColor }}
+        >
+          Hide comments ▲
+        </button>
+      )}
       {comments.length > 0 && (
-        <div style={{ marginBottom: canComment ? 8 : 0, paddingTop: 6, borderTop: `1px solid ${dark ? "rgba(200,194,180,0.15)" : T.paperDark}` }}>
+        <div style={{ marginBottom: canComment ? 8 : 0, paddingTop: compact ? 0 : 6, borderTop: compact ? "none" : `1px solid ${dark ? "rgba(200,194,180,0.15)" : T.paperDark}` }}>
           {hiddenCount > 0 && !expanded && (
             <button type="button" onClick={e => { e.stopPropagation(); setExpanded(true); }} style={{ background: "transparent", border: "none", padding: 0, marginBottom: 4, cursor: "pointer", fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: nameColor }}>
               +{hiddenCount} earlier
@@ -819,8 +835,8 @@ function TileBuddyComments({ comments = [], canComment, boardItemId, currentUser
           {visible.map(c => (
             <div key={c.id} className="tile-buddy-comment-row">
               <span className="tile-buddy-comment-name" style={{ color: nameColor }}>{(c.displayName || "Buddy").split(" ")[0]}</span>
-              <span style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", color: textColor }}>{c.body}</span>
-              {currentUserId && c.user_id === currentUserId && onDelete && (
+              <span style={{ fontFamily: "'Spectral', serif", fontStyle: "italic", color: textColor }}>{c.body}</span>
+              {currentUserId && c.user_id === currentUserId && onDelete && canComment && (
                 <button type="button" onClick={e => { e.stopPropagation(); onDelete(c.id, boardItemId); }} style={{ background: "transparent", border: "none", color: nameColor, cursor: "pointer", fontSize: 10, marginLeft: 4, padding: "0 2px" }} aria-label="Delete comment">×</button>
               )}
             </div>
@@ -844,13 +860,15 @@ function TileBuddyComments({ comments = [], canComment, boardItemId, currentUser
   );
 }
 
-function ArchiveTile({ item, onMusicOpen, itemCount = 5, badgeSize = "sm", style, titleBelow = true, compact = false, tileComments = [], canComment = false, currentUserId, onPostTileComment, onDeleteTileComment }) {
+function ArchiveTile({ item, onMusicOpen, itemCount = 5, badgeSize = "sm", style, titleBelow = true, compact = false, tileComments = [], canComment = false, commentsCompact = false, currentUserId, onPostTileComment, onDeleteTileComment }) {
   const tile = boardItemToTile(item);
   const catKey = item.category;
   const open = () => openTileLink(tile, { catKey, onMusicOpen });
   const isSingle = itemCount === 1 && !compact;
   const fixedWidth = style?.width;
   const isMusic = isMusicCategory(catKey);
+  const clickable = tileIsClickable(tile, catKey);
+  const useOverlayActions = !compact && !fixedWidth;
 
   let containerClass = "archive-tile-card";
   let posterStyle;
@@ -867,52 +885,64 @@ function ArchiveTile({ item, onMusicOpen, itemCount = 5, badgeSize = "sm", style
     };
     containerClass = "";
   } else if (isSingle) {
-    const w = 200;
     posterStyle = {
-      width: w,
+      width: "100%",
       aspectRatio: isMusic ? "1/1" : "2/3",
       objectFit: "contain",
       background: "#000",
       border: `1px solid ${T.paperDark}`,
       display: "block",
     };
-    containerClass = "";
+    containerClass = "archive-tile-single";
   } else {
     posterStyle = null;
   }
 
   const containerStyle = {
     flexShrink: 0,
-    ...(isSingle ? { width: 200 } : {}),
     ...(compact || fixedWidth ? style : {}),
   };
 
+  const posterContent = tile.poster
+    ? posterStyle
+      ? <img src={tile.poster} alt={tile.title} style={{ ...posterStyle, cursor: clickable ? "pointer" : "default" }} className={posterStyle ? undefined : "archive-tile-poster"} onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} />
+      : <img src={tile.poster} alt={tile.title} className="archive-tile-poster" style={{ cursor: clickable ? "pointer" : "default" }} onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} />
+    : posterStyle
+      ? <div style={{ ...posterStyle, background: T.paperDark, alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 4, display: "flex" }}>{tile.title}</div>
+      : <div className={placeholderClass}>{tile.title}</div>;
+
   return (
     <div
-      className={isSingle ? "archive-tile-single" : (containerClass || undefined)}
+      className={containerClass || undefined}
       style={Object.keys(containerStyle).length ? containerStyle : undefined}
     >
-      <div
-        className="tile-media"
-        onClick={open}
-        style={{ cursor: tileIsClickable(tile, catKey) ? "pointer" : "default" }}
-      >
-        {tile.poster
-          ? posterStyle
-            ? <img src={tile.poster} alt={tile.title} style={posterStyle} className={posterStyle ? undefined : "archive-tile-poster"} onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} />
-            : <img src={tile.poster} alt={tile.title} className="archive-tile-poster" onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} />
-          : posterStyle
-            ? <div style={{ ...posterStyle, background: T.paperDark, alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 4, display: "flex" }}>{tile.title}</div>
-            : <div className={placeholderClass}>{tile.title}</div>}
-      </div>
-      <ArchiveTileActions item={tile} catKey={catKey} onOpen={open} size={badgeSize} />
-      {titleBelow && (
-        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: T.inkFaint, marginTop: 3, lineHeight: 1.3, maxWidth: isSingle ? 200 : fixedWidth || 180, textAlign: isSingle ? "center" : undefined }}>{item.title}</div>
+      {useOverlayActions ? (
+        <TileMedia
+          item={tile}
+          catKey={catKey}
+          onOpen={open}
+          badgeSize={isSingle ? "md" : "sm"}
+          actionsHorizontal
+        >
+          {posterContent}
+        </TileMedia>
+      ) : (
+        <div
+          className="tile-media"
+          onClick={open}
+          style={{ cursor: clickable ? "pointer" : "default" }}
+        >
+          {posterContent}
+        </div>
       )}
-      {item.id && (tileComments.length > 0 || canComment) && (
+      {titleBelow && (
+        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: T.inkFaint, marginTop: 3, lineHeight: 1.3, maxWidth: isSingle ? 240 : fixedWidth || 220, textAlign: isSingle ? "center" : undefined }}>{item.title}</div>
+      )}
+      {item.id && (tileComments.length > 0 || canComment || commentsCompact) && (
         <TileBuddyComments
           comments={tileComments}
           canComment={canComment}
+          compact={commentsCompact}
           boardItemId={item.id}
           currentUserId={currentUserId}
           onPost={onPostTileComment}
@@ -924,7 +954,7 @@ function ArchiveTile({ item, onMusicOpen, itemCount = 5, badgeSize = "sm", style
   );
 }
 
-function OwnArchive({ boards, canPublish, onRepublish, onDelete, onMusicOpen, defaultOpen = false, tileComments = {}, canComment = false, currentUserId, onPostTileComment, onDeleteTileComment }) {
+function OwnArchive({ boards, canPublish, onRepublish, onDelete, onMusicOpen, defaultOpen = false, tileComments = {}, currentUserId, onPostTileComment, onDeleteTileComment }) {
   const [open, setOpen] = useState(defaultOpen);
   const inactive = boards.filter(b => !b.is_active && b.published_at);
   if (!inactive.length) return null;
@@ -971,7 +1001,8 @@ function OwnArchive({ boards, canPublish, onRepublish, onDelete, onMusicOpen, de
                           onMusicOpen={onMusicOpen}
                           itemCount={items.length}
                           tileComments={tileComments[item.id] || []}
-                          canComment={canComment}
+                          canComment={false}
+                          commentsCompact
                           currentUserId={currentUserId}
                           onPostTileComment={onPostTileComment}
                           onDeleteTileComment={onDeleteTileComment}
@@ -989,7 +1020,7 @@ function OwnArchive({ boards, canPublish, onRepublish, onDelete, onMusicOpen, de
   );
 }
 
-function PreviousVouches({ userId, onDudeSame, myReactions, queue, onAddToQueue, onMusicOpen, defaultOpen = false, tileComments = {}, canComment = false, currentUserId, onPostTileComment, onDeleteTileComment }) {
+function PreviousVouches({ userId, onDudeSame, myReactions, queue, onAddToQueue, onMusicOpen, defaultOpen = false, tileComments = {}, currentUserId, onPostTileComment, onDeleteTileComment }) {
   const [boards, setBoards] = useState([]);
   const [open, setOpen] = useState(defaultOpen);
   const [loading, setLoading] = useState(false);
@@ -1053,7 +1084,8 @@ function PreviousVouches({ userId, onDudeSame, myReactions, queue, onAddToQueue,
                           onMusicOpen={onMusicOpen}
                           itemCount={items.length}
                           tileComments={commentsMap[item.id] || []}
-                          canComment={canComment}
+                          canComment={false}
+                          commentsCompact
                           currentUserId={currentUserId}
                           onPostTileComment={onPostTileComment}
                           onDeleteTileComment={onDeleteTileComment}
@@ -5511,10 +5543,10 @@ export default function Vouch() {
                   </div>
                 ) : null}
                 {viewing && !isOwn && (
-                  <PreviousVouches key={viewing.userId} userId={viewing.userId} onDudeSame={dudeSame} myReactions={myReactions} queue={queue} onAddToQueue={addToQueue} onMusicOpen={openMusicUrl} defaultOpen={viewExpandPreviousVouches} tileComments={vouchTileComments} canComment={isBuddyWith(viewing?.userId)} currentUserId={userId} onPostTileComment={postTileComment} onDeleteTileComment={deleteTileComment} />
+                  <PreviousVouches key={viewing.userId} userId={viewing.userId} onDudeSame={dudeSame} myReactions={myReactions} queue={queue} onAddToQueue={addToQueue} onMusicOpen={openMusicUrl} defaultOpen={viewExpandPreviousVouches} tileComments={vouchTileComments} currentUserId={userId} onPostTileComment={postTileComment} onDeleteTileComment={deleteTileComment} />
                 )}
                 {isOwn && boardArchive.filter(b => !b.is_active && b.published_at).length > 0 && (
-                  <OwnArchive boards={boardArchive} canPublish={canPublish} onRepublish={republishBoard} onMusicOpen={openMusicUrl} defaultOpen={expandPreviousVouches} tileComments={vouchTileComments} canComment={true} currentUserId={userId} onPostTileComment={postTileComment} onDeleteTileComment={deleteTileComment} onDelete={async (b) => { await revokeClaimsForBoard(b.id).catch(() => {}); await supabase.from("vouch_board_items").delete().eq("board_id", b.id); await supabase.from("vouch_boards").delete().eq("id", b.id); setBoardArchive(prev => prev.filter(x => x.id !== b.id)); loadBadgesForUser(userId).then(setOwnItemBadges).catch(() => {}); }} />
+                  <OwnArchive boards={boardArchive} canPublish={canPublish} onRepublish={republishBoard} onMusicOpen={openMusicUrl} defaultOpen={expandPreviousVouches} tileComments={vouchTileComments} currentUserId={userId} onPostTileComment={postTileComment} onDeleteTileComment={deleteTileComment} onDelete={async (b) => { await revokeClaimsForBoard(b.id).catch(() => {}); await supabase.from("vouch_board_items").delete().eq("board_id", b.id); await supabase.from("vouch_boards").delete().eq("id", b.id); setBoardArchive(prev => prev.filter(x => x.id !== b.id)); loadBadgesForUser(userId).then(setOwnItemBadges).catch(() => {}); }} />
                 )}
 
                 {(() => {
