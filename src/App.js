@@ -324,6 +324,21 @@ const T = {
   paperDark: "#b3ada0",
 };
 
+const GRAY_PILL_BG = "linear-gradient(180deg, #E0E0E0 0%, #C0C0C0 60%, #909090 100%)";
+const GRAY_PILL_ACTIVE = "linear-gradient(180deg, #C8C2B4 0%, #A8A29E 55%, #7a7568 100%)";
+
+function grayPillStyle(active = false, extra = {}) {
+  return {
+    background: active ? GRAY_PILL_ACTIVE : GRAY_PILL_BG,
+    border: "none",
+    color: T.ink,
+    cursor: "pointer",
+    fontWeight: 700,
+    fontFamily: "'Spectral SC',serif",
+    ...extra,
+  };
+}
+
 const Styles = () => (
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,600;1,700&family=Spectral+SC:wght@300;400;600;700&display=swap');
@@ -719,6 +734,57 @@ async function loadNewCommentNotifications(uid, lastVisit) {
     });
 }
 
+async function enrichCommentsForFeed(commentRows, allPeople) {
+  if (!commentRows?.length) return [];
+  const itemIds = [...new Set(commentRows.map(c => c.board_item_id))];
+  const { data: items } = await supabase
+    .from("vouch_board_items")
+    .select("id, title, poster, board_id, category, subtitle")
+    .in("id", itemIds);
+  const itemMap = Object.fromEntries((items || []).map(i => [i.id, i]));
+  const boardIds = [...new Set((items || []).map(i => i.board_id).filter(Boolean))];
+  const { data: boards } = boardIds.length
+    ? await supabase.from("vouch_boards").select("id, user_id, name, theme").in("id", boardIds)
+    : { data: [] };
+  const boardMap = Object.fromEntries((boards || []).map(b => [b.id, b]));
+  const profileIds = [...new Set([
+    ...commentRows.map(c => c.user_id),
+    ...(boards || []).map(b => b.user_id),
+  ])];
+  const { data: profs } = profileIds.length
+    ? await supabase.from("profiles").select("id, display_name, username, avatar_url").in("id", profileIds)
+    : { data: [] };
+  const profMap = Object.fromEntries((profs || []).map(p => [p.id, p]));
+
+  return commentRows.map(c => {
+    const item = itemMap[c.board_item_id];
+    const board = item ? boardMap[item.board_id] : null;
+    if (!item || !board) return null;
+    const ownerProf = profMap[board.user_id];
+    const commenterProf = profMap[c.user_id];
+    const buddy = allPeople.find(x => x.userId === c.user_id) || {
+      userId: c.user_id,
+      displayName: commenterProf?.display_name || "Someone",
+      username: commenterProf?.username || "",
+      avatarUrl: commenterProf?.avatar_url || null,
+    };
+    return {
+      type: "comment",
+      date: new Date(c.created_at),
+      comment: c,
+      buddy,
+      boardOwner: {
+        userId: board.user_id,
+        displayName: ownerProf?.display_name || "Someone",
+        username: ownerProf?.username || "",
+        avatarUrl: ownerProf?.avatar_url || null,
+      },
+      tile: item,
+      vouchLabel: (board.theme && board.theme !== "Other") ? board.theme : (board.name || "Vouch"),
+    };
+  }).filter(Boolean);
+}
+
 function TileBuddyComments({ comments = [], canComment, boardItemId, currentUserId, onPost, onDelete, dark = true }) {
   const [body, setBody] = useState("");
   const [posting, setPosting] = useState(false);
@@ -771,7 +837,7 @@ function TileBuddyComments({ comments = [], canComment, boardItemId, currentUser
             placeholder={canComment && comments.length > 0 ? "Reply…" : "Add a comment…"}
             maxLength={200}
           />
-          <button type="submit" disabled={posting || !body.trim()} style={{ flexShrink: 0, background: body.trim() ? "rgba(200,194,180,0.2)" : "rgba(200,194,180,0.08)", border: "1px solid rgba(200,194,180,0.2)", color: "rgba(200,194,180,0.7)", cursor: body.trim() ? "pointer" : "default", fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", padding: "6px 8px" }}>Post</button>
+          <button type="submit" disabled={posting || !body.trim()} style={grayPillStyle(!!body.trim(), { flexShrink: 0, fontSize: "7px", letterSpacing: "0.1em", padding: "6px 10px", opacity: body.trim() ? 1 : 0.45, cursor: body.trim() ? "pointer" : "default" })}>Post</button>
         </form>
       )}
     </div>
@@ -1905,9 +1971,9 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
           dark
         />
         {!isOwn && (
-          <div style={{ display: "flex", marginTop: 8 }}>
-            <button onClick={e => { e.stopPropagation(); onDudeSame(it, ownerId); }} style={{ flex: 1, background: myReactions?.includes(String(it.id)) ? "rgba(200,194,180,0.25)" : "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", color: "rgba(200,194,180,0.7)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "5px 4px", fontWeight: 700 }}>{myReactions?.includes(String(it.id)) ? "✓ Agreed" : "Agree"}</button>
-            {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue(it); }} style={{ flex: 1, background: queue?.find(q => String(q.id) === String(it.id)) ? "rgba(200,194,180,0.25)" : "rgba(200,194,180,0.1)", border: "1px solid rgba(200,194,180,0.2)", borderLeft: "none", color: "rgba(200,194,180,0.7)", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "5px 4px", fontWeight: 700 }}>{queue?.find(q => String(q.id) === String(it.id)) ? "✓ Queue" : "+ Queue"}</button>}
+          <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+            <button onClick={e => { e.stopPropagation(); onDudeSame(it, ownerId); }} style={grayPillStyle(myReactions?.includes(String(it.id)), { flex: 1, fontSize: "8px", letterSpacing: "0.1em", padding: "5px 4px" })}>{myReactions?.includes(String(it.id)) ? "✓ Agreed" : "Agree"}</button>
+            {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue(it); }} style={grayPillStyle(!!queue?.find(q => String(q.id) === String(it.id)), { flex: 1, fontSize: "8px", letterSpacing: "0.1em", padding: "5px 4px" })}>{queue?.find(q => String(q.id) === String(it.id)) ? "✓ Queue" : "+ Queue"}</button>}
           </div>
         )}
       </div>
@@ -2810,7 +2876,7 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue,
   );
 }
 
-const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onDudeSame, onAddToQueue, queue, myReactions, onShelfExtras, onMusicOpen, tileCommentProps, isBuddyWithUser }) {
+const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onViewOwnBoard, onDudeSame, onAddToQueue, queue, myReactions, onShelfExtras, onMusicOpen, tileCommentProps, isBuddyWithUser }) {
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
   const [feedTab, setFeedTab] = useState('vouches');
@@ -2891,6 +2957,15 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
               if (date > shelfGroups[key].date) shelfGroups[key].date = date;
             }
           });
+          const { data: commentRows } = await supabase
+            .from("vouch_tile_buddy_comments")
+            .select("id, user_id, body, created_at, board_item_id")
+            .gte("created_at", ninetyDaysAgo)
+            .order("created_at", { ascending: false })
+            .limit(200);
+          const buddyComments = (commentRows || []).filter(c => buddyIds.includes(c.user_id));
+          const commentFeedItems = await enrichCommentsForFeed(buddyComments, allPeople);
+          commentFeedItems.forEach(c => items.push(c));
         }
 
         items.sort((a, b) => b.date - a.date);
@@ -3107,11 +3182,55 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
             {primary.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{primary.subtitle}</div>}
             </div>
             {onDudeSame && buddy && buddy.userId !== selfId && (
-              <div style={{ display: "flex", marginTop: 8 }}>
-                <button onClick={e => { e.stopPropagation(); onDudeSame({ id: primary.item_id, title: primary.title, poster: primary.poster, _cat: primary.category }, buddy.userId); }} style={{ flex: 1, background: (myReactions||[]).find(r => r.item_id === String(primary.item_id) && r.item_owner_id === buddy.userId) ? "#111008" : "transparent", border: "1px solid #b3ada0", color: (myReactions||[]).find(r => r.item_id === String(primary.item_id) && r.item_owner_id === buddy.userId) ? "#C8C2B4" : "#3a3830", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700 }}>{(myReactions||[]).find(r => r.item_id === String(primary.item_id) && r.item_owner_id === buddy.userId) ? "✓ Agreed" : "Agree"}</button>
-                {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue({ id: primary.item_id, title: primary.title, poster: primary.poster, source_url: primary.source_url, category: primary.category, user_id: buddy.userId }); }} style={{ flex: 1, background: (queue||[]).find(q => String(q.id) === String(primary.item_id)) ? "#111008" : "transparent", border: "1px solid #b3ada0", borderLeft: "none", color: (queue||[]).find(q => String(q.id) === String(primary.item_id)) ? "#C8C2B4" : "#3a3830", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700 }}>{(queue||[]).find(q => String(q.id) === String(primary.item_id)) ? "✓ Queued" : "+ Queue"}</button>}
+              <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+                <button onClick={e => { e.stopPropagation(); onDudeSame({ id: primary.item_id, title: primary.title, poster: primary.poster, _cat: primary.category }, buddy.userId); }} style={grayPillStyle(!!(myReactions||[]).find(r => r.item_id === String(primary.item_id) && r.item_owner_id === buddy.userId), { flex: 1, fontSize: "8px", letterSpacing: "0.1em", padding: "6px 4px" })}>{(myReactions||[]).find(r => r.item_id === String(primary.item_id) && r.item_owner_id === buddy.userId) ? "✓ Agreed" : "Agree"}</button>
+                {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue({ id: primary.item_id, title: primary.title, poster: primary.poster, source_url: primary.source_url, category: primary.category, user_id: buddy.userId }); }} style={grayPillStyle(!!(queue||[]).find(q => String(q.id) === String(primary.item_id)), { flex: 1, fontSize: "8px", letterSpacing: "0.1em", padding: "6px 4px" })}>{(queue||[]).find(q => String(q.id) === String(primary.item_id)) ? "✓ Queued" : "+ Queue"}</button>}
               </div>
             )}
+          </div>
+        </div>
+      );
+    }
+    if (item.type === "comment") {
+      const { buddy, boardOwner, tile, vouchLabel, comment } = item;
+      const ownerView = {
+        userId: boardOwner.userId,
+        displayName: boardOwner.displayName,
+        username: boardOwner.username,
+        avatarUrl: boardOwner.avatarUrl,
+      };
+      const isOwnVouch = boardOwner.userId === selfId;
+      const goToVouch = () => (isOwnVouch ? onViewOwnBoard?.() : onViewBuddy(ownerView));
+      return (
+        <div key={`${isDiscovery ? "d" : "b"}-comment-${i}`} style={{ borderBottom: "1px solid #b3ada0", paddingBottom: 24, marginBottom: 24, opacity: isDiscovery ? 0.92 : 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <div onClick={() => buddy && onViewBuddy(buddy)} style={{ cursor: "pointer", flexShrink: 0 }}>
+              <Avatar name={buddy?.displayName || "?"} size={28} avatarUrl={buddy?.avatarUrl} />
+            </div>
+            <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: isDiscovery ? T.inkMid : "#3a3830", flex: 1 }}>
+              <span onClick={() => buddy && onViewBuddy(buddy)} style={{ fontWeight: 600, cursor: "pointer" }}>{buddy?.displayName}</span>
+              <span style={{ fontStyle: "italic", color: "#7a7568" }}> commented on </span>
+              {isOwnVouch ? (
+                <span style={{ fontWeight: 600, cursor: "pointer" }} onClick={goToVouch}>your Vouch</span>
+              ) : (
+                <span onClick={goToVouch} style={{ fontWeight: 600, cursor: "pointer" }}>{boardOwner.displayName}'s Vouch</span>
+              )}
+              {isDiscovery && <DiscoveryBadge />}
+              <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: "#a09890", marginLeft: 8 }}>{item.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+            </div>
+          </div>
+          <div style={{ width: "100%", maxWidth: 300, margin: "0 auto" }}>
+            <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.14em", color: "#7a7568", marginBottom: 6 }}>{vouchLabel}</div>
+            {tile.poster && (
+              <div style={{ cursor: tileIsClickable(tile, tile.category) ? "pointer" : "default" }} onClick={() => openTileLink(tile, { catKey: tile.category, onMusicOpen })}>
+                <img src={tile.poster} alt={tile.title} style={{ width: "100%", maxHeight: 220, objectFit: "contain", background: "#000", display: "block", border: `1px solid ${T.paperDark}` }} onError={e => e.target.style.display = "none"} />
+              </div>
+            )}
+            <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{tile.title}</div>
+            {comment?.body && (
+              <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: "#3a3830", marginTop: 8, lineHeight: 1.5 }}>"{comment.body}"</div>
+            )}
+            <button type="button" onClick={goToVouch} style={grayPillStyle(false, { marginTop: 10, width: "100%", fontSize: "8px", letterSpacing: "0.12em", padding: "7px 10px" })}>View Vouch</button>
           </div>
         </div>
       );
@@ -3170,11 +3289,11 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
                 {r.subtitle && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", color: "#a09890", marginTop: 2 }}>{r.subtitle}</div>}
               </div>
               {onDudeSame && r.item_owner_id && r.item_owner_id !== selfId && (
-                <div style={{ display: "flex", marginTop: 8 }}>
-                  <button onClick={() => onDudeSame({ id: r.item_id, title: r.title, poster: r.poster, _cat: r.category }, r.item_owner_id)} style={{ flex: 1, background: (myReactions||[]).find(x => x.item_id === r.item_id && x.item_owner_id === r.item_owner_id) ? "#111008" : "transparent", border: "1px solid #b3ada0", color: (myReactions||[]).find(x => x.item_id === r.item_id && x.item_owner_id === r.item_owner_id) ? "#C8C2B4" : "#3a3830", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700 }}>
+                <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+                  <button onClick={() => onDudeSame({ id: r.item_id, title: r.title, poster: r.poster, _cat: r.category }, r.item_owner_id)} style={grayPillStyle(!!(myReactions||[]).find(x => x.item_id === r.item_id && x.item_owner_id === r.item_owner_id), { flex: 1, fontSize: "8px", letterSpacing: "0.1em", padding: "6px 4px" })}>
                     {(myReactions||[]).find(x => x.item_id === r.item_id && x.item_owner_id === r.item_owner_id) ? "✓ Agreed" : "Agree"}
                   </button>
-                  {onAddToQueue && <button onClick={() => onAddToQueue({ id: r.item_id, title: r.title, poster: r.poster, source_url: r.source_url, category: r.category })} style={{ flex: 1, background: (queue||[]).find(q => q.id === r.item_id) ? "#111008" : "transparent", border: "1px solid #b3ada0", borderLeft: "none", color: (queue||[]).find(q => q.id === r.item_id) ? "#C8C2B4" : "#3a3830", cursor: "pointer", fontSize: "8px", fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", padding: "6px 4px", fontWeight: 700 }}>
+                  {onAddToQueue && <button onClick={() => onAddToQueue({ id: r.item_id, title: r.title, poster: r.poster, source_url: r.source_url, category: r.category })} style={grayPillStyle(!!(queue||[]).find(q => q.id === r.item_id), { flex: 1, fontSize: "8px", letterSpacing: "0.1em", padding: "6px 4px" })}>
                     {(queue||[]).find(q => q.id === r.item_id) ? "✓ Queued" : "+ Queue"}
                   </button>}
                 </div>
@@ -5088,7 +5207,7 @@ export default function Vouch() {
                 )}
               </div>
               <div className="board-sub" style={{ marginBottom: 28 }}>Recent activity from your circle</div>
-              <BuddyFeed buddies={buddies} selfId={userId} selfName={user?.displayName} selfAvatar={user?.avatarUrl} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId, true); window.scrollTo(0,0); }} onDudeSame={dudeSame} onAddToQueue={addToQueue} queue={queue} myReactions={myReactions} onShelfExtras={setShelfExtras} onMusicOpen={openMusicUrl} tileCommentProps={tileCommentProps} isBuddyWithUser={isBuddyWith} />
+              <BuddyFeed buddies={buddies} selfId={userId} selfName={user?.displayName} selfAvatar={user?.avatarUrl} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId, true); window.scrollTo(0,0); }} onViewOwnBoard={() => { setViewing(null); setTab("board"); window.history.pushState({ tab: "board" }, "", "/"); scrollToTop(); }} onDudeSame={dudeSame} onAddToQueue={addToQueue} queue={queue} myReactions={myReactions} onShelfExtras={setShelfExtras} onMusicOpen={openMusicUrl} tileCommentProps={tileCommentProps} isBuddyWithUser={isBuddyWith} />
             </div>
           )}
           {tab === "settings" && !viewing && (
