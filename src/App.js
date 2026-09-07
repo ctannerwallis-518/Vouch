@@ -604,6 +604,20 @@ function boardItemToTile(item) {
   }, item.category);
 }
 
+function vouchItemToDisplay(item) {
+  return {
+    id: item.item_id,
+    title: item.title,
+    sub: item.subtitle || "",
+    poster: item.poster,
+    comment: item.comment || "",
+    vouched: true,
+    sourceUrl: item.source_url,
+    _cat: item.category,
+    _catLabel: CATEGORIES.find(c => c.key === item.category)?.label || item.category,
+  };
+}
+
 function ArchiveTile({ item, onMusicOpen, itemCount = 5, badgeSize = "sm", style, titleBelow = true, compact = false }) {
   const tile = boardItemToTile(item);
   const catKey = item.category;
@@ -667,7 +681,12 @@ function ArchiveTile({ item, onMusicOpen, itemCount = 5, badgeSize = "sm", style
       </div>
       <ArchiveTileActions item={tile} catKey={catKey} onOpen={open} size={badgeSize} />
       {titleBelow && (
-        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: T.inkFaint, marginTop: 3, lineHeight: 1.3, maxWidth: isSingle ? 200 : fixedWidth || 180, textAlign: isSingle ? "center" : undefined }}>{item.title}</div>
+        <>
+          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: T.inkFaint, marginTop: 3, lineHeight: 1.3, maxWidth: isSingle ? 200 : fixedWidth || 180, textAlign: isSingle ? "center" : undefined }}>{item.title}</div>
+          {item.comment && (
+            <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 9, color: T.inkLight, marginTop: 3, lineHeight: 1.35, maxWidth: isSingle ? 200 : fixedWidth || 180, textAlign: isSingle ? "center" : undefined }}>"{item.comment}"</div>
+          )}
+        </>
       )}
     </div>
   );
@@ -927,7 +946,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
             const avb = board.activeVouchBoard;
             const vbBoard = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [], podcasts: [] };
             (avb.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0,5).forEach(item => {
-              if (vbBoard[item.category]) vbBoard[item.category].push({ id: item.item_id, title: item.title, sub: item.subtitle || "", poster: item.poster, comment: "", vouched: true, sourceUrl: item.source_url, _cat: item.category, _catLabel: CATEGORIES.find(c=>c.key===item.category)?.label || item.category });
+              if (vbBoard[item.category]) vbBoard[item.category].push(vouchItemToDisplay(item));
             });
             const theme = (avb.theme && avb.theme !== "Other") ? avb.theme : (avb.name || "Vouch");
             return (
@@ -2046,7 +2065,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
   const [theme, setTheme]             = useState(savedDraft?.theme ?? existing?.theme ?? "");
   const [description, setDescription] = useState(savedDraft?.description ?? existing?.description ?? "");
   const [singleCat, setSingleCat]     = useState(savedDraft?.singleCat ?? existing?.single_category ?? "");
-  const [items, setItems]             = useState(savedDraft?.items ?? existing?.vouch_board_items?.sort((a,b)=>a.position-b.position).map(i => ({ ...i, id: i.item_id, sub: i.subtitle, catKey: i.category })) ?? []);
+  const [items, setItems]             = useState(savedDraft?.items ?? existing?.vouch_board_items?.sort((a,b)=>a.position-b.position).map(i => ({ ...i, id: i.item_id, sub: i.subtitle, catKey: i.category, comment: i.comment || "" })) ?? []);
   const [addingItem, setAddingItem]   = useState(false);
   const [q, setQ]                     = useState("");
   const [results, setResults]         = useState([]);
@@ -2111,6 +2130,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
     [next[idx], next[target]] = [next[target], next[idx]];
     return next;
   });
+  const updateItemComment = (idx, comment) => setItems(prev => prev.map((item, i) => i === idx ? { ...item, comment: comment.slice(0, 200) } : item));
 
   const [publishing, setPublishing] = useState(false);
   const handlePublish = () => {
@@ -2165,6 +2185,15 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
                       <button onClick={() => removeItem(i)} style={{ position: "absolute", top: 2, right: 2, background: "rgba(17,16,8,0.85)", border: "none", color: "#C8C2B4", width: 18, height: 18, cursor: "pointer", fontSize: 12, lineHeight: "18px", textAlign: "center" }}>×</button>
                     </div>
                     <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "6px", color: T.inkFaint, marginTop: 2, textAlign: "center", lineHeight: 1.2 }}>{catLabel(item.catKey || item.category)}</div>
+                    <textarea
+                      className="comment-area"
+                      placeholder="Optional note…"
+                      value={item.comment || ""}
+                      onChange={e => updateItemComment(i, e.target.value)}
+                      maxLength={200}
+                      rows={2}
+                      style={{ marginTop: 4, height: 44, fontSize: 10, width: "100%", padding: "6px 8px" }}
+                    />
                     <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
                       <button onClick={() => moveItem(i, -1)} disabled={i === 0} style={{ background: "transparent", border: `1px solid ${i === 0 ? T.paperDark : T.inkMid}`, color: i === 0 ? T.inkFaint : T.inkMid, cursor: i === 0 ? "default" : "pointer", width: 24, height: 24, fontSize: 12, lineHeight: "22px", textAlign: "center" }}>←</button>
                       <button onClick={() => moveItem(i, 1)} disabled={i === items.length - 1} style={{ background: "transparent", border: `1px solid ${i === items.length - 1 ? T.paperDark : T.inkMid}`, color: i === items.length - 1 ? T.inkFaint : T.inkMid, cursor: i === items.length - 1 ? "default" : "pointer", width: 24, height: 24, fontSize: 12, lineHeight: "22px", textAlign: "center" }}>→</button>
@@ -2820,7 +2849,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
             {vouchItems.length > 0 && (() => {
               const vbBoard = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [], podcasts: [] };
               vouchItems.forEach(it => {
-                if (vbBoard[it.category]) vbBoard[it.category].push({ id: it.item_id, title: it.title, sub: it.subtitle || "", poster: it.poster, comment: "", vouched: true, sourceUrl: it.source_url, _cat: it.category, _catLabel: it.category });
+                if (vbBoard[it.category]) vbBoard[it.category].push(vouchItemToDisplay(it));
               });
               const isSelfBoard = b.user_id === selfId;
               return <VouchSection board={vbBoard} isOwn={isSelfBoard} onCard={()=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={onDudeSame || (()=>{})} myReactions={(myReactions || []).filter(r => r.item_owner_id === b.user_id).map(r => r.item_id)} hideHeader={true} hideEmptySlots={true} onAddToQueue={isSelfBoard ? null : (onAddToQueue || null)} queue={queue} ownerId={b.user_id} onMusicOpen={onMusicOpen} singleTile={true} itemBadges={itemBadgesForOwner(feedBadgeMap, b.user_id)} badgeOwnerName={buddy?.displayName} />;
@@ -3477,6 +3506,7 @@ export default function Vouch() {
             source_url: item.sourceUrl || item.source_url || null,
             category: item.catKey || item.category || "",
             position: i,
+            comment: item.comment || "",
           }))
         );
       }
@@ -3506,6 +3536,7 @@ export default function Vouch() {
             source_url: item.sourceUrl || item.source_url || null,
             category: item.catKey || item.category || "",
             position: i,
+            comment: item.comment || "",
           }))
         );
       }
@@ -4262,6 +4293,7 @@ export default function Vouch() {
             source_url: item.sourceUrl || item.source_url || null,
             category: item.catKey || item.category || "",
             position: i,
+            comment: item.comment || "",
           })),
         };
       }
@@ -5005,7 +5037,7 @@ export default function Vouch() {
                       <VouchSection board={(() => {
                         const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [], podcasts: [] };
                         (activeBoard.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0,5).forEach(item => {
-                          if (b[item.category]) b[item.category].push({ id: item.item_id, title: item.title, sub: item.subtitle || "", poster: item.poster, comment: "", vouched: true, sourceUrl: item.source_url, _cat: item.category, _catLabel: CATEGORIES.find(c=>c.key===item.category)?.label || item.category });
+                          if (b[item.category]) b[item.category].push(vouchItemToDisplay(item));
                         });
                         return b;
                       })()} isOwn={true} onCard={(k, i) => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => {}} myReactions={[]} hideHeader={true} onMusicOpen={openMusicUrl} itemBadges={ownItemBadges} badgeOwnerName={user.displayName} />
@@ -5029,7 +5061,7 @@ export default function Vouch() {
                     <VouchSection board={(() => {
                       const brd = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [], podcasts: [] };
                       (viewActiveBoard.vouch_board_items || []).sort((a,x) => a.position - x.position).slice(0,5).forEach(item => {
-                        if (brd[item.category]) brd[item.category].push({ id: item.item_id, title: item.title, sub: item.subtitle || "", poster: item.poster, comment: "", vouched: true, sourceUrl: item.source_url, _cat: item.category, _catLabel: CATEGORIES.find(c=>c.key===item.category)?.label || item.category });
+                        if (brd[item.category]) brd[item.category].push(vouchItemToDisplay(item));
                       });
                       return brd;
                     })()} isOwn={false} onCard={(k,i)=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={dudeSame} myReactions={myReactions.filter(r => viewing && r.item_owner_id === viewing.userId).map(r => r.item_id)} hideHeader={true} onAddToQueue={addToQueue} queue={queue} ownerId={viewing?.userId} onMusicOpen={openMusicUrl} itemBadges={viewItemBadges} badgeOwnerName={viewing?.displayName} />
