@@ -301,11 +301,36 @@ const EMPTY_BOARD = {
   movies: [], albums: [], artists: [], songs: [], books: [], shows: [], podcasts: [],
 };
 
-const BOARD_THEMES = [
+const BOARD_THEMES_BASE = [
   "Feelin' Lately", "All-Timers", "Nostalgic", "Deep Cuts",
-  "New Releases", "Underrated", "Seasonal", "No Boundaries",
-  "Locals Only", "Old School", "Classics", "Guilty Pleasures", "Other"
+  "New Releases", "Underrated", "No Boundaries",
+  "Locals Only", "Old School", "Classics", "Guilty Pleasures", "Other",
 ];
+
+/** Rotating season label (replaces old static "Seasonal"). */
+function getCurrentSeasonTheme(date = new Date()) {
+  const month = date.getMonth(); // 0 = Jan … 11 = Dec
+  if (month === 11 || month <= 1) return "Winter";       // Dec–Feb
+  if (month >= 2 && month <= 4) return "Spring";       // Mar–May
+  if (month >= 5 && month <= 6) return "Summer";       // Jun–Jul
+  if (month === 7 || month === 8) return "Late Summer"; // Aug–Sep
+  return "Fall Favorites";                              // Oct–Nov
+}
+
+/** Timed + seasonal themes for publish/edit pickers — updates automatically by calendar. */
+function getTimedBoardThemes(date = new Date()) {
+  const month = date.getMonth();
+  const year = date.getFullYear();
+  const timed = [];
+
+  if (month >= 10) timed.push(`Best of ${year}`);       // Nov–Dec
+  if (month === 8 || month === 9) timed.push("Spooky Season"); // Sep–Oct
+  if (month === 9) timed.push("Halloween");             // Oct
+
+  const seasonTheme = getCurrentSeasonTheme(date);
+  const core = BOARD_THEMES_BASE.filter(t => t !== "Other" && t !== seasonTheme);
+  return [...timed, seasonTheme, ...core, "Other"];
+}
 
 const T = {
   bg:        "#C8C2B4",
@@ -5989,7 +6014,7 @@ export default function Vouch() {
             onPublish={publishBoard}
             existing={editingBoard}
             categories={CATEGORIES}
-            themes={BOARD_THEMES}
+            themes={getTimedBoardThemes()}
             userId={userId}
             canPublish={canPublish}
             nextPublishDate={nextPublishDate}
@@ -6286,7 +6311,7 @@ export default function Vouch() {
             onPublish={publishBoard}
             existing={editingBoard}
             categories={CATEGORIES}
-            themes={BOARD_THEMES}
+            themes={getTimedBoardThemes()}
             userId={userId}
             canPublish={canPublish}
             nextPublishDate={nextPublishDate}
@@ -6300,7 +6325,7 @@ export default function Vouch() {
                 <div className="modal-title">Edit Vouch Details</div>
                 <button className="modal-x" onClick={() => setEditingMeta(false)}>×</button>
               </div>
-              <EditMetaForm board={activeBoard} themes={BOARD_THEMES} onSave={async (updates) => {
+              <EditMetaForm board={activeBoard} themes={getTimedBoardThemes()} onSave={async (updates) => {
                 await supabase.from("vouch_boards").update(updates).eq("id", activeBoard.id);
                 await loadVouchBoards(userId);
                 setEditingMeta(false);
