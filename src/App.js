@@ -441,6 +441,9 @@ const Styles = () => (
       -webkit-overflow-scrolling: touch; scrollbar-width: none;
     }
     .archive-tiles-row::-webkit-scrollbar { display: none; }
+    .archive-tiles-row-single { justify-content: center; overflow-x: visible; }
+    .archive-tile-single { display: flex; flex-direction: column; align-items: center; }
+    .archive-tile-single .tile-archive-actions { align-items: center; }
     .archive-tile-card { width: 180px; flex-shrink: 0; }
     .archive-tile-poster {
       width: 180px; height: 248px; object-fit: cover; display: block;
@@ -645,7 +648,10 @@ function ArchiveTile({ item, onMusicOpen, itemCount = 5, badgeSize = "sm", style
   };
 
   return (
-    <div className={containerClass || undefined} style={Object.keys(containerStyle).length ? containerStyle : undefined}>
+    <div
+      className={isSingle ? "archive-tile-single" : (containerClass || undefined)}
+      style={Object.keys(containerStyle).length ? containerStyle : undefined}
+    >
       <div
         className="tile-media"
         onClick={open}
@@ -661,7 +667,7 @@ function ArchiveTile({ item, onMusicOpen, itemCount = 5, badgeSize = "sm", style
       </div>
       <ArchiveTileActions item={tile} catKey={catKey} onOpen={open} size={badgeSize} />
       {titleBelow && (
-        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: T.inkFaint, marginTop: 3, lineHeight: 1.3, maxWidth: isSingle ? 200 : fixedWidth || 180 }}>{item.title}</div>
+        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: T.inkFaint, marginTop: 3, lineHeight: 1.3, maxWidth: isSingle ? 200 : fixedWidth || 180, textAlign: isSingle ? "center" : undefined }}>{item.title}</div>
       )}
     </div>
   );
@@ -706,7 +712,7 @@ function OwnArchive({ boards, canPublish, onRepublish, onDelete, onMusicOpen, de
                         <button onClick={() => { if (window.confirm("Delete this Vouch permanently?")) onDelete(b); }} style={{ padding: "4px 12px", fontSize: 10, fontFamily: "'Spectral SC',serif", letterSpacing: "0.1em", background: "transparent", border: "1px solid " + T.paperDark, color: T.inkMid, cursor: "pointer" }}>Delete</button>
                       </div>
                     </div>
-                    <div className="archive-tiles-row">
+                    <div className={`archive-tiles-row${items.length === 1 ? " archive-tiles-row-single" : ""}`}>
                       {items.map((item, idx) => (
                         <ArchiveTile key={idx} item={item} onMusicOpen={onMusicOpen} itemCount={items.length} />
                       ))}
@@ -768,7 +774,7 @@ function PreviousVouches({ userId, onDudeSame, myReactions, queue, onAddToQueue,
                       <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.12em", color: T.inkLight, marginTop: 2 }}>{new Date(b.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
                       {b.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkMid, marginTop: 3 }}>{b.description}</div>}
                     </div>
-                    <div className="archive-tiles-row">
+                    <div className={`archive-tiles-row${items.length === 1 ? " archive-tiles-row-single" : ""}`}>
                       {items.map((item, idx) => (
                         <ArchiveTile key={idx} item={item} onMusicOpen={onMusicOpen} itemCount={items.length} />
                       ))}
