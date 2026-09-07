@@ -345,11 +345,30 @@ function agreePillStyle(agreed = false, extra = {}) {
   };
 }
 
-function activityPillStyle(active = false, extra = {}) {
+function activityBtnStyle(extra = {}) {
   return {
-    background: active ? AGREE_CHECK_GOLD : T.ink,
+    background: T.ink,
     border: "none",
-    color: active ? T.ink : T.bg,
+    color: T.bg,
+    cursor: "pointer",
+    fontWeight: 700,
+    fontFamily: "'Spectral SC',serif",
+    ...extra,
+  };
+}
+
+function activityAgreePillStyle(agreed = false, extra = {}) {
+  return activityBtnStyle({
+    color: agreed ? AGREE_CHECK_GOLD : T.bg,
+    ...extra,
+  });
+}
+
+function activityQueuePillStyle(queued = false, extra = {}) {
+  return {
+    background: queued ? AGREE_CHECK_GOLD : T.ink,
+    border: "none",
+    color: queued ? T.ink : T.bg,
     cursor: "pointer",
     fontWeight: 700,
     fontFamily: "'Spectral SC',serif",
@@ -3279,8 +3298,8 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
             </div>
             {onDudeSame && buddy && buddy.userId !== selfId && (
               <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-                <button onClick={e => { e.stopPropagation(); onDudeSame({ id: primary.item_id, title: primary.title, poster: primary.poster, _cat: primary.category }, buddy.userId); }} style={activityPillStyle(!!(myReactions||[]).find(r => r.item_id === String(primary.item_id) && r.item_owner_id === buddy.userId), { flex: 1, fontSize: "8px", letterSpacing: "0.1em", padding: "6px 4px" })}>{(myReactions||[]).find(r => r.item_id === String(primary.item_id) && r.item_owner_id === buddy.userId) ? "✓ Agreed" : "Agree"}</button>
-                {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue({ id: primary.item_id, title: primary.title, poster: primary.poster, source_url: primary.source_url, category: primary.category, user_id: buddy.userId }); }} style={activityPillStyle(!!(queue||[]).find(q => String(q.id) === String(primary.item_id)), { flex: 1, fontSize: "8px", letterSpacing: "0.1em", padding: "6px 4px" })}>{(queue||[]).find(q => String(q.id) === String(primary.item_id)) ? "✓ Queued" : "+ Queue"}</button>}
+                <button onClick={e => { e.stopPropagation(); onDudeSame({ id: primary.item_id, title: primary.title, poster: primary.poster, _cat: primary.category }, buddy.userId); }} style={activityAgreePillStyle(!!(myReactions||[]).find(r => r.item_id === String(primary.item_id) && r.item_owner_id === buddy.userId), { flex: 1, fontSize: "8px", letterSpacing: "0.1em", padding: "6px 4px" })}>{(myReactions||[]).find(r => r.item_id === String(primary.item_id) && r.item_owner_id === buddy.userId) ? "✓ Agreed" : "Agree"}</button>
+                {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue({ id: primary.item_id, title: primary.title, poster: primary.poster, source_url: primary.source_url, category: primary.category, user_id: buddy.userId }); }} style={activityQueuePillStyle(!!(queue||[]).find(q => String(q.id) === String(primary.item_id)), { flex: 1, fontSize: "8px", letterSpacing: "0.1em", padding: "6px 4px" })}>{(queue||[]).find(q => String(q.id) === String(primary.item_id)) ? "✓ Queued" : "+ Queue"}</button>}
               </div>
             )}
           </div>
@@ -3326,7 +3345,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
             {comment?.body && (
               <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "#3a3830", marginTop: 8, lineHeight: 1.5 }}>"{comment.body}"</div>
             )}
-            <button type="button" onClick={goToVouch} style={activityPillStyle(false, { marginTop: 10, width: "100%", fontSize: "8px", letterSpacing: "0.12em", padding: "7px 10px" })}>View Vouch</button>
+            <button type="button" onClick={goToVouch} style={activityBtnStyle({ marginTop: 10, width: "100%", fontSize: "8px", letterSpacing: "0.12em", padding: "7px 10px" })}>View Vouch</button>
           </div>
         </div>
       );
@@ -3386,10 +3405,10 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
               </div>
               {onDudeSame && r.item_owner_id && r.item_owner_id !== selfId && (
                 <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-                  <button onClick={() => onDudeSame({ id: r.item_id, title: r.title, poster: r.poster, _cat: r.category }, r.item_owner_id)} style={activityPillStyle(!!(myReactions||[]).find(x => x.item_id === r.item_id && x.item_owner_id === r.item_owner_id), { flex: 1, fontSize: "8px", letterSpacing: "0.1em", padding: "6px 4px" })}>
+                  <button onClick={() => onDudeSame({ id: r.item_id, title: r.title, poster: r.poster, _cat: r.category }, r.item_owner_id)} style={activityAgreePillStyle(!!(myReactions||[]).find(x => x.item_id === r.item_id && x.item_owner_id === r.item_owner_id), { flex: 1, fontSize: "8px", letterSpacing: "0.1em", padding: "6px 4px" })}>
                     {(myReactions||[]).find(x => x.item_id === r.item_id && x.item_owner_id === r.item_owner_id) ? "✓ Agreed" : "Agree"}
                   </button>
-                  {onAddToQueue && <button onClick={() => onAddToQueue({ id: r.item_id, title: r.title, poster: r.poster, source_url: r.source_url, category: r.category })} style={activityPillStyle(!!(queue||[]).find(q => q.id === r.item_id), { flex: 1, fontSize: "8px", letterSpacing: "0.1em", padding: "6px 4px" })}>
+                  {onAddToQueue && <button onClick={() => onAddToQueue({ id: r.item_id, title: r.title, poster: r.poster, source_url: r.source_url, category: r.category })} style={activityQueuePillStyle(!!(queue||[]).find(q => q.id === r.item_id), { flex: 1, fontSize: "8px", letterSpacing: "0.1em", padding: "6px 4px" })}>
                     {(queue||[]).find(q => q.id === r.item_id) ? "✓ Queued" : "+ Queue"}
                   </button>}
                 </div>
