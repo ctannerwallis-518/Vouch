@@ -1,5 +1,5 @@
 // build: 2026-09-02T14:48:00
-import { useState, useEffect, useRef, memo } from "react";
+import { useState, useEffect, useRef, memo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "./supabase";
 import {
@@ -376,6 +376,112 @@ function activityQueuePillStyle(queued = false, extra = {}) {
   };
 }
 
+function usePullToRefresh(enabled, onRefresh) {
+  const [pull, setPull] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const startY = useRef(null);
+  const pulling = useRef(false);
+  const pullRef = useRef(0);
+  const refreshingRef = useRef(false);
+  const onRefreshRef = useRef(onRefresh);
+  onRefreshRef.current = onRefresh;
+  const threshold = 72;
+
+  useEffect(() => { refreshingRef.current = refreshing; }, [refreshing]);
+
+  useEffect(() => {
+    if (!enabled) return undefined;
+    const atTop = () => (window.scrollY || document.documentElement.scrollTop || 0) <= 1;
+    const resetTouch = () => { startY.current = null; pulling.current = false; };
+
+    const onTouchStart = (e) => {
+      if (!atTop() || refreshingRef.current) return;
+      startY.current = e.touches[0].clientY;
+      pulling.current = false;
+    };
+
+    const onTouchMove = (e) => {
+      if (startY.current == null || refreshingRef.current) return;
+      if (!atTop() && !pulling.current) {
+        resetTouch();
+        setPull(0);
+        pullRef.current = 0;
+        return;
+      }
+      const dy = e.touches[0].clientY - startY.current;
+      if (dy <= 0) {
+        setPull(0);
+        pullRef.current = 0;
+        return;
+      }
+      pulling.current = true;
+      if (e.cancelable) e.preventDefault();
+      const next = Math.min(dy * 0.5, 100);
+      pullRef.current = next;
+      setPull(next);
+    };
+
+    const onTouchEnd = async () => {
+      if (startY.current == null) return;
+      const shouldRefresh = pulling.current && pullRef.current >= threshold && !refreshingRef.current;
+      resetTouch();
+      if (!shouldRefresh) {
+        setPull(0);
+        pullRef.current = 0;
+        return;
+      }
+      setRefreshing(true);
+      setPull(56);
+      try {
+        await onRefreshRef.current?.();
+      } finally {
+        setRefreshing(false);
+        setPull(0);
+        pullRef.current = 0;
+      }
+    };
+
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onTouchEnd);
+    window.addEventListener("touchcancel", onTouchEnd);
+    return () => {
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchcancel", onTouchEnd);
+    };
+  }, [enabled, threshold]);
+
+  useEffect(() => {
+    const appEl = document.querySelector(".app");
+    if (!appEl) return undefined;
+    if (pull > 0 || refreshing) {
+      appEl.style.transform = `translateY(${refreshing ? 56 : pull}px)`;
+      appEl.style.transition = refreshing || pull === 0 ? "transform 0.22s ease" : "none";
+    } else {
+      appEl.style.transform = "";
+      appEl.style.transition = "";
+    }
+    return () => {
+      appEl.style.transform = "";
+      appEl.style.transition = "";
+    };
+  }, [pull, refreshing]);
+
+  return { pull, refreshing, threshold };
+}
+
+function PullToRefreshIndicator({ pull, refreshing, threshold }) {
+  if (pull <= 0 && !refreshing) return null;
+  const progress = Math.min(pull / threshold, 1);
+  return (
+    <div className="pull-refresh-indicator" style={{ opacity: refreshing ? 1 : 0.35 + progress * 0.65 }}>
+      {refreshing ? "Refreshing…" : progress >= 1 ? "Release to refresh" : "Pull to refresh"}
+    </div>
+  );
+}
+
 const FEATURES_ANNOUNCE_KEY = "vouch-features-announce-2026-03-v2";
 
 function FeaturesAnnounceModal({ onDismiss }) {
@@ -665,6 +771,12 @@ const Styles = () => (
       .archive-tile-poster { height: 166px; }
       .archive-tile-poster-placeholder { height: 166px; font-size: 9px; padding: 4px; }
       .page { padding: 0 16px 60px; }
+    .pull-refresh-indicator {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 9997;
+      height: 56px; display: flex; align-items: center; justify-content: center;
+      font-family: 'Spectral SC', serif; font-size: 9px; letter-spacing: 0.16em;
+      color: ${T.inkMid}; pointer-events: none;
+    }
       .masthead-meta { padding: 7px 16px; }
       .vouch-section { padding: 16px 14px 20px; }
     }
@@ -2991,7 +3103,7 @@ function BuddiesBin({ allBuddyBoards, buddies, onViewBuddy, onAddToQueue, queue,
   );
 }
 
-const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onViewOwnBoard, onDudeSame, onAddToQueue, queue, myReactions, onShelfExtras, onMusicOpen, tileCommentProps, isBuddyWithUser }) {
+const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvatar, onViewBuddy, onViewOwnBoard, onDudeSame, onAddToQueue, queue, myReactions, onShelfExtras, onMusicOpen, tileCommentProps, isBuddyWithUser, refreshKey = 0 }) {
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(true);
   const [feedTab, setFeedTab] = useState('vouches');
@@ -3207,7 +3319,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
       setLoading(false);
     };
     load();
-  }, [buddies, selfId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [buddies, selfId, refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const profileBuddy = (profile, userId) => profile
     ? { userId: profile.id || userId, displayName: profile.display_name, username: profile.username, avatarUrl: profile.avatar_url }
@@ -3867,6 +3979,7 @@ export default function Vouch() {
   const [suggested, setSuggested] = useState([]); // eslint-disable-line no-unused-vars
   const [queue,          setQueue]          = useState([]);
   const queueRef = useRef([]);
+  const [feedRefreshKey, setFeedRefreshKey] = useState(0);
   const [shelfView,      setShelfView]      = useState("shelf"); // "shelf" | "queue"
   useEffect(() => { queueRef.current = queue; }, [queue]);
 
@@ -4033,8 +4146,8 @@ export default function Vouch() {
   };
 
 
-  const loadBoard = async (uid) => {
-    setLoading(true);
+  const loadBoard = async (uid, { silent = false } = {}) => {
+    if (!silent) setLoading(true);
     const { data, error } = await supabase
       .from("endorsements").select("*").eq("user_id", uid).order("created_at", { ascending: true });
     if (!error && data) {
@@ -4047,7 +4160,7 @@ export default function Vouch() {
       });
       setBoard(b);
     }
-    setLoading(false);
+    if (!silent) setLoading(false);
   };
 
   const loadViewBoard = async (uid) => {
@@ -5203,6 +5316,30 @@ export default function Vouch() {
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   })();
 
+  const handlePullRefresh = useCallback(async () => {
+    if (!userId) return;
+    const tasks = [
+      loadBoard(userId, { silent: true }),
+      loadBuddies(userId),
+      loadMyReactions(userId),
+      loadVouchBoards(userId),
+      loadBoardReactions(userId, false),
+    ];
+    if (viewing?.userId) {
+      tasks.push(loadViewBoard(viewing.userId));
+      tasks.push(loadBoardReactions(viewing.userId, true));
+    }
+    await Promise.all(tasks);
+    loadBadgesForUser(userId).then(setOwnItemBadges).catch(() => {});
+    if (viewing?.userId) {
+      loadBadgesForUser(viewing.userId).then(setViewItemBadges).catch(() => {});
+    }
+    setFeedRefreshKey(k => k + 1);
+  }, [userId, viewing?.userId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const pullRefreshBlocked = boardEditor || showFeaturesAnnounce || showExpandVouchesPrompt || showNotifications || showAgreements || buddyModal || shareModal || musicPickerModal || removeVouchModal || avatarPicker || showContactModal;
+  const { pull: pullRefreshDistance, refreshing: pullRefreshing, threshold: pullRefreshThreshold } = usePullToRefresh(!!userId && !pullRefreshBlocked, handlePullRefresh);
+
   const inviteParam  = new URLSearchParams(window.location.search).get("invite");
   // Support /@username clean URLs
   const pathUsername = window.location.pathname.startsWith("/@") ? window.location.pathname.slice(2) : null;
@@ -5254,6 +5391,7 @@ export default function Vouch() {
   return (
     <>
       <Styles />
+      <PullToRefreshIndicator pull={pullRefreshDistance} refreshing={pullRefreshing} threshold={pullRefreshThreshold} />
       <div className="app">
         <header className="masthead">
           <div className="masthead-meta" style={{ justifyContent: "space-between" }}>
@@ -5324,7 +5462,7 @@ export default function Vouch() {
                 )}
               </div>
               <div className="board-sub" style={{ marginBottom: 28 }}>Recent activity from your circle</div>
-              <BuddyFeed buddies={buddies} selfId={userId} selfName={user?.displayName} selfAvatar={user?.avatarUrl} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId, true); window.scrollTo(0,0); }} onViewOwnBoard={() => { setViewing(null); setTab("board"); window.history.pushState({ tab: "board" }, "", "/"); scrollToTop(); }} onDudeSame={dudeSame} onAddToQueue={addToQueue} queue={queue} myReactions={myReactions} onShelfExtras={setShelfExtras} onMusicOpen={openMusicUrl} tileCommentProps={tileCommentProps} isBuddyWithUser={isBuddyWith} />
+              <BuddyFeed buddies={buddies} selfId={userId} selfName={user?.displayName} selfAvatar={user?.avatarUrl} refreshKey={feedRefreshKey} onViewBuddy={(buddy) => { setViewing(buddy); setTab("board"); loadViewBoard(buddy.userId); loadBoardReactions(buddy.userId, true); window.scrollTo(0,0); }} onViewOwnBoard={() => { setViewing(null); setTab("board"); window.history.pushState({ tab: "board" }, "", "/"); scrollToTop(); }} onDudeSame={dudeSame} onAddToQueue={addToQueue} queue={queue} myReactions={myReactions} onShelfExtras={setShelfExtras} onMusicOpen={openMusicUrl} tileCommentProps={tileCommentProps} isBuddyWithUser={isBuddyWith} />
             </div>
           )}
           {tab === "settings" && !viewing && (
