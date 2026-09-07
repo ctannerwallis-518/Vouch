@@ -318,6 +318,7 @@ const T = {
 
 const GRAY_PILL_BG = "linear-gradient(180deg, #E0E0E0 0%, #C0C0C0 60%, #909090 100%)";
 const GRAY_PILL_ACTIVE = "linear-gradient(180deg, #C8C2B4 0%, #A8A29E 55%, #7a7568 100%)";
+const AGREE_GOLD = "#C9A227";
 
 function grayPillStyle(active = false, extra = {}) {
   return {
@@ -329,6 +330,13 @@ function grayPillStyle(active = false, extra = {}) {
     fontFamily: "'Spectral SC',serif",
     ...extra,
   };
+}
+
+function agreePillStyle(agreed = false, extra = {}) {
+  return grayPillStyle(false, {
+    color: agreed ? AGREE_GOLD : T.ink,
+    ...extra,
+  });
 }
 
 const FEATURES_ANNOUNCE_KEY = "vouch-features-announce-2026-03";
@@ -578,7 +586,7 @@ const Styles = () => (
     .tile-buddy-comment-row { font-size: 11px; line-height: 1.45; margin-bottom: 5px; word-break: break-word; }
     .tile-buddy-comment-name { font-family: 'Spectral SC', serif; font-size: 8px; letter-spacing: 0.08em; margin-right: 6px; }
     .tile-buddy-comment-input {
-      flex: 1; min-width: 0; font-family: 'Spectral', serif; font-style: italic; font-size: 11px;
+      flex: 1; min-width: 0; font-family: 'Spectral', serif; font-size: 11px;
       padding: 6px 8px; border: 1px solid rgba(200,194,180,0.25); background: rgba(0,0,0,0.15); color: #C8C2B4; outline: none;
     }
     .tile-buddy-comment-input::placeholder { color: rgba(200,194,180,0.35); }
@@ -872,7 +880,7 @@ function TileBuddyComments({ comments = [], canComment, boardItemId, currentUser
           {visible.map(c => (
             <div key={c.id} className="tile-buddy-comment-row">
               <span className="tile-buddy-comment-name" style={{ color: nameColor }}>{(c.displayName || "Buddy").split(" ")[0]}</span>
-              <span style={{ fontFamily: "'Spectral', serif", fontStyle: "italic", color: textColor }}>{c.body}</span>
+              <span style={{ fontFamily: "'Spectral', serif", color: textColor }}>{c.body}</span>
               {currentUserId && c.user_id === currentUserId && onDelete && canComment && (
                 <button type="button" onClick={e => { e.stopPropagation(); onDelete(c.id, boardItemId); }} style={{ background: "transparent", border: "none", color: nameColor, cursor: "pointer", fontSize: 10, marginLeft: 4, padding: "0 2px" }} aria-label="Delete comment">×</button>
               )}
@@ -2041,7 +2049,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
         />
         {!isOwn && (
           <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-            <button onClick={e => { e.stopPropagation(); onDudeSame(it, ownerId); }} style={grayPillStyle(myReactions?.includes(String(it.id)), { flex: 1, fontSize: "8px", letterSpacing: "0.1em", padding: "5px 4px" })}>{myReactions?.includes(String(it.id)) ? "✓ Agreed" : "Agree"}</button>
+            <button onClick={e => { e.stopPropagation(); onDudeSame(it, ownerId); }} style={agreePillStyle(myReactions?.includes(String(it.id)), { flex: 1, fontSize: "8px", letterSpacing: "0.1em", padding: "5px 4px" })}>{myReactions?.includes(String(it.id)) ? "✓ Agreed" : "Agree"}</button>
             {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue(it); }} style={grayPillStyle(!!queue?.find(q => String(q.id) === String(it.id)), { flex: 1, fontSize: "8px", letterSpacing: "0.1em", padding: "5px 4px" })}>{queue?.find(q => String(q.id) === String(it.id)) ? "✓ Queue" : "+ Queue"}</button>}
           </div>
         )}
@@ -3297,7 +3305,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
             )}
             <div style={{ fontFamily: "'Spectral',serif", fontSize: "14px", fontWeight: 600, color: "#111008", marginTop: 8, lineHeight: 1.3 }}>{tile.title}</div>
             {comment?.body && (
-              <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: "#3a3830", marginTop: 8, lineHeight: 1.5 }}>"{comment.body}"</div>
+              <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "#3a3830", marginTop: 8, lineHeight: 1.5 }}>"{comment.body}"</div>
             )}
             <button type="button" onClick={goToVouch} style={grayPillStyle(false, { marginTop: 10, width: "100%", fontSize: "8px", letterSpacing: "0.12em", padding: "7px 10px" })}>View Vouch</button>
           </div>
