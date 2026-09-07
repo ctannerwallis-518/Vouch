@@ -331,6 +331,43 @@ function grayPillStyle(active = false, extra = {}) {
   };
 }
 
+const FEATURES_ANNOUNCE_KEY = "vouch-features-announce-2026-03";
+
+function FeaturesAnnounceModal({ onDismiss }) {
+  const items = [
+    "30-second previews on songs, albums, and artists — right on the tile",
+    "Trailers for films and TV",
+    "Comments on vouch tiles — buddies can comment, you can reply",
+    "Notifications when someone comments on your vouch",
+    "Comments and agrees show up in your Activity feed",
+    "Previous vouches are now visible on profiles",
+  ];
+  return (
+    <div className="modal-overlay" onClick={onDismiss}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-head">
+          <div className="modal-title">What's New</div>
+          <button className="modal-x" onClick={onDismiss}>×</button>
+        </div>
+        <div className="modal-body">
+          <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 14, color: T.inkMid, marginBottom: 18, lineHeight: 1.6 }}>
+            A lot has landed since your last visit:
+          </div>
+          <ul style={{ listStyle: "none", margin: "0 0 24px", padding: 0, display: "flex", flexDirection: "column", gap: 12 }}>
+            {items.map(text => (
+              <li key={text} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontFamily: "'Spectral',serif", fontSize: 14, lineHeight: 1.5, color: T.ink }}>
+                <span style={{ fontFamily: "'Spectral SC',serif", fontSize: 10, letterSpacing: "0.08em", color: T.inkMid, marginTop: 3, flexShrink: 0 }}>→</span>
+                <span>{text}</span>
+              </li>
+            ))}
+          </ul>
+          <button className="btn btn-solid" style={{ width: "100%", padding: "14px" }} onClick={onDismiss}>Got it</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const Styles = () => (
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,600;1,700&family=Spectral+SC:wght@300;400;600;700&display=swap');
@@ -3763,7 +3800,7 @@ export default function Vouch() {
   const [editingMeta,    setEditingMeta]    = useState(false);
   const [newAgreements,  setNewAgreements]  = useState([]);
   const [newCommentNotifs, setNewCommentNotifs] = useState([]);
-  const [archiveBannerDismissed, setArchiveBannerDismissed] = useState(!!localStorage.getItem('vouch-archive-public-announce'));
+  const [showFeaturesAnnounce, setShowFeaturesAnnounce] = useState(false);
   const [expandPreviousVouches, setExpandPreviousVouches] = useState(true);
   const [viewExpandPreviousVouches, setViewExpandPreviousVouches] = useState(true);
   const [showExpandVouchesPrompt, setShowExpandVouchesPrompt] = useState(false);
@@ -4267,7 +4304,11 @@ export default function Vouch() {
         const { data: prof } = await supabase.from("profiles").select("categories, music_preference, queue_items, expand_previous_vouches").eq("id", uid).maybeSingle();
         if (prof?.music_preference) { setMusicPreference(prof.music_preference); musicPrefRef.current = prof.music_preference; }
         setExpandPreviousVouches(prof?.expand_previous_vouches !== false);
-        if (!localStorage.getItem("vouch-expand-vouches-prompted")) setShowExpandVouchesPrompt(true);
+        if (!localStorage.getItem(FEATURES_ANNOUNCE_KEY)) {
+          setShowFeaturesAnnounce(true);
+        } else if (!localStorage.getItem("vouch-expand-vouches-prompted")) {
+          setShowExpandVouchesPrompt(true);
+        }
         if (prof?.categories && prof.categories.length > 0) {
           setUserCategories(prof.categories);
         } else if (prof && !prof.categories) {
@@ -4376,6 +4417,12 @@ export default function Vouch() {
   const saveExpandPreviousVouches = async (enabled) => {
     setExpandPreviousVouches(enabled);
     if (userId) await supabase.from("profiles").update({ expand_previous_vouches: enabled }).eq("id", userId);
+  };
+
+  const dismissFeaturesAnnounce = () => {
+    localStorage.setItem(FEATURES_ANNOUNCE_KEY, "1");
+    setShowFeaturesAnnounce(false);
+    if (!localStorage.getItem("vouch-expand-vouches-prompted")) setShowExpandVouchesPrompt(true);
   };
 
   const dismissExpandVouchesPrompt = async (enabled) => {
@@ -5195,14 +5242,6 @@ export default function Vouch() {
 
           {tab === "home" && !viewing && (
             <div style={{ maxWidth: 680, margin: "0 auto", paddingTop: 24 }}>
-              {!archiveBannerDismissed && (
-                <div style={{ background: T.ink, color: T.bg, padding: "14px 16px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                  <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, lineHeight: 1.5 }}>
-                    <strong style={{ fontStyle: "normal", fontFamily: "'Spectral SC',serif", fontSize: 11, letterSpacing: "0.12em" }}>New:</strong> Your previous Vouches (Archives) are now available for others to see on your board.
-                  </div>
-                  <button onClick={() => { localStorage.setItem("vouch-archive-public-announce", "1"); setArchiveBannerDismissed(true); }} style={{ background: "transparent", border: "none", color: "rgba(200,194,180,0.5)", fontSize: 20, cursor: "pointer", padding: 0, flexShrink: 0 }}>×</button>
-                </div>
-              )}
               {newAgreements.length > 0 && (
                 <div style={{ background: T.ink, color: T.bg, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }} onClick={() => setShowAgreements(true)}>
                   <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13 }}>
@@ -6222,6 +6261,10 @@ export default function Vouch() {
               </div>
             </div>
           </div>
+        )}
+
+        {showFeaturesAnnounce && (
+          <FeaturesAnnounceModal onDismiss={dismissFeaturesAnnounce} />
         )}
 
         {showExpandVouchesPrompt && (
