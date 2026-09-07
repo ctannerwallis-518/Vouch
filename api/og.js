@@ -20,12 +20,20 @@ module.exports = async (req, res) => {
 
     if (!profile) return res.status(404).send("Not found");
 
-    const { data: activeBoard } = await supabase
+    const { data: activeBoards } = await supabase
       .from("vouch_boards")
       .select("name, theme, vouch_board_items(poster, title, position)")
       .eq("user_id", profile.id)
       .eq("is_active", true)
-      .maybeSingle();
+      .not("published_at", "is", null)
+      .order("published_at", { ascending: false })
+      .limit(5);
+
+    const activeBoard = (activeBoards || []).sort((a, b) => {
+      const ai = (a.vouch_board_items || []).length;
+      const bi = (b.vouch_board_items || []).length;
+      return bi - ai;
+    })[0] || null;
 
     const firstName = (profile.display_name || username).split(" ")[0];
     const boardName = activeBoard?.theme && activeBoard.theme !== "Other"
