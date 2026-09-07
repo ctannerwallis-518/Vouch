@@ -32,6 +32,7 @@ import {
   openTileLink,
   tileIsClickable,
   tileActionHint,
+  normalizeTileItem,
 } from "./tileLinks";
 import {
   stopMusicPreview,
@@ -548,7 +549,48 @@ function Auth({ inviteUserId }) {
   );
 }
 
-function OwnArchive({ boards, canPublish, onRepublish, onDelete, defaultOpen = false }) {
+function boardItemToTile(item) {
+  return normalizeTileItem({
+    id: item.item_id,
+    item_id: item.item_id,
+    category: item.category,
+    title: item.title,
+    subtitle: item.subtitle,
+    poster: item.poster,
+    source_url: item.source_url,
+  }, item.category);
+}
+
+function ArchiveTile({ item, onMusicOpen, badgeSize = "sm", style, titleBelow = true }) {
+  const tile = boardItemToTile(item);
+  const catKey = item.category;
+  const open = () => openTileLink(tile, { catKey, onMusicOpen });
+  const fixedWidth = style?.width;
+  const posterStyle = fixedWidth
+    ? { width: fixedWidth, height: Math.round(fixedWidth * 1.5), objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block" }
+    : { width: "100%", aspectRatio: "2/3", objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block" };
+  return (
+    <div style={{ flexShrink: 0, flex: fixedWidth ? undefined : 1, ...style }}>
+      <TileMedia
+        item={tile}
+        catKey={catKey}
+        onOpen={open}
+        poster={tile.poster}
+        title={tile.title}
+        badgeSize={badgeSize}
+      >
+        {tile.poster
+          ? <img src={tile.poster} alt={tile.title} style={posterStyle} onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} />
+          : <div style={{ ...posterStyle, background: T.paperDark, alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 4 }}>{tile.title}</div>}
+      </TileMedia>
+      {titleBelow && (
+        <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: T.inkFaint, marginTop: 3, textAlign: "center", lineHeight: 1.3 }}>{item.title}</div>
+      )}
+    </div>
+  );
+}
+
+function OwnArchive({ boards, canPublish, onRepublish, onDelete, onMusicOpen, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
   const inactive = boards.filter(b => !b.is_active && b.published_at);
   if (!inactive.length) return null;
@@ -589,11 +631,7 @@ function OwnArchive({ boards, canPublish, onRepublish, onDelete, defaultOpen = f
                     </div>
                     <div style={{ display: "flex", gap: 6 }}>
                       {items.map((item, idx) => (
-                        <div key={idx} style={{ flexShrink: 0, flex: 1 }}>
-                          {item.poster ? <img src={item.poster} alt={item.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: "1px solid " + T.paperDark, display: "block" }} onError={e => e.target.style.display = "none"} />
-                            : <div style={{ width: "100%", aspectRatio: "2/3", background: T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 4 }}>{item.title}</div>}
-                          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: T.inkFaint, marginTop: 3, textAlign: "center", lineHeight: 1.3 }}>{item.title}</div>
-                        </div>
+                        <ArchiveTile key={idx} item={item} onMusicOpen={onMusicOpen} />
                       ))}
                     </div>
                   </div>
@@ -655,11 +693,7 @@ function PreviousVouches({ userId, onDudeSame, myReactions, queue, onAddToQueue,
                     </div>
                     <div style={{ display: "flex", gap: 6 }}>
                       {items.map((item, idx) => (
-                        <div key={idx} style={{ flexShrink: 0, flex: 1 }}>
-                          {item.poster ? <img src={item.poster} alt={item.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", border: "1px solid " + T.paperDark, display: "block" }} onError={e => e.target.style.display = "none"} />
-                            : <div style={{ width: "100%", aspectRatio: "2/3", background: T.paperDark, border: "1px solid " + T.paperDark, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 4 }}>{item.title}</div>}
-                          <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: T.inkFaint, marginTop: 3, textAlign: "center", lineHeight: 1.3 }}>{item.title}</div>
-                        </div>
+                        <ArchiveTile key={idx} item={item} onMusicOpen={onMusicOpen} />
                       ))}
                     </div>
                   </div>
@@ -4914,7 +4948,7 @@ export default function Vouch() {
                   <PreviousVouches key={viewing.userId} userId={viewing.userId} onDudeSame={dudeSame} myReactions={myReactions} queue={queue} onAddToQueue={addToQueue} onMusicOpen={openMusicUrl} defaultOpen={expandPreviousVouches} />
                 )}
                 {isOwn && boardArchive.filter(b => !b.is_active && b.published_at).length > 0 && (
-                  <OwnArchive boards={boardArchive} canPublish={canPublish} onRepublish={republishBoard} defaultOpen={expandPreviousVouches} onDelete={async (b) => { await revokeClaimsForBoard(b.id).catch(() => {}); await supabase.from("vouch_board_items").delete().eq("board_id", b.id); await supabase.from("vouch_boards").delete().eq("id", b.id); setBoardArchive(prev => prev.filter(x => x.id !== b.id)); loadBadgesForUser(userId).then(setOwnItemBadges).catch(() => {}); }} />
+                  <OwnArchive boards={boardArchive} canPublish={canPublish} onRepublish={republishBoard} onMusicOpen={openMusicUrl} defaultOpen={expandPreviousVouches} onDelete={async (b) => { await revokeClaimsForBoard(b.id).catch(() => {}); await supabase.from("vouch_board_items").delete().eq("board_id", b.id); await supabase.from("vouch_boards").delete().eq("id", b.id); setBoardArchive(prev => prev.filter(x => x.id !== b.id)); loadBadgesForUser(userId).then(setOwnItemBadges).catch(() => {}); }} />
                 )}
 
                 {(() => {
@@ -5181,12 +5215,7 @@ export default function Vouch() {
                           {b.vouch_board_items?.length > 0 && (
                             <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
                               {b.vouch_board_items.sort((a,x) => a.position - x.position).slice(0,5).map((item, i) => (
-                                <div key={i} style={{ flexShrink: 0, width: 70 }}>
-                                  {item.poster
-                                    ? <img src={item.poster} alt={item.title} style={{ width: 70, height: 96, objectFit: "cover", border: `1px solid ${T.paperDark}`, display: "block" }} onError={e => e.target.style.display = "none"} />
-                                    : <div style={{ width: 70, height: 96, background: T.paperDark, border: `1px solid ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 4 }}>{item.title}</div>}
-                                  <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", color: T.inkFaint, marginTop: 3, textAlign: "center", lineHeight: 1.3 }}>{item.title}</div>
-                                </div>
+                                <ArchiveTile key={i} item={item} onMusicOpen={openMusicUrl} style={{ width: 70 }} />
                               ))}
                             </div>
                           )}
@@ -5466,9 +5495,7 @@ export default function Vouch() {
                     {b.vouch_board_items?.length > 0 && (
                       <div style={{ display: "flex", gap: 6 }}>
                         {b.vouch_board_items.sort((a,b) => a.position - b.position).slice(0,5).map((item, i) => (
-                          item.poster
-                            ? <img key={i} src={item.poster} alt={item.title} style={{ width: 44, height: 60, objectFit: "cover", border: `1px solid ${T.paperDark}` }} onError={e => e.target.style.display = "none"} />
-                            : <div key={i} style={{ width: 44, height: 60, background: T.paperDark, border: `1px solid ${T.paperDark}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontFamily: "'Spectral',serif", color: T.inkLight, textAlign: "center", padding: 3 }}>{item.title}</div>
+                          <ArchiveTile key={i} item={item} onMusicOpen={openMusicUrl} style={{ width: 70 }} titleBelow={false} />
                         ))}
                       </div>
                     )}
