@@ -43,6 +43,11 @@ import {
   toggleMusicPreview,
 } from "./musicPreview";
 import {
+  fetchDisplayVouchBoard,
+  healDuplicateActiveBoards,
+  pickDisplayVouchBoard,
+} from "./vouchBoards";
+import {
   fetchTrailer,
   getCachedTrailer,
   isFilmCategory,
@@ -704,12 +709,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
           .eq("user_id", inviteUserId)
           .not("published_at", "is", null);
         setPublicPublishCount(publishCount || 0);
-        const { data: activeVouchBoard } = await supabase
-          .from("vouch_boards")
-          .select("*, vouch_board_items(*)")
-          .eq("user_id", inviteUserId)
-          .eq("is_active", true)
-          .maybeSingle();
+        const { board: activeVouchBoard } = await fetchDisplayVouchBoard(supabase, inviteUserId);
         const { data: rows } = await supabase
           .from("endorsements").select("*").eq("user_id", inviteUserId).order("created_at", { ascending: true });
         const b = { movies: [], albums: [], artists: [], songs: [], books: [], shows: [], podcasts: [] };
@@ -3198,9 +3198,7 @@ export default function Vouch() {
   const prefersPhotoSave = isIOSDevice || isMobileGlobal;
 
 
-  // Save and restore scroll position when leaving/returning to page
-  // Removed scroll save/restore - was causing flicker on tab switch
-  const profileCache = useRef({});
+  // Removed stale profile cache — always fetch fresh vouch board on profile view
 
   useEffect(() => {
     const handlePop = (e) => {
@@ -3303,7 +3301,11 @@ export default function Vouch() {
       .eq("user_id", uid)
       .order("created_at", { ascending: false });
     if (data) {
-      const active = data.find(b => b.is_active) || null;
+      const active = pickDisplayVouchBoard(data);
+      if (active?.id) {
+        const dupes = data.filter((b) => b.is_active && b.published_at && b.id !== active.id);
+        if (dupes.length > 0) healDuplicateActiveBoards(supabase, uid, active.id).catch(() => {});
+      }
       setActiveBoard(active);
       setBoardArchive(data);
     }
@@ -3343,14 +3345,17 @@ export default function Vouch() {
     } else {
       // NEW PUBLISH: deactivate current, create new board
       await supabase.from("vouch_boards").update({ is_active: false }).eq("user_id", userId).eq("is_active", true);
-      const { data: newBoard } = await supabase.from("vouch_boards").insert({
+      const { data: newBoard, error: insertError } = await supabase.from("vouch_boards").insert({
         user_id: userId,
         name, theme, description,
         single_category: singleCategory || null,
         published_at: new Date().toISOString(),
         is_active: true,
       }).select().single();
-      if (!newBoard) return;
+      if (insertError || !newBoard) {
+        console.error("publishBoard insert failed:", insertError);
+        return;
+      }
       publishedBoardId = newBoard.id;
       if (items.length > 0) {
         await supabase.from("vouch_board_items").insert(
@@ -3434,16 +3439,6 @@ export default function Vouch() {
   };
 
   const loadViewBoard = async (uid) => {
-    // Use cache if available - refresh reactions but skip board/shelf refetch
-    if (profileCache.current[uid]) {
-      const cached = profileCache.current[uid];
-      setViewBoard(cached.board);
-      setViewActiveBoard(cached.activeBoard);
-      setViewing(prev => ({ ...(prev || {}), ...cached.profile }));
-      setViewBuddies(cached.buddies || []);
-      loadBadgesForUser(uid).then(setViewItemBadges).catch(() => {});
-      return;
-    }
     const { data, error } = await supabase
       .from("endorsements").select("*").eq("user_id", uid).order("created_at", { ascending: true });
     if (error) { console.error("loadViewBoard error:", error); return; }
@@ -3455,14 +3450,17 @@ export default function Vouch() {
       }
     });
     setViewBoard(b);
+    const { board: activeBoardData, hasDuplicateActive } = await fetchDisplayVouchBoard(supabase, uid);
+    if (activeBoardData?.id && hasDuplicateActive) {
+      healDuplicateActiveBoards(supabase, uid, activeBoardData.id).catch(() => {});
+    }
+    setViewActiveBoard(activeBoardData || null);
     const { count: publishCount } = await supabase
       .from("vouch_boards")
       .select("*", { count: "exact", head: true })
       .eq("user_id", uid)
       .not("published_at", "is", null);
     setViewPublishCount(publishCount || 0);
-    const { data: activeBoardData } = await supabase.from("vouch_boards").select("*, vouch_board_items(*)").eq("user_id", uid).eq("is_active", true).maybeSingle();
-    setViewActiveBoard(activeBoardData || null);
     // Always fetch fresh profile data including avatar
     const { data: profile } = await supabase.from("profiles").select("id, display_name, avatar_url, username").eq("id", uid).maybeSingle();
     if (profile) {
