@@ -97,6 +97,22 @@ function PreviewIcon({ playing, size = 8 }) {
   );
 }
 
+function TileInlineButton({ size = "md", className = "", icon, label, onClick, ...props }) {
+  const { fontSize, iconSize, padY, padX, gap } = tileMediaActionStyle(size);
+  return (
+    <button
+      type="button"
+      className={`tile-inline-btn${className ? ` ${className}` : ""}`}
+      style={{ fontSize, padding: `${padY}px ${padX}px`, gap }}
+      onClick={onClick}
+      {...props}
+    >
+      {icon ?? <span className="tile-inline-btn-spacer" style={{ width: iconSize, height: iconSize }} aria-hidden />}
+      <span>{label}</span>
+    </button>
+  );
+}
+
 function TilePlayButton({ item, catKey, size = "md" }) {
   const key = catKey || item?.category || item?._cat;
   const itemKey = previewItemKey(item, catKey);
@@ -125,23 +141,21 @@ function TilePlayButton({ item, catKey, size = "md" }) {
   const { currentKey, loadingKey, playing } = getMusicPreviewState();
   const isLoading = loadingKey === itemKey;
   const isPlaying = playing && currentKey === itemKey;
-  const { fontSize, iconSize, padY, padX, gap } = tileMediaActionStyle(size);
+  const { iconSize } = tileMediaActionStyle(size);
 
   return (
-    <button
-      type="button"
-      className={`tile-inline-btn${isPlaying ? " is-playing" : ""}`}
+    <TileInlineButton
+      size={size}
+      className={isPlaying ? "is-playing" : ""}
       aria-label={isPlaying ? "Pause preview" : "Play 30-second preview"}
       title={isPlaying ? "Pause preview" : "Play preview"}
+      label="Preview"
+      icon={isLoading ? "…" : <PreviewIcon playing={isPlaying} size={iconSize} />}
       onClick={async (e) => {
         e.stopPropagation();
         await toggleMusicPreview(item, catKey);
       }}
-      style={{ fontSize, padding: `${padY}px ${padX}px`, gap }}
-    >
-      {isLoading ? "…" : <PreviewIcon playing={isPlaying} size={iconSize} />}
-      <span>Preview</span>
-    </button>
+    />
   );
 }
 
@@ -173,25 +187,22 @@ function TileTrailerButton({ item, catKey, size = "md" }) {
 
   if (!isFilmCategory(key) || !item?.title || hasTrailer !== true || !youtubeKey) return null;
 
-  const { fontSize, iconSize, padY, padX, gap } = tileMediaActionStyle(size);
+  const { iconSize } = tileMediaActionStyle(size);
 
   return (
     <>
-      <button
-        type="button"
-        className="tile-inline-btn"
+      <TileInlineButton
+        size={size}
         aria-label="Watch trailer"
         title="Watch trailer"
+        label="Trailer"
+        icon={<PreviewIcon playing={false} size={iconSize} />}
         onClick={(e) => {
           e.stopPropagation();
           stopMusicPreview();
           setOpen(true);
         }}
-        style={{ fontSize, padding: `${padY}px ${padX}px`, gap }}
-      >
-        <PreviewIcon playing={false} size={iconSize} />
-        <span>Trailer</span>
-      </button>
+      />
       {open && <TrailerModal youtubeKey={youtubeKey} title={item.title} onClose={() => setOpen(false)} />}
     </>
   );
@@ -202,16 +213,12 @@ function TileActionBadge({ item, catKey, onClick, size = "md" }) {
   if (!tileIsClickable(item, key)) return null;
   const hint = tileActionHint(key);
   if (!hint) return null;
-  const { fontSize, padY, padX, gap } = tileMediaActionStyle(size);
   return (
-    <button
-      type="button"
-      className="tile-inline-btn"
+    <TileInlineButton
+      size={size}
+      label={hint}
       onClick={(e) => { e.stopPropagation(); onClick?.(); }}
-      style={{ fontSize, padding: `${padY}px ${padX}px`, gap }}
-    >
-      <span>{hint}</span>
-    </button>
+    />
   );
 }
 
@@ -395,16 +402,18 @@ const Styles = () => (
     .tile-media { position: relative; display: block; }
     .tile-media-actions {
       position: absolute; z-index: 49;
-      display: flex; flex-direction: column; align-items: flex-start;
+      display: flex; flex-direction: column; align-items: stretch;
     }
     .tile-inline-btn {
-      display: inline-flex; align-items: center;
+      display: flex; align-items: center; justify-content: flex-start;
+      width: 100%; box-sizing: border-box;
       background: rgba(17,16,8,0.88); border: 1px solid rgba(179,173,160,0.55);
       color: #C8C2B4; cursor: pointer;
       font-family: 'Spectral SC', serif; font-weight: 700;
       letter-spacing: 0.12em; text-transform: uppercase; line-height: 1;
       transition: background 0.14s, color 0.14s, border-color 0.14s;
     }
+    .tile-inline-btn-spacer { flex-shrink: 0; display: block; }
     .tile-inline-btn:hover { background: rgba(17,16,8,0.96); color: #fff; border-color: rgba(179,173,160,0.75); }
     .tile-inline-btn.is-playing { background: rgba(17,16,8,0.96); color: #fff; border-color: rgba(179,173,160,0.75); }
     .trailer-overlay {
