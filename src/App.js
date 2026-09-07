@@ -51,6 +51,7 @@ import {
   fetchTrailer,
   getCachedTrailer,
   isFilmCategory,
+  tileMediaActionStyle,
   trailerItemKey,
 } from "./trailerPreview";
 
@@ -77,6 +78,22 @@ function TrailerModal({ youtubeKey, title, onClose }) {
       </div>
     </div>,
     document.body
+  );
+}
+
+function PreviewIcon({ playing, size = 8 }) {
+  if (playing) {
+    return (
+      <svg width={size} height={size} viewBox="0 0 8 8" fill="currentColor" aria-hidden style={{ flexShrink: 0 }}>
+        <rect x="1" y="0.5" width="2" height="7" />
+        <rect x="5" y="0.5" width="2" height="7" />
+      </svg>
+    );
+  }
+  return (
+    <svg width={size} height={size} viewBox="0 0 8 8" fill="currentColor" aria-hidden style={{ flexShrink: 0 }}>
+      <path d="M1.5 0.5 L7 4 L1.5 7.5 Z" />
+    </svg>
   );
 }
 
@@ -115,20 +132,22 @@ function TilePlayButton({ item, catKey, size = "md" }) {
   const { currentKey, loadingKey, playing } = getMusicPreviewState();
   const isLoading = loadingKey === itemKey;
   const isPlaying = playing && currentKey === itemKey;
+  const { inset, bottom, fontSize, iconSize, padY, padX, gap } = tileMediaActionStyle(size);
 
   return (
     <button
       type="button"
-      className={`tile-action-badge${isPlaying ? " is-active" : ""}`}
+      className={`tile-inline-btn${isPlaying ? " is-playing" : ""}`}
       aria-label={isPlaying ? "Pause preview" : "Play 30-second preview"}
       title={isPlaying ? "Pause preview" : "Play preview"}
       onClick={async (e) => {
         e.stopPropagation();
         await toggleMusicPreview(item, catKey);
       }}
-      style={tileActionBadgeStyle(size)}
+      style={{ bottom, left: inset, fontSize, padding: `${padY}px ${padX}px`, gap }}
     >
-      {isLoading ? "…" : isPlaying ? "PAUSE →" : "PREVIEW →"}
+      {isLoading ? "…" : <PreviewIcon playing={isPlaying} size={iconSize} />}
+      <span>Preview</span>
     </button>
   );
 }
@@ -161,11 +180,13 @@ function TileTrailerButton({ item, catKey, size = "md" }) {
 
   if (!isFilmCategory(key) || !item?.title || hasTrailer !== true || !youtubeKey) return null;
 
+  const { inset, bottom, fontSize, iconSize, padY, padX, gap } = tileMediaActionStyle(size);
+
   return (
     <>
       <button
         type="button"
-        className="tile-action-badge"
+        className="tile-inline-btn"
         aria-label="Watch trailer"
         title="Watch trailer"
         onClick={(e) => {
@@ -173,9 +194,10 @@ function TileTrailerButton({ item, catKey, size = "md" }) {
           stopMusicPreview();
           setOpen(true);
         }}
-        style={tileActionBadgeStyle(size)}
+        style={{ bottom, left: inset, fontSize, padding: `${padY}px ${padX}px`, gap }}
       >
-        TRAILER →
+        <PreviewIcon playing={false} size={iconSize} />
+        <span>Trailer</span>
       </button>
       {open && <TrailerModal youtubeKey={youtubeKey} title={item.title} onClose={() => setOpen(false)} />}
     </>
@@ -208,11 +230,9 @@ function TileMedia({ item, catKey, onOpen, poster, title, className, style, plac
       {children || (poster
         ? <img src={poster} alt={title || ""} className={className} style={{ cursor: clickable ? "pointer" : "default" }} onError={e => { e.target.style.display = "none"; if (e.target.nextSibling) e.target.nextSibling.style.display = "flex"; }} />
         : <div className={className || "card-poster-placeholder"} style={{ display: "flex", cursor: clickable ? "pointer" : "default", ...placeholderStyle }}>{title}</div>)}
-      <div className="tile-media-actions">
-        <TileActionBadge item={item} catKey={key} onClick={open} size={badgeSize} />
-        <TileTrailerButton item={item} catKey={key} size={badgeSize} />
-        <TilePlayButton item={item} catKey={key} size={badgeSize} />
-      </div>
+      <TilePlayButton item={item} catKey={key} size={badgeSize} />
+      <TileTrailerButton item={item} catKey={key} size={badgeSize} />
+      <TileActionBadge item={item} catKey={key} onClick={open} size={badgeSize} />
     </div>
   );
 }
@@ -369,12 +389,8 @@ const Styles = () => (
     .card-title   { font-family: 'Spectral', serif; font-weight: 600; font-size: 12.5px; line-height: 1.35; margin-top: 7px; }
     .card-sub     { font-family: 'Spectral SC', serif; font-size: 9.5px; letter-spacing: 0.06em; color: ${T.inkLight}; margin-top: 2px; }
     .tile-media { position: relative; display: block; }
-    .tile-media-actions {
-      position: absolute; bottom: 0; left: 0; right: 0; z-index: 49;
-      display: flex; flex-direction: column-reverse;
-    }
     .tile-action-badge {
-      position: relative; z-index: 2;
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
       width: 100%; margin: 0; padding: 5px 6px;
       background: rgba(17,16,8,0.88); border: none; border-top: 1px solid rgba(200,194,180,0.22);
       color: #C8C2B4; font-family: 'Spectral SC', serif; font-weight: 700;
@@ -382,7 +398,17 @@ const Styles = () => (
       transition: background 0.14s, color 0.14s;
     }
     .tile-action-badge:hover { background: rgba(17,16,8,0.96); color: #fff; text-decoration: underline; text-underline-offset: 2px; }
-    .tile-action-badge.is-active { background: rgba(17,16,8,0.96); color: #fff; }
+    .tile-inline-btn {
+      position: absolute; z-index: 49;
+      display: inline-flex; align-items: center;
+      background: rgba(17,16,8,0.88); border: 1px solid rgba(179,173,160,0.55);
+      color: #C8C2B4; cursor: pointer;
+      font-family: 'Spectral SC', serif; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase; line-height: 1;
+      transition: background 0.14s, color 0.14s, border-color 0.14s;
+    }
+    .tile-inline-btn:hover { background: rgba(17,16,8,0.96); color: #fff; border-color: rgba(179,173,160,0.75); }
+    .tile-inline-btn.is-playing { background: rgba(17,16,8,0.96); color: #fff; border-color: rgba(179,173,160,0.75); }
     .trailer-overlay {
       position: fixed; inset: 0; z-index: 2000;
       background: rgba(17,16,8,0.92);

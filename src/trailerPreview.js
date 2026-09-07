@@ -49,3 +49,14 @@ export async function fetchTrailer(item, catKey) {
     return null;
   }
 }
+
+export function tileMediaActionStyle(size = "md") {
+  const inset = size === "sm" ? 4 : 6;
+  const bottom = size === "sm" ? 26 : size === "lg" ? 36 : 30;
+  const fontSize = size === "sm" ? 6.5 : size === "lg" ? 8.5 : 7.5;
+  const iconSize = size === "sm" ? 7 : size === "lg" ? 9 : 8;
+  const padY = size === "sm" ? 3 : size === "lg" ? 5 : 4;
+  const padX = size === "sm" ? 5 : size === "lg" ? 8 : 6;
+  const gap = size === "sm" ? 3 : 4;
+  return { inset, bottom, fontSize, iconSize, padY, padX, gap };
+}

@@ -205,7 +205,7 @@ export function tileActionHint(catKey) {
   const cat = catKey || "";
   if (cat === "movies" || cat === "shows") return "STREAM →";
   if (cat === "books") return "BUY →";
-  if (isMusicCategory(cat)) return "LISTEN →";
+  if (isMusicCategory(cat)) return "STREAM →";
   return null;
 }
 
