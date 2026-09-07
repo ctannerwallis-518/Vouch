@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/profile.js": {
+      "includeFiles": "build/index.html"
+    }
+  },
   "rewrites": [
     {
       "source": "/start",
@@ -10,7 +15,7 @@
     },
     {
       "source": "/@:username",
-      "destination": "/index.html"
+      "destination": "/api/profile?username=:username"
     }
   ]
 }
