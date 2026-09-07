@@ -318,7 +318,6 @@ const T = {
 
 const GRAY_PILL_BG = "linear-gradient(180deg, #E0E0E0 0%, #C0C0C0 60%, #909090 100%)";
 const GRAY_PILL_ACTIVE = "linear-gradient(180deg, #C8C2B4 0%, #A8A29E 55%, #7a7568 100%)";
-const AGREE_GOLD = "#C9A227";
 
 function grayPillStyle(active = false, extra = {}) {
   return {
@@ -333,10 +332,16 @@ function grayPillStyle(active = false, extra = {}) {
 }
 
 function agreePillStyle(agreed = false, extra = {}) {
-  return grayPillStyle(false, {
-    color: agreed ? AGREE_GOLD : T.ink,
+  if (!agreed) return grayPillStyle(false, extra);
+  return {
+    background: T.bg,
+    border: "none",
+    color: T.ink,
+    cursor: "pointer",
+    fontWeight: 700,
+    fontFamily: "'Spectral SC',serif",
     ...extra,
-  });
+  };
 }
 
 const FEATURES_ANNOUNCE_KEY = "vouch-features-announce-2026-03";
@@ -2049,7 +2054,9 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
         />
         {!isOwn && (
           <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-            <button onClick={e => { e.stopPropagation(); onDudeSame(it, ownerId); }} style={agreePillStyle(myReactions?.includes(String(it.id)), { flex: 1, fontSize: "8px", letterSpacing: "0.1em", padding: "5px 4px" })}>{myReactions?.includes(String(it.id)) ? "✓ Agreed" : "Agree"}</button>
+            <button onClick={e => { e.stopPropagation(); onDudeSame(it, ownerId); }} style={agreePillStyle(myReactions?.includes(String(it.id)), { flex: 1, fontSize: "8px", letterSpacing: "0.1em", padding: "5px 4px" })}>
+              {myReactions?.includes(String(it.id)) ? "✓ Agreed" : "Agree"}
+            </button>
             {onAddToQueue && <button onClick={e => { e.stopPropagation(); onAddToQueue(it); }} style={grayPillStyle(!!queue?.find(q => String(q.id) === String(it.id)), { flex: 1, fontSize: "8px", letterSpacing: "0.1em", padding: "5px 4px" })}>{queue?.find(q => String(q.id) === String(it.id)) ? "✓ Queue" : "+ Queue"}</button>}
           </div>
         )}
