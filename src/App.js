@@ -704,7 +704,7 @@ function TileBuddyComments({ comments = [], canComment, boardItemId, currentUser
             type="text"
             value={body}
             onChange={e => setBody(e.target.value.slice(0, 200))}
-            placeholder="Add a comment…"
+            placeholder={canComment && comments.length > 0 ? "Reply…" : "Add a comment…"}
             maxLength={200}
           />
           <button type="submit" disabled={posting || !body.trim()} style={{ flexShrink: 0, background: body.trim() ? "rgba(200,194,180,0.2)" : "rgba(200,194,180,0.08)", border: "1px solid rgba(200,194,180,0.2)", color: "rgba(200,194,180,0.7)", cursor: body.trim() ? "pointer" : "default", fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", padding: "6px 8px" }}>Post</button>
@@ -1833,7 +1833,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
         <div style={{ fontFamily: "'Spectral',serif", fontSize: 13, color: "rgba(200,194,180,0.7)" }}>{it.artist || it.author || it.sub || ""}</div>
         <TileBuddyComments
           comments={tileCommentsByItemId?.[it.boardItemId] || []}
-          canComment={!!canCommentTiles && !isOwn}
+          canComment={!!canCommentTiles}
           boardItemId={it.boardItemId}
           currentUserId={currentUserId}
           onPost={onPostTileComment}
@@ -2997,7 +2997,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
               });
               const isSelfBoard = b.user_id === selfId;
               const mergedComments = { ...feedTileComments, ...(tileCommentProps?.tileCommentsByItemId || {}) };
-              return <VouchSection board={vbBoard} isOwn={isSelfBoard} onCard={()=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={onDudeSame || (()=>{})} myReactions={(myReactions || []).filter(r => r.item_owner_id === b.user_id).map(r => r.item_id)} hideHeader={true} hideEmptySlots={true} onAddToQueue={isSelfBoard ? null : (onAddToQueue || null)} queue={queue} ownerId={b.user_id} onMusicOpen={onMusicOpen} singleTile={true} itemBadges={itemBadgesForOwner(feedBadgeMap, b.user_id)} badgeOwnerName={buddy?.displayName} canCommentTiles={!isDiscovery && !isSelfBoard && !!isBuddyWithUser?.(b.user_id)} {...(tileCommentProps || {})} tileCommentsByItemId={mergedComments} />;
+              return <VouchSection board={vbBoard} isOwn={isSelfBoard} onCard={()=>{}} onAdd={()=>{}} onRemove={()=>{}} onDudeSame={onDudeSame || (()=>{})} myReactions={(myReactions || []).filter(r => r.item_owner_id === b.user_id).map(r => r.item_id)} hideHeader={true} hideEmptySlots={true} onAddToQueue={isSelfBoard ? null : (onAddToQueue || null)} queue={queue} ownerId={b.user_id} onMusicOpen={onMusicOpen} singleTile={true} itemBadges={itemBadgesForOwner(feedBadgeMap, b.user_id)} badgeOwnerName={buddy?.displayName} canCommentTiles={!isDiscovery && (isSelfBoard || !!isBuddyWithUser?.(b.user_id))} {...(tileCommentProps || {})} tileCommentsByItemId={mergedComments} />;
             })()}
           </div>
         </div>
@@ -5236,7 +5236,7 @@ export default function Vouch() {
                           if (b[item.category]) b[item.category].push(vouchItemToDisplay(item));
                         });
                         return b;
-                      })()} isOwn={true} onCard={(k, i) => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => {}} myReactions={[]} hideHeader={true} onMusicOpen={openMusicUrl} itemBadges={ownItemBadges} badgeOwnerName={user.displayName} canCommentTiles={false} {...tileCommentProps} />
+                      })()} isOwn={true} onCard={(k, i) => {}} onAdd={() => {}} onRemove={() => {}} onDudeSame={() => {}} myReactions={[]} hideHeader={true} onMusicOpen={openMusicUrl} itemBadges={ownItemBadges} badgeOwnerName={user.displayName} canCommentTiles={true} {...tileCommentProps} />
                     ) : (
                       <div style={{ height: 220, border: "1px dashed rgba(200,194,180,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 10, cursor: "pointer" }} onClick={() => { setEditingBoard(null); setBoardEditor(true); }}>
                         <span style={{ fontSize: 28, color: "rgba(200,194,180,0.4)" }}>+</span>
@@ -5267,7 +5267,7 @@ export default function Vouch() {
                   <PreviousVouches key={viewing.userId} userId={viewing.userId} onDudeSame={dudeSame} myReactions={myReactions} queue={queue} onAddToQueue={addToQueue} onMusicOpen={openMusicUrl} defaultOpen={viewExpandPreviousVouches} tileComments={vouchTileComments} canComment={isBuddyWith(viewing?.userId)} currentUserId={userId} onPostTileComment={postTileComment} onDeleteTileComment={deleteTileComment} />
                 )}
                 {isOwn && boardArchive.filter(b => !b.is_active && b.published_at).length > 0 && (
-                  <OwnArchive boards={boardArchive} canPublish={canPublish} onRepublish={republishBoard} onMusicOpen={openMusicUrl} defaultOpen={expandPreviousVouches} tileComments={vouchTileComments} canComment={false} currentUserId={userId} onPostTileComment={postTileComment} onDeleteTileComment={deleteTileComment} onDelete={async (b) => { await revokeClaimsForBoard(b.id).catch(() => {}); await supabase.from("vouch_board_items").delete().eq("board_id", b.id); await supabase.from("vouch_boards").delete().eq("id", b.id); setBoardArchive(prev => prev.filter(x => x.id !== b.id)); loadBadgesForUser(userId).then(setOwnItemBadges).catch(() => {}); }} />
+                  <OwnArchive boards={boardArchive} canPublish={canPublish} onRepublish={republishBoard} onMusicOpen={openMusicUrl} defaultOpen={expandPreviousVouches} tileComments={vouchTileComments} canComment={true} currentUserId={userId} onPostTileComment={postTileComment} onDeleteTileComment={deleteTileComment} onDelete={async (b) => { await revokeClaimsForBoard(b.id).catch(() => {}); await supabase.from("vouch_board_items").delete().eq("board_id", b.id); await supabase.from("vouch_boards").delete().eq("id", b.id); setBoardArchive(prev => prev.filter(x => x.id !== b.id)); loadBadgesForUser(userId).then(setOwnItemBadges).catch(() => {}); }} />
                 )}
 
                 {(() => {
