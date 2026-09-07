@@ -49,15 +49,3 @@ export async function fetchTrailer(item, catKey) {
     return null;
   }
 }
-
-export function tileMediaActionStyle(size = "md", label = "preview") {
-  const inset = size === "sm" ? 4 : 6;
-  const bottom = size === "sm" ? 26 : size === "lg" ? 36 : 30;
-  const isLong = label === "trailer";
-  const fontSize = size === "sm" ? (isLong ? 5.5 : 6.5) : size === "lg" ? (isLong ? 7.5 : 8.5) : (isLong ? 6.5 : 7.5);
-  const iconSize = size === "sm" ? 7 : size === "lg" ? 9 : 8;
-  const padY = size === "sm" ? 3 : size === "lg" ? 5 : 4;
-  const padX = size === "sm" ? 4 : size === "lg" ? 8 : 6;
-  const gap = size === "sm" ? 3 : 4;
-  return { inset, bottom, fontSize, iconSize, padY, padX, gap };
-}
