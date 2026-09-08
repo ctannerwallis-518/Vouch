@@ -2514,66 +2514,15 @@ function BuddyModal({ userId, onClose, onSendRequest, onGenerateLink, inviteLink
   );
 }
 
-const TERMS = `TERMS OF USE
-
-Effective Date: March 11, 2026
-
-By using Vouch, you agree to these terms.
-
-You must be 13 or older to use Vouch. You're responsible for your account and what you post. Don't use Vouch for anything unlawful or harmful to others.
-
-You own your content. By posting it, you allow us to display it on the platform. You can remove it at any time.
-
-Vouch uses Google, Spotify, TMDB, and Open Library to power certain features. Your use of those services is subject to their own terms.
-
-The Vouch name, design, and code are ours. Please don't reproduce or redistribute them without permission.
-
-Vouch is provided as-is. We're not liable for issues that arise from your use of the service.
-
-We may update these terms occasionally. Continued use means you accept any changes.`;
-
-const PRIVACY = `PRIVACY POLICY
-
-Effective Date: March 11, 2026
-
-We keep it simple.
-
-We collect your name and email via Google Sign-In, the titles you add to your shelf and boards, your buddy connections, and basic usage data.
-
-We use this only to run Vouch. We don't sell your data, show ads, or share anything with third parties. Your board is visible to your approved Buddies only.
-
-We use Google for login, Spotify for music, TMDB for film and TV, and Open Library for books. We don't store credentials for any of these services.
-
-Your data is kept as long as your account is active. To delete your account and all associated data, use the contact form in Settings.
-
-We may update this policy occasionally. Continued use means you accept any changes.`;
-
-function LegalModal({ page, onClose }) {
-  if (page === "how") {
-    return (
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="modal" onClick={e => e.stopPropagation()}>
-          <div className="modal-head">
-            <div className="modal-title">How It Works</div>
-            <button className="modal-x" onClick={onClose}>×</button>
-          </div>
-          <div className="modal-body"><HowItWorks /></div>
-        </div>
-      </div>
-    );
-  }
-  const content = page === "terms" ? TERMS : PRIVACY;
-  const title   = page === "terms" ? "Terms of Use" : "Privacy Policy";
+function LegalModal({ onClose }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxHeight: "80vh", display: "flex", flexDirection: "column" }}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
         <div className="modal-head">
-          <div className="modal-title">{title}</div>
+          <div className="modal-title">How It Works</div>
           <button className="modal-x" onClick={onClose}>×</button>
         </div>
-        <div className="modal-body" style={{ overflowY: "auto", flex: 1 }}>
-          <pre style={{ fontFamily: "'Spectral',serif", fontSize: 12.5, lineHeight: 1.8, whiteSpace: "pre-wrap", color: T.inkMid }}>{content}</pre>
-        </div>
+        <div className="modal-body"><HowItWorks /></div>
       </div>
     </div>
   );
@@ -5907,7 +5856,7 @@ export default function Vouch() {
           <AddModal catKey={addModal} catLabel={CATEGORIES.find(c => c.key === addModal)?.label} used={(board[addModal] || []).filter(i => !i.vouched).length} onClose={() => setAddModal(null)} onAdd={addItem} />
         )}
 
-        {legalPage && <LegalModal page={legalPage} onClose={() => setLegalPage(null)} />}
+        {legalPage === "how" && <LegalModal onClose={() => setLegalPage(null)} />}
 
         {showBuddyList && (
           <div className="modal-overlay" onClick={() => setShowBuddyList(false)}>
@@ -6546,13 +6495,9 @@ export default function Vouch() {
             </div>
           </div>
         )}
-        <footer style={{ borderTop: `3px double ${T.ink}`, marginTop: 64, padding: "24px 28px", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+        <footer style={{ borderTop: `3px double ${T.ink}`, marginTop: 64, padding: "24px 28px" }}>
           <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid }}>
             © {new Date().getFullYear()} Vouch. All Rights Reserved.
-          </div>
-          <div style={{ display: "flex", gap: 20 }}>
-            <button onClick={() => setLegalPage("terms")} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkMid, textDecoration: "underline" }}>Terms of Use</button>
-            <button onClick={() => setLegalPage("privacy")} style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.15em", color: T.inkMid, textDecoration: "underline" }}>Privacy Policy</button>
           </div>
         </footer>
       </div>
