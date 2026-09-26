@@ -307,14 +307,34 @@ const BOARD_THEMES_BASE = [
   "Locals Only", "Old School", "Classics", "Guilty Pleasures", "Other",
 ];
 
+const SEASONAL_ORANGE = "#E8762A";
+const SEASONAL_ORANGE_SHADOW = "#B8520F";
+const VOUCH_GOLD = "#C9A84C";
+const VOUCH_GOLD_SHADOW = "#A07830";
+
 /** Rotating season label (replaces old static "Seasonal"). */
 function getCurrentSeasonTheme(date = new Date()) {
   const month = date.getMonth(); // 0 = Jan … 11 = Dec
   if (month === 11 || month <= 1) return "Winter";       // Dec–Feb
-  if (month >= 2 && month <= 4) return "Spring";       // Mar–May
-  if (month >= 5 && month <= 6) return "Summer";       // Jun–Jul
-  if (month === 7 || month === 8) return "Late Summer"; // Aug–Sep
-  return "Fall Favorites";                              // Oct–Nov
+  if (month >= 2 && month <= 4) return "Spring";         // Mar–May
+  if (month >= 5 && month <= 8) return "Summer";         // Jun–Sep
+  return null;                                           // Oct–Nov: fall themes in picker
+}
+
+function getPromotedSeasonalThemes(date = new Date()) {
+  const month = date.getMonth();
+  const year = date.getFullYear();
+  const set = new Set();
+  if (month >= 10) set.add(`Best of ${year}`);
+  if (month === 8 || month === 9) {
+    set.add("Spooky SZN");
+    set.add("Horror");
+    set.add("Fall Favorites");
+    set.add("Halloween");
+  }
+  const season = getCurrentSeasonTheme(date);
+  if (season) set.add(season);
+  return set;
 }
 
 /** Timed + seasonal themes for publish/edit pickers — updates automatically by calendar. */
@@ -323,13 +343,84 @@ function getTimedBoardThemes(date = new Date()) {
   const year = date.getFullYear();
   const timed = [];
 
-  if (month >= 10) timed.push(`Best of ${year}`);       // Nov–Dec
-  if (month === 8 || month === 9) timed.push("Spooky Season"); // Sep–Oct
-  if (month === 9) timed.push("Halloween");             // Oct
+  if (month >= 10) timed.push(`Best of ${year}`);
+  if (month === 8 || month === 9) timed.push("Spooky SZN", "Horror", "Fall Favorites", "Halloween");
 
   const seasonTheme = getCurrentSeasonTheme(date);
-  const core = BOARD_THEMES_BASE.filter(t => t !== "Other" && t !== seasonTheme);
-  return [...timed, seasonTheme, ...core, "Other"];
+  const core = BOARD_THEMES_BASE.filter(t => t !== "Other" && t !== seasonTheme && !timed.includes(t));
+  const prefix = [...timed];
+  if (seasonTheme && !prefix.includes(seasonTheme)) prefix.push(seasonTheme);
+  return [...prefix, ...core, "Other"];
+}
+
+function boardThemeName(board) {
+  return (board?.theme && board.theme !== "Other") ? board.theme : (board?.name || "Vouch");
+}
+
+function isOrangeBoardTheme(theme) {
+  if (!theme || theme === "Other") return false;
+  if (["Spooky SZN", "Spooky Season", "Horror", "Fall Favorites", "Halloween", "Winter", "Spring", "Summer"].includes(theme)) return true;
+  return /^Best of \d{4}$/.test(theme);
+}
+
+function isHorrorBoardTheme(theme) {
+  return theme === "Horror" || theme === "Halloween" || theme === "Spooky SZN" || theme === "Spooky Season";
+}
+
+function getVouchSectionBorderStyle(theme) {
+  if (!isOrangeBoardTheme(theme)) return {};
+  return {
+    border: `3px double ${SEASONAL_ORANGE}`,
+    boxShadow: `0 0 0 1px ${SEASONAL_ORANGE_SHADOW}`,
+  };
+}
+
+function getVouchThemeLabelStyle(theme) {
+  if (isHorrorBoardTheme(theme)) {
+    return {
+      fontFamily: "'Creepster', cursive",
+      fontWeight: 400,
+      fontSize: 26,
+      letterSpacing: "0.04em",
+    };
+  }
+  return {};
+}
+
+function themePickerButtonStyle(t, selected, date = new Date()) {
+  const isSeasonal = getPromotedSeasonalThemes(date).has(t);
+  const sel = selected === t;
+  if (isSeasonal) {
+    return {
+      fontFamily: "'Spectral SC',serif",
+      fontSize: "9px",
+      letterSpacing: "0.14em",
+      padding: "4px 10px",
+      border: `2px solid ${SEASONAL_ORANGE}`,
+      background: sel ? SEASONAL_ORANGE : "transparent",
+      color: sel ? T.bg : SEASONAL_ORANGE,
+      cursor: "pointer",
+      fontWeight: sel ? 700 : 600,
+    };
+  }
+  return {
+    fontFamily: "'Spectral SC',serif",
+    fontSize: "9px",
+    letterSpacing: "0.14em",
+    padding: "4px 10px",
+    border: `1px solid ${sel ? T.ink : T.paperDark}`,
+    background: sel ? T.ink : "transparent",
+    color: sel ? T.bg : T.inkMid,
+    cursor: "pointer",
+  };
+}
+
+function vouchShareBorderStyle(theme) {
+  const orange = isOrangeBoardTheme(theme);
+  return {
+    border: `3px double ${orange ? SEASONAL_ORANGE : VOUCH_GOLD}`,
+    boxShadow: orange ? `0 0 0 1px ${SEASONAL_ORANGE_SHADOW}` : `0 0 0 1px ${VOUCH_GOLD_SHADOW}`,
+  };
 }
 
 const T = {
@@ -543,7 +634,7 @@ function FeaturesAnnounceModal({ onDismiss }) {
 
 const Styles = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,600;1,700&family=Spectral+SC:wght@300;400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Creepster&family=Playfair+Display:wght@700;800;900&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,600;1,700&family=Spectral+SC:wght@300;400;600;700&display=swap');
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
@@ -1194,13 +1285,13 @@ function OwnArchive({ boards, canPublish, onRepublish, onDelete, onMusicOpen, de
             <div key={monthYear} style={{ marginBottom: 32 }}>
               <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 10, letterSpacing: "0.18em", color: T.inkMid, borderBottom: "2px solid " + T.ink, paddingBottom: 8, marginBottom: 16 }}>{monthYear}</div>
               {mBoards.map(b => {
-                const theme = (b.theme && b.theme !== "Other") ? b.theme : (b.name || "Vouch");
+                const theme = boardThemeName(b);
                 const items = (b.vouch_board_items || []).sort((a,x) => a.position - x.position).slice(0,5);
                 return (
                   <div key={b.id} style={{ marginBottom: 28 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
                       <div>
-                        <div style={{ fontFamily: "'Times New Roman',Times,serif", fontWeight: 900, fontSize: 20, color: T.ink }}>{theme}</div>
+                        <div style={{ fontFamily: "'Times New Roman',Times,serif", fontWeight: 900, fontSize: 20, color: T.ink, ...getVouchThemeLabelStyle(theme) }}>{theme}</div>
                         <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.12em", color: T.inkLight, marginTop: 2 }}>{new Date(b.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
                         {b.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkMid, marginTop: 3 }}>{b.description}</div>}
                       </div>
@@ -1283,12 +1374,12 @@ function PreviousVouches({ userId, onDudeSame, myReactions, queue, onAddToQueue,
             <div key={monthYear} style={{ marginBottom: 32 }}>
               <div style={{ fontFamily: "'Spectral SC',serif", fontWeight: 700, fontSize: 10, letterSpacing: "0.18em", color: T.inkMid, borderBottom: "2px solid " + T.ink, paddingBottom: 8, marginBottom: 16 }}>{monthYear}</div>
               {mBoards.map(b => {
-                const theme = (b.theme && b.theme !== "Other") ? b.theme : (b.name || "Vouch");
+                const theme = boardThemeName(b);
                 const items = (b.vouch_board_items || []).sort((a,x) => a.position - x.position).slice(0,5);
                 return (
                   <div key={b.id} style={{ marginBottom: 28 }}>
                     <div style={{ marginBottom: 10 }}>
-                      <div style={{ fontFamily: "'Times New Roman',Times,serif", fontWeight: 900, fontSize: 20, color: T.ink }}>{theme}</div>
+                      <div style={{ fontFamily: "'Times New Roman',Times,serif", fontWeight: 900, fontSize: 20, color: T.ink, ...getVouchThemeLabelStyle(theme) }}>{theme}</div>
                       <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.12em", color: T.inkLight, marginTop: 2 }}>{new Date(b.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
                       {b.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: T.inkMid, marginTop: 3 }}>{b.description}</div>}
                     </div>
@@ -1458,12 +1549,12 @@ function PublicBoard({ inviteUserId, onSignUp }) {
             (avb.vouch_board_items || []).sort((a,b) => a.position - b.position).slice(0,5).forEach(item => {
               if (vbBoard[item.category]) vbBoard[item.category].push(vouchItemToDisplay(item));
             });
-            const theme = (avb.theme && avb.theme !== "Other") ? avb.theme : (avb.name || "Vouch");
+            const theme = boardThemeName(avb);
             return (
-              <div className="vouch-section" style={{ marginBottom: 52 }}>
+              <div className="vouch-section" style={{ marginBottom: 52, ...getVouchSectionBorderStyle(theme) }}>
                 <div className="vouch-section-header">
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className="vouch-section-label">{theme}</div>
+                    <div className="vouch-section-label" style={getVouchThemeLabelStyle(theme)}>{theme}</div>
                     <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginTop: 3 }}>Vouch</div>
                     {avb.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 4 }}>{avb.description}</div>}
                     {avb.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.3)", marginTop: 4 }}>Published {new Date(avb.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>}
@@ -2631,7 +2722,7 @@ function BoardEditorModal({ onClose, onPublish, existing, categories, themes, us
             <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>Theme</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {themes.map(t => (
-                <button key={t} onClick={() => setTheme(t)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "4px 10px", border: `1px solid ${theme === t ? T.ink : T.paperDark}`, background: theme === t ? T.ink : "transparent", color: theme === t ? T.bg : T.inkMid, cursor: "pointer" }}>{t === "Other" ? "Other — Create Your Own" : t}</button>
+                <button key={t} type="button" onClick={() => setTheme(t)} style={themePickerButtonStyle(t, theme)}>{t === "Other" ? "Other — Create Your Own" : t}</button>
               ))}
             </div>
             {theme === "Other" && (
@@ -2780,7 +2871,7 @@ function EditMetaForm({ board, themes, onSave, onClose }) {
         <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.18em", color: T.inkMid, marginBottom: 6 }}>Theme</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           {themes.map(t => (
-            <button key={t} onClick={() => setTheme(t)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "9px", letterSpacing: "0.14em", padding: "4px 10px", border: `1px solid ${theme === t ? T.ink : T.paperDark}`, background: theme === t ? T.ink : "transparent", color: theme === t ? T.bg : T.inkMid, cursor: "pointer" }}>{t === "Other" ? "Other — Create Your Own" : t}</button>
+            <button key={t} type="button" onClick={() => setTheme(t)} style={themePickerButtonStyle(t, theme)}>{t === "Other" ? "Other — Create Your Own" : t}</button>
           ))}
         </div>
         {theme === "Other" && <div>
@@ -3307,7 +3398,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
     if (item.type === "vouch") {
       const b = item.board;
       const buddy = item.buddy || profileBuddy(b.profiles, b.user_id);
-      const theme = (b.theme && b.theme !== "Other") ? b.theme : (b.name || "Vouch");
+      const theme = boardThemeName(b);
       const vouchItems = (b.vouch_board_items || []).sort((a,x) => a.position - x.position).slice(0,5);
       return (
         <div key={`${isDiscovery ? "d" : "b"}-vouch-${i}`} style={{ marginBottom: 32, opacity: isDiscovery ? 0.92 : 1 }}>
@@ -3322,10 +3413,10 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
               <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: "#a09890", marginLeft: 8 }}>{item.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
             </div>
           </div>
-          <div className="vouch-section" style={{ marginBottom: 32 }}>
+          <div className="vouch-section" style={{ marginBottom: 32, ...getVouchSectionBorderStyle(theme) }}>
             <div className="vouch-section-header">
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div className="vouch-section-label">{theme}</div>
+                <div className="vouch-section-label" style={getVouchThemeLabelStyle(theme)}>{theme}</div>
                 <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginTop: 3 }}>Vouch</div>
                 {b.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 4 }}>{b.description}</div>}
               </div>
@@ -5691,10 +5782,10 @@ export default function Vouch() {
                 })()}
 
                 {isOwn ? (
-                  <div className="vouch-section" style={{ marginBottom: 52 }}>
+                  <div className="vouch-section" style={{ marginBottom: 52, ...getVouchSectionBorderStyle(boardThemeName(activeBoard)) }}>
                     <div className="vouch-section-header" style={{ flexDirection: "column", alignItems: "stretch", flexWrap: "wrap" }}>
                       <div style={{ flex: 1, minWidth: 0, width: "100%" }}>
-                        <div className="vouch-section-label">{(activeBoard?.theme && activeBoard.theme !== "Other") ? activeBoard.theme : (activeBoard?.name || "Vouch")}</div>
+                        <div className="vouch-section-label" style={getVouchThemeLabelStyle(boardThemeName(activeBoard))}>{boardThemeName(activeBoard)}</div>
                         {activeBoard && <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10 }}>
                           <button onClick={() => setShareModal(true)} style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.14em", padding: "4px 12px", border: "none", background: "linear-gradient(180deg, #E0E0E0 0%, #C0C0C0 60%, #909090 100%)", color: T.ink, cursor: "pointer", fontWeight: 700 }}>Share</button>
                           <button onClick={() => { setEditingBoard(activeBoard); setBoardEditor(true); }} style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.14em", padding: "4px 12px", border: "1px solid rgba(200,194,180,0.25)", background: "transparent", color: "rgba(200,194,180,0.5)", cursor: "pointer" }}>Edit</button>
@@ -5721,10 +5812,10 @@ export default function Vouch() {
                     )}
                   </div>
                 ) : viewActiveBoard?.vouch_board_items?.length > 0 ? (
-                  <div className="vouch-section" style={{ marginBottom: 52 }}>
+                  <div className="vouch-section" style={{ marginBottom: 52, ...getVouchSectionBorderStyle(boardThemeName(viewActiveBoard)) }}>
                     <div className="vouch-section-header">
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div className="vouch-section-label">{(viewActiveBoard?.theme && viewActiveBoard.theme !== "Other") ? viewActiveBoard.theme : (viewActiveBoard?.name || "Vouch")}</div>
+                        <div className="vouch-section-label" style={getVouchThemeLabelStyle(boardThemeName(viewActiveBoard))}>{boardThemeName(viewActiveBoard)}</div>
                         <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.18em", color: "rgba(200,194,180,0.4)", marginTop: 3 }}>Vouch</div>
                         {viewActiveBoard.description && <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.45)", marginTop: 5 }}>{viewActiveBoard.description}</div>}
                         {viewActiveBoard.published_at && <div style={{ fontFamily: "'Spectral SC',serif", fontSize: "7px", letterSpacing: "0.1em", color: "rgba(200,194,180,0.3)", marginTop: 4 }}>Published {new Date(viewActiveBoard.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>}
@@ -6145,14 +6236,15 @@ export default function Vouch() {
               <div className="modal-body" style={{ textAlign: "center" }}>
                 <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 13, color: T.inkMid, marginBottom: 16 }}>Your Vouch is live — share it with your circle.</div>
                 {/* Share card preview */}
-                <div style={{ background: T.ink, color: T.bg, marginBottom: 16, border: "3px double #C9A84C", position: "relative", overflow: "hidden" }}>
+                <div style={{ background: T.ink, color: T.bg, marginBottom: 16, position: "relative", overflow: "hidden", ...vouchShareBorderStyle(boardThemeName(activeBoard)) }}>
                   {(() => {
+                    const shareTheme = boardThemeName(activeBoard);
                     const coverItem = (activeBoard?.vouch_board_items || []).sort((a,b) => a.position - b.position)[0];
                     return coverItem?.poster ? (
                       <div style={{ position: "relative" }}>
                         <img src={coverItem.poster} alt={coverItem.title} style={{ width: "100%", aspectRatio: "2/3", objectFit: "cover", display: "block", maxHeight: 280 }} onError={e => e.target.style.display="none"} />
                         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(to top, rgba(17,16,8,0.95) 0%, rgba(17,16,8,0) 100%)", padding: "40px 16px 16px" }}>
-                          <div style={{ fontFamily: "'Times New Roman',serif", fontWeight: 900, fontSize: 22, color: "#C8C2B4" }}>{activeBoard?.name || activeBoard?.theme || "My Vouch"}</div>
+                          <div style={{ fontFamily: "'Times New Roman',serif", fontWeight: 900, fontSize: 22, color: "#C8C2B4", ...getVouchThemeLabelStyle(shareTheme) }}>{shareTheme}</div>
                           <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 11, color: "rgba(200,194,180,0.6)" }}>vouched by {user?.displayName}</div>
                         </div>
                         <div style={{ position: "absolute", top: 8, left: 8, fontFamily: "'Spectral SC',serif", fontSize: 8, letterSpacing: "0.2em", color: "rgba(200,194,180,0.5)" }}>EST. 2026 · VOUCH</div>
@@ -6160,7 +6252,7 @@ export default function Vouch() {
                     ) : (
                       <div style={{ padding: "24px 20px" }}>
                         <div style={{ fontFamily: "'Spectral SC',serif", fontSize: 9, letterSpacing: "0.3em", color: "rgba(200,194,180,0.4)", marginBottom: 8 }}>EST. 2026 · VOUCH</div>
-                        <div style={{ fontFamily: "'Times New Roman',serif", fontWeight: 900, fontSize: 26, color: "#C8C2B4", marginBottom: 4 }}>{activeBoard?.name || activeBoard?.theme || "My Vouch"}</div>
+                        <div style={{ fontFamily: "'Times New Roman',serif", fontWeight: 900, fontSize: 26, color: "#C8C2B4", marginBottom: 4, ...getVouchThemeLabelStyle(shareTheme) }}>{shareTheme}</div>
                         <div style={{ fontFamily: "'Spectral',serif", fontStyle: "italic", fontSize: 12, color: "rgba(200,194,180,0.5)" }}>vouched by {user?.displayName}</div>
                       </div>
                     );
