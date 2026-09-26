@@ -367,12 +367,9 @@ function isHorrorBoardTheme(theme) {
   return theme === "Horror" || theme === "Halloween" || theme === "Spooky SZN" || theme === "Spooky Season";
 }
 
-function getVouchSectionBorderStyle(theme) {
-  if (!isOrangeBoardTheme(theme)) return {};
-  return {
-    border: `3px double ${SEASONAL_ORANGE}`,
-    boxShadow: `0 0 0 1px ${SEASONAL_ORANGE_SHADOW}`,
-  };
+function getVouchSectionClassName(theme) {
+  const base = "vouch-section";
+  return isOrangeBoardTheme(theme) ? `${base} vouch-section-seasonal` : base;
 }
 
 function getVouchThemeLabelStyle(theme) {
@@ -709,6 +706,8 @@ const Styles = () => (
     .ornament { text-align: center; font-family: 'Spectral', serif; font-size: 13px; color: ${T.inkFaint}; margin: 4px 0 28px; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
     .vouch-section { margin-bottom: 52px; border: 3px double #C9A84C; box-shadow: 0 0 0 1px #A07830; background: ${T.ink}; padding: 22px 22px 22px; position: relative; }
+    .vouch-section-inner { margin-bottom: 0; border: none; box-shadow: none; background: transparent; padding: 0; position: relative; }
+    .vouch-section.vouch-section-seasonal { border: 3px double ${SEASONAL_ORANGE}; box-shadow: 0 0 0 1px ${SEASONAL_ORANGE_SHADOW}; }
     .vouch-section-header { display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; border-bottom: 1px solid rgba(200,194,180,0.25); padding-bottom: 12px; margin-bottom: 24px; }
     .vouch-section-label { font-family: 'Times New Roman', Times, serif; font-weight: 900; font-size: 22px; letter-spacing: 0.04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; color: ${T.bg}; }
     .vouch-section-sub   { font-family: 'Spectral', serif; font-style: italic; font-size: 11px; color: rgba(200,194,180,0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1567,7 +1566,7 @@ function PublicBoard({ inviteUserId, onSignUp }) {
             });
             const theme = boardThemeName(avb);
             return (
-              <div className="vouch-section" style={{ marginBottom: 52, ...getVouchSectionBorderStyle(theme) }}>
+              <div className={getVouchSectionClassName(theme)} style={{ marginBottom: 52 }}>
                 <div className="vouch-section-header">
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div className="vouch-section-label" style={getVouchThemeLabelStyle(theme)}>{theme}</div>
@@ -2342,7 +2341,7 @@ function VouchSection({ board, isOwn, onCard, onAdd, onRemove, onDudeSame, myRea
   };
 
   return (
-    <div className="vouch-section">
+    <div className={hideHeader ? "vouch-section-inner" : "vouch-section"}>
       {!hideHeader && (
         <div className="vouch-section-header">
           <div className="vouch-section-label">Vouch 5</div>
@@ -3429,7 +3428,7 @@ const BuddyFeed = memo(function BuddyFeed({ buddies, selfId, selfName, selfAvata
               <span style={{ fontFamily: "'Spectral SC',serif", fontSize: "8px", letterSpacing: "0.1em", color: "#a09890", marginLeft: 8 }}>{item.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
             </div>
           </div>
-          <div className="vouch-section" style={{ marginBottom: 32, ...getVouchSectionBorderStyle(theme) }}>
+          <div className={getVouchSectionClassName(theme)} style={{ marginBottom: 32 }}>
             <div className="vouch-section-header">
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="vouch-section-label" style={getVouchThemeLabelStyle(theme)}>{theme}</div>
@@ -5798,7 +5797,7 @@ export default function Vouch() {
                 })()}
 
                 {isOwn ? (
-                  <div className="vouch-section" style={{ marginBottom: 52, ...getVouchSectionBorderStyle(boardThemeName(activeBoard)) }}>
+                  <div className={getVouchSectionClassName(boardThemeName(activeBoard))} style={{ marginBottom: 52 }}>
                     <div className="vouch-section-header" style={{ flexDirection: "column", alignItems: "stretch", flexWrap: "wrap" }}>
                       <div style={{ flex: 1, minWidth: 0, width: "100%" }}>
                         <div className="vouch-section-label" style={getVouchThemeLabelStyle(boardThemeName(activeBoard))}>{boardThemeName(activeBoard)}</div>
@@ -5828,7 +5827,7 @@ export default function Vouch() {
                     )}
                   </div>
                 ) : viewActiveBoard?.vouch_board_items?.length > 0 ? (
-                  <div className="vouch-section" style={{ marginBottom: 52, ...getVouchSectionBorderStyle(boardThemeName(viewActiveBoard)) }}>
+                  <div className={getVouchSectionClassName(boardThemeName(viewActiveBoard))} style={{ marginBottom: 52 }}>
                     <div className="vouch-section-header">
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div className="vouch-section-label" style={getVouchThemeLabelStyle(boardThemeName(viewActiveBoard))}>{boardThemeName(viewActiveBoard)}</div>
