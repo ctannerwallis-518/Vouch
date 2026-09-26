@@ -397,10 +397,9 @@ function themePickerButtonStyle(t, selected, date = new Date()) {
       letterSpacing: "0.14em",
       padding: "4px 10px",
       border: `2px solid ${SEASONAL_ORANGE}`,
-      background: sel ? "rgba(232, 118, 42, 0.14)" : "transparent",
-      color: T.ink,
+      background: sel ? T.ink : "transparent",
+      color: sel ? T.bg : T.inkMid,
       cursor: "pointer",
-      fontWeight: sel ? 700 : 600,
     };
   }
   return {
