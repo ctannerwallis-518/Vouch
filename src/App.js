@@ -317,8 +317,8 @@ function getCurrentSeasonTheme(date = new Date()) {
   const month = date.getMonth(); // 0 = Jan … 11 = Dec
   if (month === 11 || month <= 1) return "Winter";       // Dec–Feb
   if (month >= 2 && month <= 4) return "Spring";         // Mar–May
-  if (month >= 5 && month <= 8) return "Summer";         // Jun–Sep
-  return null;                                           // Oct–Nov: fall themes in picker
+  if (month >= 5 && month <= 7) return "Summer";         // Jun–Aug
+  return null;                                           // Sep–Nov: fall / year-end themes in picker
 }
 
 function getPromotedSeasonalThemes(date = new Date()) {
